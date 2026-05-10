@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>노형점핑 출석체크</title>
+  <style>
+    /* Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+    :root {
+      --primary: #8a2be2;
+      --primary-light: #b388ff;
+      --bg-dark: #121212;
+      --glass-bg: rgba(30, 30, 30, 0.6);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --text-main: #ffffff;
+      --text-sub: #aaaaaa;
+      --danger: #ff5252;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      background-image: radial-gradient(circle at 20% 30%, rgba(138, 43, 226, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(76, 175, 80, 0.1) 0%, transparent 50%);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      justify-content: center;
+    }
+
+    /* 헤더 영역 */
+    .header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    .logo-img {
+      max-height: 65px;
+      max-width: 100%;
+      margin-bottom: 8px;
+      object-fit: contain;
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 8px 20px;
+      border-radius: 14px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+    .header p {
+      color: var(--text-sub);
+      font-size: 0.9rem;
+      font-weight: 300;
+    }
+
+    /* 입력창 (Glassmorphism) */
+    .input-display {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 18px;
+      height: 70px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+      font-size: 2.2rem;
+      font-weight: 600;
+      letter-spacing: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+    .input-display.active {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 20px rgba(138, 43, 226, 0.3);
+    }
+    .placeholder {
+      color: rgba(255, 255, 255, 0.2);
+      font-size: 1.1rem;
+      letter-spacing: 0;
+      font-weight: 400;
+    }
+
+    /* 키패드 */
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      width: 100%;
+      max-width: 360px;
+      margin: 0 auto;
+    }
+    .key {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 50%;
+      aspect-ratio: 1/1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.6rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .key:active {
+      background: var(--primary);
+      transform: scale(0.92);
+    }
+    .key.action {
+      font-size: 1.1rem;
+      color: var(--text-sub);
+      background: transparent;
+      border: none;
+    }
+    .key.action:active {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+    .key.submit {
+      background: var(--primary);
+      border: none;
+      box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+      color: #fff;
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+
+    /* 작은 화면용 최적화 */
+    @media (max-height: 740px) {
+      .container { padding: 10px; }
+      .header { margin-bottom: 15px; }
+      .logo-img { max-height: 50px; padding: 6px 15px; }
+      .header p { font-size: 0.85rem; }
+      .input-display { height: 60px; margin-bottom: 15px; font-size: 2rem; }
+      .keypad { gap: 10px; }
+      .key { font-size: 1.4rem; }
+      .key.submit, .key.action { font-size: 1rem; }
+    }
+
+    /* 2단계 팝업 (본인확인 및 옵션 선택) */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(10px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .modal-overlay.show {
+      display: flex;
+      opacity: 1;
+    }
+    .modal-content {
+      background: #1e1e1e;
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      width: 90%;
+      max-width: 400px;
+      padding: 40px 30px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      transform: translateY(20px);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .modal-overlay.show .modal-content {
+      transform: translateY(0);
+    }
+    .user-greeting {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    .user-status {
+      color: var(--primary-light);
+      font-size: 1rem;
+      margin-bottom: 30px;
+    }
+    
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .btn {
+      padding: 16px;
+      border-radius: 12px;
+      border: none;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:active { transform: scale(0.98); background: #7122b8; }
+    
+    .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; }
+    .btn-secondary:active { background: rgba(255,255,255,0.2); }
+
+    .btn-bonus { background: linear-gradient(45deg, #f59e0b, #d97706); color: #fff; display: none; }
+    
+    .btn-cancel { background: transparent; color: var(--text-sub); margin-top: 10px; font-weight: 400; }
+    
+    /* 성공 알림 모달 (예쁘게 꾸미기) */
+    .success-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(15px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .success-modal-overlay.show {
+      display: flex;
+      opacity: 1;
+    }
+    .success-content {
+      background: linear-gradient(145deg, #2a0845, #6441a5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 24px;
+      width: 85%;
+      max-width: 380px;
+      padding: 50px 30px;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(138, 43, 226, 0.6);
+      transform: scale(0.8);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .success-modal-overlay.show .success-content {
+      transform: scale(1);
+    }
+    .success-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      display: inline-block;
+      animation: bounce 1s infinite alternate;
+    }
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-10px); }
+    }
+    /* 에러 알림 모달 (진동 효과) */
+    .error-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(15px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .error-modal-overlay.show {
+      display: flex;
+      opacity: 1;
+    }
+    .error-content {
+      background: linear-gradient(145deg, #4a0000, #ff5252);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 24px;
+      width: 85%;
+      max-width: 380px;
+      padding: 50px 30px;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(255, 82, 82, 0.6);
+      transform: scale(0.8);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .error-modal-overlay.show .error-content {
+      transform: scale(1);
+      animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    @keyframes shake {
+      10%, 90% { transform: scale(1) translate3d(-2px, 0, 0); }
+      20%, 80% { transform: scale(1) translate3d(4px, 0, 0); }
+      30%, 50%, 70% { transform: scale(1) translate3d(-6px, 0, 0); }
+      40%, 60% { transform: scale(1) translate3d(6px, 0, 0); }
+    }
+    .error-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      display: inline-block;
+    }
+    .error-text {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.5;
+    }
+
+    #userListArea {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 5px;
+    }
+    .user-list-btn {
+      padding: 20px 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      color: white;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.2s;
+    }
+    .user-list-btn:active { 
+      background: var(--primary);
+      transform: scale(0.95);
+    }
+    .user-list-btn .u-name { font-weight: 600; font-size: 1.2rem; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <!-- 구글 드라이브 썸네일 API 방식으로 변경 (우회) -->
+      <img src="https://drive.google.com/thumbnail?id=1294x-K2aBT5CzyoNnaq2-6CPEIfyFEzk&sz=w500" alt="노형점핑 로고" class="logo-img" onerror="this.onerror=null; this.src='https://lh3.googleusercontent.com/d/1294x-K2aBT5CzyoNnaq2-6CPEIfyFEzk';">
+      <p>휴대폰 번호 뒷자리 4자리를 눌러주세요</p>
+    </div>
+
+    <div class="input-display" id="display">
+      <span class="placeholder">••••</span>
+    </div>
+
+    <div class="keypad">
+      <div class="key" onclick="press('1')">1</div>
+      <div class="key" onclick="press('2')">2</div>
+      <div class="key" onclick="press('3')">3</div>
+      <div class="key" onclick="press('4')">4</div>
+      <div class="key" onclick="press('5')">5</div>
+      <div class="key" onclick="press('6')">6</div>
+      <div class="key" onclick="press('7')">7</div>
+      <div class="key" onclick="press('8')">8</div>
+      <div class="key" onclick="press('9')">9</div>
+      <div class="key action" onclick="clearAll()">지우기</div>
+      <div class="key" onclick="press('0')">0</div>
+      <div class="key submit" onclick="searchUser()">확인</div>
+    </div>
+  </div>
+
+  <!-- 다중 사용자 선택 모달 -->
+  <div class="modal-overlay" id="multiUserModal">
+    <div class="modal-content">
+      <div class="user-greeting">회원님을 선택해주세요</div>
+      <div class="user-status" style="margin-bottom:20px; font-size: 0.9rem; opacity: 0.7;">동일한 번호의 회원님이 계십니다.</div>
+      <div id="userListArea">
+        <!-- 리스트가 여기에 그리드로 생성됨 -->
+      </div>
+      <button class="btn btn-cancel" style="margin-top: 20px;" onclick="closeMultiModal()">취소</button>
+    </div>
+  </div>
+
+  <!-- 2단계: 본인 확인 및 옵션 선택 모달 -->
+  <div class="modal-overlay" id="userModal">
+    <div class="modal-content">
+      <div class="user-greeting" id="userName">김홍철 님</div>
+      <div class="user-status" id="userStatus">잔여 12회 (월권)</div>
+      
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="submitLog('점핑')">점핑 출석</button>
+        <button class="btn btn-secondary" onclick="submitLog('테라피')">테라피 출석</button>
+        <button class="btn btn-secondary" onclick="submitLog('복합')">복합 출석</button>
+        <button class="btn btn-bonus" id="btnBonus" onclick="submitLog('보너스')">🎁 보너스 횟수 1회 사용</button>
+        <button class="btn btn-cancel" onclick="closeModal()">아니오, 잘못 눌렀습니다</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 성공 알림 팝업 -->
+  <div class="success-modal-overlay" id="successModal">
+    <div class="success-content">
+      <div class="success-icon">✨</div>
+      <div class="success-text" id="successMessage">출석이 완료되었습니다!<br>오늘도 화이팅!</div>
+    </div>
+  </div>
+
+  <!-- 에러 알림 팝업 -->
+  <div class="error-modal-overlay" id="errorModal">
+    <div class="error-content">
+      <div class="error-icon">⚠️</div>
+      <div class="error-text" id="errorMessage">에러 메시지가 여기에 표시됩니다.</div>
+    </div>
+  </div>
+
+  <script>
+    let pin = "";
+    const display = document.getElementById("display");
+
+    function updateDisplay() {
+      if (pin.length === 0) {
+        display.innerHTML = '<span class="placeholder">••••</span>';
+        display.classList.remove('active');
+      } else {
+        display.innerText = pin;
+        display.classList.add('active');
+      }
+    }
+
+    function press(num) {
+      if (pin.length < 4) {
+        pin += num;
+        updateDisplay();
+      }
+    }
+
+    function clearAll() {
+      pin = "";
+      updateDisplay();
+    }
+
+    // 에러 팝업 띄우기 함수
+    function showError(message) {
+      const errorModal = document.getElementById('errorModal');
+      document.getElementById('errorMessage').innerText = message;
+      errorModal.classList.add('show');
+      
+      // 2.5초 뒤에 닫기
+      setTimeout(() => {
+        errorModal.classList.remove('show');
+      }, 2500);
+    }
+
+    let selectedMemberPhone = "";
+
+    function searchUser() {
+      if (pin.length !== 4) {
+        showError("뒷자리 4자리를 정확히 입력해주세요.");
+        return;
+      }
+      
+      // 검색 중 시각적 피드백
+      display.innerHTML = '<span style="font-size: 1.5rem;">조회중...</span>';
+      
+      // 실제 구글 앱스 스크립트 환경인지 확인 (로컬 파일로 열었을 때 무한 로딩 방지)
+      if (typeof google === 'undefined' || !google.script) {
+        showError("[테스트 모드]\n구글 앱스 스크립트 웹앱 주소로 접속해야 DB와 연결됩니다!");
+        clearAll();
+        return;
+      }
+      
+      // 구글 앱스 스크립트 백엔드 호출
+      google.script.run.withFailureHandler(function(err) {
+        showError("서버 통신 오류가 발생했습니다.");
+        clearAll();
+      }).withSuccessHandler(function(res) {
+        if (res.error) {
+          showError(res.error);
+          clearAll();
+          return;
+        }
+        
+        // 검색 결과 처리
+        if (res.members.length > 1) {
+          showUserSelection(res.members);
+        } else {
+          selectUser(res.members[0]);
+        }
+      }).searchMemberByPin(pin);
+    }
+
+    let allFoundMembers = [];
+
+    function showUserSelection(members) {
+      allFoundMembers = members;
+      const listArea = document.getElementById('userListArea');
+      listArea.innerHTML = "";
+      
+      members.forEach((m, idx) => {
+        const btn = document.createElement('div');
+        btn.className = 'user-list-btn';
+        btn.onclick = () => selectUserFromList(idx);
+        btn.innerHTML = `<span class="u-name">${m.name}</span>`;
+        listArea.appendChild(btn);
+      });
+      
+      document.getElementById('multiUserModal').classList.add('show');
+    }
+
+    function selectUserFromList(idx) {
+      document.getElementById('multiUserModal').classList.remove('show');
+      selectUser(allFoundMembers[idx]);
+    }
+
+    function selectUser(member) {
+      selectedMemberPhone = member.phone;
+      document.getElementById('userName').innerText = member.name + " 님";
+      
+      const statusArea = document.getElementById('userStatus');
+      statusArea.innerHTML = ""; // 기존 내용 비우기
+      
+      // 보유한 모든 회원권 정보를 리스트로 표시
+      if (member.allPasses && member.allPasses.length > 0) {
+        member.allPasses.forEach(function(pass) {
+          const passDiv = document.createElement('div');
+          passDiv.style.marginBottom = "10px";
+          passDiv.style.padding = "12px";
+          passDiv.style.background = "rgba(255,255,255,0.07)";
+          passDiv.style.border = "1px solid rgba(255,255,255,0.1)";
+          passDiv.style.borderRadius = "10px";
+          passDiv.style.textAlign = "left";
+          
+          let color = "#fff";
+          let warning = "";
+          
+          // 1. 횟수 기준 체크 (3회 이하)
+          const remain = Number(pass.remainCount);
+          const isLowSessions = (pass.membershipType.indexOf("월권") === -1 && !isNaN(remain) && remain <= 3);
+          
+          // 2. 기한 기준 체크 (5일 이하)
+          let isNearExpiry = false;
+          let diffDays = 999;
+          if (pass.expireDate && pass.expireDate !== "-") {
+            const exp = new Date(pass.expireDate);
+            exp.setHours(23, 59, 59, 999);
+            const now = new Date();
+            const diffTime = exp.getTime() - now.getTime();
+            diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays <= 5) isNearExpiry = true;
+          }
+          
+          // 둘 중 하나라도 해당되면 빨간색 강조
+          if (isLowSessions || isNearExpiry) {
+            color = "#ff5252";
+            if (diffDays < 0) {
+              warning = " <span style='font-size:0.8rem;'>⚠️ 기한만료</span>";
+            } else if (diffDays === 0) {
+              warning = " <span style='font-size:0.8rem;'>⚠️ 오늘만료</span>";
+            } else if (isNearExpiry) {
+              warning = ` <span style='font-size:0.8rem;'>⚠️ ${diffDays}일전</span>`;
+            } else {
+              warning = " <span style='font-size:0.8rem;'>⚠️ 연장필요</span>";
+            }
+          }
+          
+          passDiv.innerHTML = `<div style="font-weight:600; color:var(--primary-light); font-size:1rem; margin-bottom:4px;">${pass.membershipType}</div>` + 
+                              `<div style="color:${color}; font-size:0.9rem;">잔여: ${pass.remainCount}회 | 기한: ~${pass.expireDate}${warning}</div>`;
+          statusArea.appendChild(passDiv);
+        });
+      } else {
+        statusArea.innerHTML = "<div style='padding:20px; color:#888;'>진행 중인 회원권이 없습니다.</div>";
+      }
+      
+      // 보너스 버튼 표시 여부
+      const btnBonus = document.getElementById('btnBonus');
+      if (btnBonus) {
+        const bCount = Number(member.bonusCount || 0);
+        if (bCount > 0) {
+          btnBonus.style.display = "block";
+          btnBonus.innerText = `🎁 보너스 출석 (잔여: ${bCount}회)`;
+        } else {
+          btnBonus.style.display = "none";
+        }
+      }
+
+      document.getElementById('userModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('userModal').classList.remove('show');
+      clearAll();
+      selectedMemberPhone = "";
+    }
+
+    function closeMultiModal() {
+      document.getElementById('multiUserModal').classList.remove('show');
+      clearAll();
+    }
+
+    function submitLog(type) {
+      // 팝업 닫기 전 로딩 텍스트로 변경 (이중 클릭 방지)
+      document.getElementById('userName').innerText = "출석 처리중...";
+      
+      google.script.run.withSuccessHandler(function(res) {
+        closeModal();
+        
+        if (res.error) {
+          showError(res.error);
+          return;
+        }
+        
+        // 성공 팝업 예쁘게 띄우기
+        const successModal = document.getElementById('successModal');
+        const msgBox = document.getElementById('successMessage');
+        
+        if(type === '점핑') {
+          msgBox.innerHTML = "점핑 출석 완료!🏃‍♀️<br>신나게 뛰어볼까요?";
+        } else if(type === '테라피') {
+          msgBox.innerHTML = "테라피 출석 완료!🌿<br>편안한 시간 되세요.";
+        } else if(type === '복합') {
+          msgBox.innerHTML = "복합 출석 완료!✨<br>오늘도 고생하셨습니다.";
+        } else if(type === '보너스') {
+          msgBox.innerHTML = "보너스 출석 완료!🎁<br>감사합니다!";
+        } else {
+          msgBox.innerHTML = "출석이 완료되었습니다!✨<br>오늘도 화이팅!";
+        }
+        
+        // 잔여 횟수 정보 추가 표시
+        if (res.updatedRemain !== undefined) {
+          const countInfo = res.isUnlimited ? "(무제한 이용 중)" : `잔여: ${res.updatedRemain}회`;
+          
+          // 회원권이 여러 개인 경우(혹은 usedPassName이 있는 경우) 이름도 함께 표시
+          let finalInfo = "";
+          if (res.usedPassName && res.usedPassName !== "보너스권") {
+             finalInfo = `<span style="color:var(--primary-light); font-weight:600;">${res.usedPassName}</span>: ${countInfo}`;
+          } else {
+             finalInfo = `(${countInfo})`;
+          }
+          
+          msgBox.innerHTML += `<div style="margin-top:15px; font-size:1.05rem; opacity:0.9;">${finalInfo}</div>`;
+        }
+
+        successModal.classList.add('show');
+
+        // 2.5초 뒤에 자동으로 팝업 닫히고 초기 화면으로
+        setTimeout(() => {
+          successModal.classList.remove('show');
+        }, 2500);
+        
+      }).processAttendance(selectedMemberPhone, type, false);
+    }
+  </script>
+</body>
+</html>

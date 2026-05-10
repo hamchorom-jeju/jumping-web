@@ -1,0 +1,2253 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>노형점핑 관리자 대시보드</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+    :root {
+      --primary: #8a2be2;
+      --bg-dark: #121212;
+      --card-bg: rgba(30, 30, 30, 0.6);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --text-main: #ffffff;
+      --text-sub: #aaaaaa;
+      --success: #4caf50;
+      --warning: #ffb300;
+      --danger: #ff5252;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      background-image: radial-gradient(circle at 0% 0%, rgba(138, 43, 226, 0.1) 0%, transparent 50%);
+    }
+
+    /* 상단 네비게이션바 */
+    .navbar {
+      background: rgba(18, 18, 18, 0.9);
+      backdrop-filter: blur(10px);
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--glass-border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .navbar h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid var(--glass-border);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+      padding-bottom: 100px;
+      /* 하단 돋보기 버튼 공간 확보 */
+    }
+
+    /* 요약 카드 */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .summary-card {
+      background: var(--card-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .summary-title {
+      font-size: 0.9rem;
+      color: var(--text-sub);
+      margin-bottom: 5px;
+    }
+
+    .summary-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    /* 리스트 영역 */
+    .section-title {
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .list-item {
+      background: var(--card-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .item-info h3 {
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+    }
+
+    .item-info p {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+    }
+
+    .status-badge {
+      font-size: 0.8rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(76, 175, 80, 0.2);
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .status-badge.therapy {
+      background: rgba(255, 179, 0, 0.2);
+      color: var(--warning);
+    }
+
+    /* 퇴실 버튼 */
+    .btn-checkout {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* 플로팅 액션 버튼 (수동 출석) */
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.5rem;
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(138, 43, 226, 0.5);
+      cursor: pointer;
+      border: none;
+    }
+
+    /* 스마트 퇴실 팝업 모달 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      color: #1a202c;
+      width: 95%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 24px;
+      padding: 35px 25px;
+      position: relative;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      transform: scale(0.9);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal-overlay.show .modal-content {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      color: #1a202c;
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 25px;
+      text-align: center;
+      letter-spacing: -0.5px;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 10px;
+    }
+
+    /* 프리미엄 버튼 스타일 */
+    .m-btn {
+      padding: 20px;
+      border: none;
+      border-radius: 16px;
+      font-size: 1.15rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .m-btn:active {
+      transform: scale(0.97);
+    }
+
+    .m-btn:hover {
+      filter: brightness(1.05);
+      transform: translateY(-2px);
+    }
+
+    .m-btn-jumping {
+      background: linear-gradient(135deg, #ff5252, #ff1744);
+      color: #fff;
+    }
+
+    .m-btn-therapy {
+      background: linear-gradient(135deg, #ffb300, #ff8f00);
+      color: #fff;
+    }
+
+    .m-btn-combo {
+      background: linear-gradient(135deg, #8a2be2, #6a1b9a);
+      color: #fff;
+    }
+
+    .m-btn-cancel {
+      background: #f7fafc;
+      color: #718096;
+      border: 1px solid #e2e8f0;
+      font-weight: 600;
+    }
+
+    .modal-btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 30px;
+    }
+
+    /* 입력창 프리미엄화 */
+    input[type="text"],
+    input[type="date"],
+    input[type="number"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 16px;
+      font-size: 1.05rem;
+      border-radius: 12px;
+      border: 2px solid #edf2f7;
+      background: #f8fafc;
+      color: #2d3748;
+      transition: all 0.2s;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(138, 43, 226, 0.1);
+    }
+
+    /* 셀렉트 그리드 & 버튼 (퇴실 팝업 등) */
+    .select-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .select-btn {
+      background: #f8fafc;
+      border: 2px solid #edf2f7;
+      color: #4a5568;
+      padding: 14px 10px;
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+
+    .select-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .select-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(138, 43, 226, 0.2);
+    }
+
+    /* 체크박스 영역 프리미엄화 */
+    .checkbox-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff5f5;
+      padding: 18px;
+      border-radius: 16px;
+      border: 1px solid #fed7d7;
+      margin-top: 10px;
+    }
+
+    .checkbox-wrap input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      accent-color: #ff5252;
+    }
+
+    .checkbox-wrap label {
+      color: #e53e3e;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 18px;
+      border-radius: 16px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 15px -3px rgba(138, 43, 226, 0.3);
+      transition: all 0.2s;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+    }
+
+    .btn-submit:active {
+      transform: scale(0.98);
+    }
+
+    .btn-close {
+      width: 100%;
+      background: transparent;
+      color: #718096;
+      border: none;
+      padding: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 테라피 예열 알림 바 -->
+  <div id="therapyAlertBar" style="display:none; background:linear-gradient(90deg, #f56565, #ed64a6); color:white; padding:12px 15px; text-align:center; font-weight:800; font-size:0.95rem; position:sticky; top:0; z-index:5000; box-shadow: 0 4px 12px rgba(245,101,101,0.3); animation: pulse-red 2s infinite;">
+    <div style="display:flex; justify-content:center; align-items:center; gap:15px; max-width:500px; margin:0 auto;">
+      <span id="therapyAlertMsg">🔥 테라피 예열을 시작하세요!</span>
+      <button onclick="dismissTherapyAlert()" style="background:rgba(255,255,255,0.2); border:1px solid white; color:white; padding:4px 12px; border-radius:20px; font-size:0.8rem; cursor:pointer; font-weight:900;">확인함</button>
+    </div>
+  </div>
+
+  <div class="navbar" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 15px;">
+    <h1 style="font-size: 1rem; line-height: 1.2; flex-shrink: 0; min-width: 70px;">👑 관리자<br>대시보드</h1>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; flex-grow: 1;">
+      <button class="nav-btn" onclick="openChallengeMenu()"
+        style="background:linear-gradient(135deg, #f59e0b, #d97706); font-weight:bold; border:none; padding: 10px 2px; font-size:0.75rem; color:white; box-shadow: 0 4px 12px rgba(245,158,11,0.3); white-space: nowrap;">🏆
+        챌린지</button>
+      <button class="nav-btn" onclick="openWorkLogMenu()"
+        style="background:var(--primary); font-weight:bold; border:none; padding: 10px 2px; font-size:0.75rem; white-space: nowrap;">📑
+        업무/매출</button>
+      <button class="nav-btn" onclick="openReservationMenu()"
+        style="background:#38a169; font-weight:bold; border:none; padding: 10px 2px; font-size:0.75rem; color:white; white-space: nowrap;">🌿
+        테라피</button>
+    </div>
+  </div>
+
+  <!-- 33 챌린지: 인바디 등록 모달 -->
+  <div class="modal-overlay" id="inBodyRegModal">
+    <div class="modal-content" style="max-width:400px;">
+      <div class="modal-header">✍️ 인바디 기록 등록</div>
+      <div class="form-group" style="position: relative;">
+        <label>회원 검색 *</label>
+        <input type="text" id="ibSearchName" class="form-control" placeholder="회원 이름 입력"
+          oninput="searchInBodyMember(this.value)">
+        <div id="ibSearchResults"
+          style="position: absolute; top: 100%; left: 0; right: 0; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; z-index: 100; display: none; max-height: 200px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        </div>
+      </div>
+      <div id="ibTargetInfo"
+        style="margin-bottom:15px; padding:10px; background:#f7fafc; border-radius:10px; display:none;">
+        <strong id="ibTargetName">회원명</strong> (<span id="ibTargetPhone">0000</span>)
+        <input type="hidden" id="ibTargetPhoneRaw">
+      </div>
+      <div class="form-group">
+        <label>측정 날짜</label>
+        <input type="date" id="ibDate" class="form-control">
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="form-group">
+          <label>체중 (kg)</label>
+          <input type="number" id="ibWeight" class="form-control" step="0.1" placeholder="00.0">
+        </div>
+        <div class="form-group">
+          <label>골격근량 (kg)</label>
+          <input type="number" id="ibMuscle" class="form-control" step="0.1" placeholder="00.0">
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="form-group">
+          <label>체지방률 (%)</label>
+          <input type="number" id="ibFat" class="form-control" step="0.1" placeholder="00.0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>비고 (상담내용)</label>
+        <input type="text" id="ibMemo" class="form-control" placeholder="특이사항 입력">
+      </div>
+      <button class="btn-submit" onclick="submitInBodyData()">기록 저장하기</button>
+      <button class="btn-close" onclick="closeInBodyRegModal()">취소</button>
+    </div>
+  </div>
+
+  <!-- 33 챌린지: 기록 조회 모달 -->
+  <div class="modal-overlay" id="inBodyHistoryModal">
+    <div class="modal-content"
+      style="height: 80vh; max-height: 80vh; display: flex; flex-direction: column; background: #ffffff;">
+      <div class="modal-header">📋 챌린지 기록 조회</div>
+      <div id="inBodyHistoryList" style="flex: 1; overflow-y: auto; padding: 10px 0;">
+        <div style="text-align:center; padding:20px; color:#718096;">불러오는 중...</div>
+      </div>
+      <button class="btn-close" onclick="closeInBodyHistoryModal()">닫기</button>
+    </div>
+  </div>
+
+  <!-- 33 챌린지: 랭킹 모달 -->
+  <div class="modal-overlay" id="challengeRankingModal">
+    <div class="modal-content"
+      style="height: 80vh; max-height: 80vh; display: flex; flex-direction: column; background: #ffffff;">
+      <div class="modal-header">📊 챌린지 랭킹 / 성적</div>
+      <div id="challengeRankingList" style="flex: 1; overflow-y: auto; padding: 10px 0;">
+        <div style="text-align:center; padding:20px; color:#718096;">계산 중...</div>
+      </div>
+      <button class="btn-close" onclick="closeChallengeRankingModal()">닫기</button>
+    </div>
+  </div>
+
+  <!-- 업무일지 기록 목록 모달 (요약 리스트) -->
+  <div class="modal-overlay" id="workLogHistoryModal">
+    <div class="modal-content"
+      style="height: 80vh; max-height: 80vh; display: flex; flex-direction: column; background: #ffffff;">
+      <div class="modal-header" style="margin-bottom:15px;">📁 업무일지 기록 조회</div>
+      <p style="text-align:center; font-size:0.85rem; color:#718096; margin-bottom:15px;">조회할 날짜를 선택해 주세요.</p>
+      <div id="workLogHistoryList" style="flex: 1; overflow-y: auto; padding-bottom: 20px;">
+        <div style="text-align:center; padding:20px; color:var(--text-sub);">불러오는 중...</div>
+      </div>
+      <button class="btn-close" onclick="closeWorkLogHistoryModal()">닫기</button>
+    </div>
+  </div>
+
+  <!-- 업무일지 상세 보기 모달 -->
+  <div class="modal-overlay" id="workLogDetailModal">
+    <div class="modal-content" style="max-height: 85vh; overflow-y: auto; background: #ffffff; text-align: left;">
+      <div class="modal-header" id="detailModalTitle">📝 업무 상세 기록</div>
+      <div id="workLogDetailContent">
+        <!-- 상세 내용 동적 삽입 -->
+      </div>
+      <button class="btn-close" onclick="closeWorkLogDetailModal()" style="margin-top:20px;">닫기</button>
+    </div>
+  </div>
+
+  <!-- 인원 명단 보기 전용 모달 (팝업 안에 팝업) -->
+  <div class="modal-overlay" id="memberListModal" style="z-index: 3000;">
+    <div class="modal-content" style="background: #ffffff; max-height: 80vh;">
+      <div class="modal-header" id="memberListModalTitle">👥 참여 명단</div>
+      <div id="memberListModalContent" style="padding: 10px 0;">
+        <!-- 명단 동적 삽입 -->
+      </div>
+      <button class="btn-close" onclick="closeMemberListModal()">닫기</button>
+    </div>
+  </div>
+
+  <!-- 테라피 예약 현황 모달 -->
+  <div class="modal-overlay" id="reservationModal" style="z-index: 4000;">
+    <div class="modal-content" style="background: #ffffff; max-height: 85vh; display: flex; flex-direction: column; padding: 25px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <div class="modal-header" style="margin-bottom:0;">🌿 테라피 예약 명단</div>
+        <button onclick="openFlashSettingModal()" style="background:#f7fafc; border:1px solid #e2e8f0; padding:6px 10px; border-radius:8px; font-size:0.75rem; font-weight:700; color:#4a5568; cursor:pointer;">⚙️ 벙개/휴일 설정</button>
+      </div>
+      
+      <!-- 날짜 선택 영역 -->
+      <div style="margin-bottom: 20px; display: flex; gap: 8px; align-items: center;">
+        <input type="date" id="resViewDate" class="form-control" style="flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.9rem;" onchange="loadReservationData()">
+        <button onclick="loadReservationData()" style="background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: 700; font-size: 0.85rem;">조회</button>
+      </div>
+
+      <div id="reservationListContent" style="flex: 1; overflow-y: auto; padding-right: 2px;">
+        <!-- 카드 리스트가 여기에 삽입됨 -->
+      </div>
+      <button class="btn-close" onclick="closeReservationModal()">닫기</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="summary-grid">
+      <div class="summary-card" id="cardJumping">
+        <div class="summary-title">🏃 점핑 출석</div>
+        <div class="summary-value" id="jumpingCount">0</div>
+      </div>
+      <div class="summary-card" id="cardTherapy">
+        <div class="summary-title">🌿 테라피 인원</div>
+        <div class="summary-value" id="therapyCount">0</div>
+      </div>
+      <div class="summary-card" id="cardTotal">
+        <div class="summary-title">📊 전체 입실</div>
+        <div class="summary-value" id="totalCount">0</div>
+      </div>
+      <div class="summary-card" id="cardGoHome" style="cursor: pointer;" onclick="scrollToGoHome()">
+        <div class="summary-title">✅ 귀가 완료</div>
+        <div class="summary-value" id="goHomeCount">0</div>
+      </div>
+    </div>
+
+    <div style="text-align:center; padding:50px; color:var(--text-sub);" id="loading-spinner">
+      <div style="font-size:2rem; margin-bottom:10px; animation: spin 1s linear infinite;">🔄</div>
+      데이터를 불러오는 중입니다...
+    </div>
+
+    <style>
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes pulse-red {
+        0% { opacity: 1; }
+        50% { opacity: 0.8; }
+        100% { opacity: 1; }
+      }
+      @keyframes pulse-card {
+        0% { transform: scale(1); box-shadow: 0 4px 15px rgba(245,101,101,0.2); }
+        50% { transform: scale(1.03); box-shadow: 0 4px 25px rgba(245,101,101,0.5); }
+        100% { transform: scale(1); box-shadow: 0 4px 15px rgba(245,101,101,0.2); }
+      }
+    </style>
+
+  </div>
+
+  <button class="fab" onclick="openSearchModal()">🔍</button>
+
+  <!-- 수동 검색 팝업 -->
+  <div class="modal-overlay" id="searchModal">
+    <div class="modal-content">
+      <div class="modal-header">회원 이름 수동 검색</div>
+
+      <div class="form-group">
+        <input type="text" id="searchInput" placeholder="이름을 입력하세요 (예: 홍길동)"
+          style="width: 100%; padding: 18px; font-size: 1.2rem; border-radius: 12px; border: 2px solid #ddd; background: #f8f9fa; color: #000; outline: none; font-weight: bold;">
+        <button class="btn-submit" onclick="doSearch()"
+          style="margin-top: 15px; width:100%; padding:15px; font-size:1.1rem;">🔍 검색하기</button>
+      </div>
+
+      <div id="searchResults" style="max-height: 250px; overflow-y: auto; margin-top: 15px;">
+        <!-- 검색 결과 리스트가 여기에 렌더링됨 -->
+      </div>
+
+      <button class="btn-close" onclick="closeSearchModal()">닫기</button>
+    </div>
+  </div>
+
+  <!-- 스마트 퇴실 팝업 -->
+  <div class="modal-overlay" id="checkoutModal">
+    <div class="modal-content">
+      <div class="modal-header" id="checkoutName">김홍철 님 퇴실 처리</div>
+
+      <!-- 점핑 정보 섹션 -->
+      <div id="jumpingSection">
+        <div class="form-group">
+          <span class="form-label">운동 타임수 기록 (통계용)</span>
+          <div class="select-grid" id="timeGrid">
+            <div class="select-btn" onclick="selectTime(this)">0.5 타임</div>
+            <div class="select-btn active" onclick="selectTime(this)">1.0 타임</div>
+            <div class="select-btn" onclick="selectTime(this)">1.5 타임</div>
+            <div class="select-btn" onclick="selectTime(this)">2.0 타임</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <span class="form-label">참여 클래스 선택</span>
+          <div class="select-grid" id="classGrid">
+            <div class="select-btn active" onclick="selectClass(this)">09시</div>
+            <div class="select-btn" onclick="selectClass(this)">10시</div>
+            <div class="select-btn" onclick="selectClass(this)">17시</div>
+            <div class="select-btn" onclick="selectClass(this)">18시</div>
+            <div class="select-btn" onclick="selectClass(this)">19시</div>
+            <div class="select-btn" onclick="selectClass(this)">20시</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 테라피 정보 섹션 -->
+      <div id="therapySection" style="display:none; border-top: 1px dashed #eee; padding-top: 20px; margin-top: 10px;">
+        <div class="form-group">
+          <span class="form-label" style="color: #ffb300;">🌿 찜질/테라피 이용 타임 선택</span>
+          <div class="select-grid" id="therapyGrid">
+            <div class="select-btn" onclick="selectTherapyTime(this)">09:00</div>
+            <div class="select-btn" onclick="selectTherapyTime(this)">09:50</div>
+            <div class="select-btn" onclick="selectTherapyTime(this)">10:40</div>
+            <div class="select-btn" onclick="selectTherapyTime(this)">17:00</div>
+            <div class="select-btn" onclick="selectTherapyTime(this)">17:50</div>
+            <div class="select-btn" onclick="selectTherapyTime(this)">18:40</div>
+            <div class="select-btn" onclick="selectTherapyTime(this)">19:30</div>
+            <div class="select-btn" id="btnTherapyDirect" onclick="toggleTherapyDirect()"
+              style="border: 1px dashed #ffb300; background: transparent; color: #ffb300;">➕ 직접입력</div>
+          </div>
+          <div id="therapyDirectWrap" style="display:none; margin-top:12px;">
+            <input type="text" id="therapyDirectInput" placeholder="예: 13:30 (벙개)"
+              style="width:100%; padding:12px; border-radius:10px; border:2px solid #ffb300; outline:none; font-weight:600;">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group checkbox-wrap">
+        <input type="checkbox" id="extraDeduct">
+        <label for="extraDeduct" id="extraDeductLabel"
+          style="color: #ff5252; font-weight: 700; font-size: 0.95rem;">기준타임 초과 이용으로 인한 추가 1회 차감</label>
+      </div>
+      <p id="extraDeductHint"
+        style="font-size: 0.8rem; color: #718096; margin-top: -10px; margin-bottom: 20px; padding-left: 18px;"></p>
+
+      <button class="btn-submit" onclick="submitCheckout()">퇴실 및 기록 완료</button>
+      <button class="btn-close" onclick="closeCheckout()">취소</button>
+    </div>
+  </div>
+
+  <script>
+    let currentCheckoutRowIdx = null;
+
+    window.onload = function () {
+      if (typeof google !== 'undefined' && google.script) {
+        refreshDashboard();
+      }
+    };
+
+    let dismissedTherapyKey = ""; // 확인 버튼 누른 알람 저장
+
+    function refreshDashboard() {
+      google.script.run.withSuccessHandler(renderDashboard).getAdminDashboardData();
+    }
+
+    // 5분마다 자동 새로고침
+    setInterval(refreshDashboard, 5 * 60 * 1000);
+
+    function renderDashboard(data) {
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+
+      // 예열 알림 체크
+      if (data.upcomingTherapy) {
+        let currentKey = data.upcomingTherapy.time + "_" + data.upcomingTherapy.name;
+        if (currentKey !== dismissedTherapyKey) {
+          document.getElementById('therapyAlertBar').style.display = 'block';
+          document.getElementById('therapyAlertMsg').innerText = `🔥 예열 알람: ${data.upcomingTherapy.time} [${data.upcomingTherapy.room}] ${data.upcomingTherapy.name} 님`;
+          const tCard = document.getElementById('cardTherapy');
+          if (tCard) {
+             tCard.style.border = '3px solid #f56565';
+             tCard.style.animation = 'pulse-card 2s infinite';
+          }
+        }
+      } else {
+        document.getElementById('therapyAlertBar').style.display = 'none';
+        const tCard = document.getElementById('cardTherapy');
+        if (tCard) {
+           tCard.style.border = 'none';
+           tCard.style.animation = 'none';
+        }
+        dismissedTherapyKey = ""; // 새로운 예약이 없으면 초기화
+      }
+
+      document.getElementById('jumpingCount').innerText = data.jumpingCount || 0;
+      document.getElementById('therapyCount').innerText = data.therapyCount || 0;
+      document.getElementById('totalCount').innerText = data.totalCount || 0;
+      document.getElementById('goHomeCount').innerText = data.goHomeCount || 0;
+
+      const listContainer = document.querySelector('.container');
+
+      let el = document.querySelector('.summary-grid').nextElementSibling;
+      while (el) {
+        const next = el.nextElementSibling;
+        el.remove();
+        el = next;
+      }
+
+      let html = '';
+
+      // 점핑 전용 (복합 제외)
+      const justJumping = data.activeJumping.filter(p => p.type !== "복합");
+      if (justJumping.length > 0) {
+        html += `<div class="section-title"><span>🏃‍♀️ 점핑 진행중 (${justJumping.length}명)</span></div>`;
+        justJumping.forEach(p => {
+          html += `
+            <div class="list-item">
+              <div class="item-info">
+                <h3>${p.name.replace(/\d{4}$/, "")} <span class="status-badge">점핑중</span></h3>
+                <p>점핑 입실: ${p.inTime} (${p.membership})</p>
+              </div>
+            <button class="btn-checkout" onclick="openCheckout('${p.name}', ${p.rowIdx}, '점핑')">퇴실 처리</button>
+          </div>`;
+        });
+      }
+
+      // 복합 전용
+      const justCombo = data.activeJumping.filter(p => p.type === "복합");
+      if (justCombo.length > 0) {
+        html += `<div class="section-title" style="margin-top: 25px;"><span>🔥 복합 진행중 (${justCombo.length}명)</span></div>`;
+        justCombo.forEach(p => {
+          let timeInfo = p.therapyTime ? `복합 입실: ${p.inTime} | 테라피 예약: ${p.therapyTime}` : `복합 입실: ${p.inTime} (${p.membership})`;
+          html += `
+            <div class="list-item">
+              <div class="item-info">
+                <h3>${p.name.replace(/\d{4}$/, "")} <span class="status-badge" style="background: rgba(138,43,226,0.2); color: var(--primary);">복합진행</span></h3>
+                <p>${timeInfo}</p>
+              </div>
+            <button class="btn-checkout" onclick="openCheckout('${p.name}', ${p.rowIdx}, '복합', '${p.therapyTime || ""}')">퇴실 처리</button>
+          </div>`;
+        });
+      }
+
+      // 테라피 전용 리스트 렌더링
+      if (data.activeTherapy.length > 0) {
+        html += `<div class="section-title" style="margin-top: 25px;"><span>🌿 테라피 진행중 (${data.activeTherapy.length}명)</span></div>`;
+        data.activeTherapy.forEach(p => {
+          let timeInfo = p.therapyTime ? `테라피 예약: ${p.therapyTime} (${p.therapyRoom})` : `입실시간: ${p.inTime}`;
+          const isBonusAttendance = p.reason && p.reason.indexOf("보너스") !== -1;
+          const badgeText = isBonusAttendance ? "보너스중" : "테라피중";
+          const badgeStyle = isBonusAttendance ? "background:#f59e0b; color:#fff;" : "";
+
+          html += `
+            <div class="list-item">
+              <div class="item-info">
+                <h3>${p.name.replace(/\d{4}$/, "")} <span class="status-badge therapy" style="${badgeStyle}">${badgeText}</span></h3>
+                <p>${timeInfo}</p>
+              </div>
+            <button class="btn-checkout" onclick="openCheckout('${p.name}', ${p.rowIdx}, '테라피', '${p.therapyTime || ""}')">퇴실 처리</button>
+          </div>`;
+        });
+      }
+
+      // 귀가 리스트 렌더링
+      if (data.goHomeList.length > 0) {
+        html += `
+          <div id="goHomeSection" style="margin-top: 40px; border-top: 2px solid rgba(255,255,255,0.05); padding-top: 20px;">
+            <div class="section-title" onclick="toggleGoHome()" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2); padding:15px; border-radius:12px;">
+              <span style="color: var(--text-sub); font-size:1rem;">✅ 오늘 귀가 완료 (${data.goHomeList.length}명)</span>
+              <span id="goHomeArrow" style="font-size:0.8rem; color:var(--text-sub);">펼치기 ▾</span>
+            </div>
+            <div id="goHomeListContainer" style="display:none; margin-top:15px;">`;
+
+        data.goHomeList.forEach(p => {
+          let displayRecord = p.classes;
+          if (p.timeLog && p.timeLog !== "0.0" && p.timeLog !== "0") {
+            displayRecord += ` (${p.timeLog}타임)`;
+          }
+          let extraChecked = p.extraText && (p.extraText.indexOf("차감됨") !== -1 || p.extraText.indexOf("추가차감") !== -1);
+
+          html += `
+            <div class="list-item" style="opacity: 0.65; cursor: pointer; background: rgba(255,255,255,0.03);" onclick="openEditCheckout('${p.name}', ${p.rowIdx}, '${p.timeLog}', '${p.classes}', ${extraChecked})">
+              <div class="item-info">
+                <h3 style="color: var(--text-sub);">${p.name.replace(/\d{4}$/, "")} <span class="status-badge" style="background: rgba(255,255,255,0.1); color: #ccc;">완료</span></h3>
+                <p style="font-size:0.85rem;">입실: ${p.inTime} | 기록: ${displayRecord} ${extraChecked ? '<br><span style="color:#ff5252;">(1회 추가 차감됨)</span>' : ''}</p>
+              </div>
+              <div style="color:var(--primary); font-size:0.75rem; border:1px solid var(--primary); padding:4px 10px; border-radius:8px; font-weight:600;">수정</div>
+            </div>`;
+        });
+
+        html += `</div></div>`;
+      }
+
+      if (html === '') {
+        html = '<div style="text-align:center; padding:30px; color:var(--text-sub);">현재 입실한 회원이 없습니다.</div>';
+      }
+
+      listContainer.insertAdjacentHTML('beforeend', html);
+    }
+
+    function toggleGoHome() {
+      const container = document.getElementById('goHomeListContainer');
+      const arrow = document.getElementById('goHomeArrow');
+      if (container.style.display === "none") {
+        container.style.display = "block";
+        arrow.innerText = "접기 ▴";
+      } else {
+        container.style.display = "none";
+        arrow.innerText = "펼치기 ▾";
+      }
+    }
+
+    function scrollToGoHome() {
+      const section = document.getElementById('goHomeSection');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+        // 스크롤 후 자동으로 펼쳐주기
+        const container = document.getElementById('goHomeListContainer');
+        if (container.style.display === "none") {
+          toggleGoHome();
+        }
+      } else {
+        showAdminErrorModal("오늘 귀가한 회원이 아직 없습니다.");
+      }
+    }
+
+    // --- 수동 검색 모달 관련 함수 ---
+    function openSearchModal() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('searchResults').innerHTML = '';
+      document.getElementById('searchModal').classList.add('show');
+    }
+
+    function closeSearchModal() {
+      document.getElementById('searchModal').classList.remove('show');
+    }
+
+    function dismissTherapyAlert() {
+      // 현재 표시된 알람의 키를 저장하여 다음 자동 새로고침 때 안 뜨게 함
+      let msg = document.getElementById('therapyAlertMsg').innerText;
+      dismissedTherapyKey = msg.replace("🔥 예열 알람: ", ""); 
+      document.getElementById('therapyAlertBar').style.display = 'none';
+      const tCard = document.getElementById('cardTherapy');
+      if (tCard) {
+         tCard.style.border = 'none';
+         tCard.style.animation = 'none';
+      }
+    }
+
+    let lastSearchResults = []; // 검색 결과를 저장할 전역 변수
+
+    function doSearch() {
+      const name = document.getElementById('searchInput').value.trim();
+      if (!name) {
+        showAdminErrorModal("검색할 이름을 입력해주세요!");
+        return;
+      }
+
+      document.getElementById('searchResults').innerHTML = '<div style="text-align:center; color:var(--text-sub);">검색 중...</div>';
+
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run.withSuccessHandler(function (res) {
+          if (res.error) {
+            document.getElementById('searchResults').innerHTML = `<div style="color:var(--danger); background:#fff5f5; padding:15px; border-radius:10px; border:1px solid #feb2b2;">${res.error}</div>`;
+            return;
+          }
+          lastSearchResults = res.results; // 검색 결과 기억하기
+
+          if (res.results.length === 0) {
+            let debugInfo = res.debug || "상세 정보 없음";
+            document.getElementById('searchResults').innerHTML = `
+              <div style="text-align:center; padding:30px; background:#f8fafc; border-radius:15px; border:2px dashed #e2e8f0;">
+                <div style="font-size:1.2rem; color:#4a5568; margin-bottom:10px; font-weight:800;">🔍 일치하는 회원이 없습니다.</div>
+                <div style="font-size:0.8rem; color:#a0aec0; line-height:1.5;">
+                  <strong>[수사 보고서]</strong><br>
+                  ${debugInfo}
+                </div>
+                <div style="margin-top:15px; font-size:0.75rem; color:var(--primary);">* 이름이나 휴대폰 번호 뒷자리를 다시 확인해주세요.</div>
+              </div>`;
+            return;
+          }
+
+          let h = '';
+          res.results.forEach(m => {
+            const displayName = (m.name || "이름없음").replace(/\d{4}$/, "");
+
+            let membershipHtml = '';
+            if (m.activeList && m.activeList.length > 0) {
+              m.activeList.forEach(active => {
+                membershipHtml += `
+                  <div style="font-size:0.85rem; color:var(--primary); margin-top:4px; font-weight:600;">
+                    • ${active.membership} (잔여: ${active.remain || 0})
+                    <br><span style="font-size:0.75rem; color:#888; margin-left:12px;">ㄴ 만료일: ${active.expireDate}</span>
+                  </div>`;
+              });
+            }
+            if (m.closedList && m.closedList.length > 0) {
+              m.closedList.forEach(closed => {
+                membershipHtml += `
+                  <div style="font-size:0.85rem; color:#a0aec0; margin-top:4px; text-decoration: line-through;">
+                    • [마감] ${closed.membership}
+                  </div>`;
+              });
+            }
+
+            if (!membershipHtml) {
+              membershipHtml = '<div style="font-size:0.85rem; color:#cbd5e0; margin-top:4px;">기타 회원 정보</div>';
+            }
+
+            h += `
+            <div style="background: #ffffff; padding: 20px; border-radius: 18px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #edf2f7; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+              <div style="flex:1;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                  <strong style="font-size:1.25rem; color:#2d3748;">${displayName}</strong>
+                  <span style="font-size:0.8rem; color:#718096; background:#f7fafc; padding:3px 8px; border-radius:6px; font-weight:700;">${m.phone.slice(-4)}</span>
+                </div>
+                ${membershipHtml}
+              </div>
+              <div style="display:flex; flex-direction:column; gap:8px; margin-left:15px;">
+                <button onclick="goToRenewal('${m.phone}')" style="background:#48bb78; color:#fff; border:none; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:800; font-size:0.9rem; white-space:nowrap;">💸 연장/결제</button>
+                <button onclick="openManualAttendance('${m.phone}')" style="background:#4299e1; color:#fff; border:none; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:800; font-size:0.9rem; white-space:nowrap;">✅ 수동출석</button>
+              </div>
+            </div>`;
+          });
+          document.getElementById('searchResults').innerHTML = h;
+        }).searchMemberByName(name);
+      } else {
+        alert("테스트 모드: 서버 연결 없음");
+      }
+    }
+
+    // --- 버튼 클릭 도우미 함수들 ---
+    function goToRenewal(phone) {
+      const memberData = lastSearchResults.find(m => m.phone === phone);
+      if (!memberData) return alert("회원 정보를 찾을 수 없습니다.");
+      const cleanName = (memberData.name || "").replace(/\d{4}$/, "");
+      const url = "<?= scriptUrl ?>" + "?page=renewal&phone=" + encodeURIComponent(phone) + "&name=" + encodeURIComponent(cleanName);
+      window.open(url, '_blank');
+    }
+
+    function openManualAttendance(phone) {
+      const memberData = lastSearchResults.find(m => m.phone === phone);
+      if (memberData) {
+        closeSearchModal(); // 검색창은 닫아줌
+        showAttendanceOptions(phone, memberData.name, memberData.bonusCount);
+      }
+    }
+
+    let currentTargetMember = null;
+    function showAttendanceOptions(phone, name, bonusCount) {
+      currentTargetMember = { phone: phone, name: name };
+      const cleanName = name.replace(/\d{4}$/, ""); // 이름 뒤 숫자 4자리 제거
+      document.getElementById('modalMemberName').innerText = cleanName;
+
+      const btnBonus = document.getElementById('btnAdminBonus');
+      if (btnBonus) {
+        if (Number(bonusCount) > 0) {
+          btnBonus.style.display = "block";
+          btnBonus.innerText = `🎁 보너스 횟수 사용 (잔여:${bonusCount}회)`;
+        } else {
+          btnBonus.style.display = "none";
+        }
+      }
+
+      document.getElementById('attendanceModal').classList.add('show');
+    }
+
+    function closeAttendanceModal() {
+      document.getElementById('attendanceModal').classList.remove('show');
+    }
+
+    function selectAttendance(type) {
+      if (!currentTargetMember) return;
+      closeAttendanceModal();
+      reqManualCheckIn(currentTargetMember.phone, currentTargetMember.name, type);
+    }
+
+    function reqManualCheckIn(phone, name, type) {
+      google.script.run.withSuccessHandler(function (res) {
+        if (res.error) {
+          showAdminErrorModal(res.error);
+        } else {
+          showAdminSuccessModal(res.message);
+          refreshDashboard();
+        }
+      }).manualAdminCheckIn(phone, type);
+    }
+
+    // --- 커스텀 모달 알림창 (프리미엄 디자인) ---
+    function showAdminErrorModal(msg) {
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay show';
+      modal.style.zIndex = "4000";
+      modal.innerHTML = `
+        <div class="modal-content" style="border-top: 5px solid var(--danger);">
+          <div style="font-size:3.5rem; margin-bottom:15px;">⚠️</div>
+          <h3 style="color:var(--danger); margin-bottom:10px;">알림</h3>
+          <p style="color:#4a5568; line-height:1.6; margin-bottom:25px;">${msg}</p>
+          <button onclick="this.closest('.modal-overlay').remove()" class="m-btn m-btn-cancel" style="width:100%; padding:15px;">확인</button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    // 전용 성공 안내 모달 (원장님 취향 저격 프리미엄 디자인)
+    function showAdminSuccessModal(msg) {
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay show';
+      modal.style.zIndex = "3000"; // 가장 위에 뜨도록
+      modal.innerHTML = `
+        <div class="modal-content" style="text-align:center; padding:40px 20px;">
+          <div style="font-size:4.5rem; margin-bottom:20px; animation: bounceIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);">✅</div>
+          <h2 style="font-size:1.6rem; margin-bottom:12px; color:#1a202c;">처리 완료!</h2>
+          <p style="font-size:1.1rem; color:#4a5568; margin-bottom:30px; line-height:1.5;">${msg}</p>
+          <button onclick="this.closest('.modal-overlay').remove()" 
+            style="width:100%; padding:18px; background:var(--primary); color:#fff; border:none; border-radius:15px; font-size:1.2rem; font-weight:700; cursor:pointer; box-shadow: 0 4px 15px rgba(138,43,226,0.3);">
+            확인
+          </button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      // 애니메이션 효과를 위한 CSS 추가 (없다면)
+      if (!document.getElementById('anim-style')) {
+        const style = document.createElement('style');
+        style.id = 'anim-style';
+        style.innerHTML = `
+          @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 1; }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    }
+
+    // --- 퇴실 모달 관련 함수 ---
+    let isEditingMode = false;
+
+    let currentActivityType = "점핑";
+
+    function openCheckout(name, rowIdx, type, reservedTime) {
+      currentCheckoutRowIdx = rowIdx;
+      currentActivityType = type;
+      isEditingMode = false;
+
+      const cleanName = name.replace(/\d{4}$/, "");
+      document.getElementById('checkoutName').innerText = cleanName + " 님 퇴실 처리";
+
+      // 섹션 가시성 조절
+      const jumpSection = document.getElementById('jumpingSection');
+      const therapySection = document.getElementById('therapySection');
+
+      if (type === '점핑') {
+        jumpSection.style.display = "block";
+        therapySection.style.display = "none";
+      } else if (type === '테라피') {
+        jumpSection.style.display = "none";
+        therapySection.style.display = "block";
+      } else if (type === '복합') {
+        jumpSection.style.display = "block";
+        therapySection.style.display = "block";
+      }
+
+      // 초기화
+      document.querySelectorAll('#timeGrid .select-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('#timeGrid .select-btn')[1].classList.add('active');
+      document.querySelectorAll('#classGrid .select-btn').forEach(btn => btn.classList.remove('active'));
+
+      // 테라피 초기화 및 자동 선택
+      document.querySelectorAll('#therapyGrid .select-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('therapyDirectWrap').style.display = "none";
+      document.getElementById('therapyDirectInput').value = "";
+      document.getElementById('btnTherapyDirect').classList.remove('active');
+
+      if (reservedTime) {
+        document.querySelectorAll('#therapyGrid .select-btn').forEach(btn => {
+          if (btn.innerText.indexOf(reservedTime) !== -1) btn.classList.add('active');
+        });
+      }
+
+      document.getElementById('extraDeduct').checked = false;
+      document.querySelector('#checkoutModal .btn-submit').innerText = "퇴실 및 기록 완료";
+      document.getElementById('checkoutModal').classList.add('show');
+    }
+
+    function openEditCheckout(name, rowIdx, timeLog, classes, extraChecked) {
+      currentCheckoutRowIdx = rowIdx;
+      isEditingMode = true;
+      document.getElementById('checkoutName').innerText = name + " 님 퇴실 내역 수정";
+
+      // 1. 타임수 세팅
+      document.querySelectorAll('#timeGrid .select-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.innerText.indexOf(timeLog) !== -1) btn.classList.add('active');
+      });
+      // 없으면 기본 1.0
+      if (!document.querySelector('#timeGrid .select-btn.active')) {
+        document.querySelectorAll('#timeGrid .select-btn')[1].classList.add('active');
+      }
+
+      // 2. 클래스 세팅
+      const classArr = classes ? classes.split(",").map(s => s.trim()) : [];
+      document.querySelectorAll('#classGrid .select-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (classArr.includes(btn.innerText)) btn.classList.add('active');
+      });
+
+      // 3. 체크박스 세팅
+      document.getElementById('extraDeduct').checked = extraChecked;
+
+      document.querySelector('#checkoutModal .btn-submit').innerText = "수정 내용 저장";
+      document.getElementById('checkoutModal').classList.add('show');
+    }
+
+    function closeCheckout() {
+      document.getElementById('checkoutModal').classList.remove('show');
+    }
+
+    function selectTime(el) {
+      document.querySelectorAll('#timeGrid .select-btn').forEach(btn => btn.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    function selectClass(el) {
+      el.classList.toggle('active');
+    }
+
+    function selectTherapyTime(el) {
+      el.classList.toggle('active');
+    }
+
+    function toggleTherapyDirect() {
+      const wrap = document.getElementById('therapyDirectWrap');
+      const btn = document.getElementById('btnTherapyDirect');
+      if (wrap.style.display === "none") {
+        wrap.style.display = "block";
+        btn.classList.add('active');
+      } else {
+        wrap.style.display = "none";
+        btn.classList.remove('active');
+      }
+    }
+
+    function submitCheckout() {
+      if (!currentCheckoutRowIdx) return;
+
+      const timeBtn = document.querySelector('#timeGrid .select-btn.active');
+      const timeLog = timeBtn ? timeBtn.innerText.replace(" 타임", "") : "1.0";
+
+      const classBtns = document.querySelectorAll('#classGrid .select-btn.active');
+      const classes = Array.from(classBtns).map(b => b.innerText).join(", ");
+
+      const therapyBtns = document.querySelectorAll('#therapyGrid .select-btn.active:not(#btnTherapyDirect)');
+      let therapyTimes = Array.from(therapyBtns).map(b => b.innerText).join(", ");
+
+      // 직접 입력분 추가
+      const directInput = document.getElementById('therapyDirectInput').value.trim();
+      if (directInput) {
+        therapyTimes = therapyTimes ? therapyTimes + ", " + directInput : directInput;
+      }
+
+      const extraDeduct = document.getElementById('extraDeduct').checked;
+
+      // 최종 참여 클래스/타임수 조립
+      let finalClasses = "";
+      if (currentActivityType === '점핑') finalClasses = classes;
+      else if (currentActivityType === '테라피') finalClasses = "테라피(" + (therapyTimes || "자율") + ")";
+      else if (currentActivityType === '복합') finalClasses = classes + " / 테라피(" + (therapyTimes || "자율") + ")";
+
+      const btnSubmit = document.querySelector('#checkoutModal .btn-submit');
+      btnSubmit.innerText = "처리 중...";
+      btnSubmit.disabled = true;
+
+      const data = {
+        rowIdx: currentCheckoutRowIdx,
+        timeLog: (currentActivityType === '테라피' ? "0.0" : timeLog),
+        classes: finalClasses,
+        extraDeduct: extraDeduct
+      };
+
+      if (typeof google !== 'undefined' && google.script) {
+        const handler = google.script.run.withSuccessHandler(function (res) {
+          closeCheckout();
+          btnSubmit.disabled = false;
+          btnSubmit.innerText = isEditingMode ? "수정 내용 저장" : "퇴실 및 기록 완료";
+
+          if (res.error) {
+            showAdminErrorModal(res.error);
+          } else {
+            showAdminSuccessModal(res.message || "완료되었습니다.");
+            refreshDashboard();
+          }
+        });
+
+        if (isEditingMode) {
+          handler.editAdminCheckout(data);
+        } else {
+          handler.processAdminCheckout(data);
+        }
+      } else {
+        showAdminErrorModal("[테스트 모드] 서버에 연결되지 않았습니다.");
+        closeCheckout();
+        btnSubmit.disabled = false;
+      }
+    }
+  </script>
+
+  <!-- 매출 등록 모달 -->
+  <div class="modal-overlay" id="salesModal">
+    <div class="modal-content" style="max-height:85vh; overflow-y:auto; background:#ffffff;">
+      <div class="modal-header">💰 일일 매출 등록</div>
+
+      <div class="form-group">
+        <label class="form-label">📅 날짜 선택</label>
+        <input type="date" id="salesDate"
+          style="width:100%; padding:12px; font-size:1rem; border-radius:10px; background:#f7fafc; color:#1a202c; border:1px solid #e2e8f0; outline:none;">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">구분 선택</label>
+        <select id="salesCategory"
+          style="width:100%; padding:12px; font-size:1rem; border-radius:10px; background:#f7fafc; color:#1a202c; border:1px solid #e2e8f0; outline:none;">
+          <option value="회원등록">회원등록</option>
+          <option value="찜질복대여">찜질복대여</option>
+          <option value="1일체험비">1일체험비</option>
+          <option value="제품판매">제품판매</option>
+          <option value="점핑PT">점핑PT</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">구입자 이름</label>
+        <input type="text" id="salesBuyer" placeholder="예: 홍길동"
+          style="width:100%; padding:12px; font-size:1rem; border-radius:10px; background:#f7fafc; color:#1a202c; border:1px solid #e2e8f0; outline:none;">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">항목명</label>
+        <input type="text" id="salesItemName" placeholder="예: 점핑 30회권, 찜질복 1벌..."
+          style="width:100%; padding:12px; font-size:1rem; border-radius:10px; background:#f7fafc; color:#1a202c; border:1px solid #e2e8f0; outline:none;">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">금액 (원)</label>
+        <input type="number" id="salesAmount" placeholder="예: 300000"
+          style="width:100%; padding:12px; font-size:1rem; border-radius:10px; background:#f7fafc; color:#1a202c; border:1px solid #e2e8f0; outline:none;">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">결제수단</label>
+        <div class="select-grid" id="payMethodGrid" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="select-btn active" onclick="selectPayMethod(this)">카드</div>
+          <div class="select-btn" onclick="selectPayMethod(this)">현금</div>
+          <div class="select-btn" onclick="selectPayMethod(this)">계좌이체</div>
+          <div class="select-btn" onclick="selectPayMethod(this)">기타</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">비고 (선택)</label>
+        <input type="text" id="salesMemo" placeholder="추가 메모..."
+          style="width:100%; padding:12px; font-size:1rem; border-radius:8px; background:rgba(255,255,255,0.1); color:#fff; border:1px solid var(--glass-border); outline:none;">
+      </div>
+
+      <button class="btn-submit" onclick="submitSalesData()" style="background:#4caf50;">매출 등록하기</button>
+      <button class="btn-close" onclick="closeSalesModal()">닫기</button>
+    </div>
+  </div>
+
+  <!-- 업무일지 모달 -->
+  <div class="modal-overlay" id="workLogModal">
+    <div class="modal-content">
+      <div class="modal-header">📝 일일 업무일지 작성</div>
+
+      <div class="form-group">
+        <label class="form-label">📅 날짜 선택</label>
+        <input type="date" id="wlDate"
+          style="width:100%; padding:12px; font-size:1rem; border-radius:10px; background:#f7fafc; color:#1a202c; border:1px solid #e2e8f0; outline:none;"
+          onchange="loadStatsForDate()">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">👤 작성자 선택</label>
+        <select id="wlAuthor"
+          style="width: 100%; padding: 12px; font-size: 1rem; border-radius: 10px; background: #f7fafc; color: #1a202c; border: 1px solid #e2e8f0; outline: none;">
+          <option value="미진">미진</option>
+          <option value="현정">현정</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">🏃‍♀️ 점핑 프로그램 목록</label>
+        <textarea id="wlJumping" placeholder="예: 웜업 - 기본바운스, 메인 - BTS 버터..."
+          style="width: 100%; padding: 12px; height: 80px; font-size: 1rem; border-radius: 10px; background: #f7fafc; color: #1a202c; border: 1px solid #e2e8f0; outline: none; resize: none;"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">💪 근력 프로그램 목록</label>
+        <textarea id="wlMuscle" placeholder="예: 전신 유산소 타바타 1세트..."
+          style="width: 100%; padding: 12px; height: 80px; font-size: 1rem; border-radius: 10px; background: #f7fafc; color: #1a202c; border: 1px solid #e2e8f0; outline: none; resize: none;"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">💬 특이사항 (회원 요청, 신규상담 등)</label>
+        <textarea id="wlRemarks" placeholder="특이사항을 입력하세요..."
+          style="width: 100%; padding: 12px; height: 80px; font-size: 1rem; border-radius: 10px; background: #f7fafc; color: #1a202c; border: 1px solid #e2e8f0; outline: none; resize: none;"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">🛠️ 시설고장 / 파손</label>
+        <textarea id="wlIssues" placeholder="고장나거나 파손된 기구가 있으면 적어주세요."
+          style="width: 100%; padding: 12px; height: 60px; font-size: 1rem; border-radius: 10px; background: #f7fafc; color: #1a202c; border: 1px solid #e2e8f0; outline: none; resize: none;"></textarea>
+      </div>
+
+      <div class="form-group"
+        style="background: #fdf2f2; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #fed7d7;">
+        <h4 style="margin-bottom: 10px; color: #e53e3e;" id="statsTitle">📊 출석 통계 (자동 계산됨)</h4>
+        <div id="workLogStats"
+          style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.9rem; color: #4a5568;">
+          <div>날짜를 선택하면 자동 불러옵니다.</div>
+        </div>
+      </div>
+
+      <button class="btn-submit" onclick="submitWorkLogData()">일지 제출하기</button>
+      <button class="btn-close" onclick="closeWorkLogModal()">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    let currentWorkLogStats = null;
+
+    function getTodayDateStr() {
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function openWorkLogModal() {
+      const today = getTodayDateStr();
+      document.getElementById('wlDate').value = today;
+      document.getElementById('workLogStats').innerHTML = '<div>통계 불러오는 중...</div>';
+      document.getElementById('workLogModal').classList.add('show');
+      loadStatsForDate();
+    }
+
+    function loadStatsForDate() {
+      const dateVal = document.getElementById('wlDate').value;
+      if (!dateVal) return;
+      document.getElementById('statsTitle').innerText = dateVal + ' 출석 통계';
+      document.getElementById('workLogStats').innerHTML = '<div>불러오는 중...</div>';
+      currentWorkLogStats = null;
+
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (res.error) {
+              document.getElementById('workLogStats').innerHTML = '<div style="color:var(--danger); grid-column: span 2;">' + res.error + '</div>';
+              return;
+            }
+            currentWorkLogStats = res.stats;
+            document.getElementById('workLogStats').innerHTML =
+              '<div>• 09시: <strong style="color:var(--primary);">' + res.stats['09시'] + '명</strong></div>' +
+              '<div>• 10시: <strong style="color:var(--primary);">' + res.stats['10시'] + '명</strong></div>' +
+              '<div>• 17시: <strong style="color:var(--primary);">' + res.stats['17시'] + '명</strong></div>' +
+              '<div>• 18시: <strong style="color:var(--primary);">' + res.stats['18시'] + '명</strong></div>' +
+              '<div>• 19시: <strong style="color:var(--primary);">' + res.stats['19시'] + '명</strong></div>' +
+              '<div>• 20시: <strong style="color:var(--primary);">' + res.stats['20시'] + '명</strong></div>' +
+              '<div style="grid-column: span 2; margin-top: 10px; padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.05);">' +
+              '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">' +
+              '<span>총 출석: <strong style="color:#2f855a; font-size:1.1rem;">' + res.stats.total + '명</strong></span>' +
+              '</div>' +
+              '<div style="display:flex; justify-content:space-between; font-size:0.85rem;">' +
+              '<span>점핑: <strong style="color:#4c51bf;">' + res.stats.jumping + '명</strong></span>' +
+              '<span>테라피: <strong style="color:#c05621;">' + res.stats.therapy + '명</strong></span>' +
+              '</div>' +
+              '</div>';
+          })
+          .withFailureHandler(function (err) {
+            document.getElementById('workLogStats').innerHTML = '<div style="color:var(--danger); grid-column: span 2;">서버 오류: ' + (err.message || err) + '</div>';
+          })
+          .getTodayWorkLogStats(dateVal);
+      }
+    }
+
+    function closeWorkLogModal() {
+      document.getElementById('workLogModal').classList.remove('show');
+    }
+
+    let lastWorkLogs = [];
+
+    function showWorkLogDetail(idx) {
+      var log = lastWorkLogs[idx];
+      if (!log) return;
+
+      var dateStr = log.date;
+      if (dateStr instanceof Date) dateStr = dateStr.toLocaleDateString();
+      else dateStr = String(dateStr).split('T')[0];
+
+      document.getElementById('detailModalTitle').innerText = '📝 ' + dateStr + ' 업무일지';
+
+      var timeSlots = ['09시', '10시', '17시', '18시', '19시', '20시'];
+      var timeHtml = '<div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; margin-bottom:15px;">';
+      timeSlots.forEach(function (slot) {
+        var count = log.stats[slot] || '0';
+        timeHtml += '<div onclick="showClassMembers(\'' + dateStr + '\',\'' + slot + '\')" style="cursor:pointer; text-align:center; padding:8px; border-radius:10px; background:#f7fafc; border:1px solid #e2e8f0; transition:all 0.2s;" onmouseover="this.style.background=\'#edf2f7\'" onmouseout="this.style.background=\'#f7fafc\'">' +
+          '<div style="font-size:0.7rem; color:#718096;">' + slot + '</div>' +
+          '<div style="font-weight:700; color:#e53e3e;">' + count + '명</div>' +
+          '</div>';
+      });
+      timeHtml += '</div>';
+
+      var contentHtml =
+        '<div style="margin-bottom:20px; border-bottom:1px solid #edf2f7; padding-bottom:15px;">' +
+        '<div style="font-size:0.9rem; color:#718096; margin-bottom:15px;">👤 작성자: <strong>' + log.author + '</strong></div>' +
+        '<div style="background:#fffaf0; padding:15px; border-radius:12px; border:1px solid #fbd38d; margin-bottom:12px;">' +
+        '<div style="font-weight:700; color:#c05621; margin-bottom:5px;">🏃 점핑 목록</div>' +
+        '<div style="font-size:0.95rem; line-height:1.5;">' + (log.jumpingList || '기록 없음') + '</div>' +
+        '</div>' +
+        '<div style="background:#f0fff4; padding:15px; border-radius:12px; border:1px solid #9ae6b4; margin-bottom:12px;">' +
+        '<div style="font-weight:700; color:#276749; margin-bottom:5px;">💪 근력 목록</div>' +
+        '<div style="font-size:0.95rem; line-height:1.5;">' + (log.muscleList || '기록 없음') + '</div>' +
+        '</div>' +
+        '</div>' +
+
+        '<div style="margin-bottom:20px;">' +
+        '<div style="font-weight:700; color:#1a202c; margin-bottom:10px;">📊 출석 통계 (타임별 인원 클릭 시 명단 확인)</div>' +
+        timeHtml +
+        '<div style="background:#f1f5f9; padding:12px; border-radius:10px; font-size:0.95rem;">' +
+        '<div onclick="showDailyAttendanceDetails(\'' + dateStr + '\')" style="cursor:pointer; display:flex; justify-content:space-between; border-bottom:1px solid #e2e8f0; padding-bottom:8px; margin-bottom:8px;">' +
+        '<span>총 인원: <strong style="color:#2f855a;">' + log.stats.total + '명</strong> 🔍</span>' +
+        '</div>' +
+        '<div style="display:flex; justify-content:space-between; font-size:0.85rem;">' +
+        '<span>점핑: <strong style="color:#4c51bf;">' + log.stats.jumping + '명</strong></span>' +
+        '<span>테라피: <strong style="color:#c05621;">' + log.stats.therapy + '명</strong></span>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+
+        '<div id="detailSalesArea" style="background:#ebf8ff; border:1px solid #bee3f8; padding:15px; border-radius:12px; margin-bottom:15px;">' +
+        '<strong>💰 매출 내역:</strong> 불러오는 중...' +
+        '</div>' +
+
+        '<div style="background:#f7fafc; border:1px solid #e2e8f0; padding:15px; border-radius:12px;">' +
+        '<div style="font-weight:700; color:#4a5568; margin-bottom:5px;">💬 특이사항 및 시설</div>' +
+        '<div style="font-size:0.95rem; line-height:1.5;">' + (log.remarks || '없음') + '</div>' +
+        (log.issues ? '<div style="margin-top:8px; color:#e53e3e; font-weight:600;">⚠️ ' + log.issues + '</div>' : '') +
+        '</div>';
+
+      document.getElementById('workLogDetailContent').innerHTML = contentHtml;
+      document.getElementById('workLogDetailModal').classList.add('show');
+
+      // 매출 데이터 로딩
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run
+          .withSuccessHandler(function (salesRes) {
+            var el = document.getElementById('detailSalesArea');
+            if (!el) return;
+            if (salesRes.error || !salesRes.sales || salesRes.sales.length === 0) {
+              el.innerHTML = '<strong>💰 매출 내역:</strong> 기록 없음';
+              return;
+            }
+            var salesHtml = '<strong>💰 매출합계: <span style="color:#2f855a; font-size:1.1rem;">' + Number(salesRes.totalAmount).toLocaleString() + '원</span></strong>';
+            salesRes.summary.forEach(function (s) {
+              salesHtml += '<div style="font-size:0.85rem; margin-top:4px;">• ' + s.category + ': ' + Number(s.amount).toLocaleString() + '원</div>';
+            });
+            salesRes.sales.forEach(function (s) {
+              salesHtml += '<div style="font-size:0.8rem; color:#4a5568; margin-top:3px; padding-left:10px;">└ ' + s.buyer + ' - ' + s.itemName + ' (' + Number(s.amount).toLocaleString() + '원)</div>';
+            });
+            el.innerHTML = salesHtml;
+          })
+          .getSalesByDate(dateStr);
+      }
+    }
+
+    function closeWorkLogDetailModal() {
+      document.getElementById('workLogDetailModal').classList.remove('show');
+    }
+
+    function openWorkLogHistoryModal() {
+      document.getElementById('workLogHistoryList').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-sub);">기록 불러오는 중...</div>';
+      document.getElementById('workLogHistoryModal').classList.add('show');
+
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (res.error) {
+              document.getElementById('workLogHistoryList').innerHTML = '<div style="color:var(--danger); text-align:center; padding:20px;">' + res.error + '</div>';
+              return;
+            }
+            if (res.logs.length === 0) {
+              document.getElementById('workLogHistoryList').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-sub);">기록된 업무일지가 없습니다.</div>';
+              return;
+            }
+
+            lastWorkLogs = res.logs;
+            var html = '';
+            res.logs.forEach(function (log, idx) {
+              var dateStr = log.date;
+              if (dateStr instanceof Date) dateStr = dateStr.toLocaleDateString();
+              else dateStr = String(dateStr).split('T')[0];
+
+              html += '<div onclick="showWorkLogDetail(' + idx + ')" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:18px; margin-bottom:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">' +
+                '<div>' +
+                '<div style="font-weight:800; color:#1a202c; font-size:1.1rem;">📅 ' + dateStr + '</div>' +
+                '<div style="font-size:0.85rem; color:#718096; margin-top:4px;">👤 작성자: ' + log.author + '</div>' +
+                '</div>' +
+                '<div style="color:#cbd5e0; font-size:1.2rem;">❯</div>' +
+                '</div>';
+            });
+            document.getElementById('workLogHistoryList').innerHTML = html;
+          })
+          .withFailureHandler(function (err) {
+            document.getElementById('workLogHistoryList').innerHTML = '<div style="color:var(--danger); text-align:center; padding:20px;">서버 오류: ' + (err.message || err) + '</div>';
+          })
+          .getWorkLogHistory();
+      }
+    }
+
+    function showClassMembers(dateStr, timeSlot) {
+      document.getElementById('memberListModalTitle').innerText = dateStr + ' ' + timeSlot + ' 명단';
+      document.getElementById('memberListModalContent').innerHTML = '<div style="text-align:center; padding:20px; color:#718096;">불러오는 중...</div>';
+      document.getElementById('memberListModal').classList.add('show');
+
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (res.error) {
+              document.getElementById('memberListModalContent').innerHTML = '<div style="color:#e53e3e; text-align:center; padding:20px;">' + res.error + '</div>';
+              return;
+            }
+            var members = res.classMembers[timeSlot] || [];
+            if (members.length === 0) {
+              document.getElementById('memberListModalContent').innerHTML = '<div style="text-align:center; padding:30px; color:#718096;">참여 회원이 없습니다.</div>';
+            } else {
+              var html = '<div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">';
+              members.forEach(function (m) {
+                html += '<div style="padding:12px; background:#f7fafc; border-radius:10px; border:1px solid #e2e8f0; text-align:center; font-weight:600; color:#2d3748;">' + m + '</div>';
+              });
+              html += '</div>';
+              document.getElementById('memberListModalContent').innerHTML = html;
+            }
+          })
+          .withFailureHandler(function (err) {
+            document.getElementById('memberListModalContent').innerHTML = '<div style="color:#e53e3e; text-align:center; padding:20px;">조회 실패</div>';
+          })
+          .getClassMembersByDate(dateStr);
+      }
+    }
+
+    function closeMemberListModal() {
+      document.getElementById('memberListModal').classList.remove('show');
+    }
+
+    /**
+     * 특정 날짜의 모든 출석자 명단을 띄우고, 더 자세한 정보를 보여줌 (조회 전용)
+     */
+    function showDailyAttendanceDetails(dateStr) {
+      document.getElementById('memberListModalTitle').innerText = '📊 ' + dateStr + ' 전체 명단';
+      document.getElementById('memberListModalContent').innerHTML = '<div style="text-align:center; padding:20px; color:#718096;">데이터 불러오는 중...</div>';
+      document.getElementById('memberListModal').classList.add('show');
+
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (res.error) {
+              document.getElementById('memberListModalContent').innerHTML = '<div style="color:#e53e3e; text-align:center; padding:20px;">' + res.error + '</div>';
+              return;
+            }
+            if (res.allLogs.length === 0) {
+              document.getElementById('memberListModalContent').innerHTML = '<div style="text-align:center; padding:30px; color:#718096;">출석 데이터가 없습니다.</div>';
+              return;
+            }
+
+            let listHtml = res.allLogs.map(log => {
+              var typeColor = (log.type === '점핑') ? '#3182ce' : (log.type === '테라피' ? '#38a169' : '#805ad5');
+              var displayTime = log.timeLog || '0';
+              var deduction = log.change || '0';
+
+              return `<div style="padding:15px; margin-bottom:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                  <strong style="color:#1a202c; font-size:1.05rem;">${log.name} <span style="font-weight:400; color:#718096; font-size:0.9rem;">(${log.inTime || '-'})</span></strong>
+                  <span style="background:${typeColor}; color:#fff; padding:3px 10px; border-radius:8px; font-size:0.75rem; font-weight:700;">${log.type}</span>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; font-size:0.8rem; color:#4a5568;">
+                  <div style="background:#fff; padding:8px; border-radius:10px; border:1px solid #edf2f7; text-align:center;">
+                    <div style="color:#718096; font-size:0.7rem; margin-bottom:3px;">🕒 운동타임수</div>
+                    <div style="font-weight:700; color:#2d3748;">${displayTime}타임</div>
+                  </div>
+                  <div style="background:#fff; padding:8px; border-radius:10px; border:1px solid #edf2f7; text-align:center;">
+                    <div style="color:#718096; font-size:0.7rem; margin-bottom:3px;">📅 참여타임</div>
+                    <div style="font-weight:700; color:#2d3748;">${log.classes || '-'}</div>
+                  </div>
+                  <div style="background:#fff; padding:8px; border-radius:10px; border:1px solid #edf2f7; text-align:center;">
+                    <div style="color:#718096; font-size:0.7rem; margin-bottom:3px;">🔢 차감횟수</div>
+                    <div style="font-weight:700; color:#e53e3e;">${deduction}회</div>
+                  </div>
+                </div>
+                ${log.extraDeduct ? '<div style="margin-top:8px; color:#e53e3e; font-size:0.75rem; font-weight:600; text-align:center;">⚠️ 추가 차감 기록 있음</div>' : ''}
+              </div>`;
+            }).join('');
+
+            document.getElementById('memberListModalContent').innerHTML = `
+              <div style="margin-bottom:15px; padding:12px; background:#f7fafc; border-radius:10px; color:#718096; font-size:0.85rem; text-align:center; border:1px solid #e2e8f0;">
+                해당 날짜의 전체 출석 및 운동 정보입니다.
+              </div>
+              <div style="max-height:55vh; overflow-y:auto; padding-right:5px;">${listHtml}</div>
+            `;
+          })
+          .getClassMembersByDate(dateStr);
+      }
+    }
+
+    // openEditFromModal 삭제 (과거 기록 수정 기능 제외 요청에 따름)
+
+
+    function openReservationMenu() {
+      document.getElementById('reservationModal').classList.add('show');
+      // 오늘 날짜 기본값 설정
+      let today = new Date();
+      let dateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+      document.getElementById('resViewDate').value = dateStr;
+      loadReservationData();
+    }
+
+    function loadReservationData() {
+      let dateStr = document.getElementById('resViewDate').value;
+      document.getElementById('reservationListContent').innerHTML = '<div style="text-align:center; padding:30px; color:#718096;"><div style="font-size:1.5rem; margin-bottom:10px;">🔄</div>데이터를 불러오는 중...</div>';
+      
+      google.script.run.withSuccessHandler(res => {
+        if (!res || res.length === 0) {
+          document.getElementById('reservationListContent').innerHTML = `
+            <div style="text-align:center; padding:50px 20px; background:#f8fafc; border-radius:20px; border:1px dashed #e2e8f0;">
+              <div style="font-size:2.5rem; margin-bottom:15px;">🍃</div>
+              <div style="color:#718096; font-weight:600;">선택하신 날짜에<br>예약 내역이 없습니다.</div>
+            </div>`;
+          return;
+        }
+        
+        // 시간대별 그룹화
+        const groups = res.reduce((acc, r) => {
+          if (!acc[r.time]) acc[r.time] = [];
+          acc[r.time].push(r);
+          return acc;
+        }, {});
+        
+        const sortedTimes = Object.keys(groups).sort();
+        
+        let html = sortedTimes.map(time => {
+          let itemsHtml = groups[time].map(r => {
+            let statusColor = r.status.indexOf('취소') !== -1 ? '#c53030' : (r.status.indexOf('완료') !== -1 ? '#2f855a' : '#2b6cb0');
+            return `
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #edf2f7;">
+                <div style="flex:1;">
+                  <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                    <span style="font-weight:800; color:#1a202c; font-size:1rem;">${r.name}</span>
+                    <span style="font-size:0.75rem; color:#718096;">(${r.room})</span>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="color:${statusColor}; font-size:0.75rem; font-weight:700;">● ${r.status}</span>
+                    <span style="color:#cbd5e0; font-size:0.7rem;">|</span>
+                    <span style="color:#718096; font-size:0.75rem;">${r.people}명</span>
+                  </div>
+                </div>
+                <button onclick="confirmDeleteReservation(${r.rowIdx}, '${r.name}')" 
+                  style="background:#fff1f1; color:#e53e3e; border:1px solid #ffdada; padding:6px 12px; border-radius:8px; font-size:0.75rem; font-weight:700; cursor:pointer;">취소</button>
+              </div>`;
+          }).join('');
+
+          return `
+            <div style="margin-bottom:20px; background:#fff; border:1px solid #e2e8f0; border-radius:20px; overflow:hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+              <div style="background:#f8fafc; padding:12px 20px; border-bottom:1px solid #edf2f7; display:flex; align-items:center; gap:10px;">
+                <span style="font-size:1.2rem;">🕒</span>
+                <span style="font-weight:900; color:#475569; font-size:1.1rem;">${time}</span>
+              </div>
+              <div style="padding:0 20px;">
+                ${itemsHtml}
+              </div>
+            </div>`;
+        }).join('');
+        
+        document.getElementById('reservationListContent').innerHTML = html;
+      }).getAdminReservationData(dateStr);
+    }
+
+    function confirmDeleteReservation(rowIdx, name) {
+      if (confirm(name + " 님의 예약을 삭제하시겠습니까?\n(시트에서 해당 행이 완전히 삭제됩니다.)")) {
+        google.script.run.withSuccessHandler(res => {
+          if (res.success) {
+            alert("예약이 삭제되었습니다.");
+            loadReservationData();
+          } else {
+            alert("오류: " + res.error);
+          }
+        }).deleteReservationByRow(rowIdx);
+      }
+    }
+
+    function closeReservationModal() {
+      document.getElementById('reservationModal').classList.remove('show');
+    }
+
+    function closeWorkLogHistoryModal() {
+      document.getElementById('workLogHistoryModal').classList.remove('show');
+    }
+
+    // --- 33 챌린지 관련 함수 ---
+    function openInBodyRegModal() {
+      document.getElementById('ibDate').value = getTodayDateStr();
+      document.getElementById('ibTargetInfo').style.display = 'none';
+      document.getElementById('ibSearchName').value = '';
+      document.getElementById('ibWeight').value = '';
+      document.getElementById('ibMuscle').value = '';
+      document.getElementById('ibFat').value = '';
+      document.getElementById('ibMemo').value = '';
+      document.getElementById('inBodyRegModal').classList.add('show');
+    }
+    function closeInBodyRegModal() { document.getElementById('inBodyRegModal').classList.remove('show'); }
+
+    function searchInBodyMember(name) {
+      if (!name || name.length < 2) {
+        document.getElementById('ibSearchResults').style.display = 'none';
+        return;
+      }
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run.withSuccessHandler(function (results) {
+          if (results.length === 0) {
+            document.getElementById('ibSearchResults').innerHTML = '<div style="padding:10px; color:#999;">검색 결과 없음</div>';
+          } else {
+            let html = '';
+            results.forEach(m => {
+              html += `<div onclick="selectInBodyMember('${m.name}', '${m.phone}')" style="padding:12px; border-bottom:1px solid #edf2f7; cursor:pointer; font-size:0.9rem;">
+                <strong>${m.name}</strong> (${m.phone.slice(-4)})
+              </div>`;
+            });
+            document.getElementById('ibSearchResults').innerHTML = html;
+          }
+          document.getElementById('ibSearchResults').style.display = 'block';
+        }).searchMemberByName(name);
+      }
+    }
+
+    function selectInBodyMember(name, phone) {
+      document.getElementById('ibTargetName').innerText = name;
+      document.getElementById('ibTargetPhone').innerText = phone.slice(-4);
+      document.getElementById('ibTargetPhoneRaw').value = phone;
+      document.getElementById('ibTargetInfo').style.display = 'block';
+      document.getElementById('ibSearchResults').style.display = 'none';
+      document.getElementById('ibSearchName').value = name;
+    }
+
+    function submitInBodyData() {
+      const phone = document.getElementById('ibTargetPhoneRaw').value;
+      if (!phone) return alert("회원을 먼저 검색하여 선택해주세요.");
+
+      const data = {
+        date: document.getElementById('ibDate').value,
+        name: document.getElementById('ibTargetName').innerText,
+        phone: phone,
+        weight: document.getElementById('ibWeight').value,
+        muscle: document.getElementById('ibMuscle').value,
+        fat: document.getElementById('ibFat').value,
+        memo: document.getElementById('ibMemo').value
+      };
+
+      const btn = document.querySelector('#inBodyRegModal .btn-submit');
+      btn.innerText = "저장 중...";
+      btn.disabled = true;
+
+      google.script.run.withSuccessHandler(function (res) {
+        btn.innerText = "기록 저장하기";
+        btn.disabled = false;
+        if (res.error) { alert("저장 실패: " + res.error); }
+        else {
+          alert(res.message);
+          closeInBodyRegModal();
+        }
+      }).saveInBodyRecord(data);
+    }
+
+    function openInBodyHistoryModal() {
+      document.getElementById('inBodyHistoryList').innerHTML = '<div style="text-align:center; padding:20px; color:#718096;">기록 불러오는 중...</div>';
+      document.getElementById('inBodyHistoryModal').classList.add('show');
+
+      google.script.run.withSuccessHandler(function (res) {
+        if (res.error || !res.records || res.records.length === 0) {
+          document.getElementById('inBodyHistoryList').innerHTML = '<div style="text-align:center; padding:20px; color:#999;">기록이 없습니다.</div>';
+          return;
+        }
+        let html = '';
+        res.records.forEach(r => {
+          html += `<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:15px; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+              <strong>${r.name}</strong> <span style="color:#718096; font-size:0.8rem;">${r.date}</span>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:5px; font-size:0.85rem; text-align:center;">
+              <div style="background:#fff; padding:5px; border-radius:6px; border:1px solid #edf2f7;">체중: <strong>${r.weight}</strong></div>
+              <div style="background:#fff; padding:5px; border-radius:6px; border:1px solid #edf2f7;">근력: <strong>${r.muscle}</strong></div>
+              <div style="background:#fff; padding:5px; border-radius:6px; border:1px solid #edf2f7;">지방: <strong>${r.fat}%</strong></div>
+            </div>
+            <div style="margin-top:8px; font-size:0.85rem; color:#2d3748; display:flex; justify-content:space-between;">
+              <span>🏆 점수: <strong style="color:#e67e22;">${r.score}</strong></span>
+              <span style="color:#718096; font-size:0.75rem;">${r.memo}</span>
+            </div>
+          </div>`;
+        });
+        document.getElementById('inBodyHistoryList').innerHTML = html;
+      }).getInBodyHistory();
+    }
+    function closeInBodyHistoryModal() { document.getElementById('inBodyHistoryModal').classList.remove('show'); }
+
+    function openChallengeRanking() {
+      document.getElementById('challengeRankingList').innerHTML = '<div style="text-align:center; padding:20px; color:#718096;">성적 계산 중...</div>';
+      document.getElementById('challengeRankingModal').classList.add('show');
+
+      google.script.run.withSuccessHandler(function (res) {
+        if (res.error || !res.rankings || res.rankings.length === 0) {
+          document.getElementById('challengeRankingList').innerHTML = '<div style="text-align:center; padding:20px; color:#999;">데이터가 부족합니다.</div>';
+          return;
+        }
+        let html = '<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">';
+        html += '<tr style="background:#f1f5f9; text-align:left;"><th style="padding:10px;">순위</th><th style="padding:10px;">이름</th><th style="padding:10px; text-align:right;">성적(감량)</th></tr>';
+        res.rankings.forEach((r, i) => {
+          html += `<tr style="border-bottom:1px solid #edf2f7;">
+            <td style="padding:10px;">${i + 1}위</td>
+            <td style="padding:10px;">
+              <strong>${r.name}</strong>
+              <div style="font-size:0.7rem; color:#999;">${r.weekLabel}</div>
+            </td>
+            <td style="padding:10px; text-align:right; font-weight:700; color:#e67e22;">${r.score}%</td>
+          </tr>`;
+        });
+        html += '</table>';
+        document.getElementById('challengeRankingList').innerHTML = html;
+      }).getChallengeRanking();
+    }
+    function closeChallengeRankingModal() { document.getElementById('challengeRankingModal').classList.remove('show'); }
+
+    // --- 매출등록 ---
+    function openSalesModal() {
+      document.getElementById('salesDate').value = getTodayDateStr();
+      document.getElementById('salesCategory').value = '회원등록';
+      document.getElementById('salesBuyer').value = '';
+      document.getElementById('salesItemName').value = '';
+      document.getElementById('salesAmount').value = '';
+      document.getElementById('salesMemo').value = '';
+      document.querySelectorAll('#payMethodGrid .select-btn').forEach(function (btn) { btn.classList.remove('active'); });
+      document.querySelectorAll('#payMethodGrid .select-btn')[0].classList.add('active');
+      document.getElementById('salesModal').classList.add('show');
+    }
+
+    function closeSalesModal() {
+      document.getElementById('salesModal').classList.remove('show');
+    }
+
+    function selectPayMethod(el) {
+      document.querySelectorAll('#payMethodGrid .select-btn').forEach(function (btn) { btn.classList.remove('active'); });
+      el.classList.add('active');
+    }
+
+    function submitSalesData() {
+      var salesDate = document.getElementById('salesDate').value;
+      var category = document.getElementById('salesCategory').value;
+      var buyer = document.getElementById('salesBuyer').value.trim();
+      var itemName = document.getElementById('salesItemName').value.trim();
+      var amount = document.getElementById('salesAmount').value;
+      var payMethodBtn = document.querySelector('#payMethodGrid .select-btn.active');
+      var payMethod = payMethodBtn ? payMethodBtn.innerText : '카드';
+      var memo = document.getElementById('salesMemo').value.trim();
+
+      if (!buyer) return alert("구입자 이름을 입력해주세요.");
+      if (!amount || Number(amount) <= 0) return alert("금액을 입력해주세요.");
+
+      var btn = document.querySelector('#salesModal .btn-submit');
+      btn.innerText = "등록 중...";
+      btn.disabled = true;
+
+      var data = {
+        date: salesDate,
+        category: category,
+        buyer: buyer,
+        itemName: itemName || category,
+        amount: amount,
+        payMethod: payMethod,
+        memo: memo
+      };
+
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run
+          .withSuccessHandler(function (res) {
+            btn.disabled = false;
+            btn.innerText = "매출 등록하기";
+            if (res.error) { alert("등록 실패: " + res.error); }
+            else { alert(res.message); closeSalesModal(); }
+          })
+          .withFailureHandler(function (err) {
+            btn.disabled = false;
+            btn.innerText = "매출 등록하기";
+            alert("서버 오류: " + (err.message || err));
+          })
+          .submitSalesRecord(data);
+      } else {
+        btn.disabled = false;
+        btn.innerText = "매출 등록하기";
+      }
+    }
+
+    function submitWorkLogData() {
+      if (!currentWorkLogStats) return alert("통계 데이터를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+
+      var wlDate = document.getElementById('wlDate').value;
+      var author = document.getElementById('wlAuthor').value;
+      var jumpingList = document.getElementById('wlJumping').value.trim();
+      var muscleList = document.getElementById('wlMuscle').value.trim();
+      var remarks = document.getElementById('wlRemarks').value.trim();
+      var issues = document.getElementById('wlIssues').value.trim();
+
+      var btn = document.querySelector('#workLogModal .btn-submit');
+      btn.innerText = "제출 중...";
+      btn.disabled = true;
+
+      var data = {
+        date: wlDate,
+        author: author,
+        jumpingList: jumpingList,
+        muscleList: muscleList,
+        remarks: remarks,
+        issues: issues,
+        stats: currentWorkLogStats
+      };
+
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run.withSuccessHandler(function (res) {
+          btn.disabled = false;
+          btn.innerText = "일지 제출하기";
+          if (res.error) { alert("저장 실패: " + res.error); }
+          else {
+            alert(res.message);
+            closeWorkLogModal();
+            document.getElementById('wlJumping').value = '';
+            document.getElementById('wlMuscle').value = '';
+            document.getElementById('wlRemarks').value = '';
+            document.getElementById('wlIssues').value = '';
+          }
+        }).submitWorkLog(data);
+      } else {
+        btn.disabled = false;
+        btn.innerText = "일지 제출하기";
+      }
+    }
+  </script>
+
+  <!-- 업무/매출 통합 메뉴 모달 -->
+  <div class="modal-overlay" id="workLogMenuModal">
+    <div class="modal-content">
+      <div class="modal-header">📑 업무 및 매출 관리</div>
+      <div class="modal-btn-group">
+        <button class="m-btn m-btn-jumping" onclick="openWorkLogModal(); closeWorkLogMenuModal();">✍️ 일지 작성하기</button>
+        <button class="m-btn m-btn-therapy" onclick="openSalesModal(); closeWorkLogMenuModal();">💰 매출 내역 등록</button>
+        <button class="m-btn m-btn-combo" onclick="openWorkLogHistoryModal(); closeWorkLogMenuModal();">📁 과거 기록
+          조회</button>
+        <button class="m-btn m-btn-cancel" onclick="closeWorkLogMenuModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openWorkLogMenu() { document.getElementById('workLogMenuModal').classList.add('show'); }
+    function closeWorkLogMenuModal() { document.getElementById('workLogMenuModal').classList.remove('show'); }
+
+    function openChallengeMenu() { document.getElementById('challengeMenuModal').classList.add('show'); }
+    function closeChallengeMenuModal() { document.getElementById('challengeMenuModal').classList.remove('show'); }
+  </script>
+
+  <!-- 33 챌린지 관리 메뉴 모달 -->
+  <div class="modal-overlay" id="challengeMenuModal">
+    <div class="modal-content">
+      <div class="modal-header">🏆 33 챌린지 관리</div>
+      <div class="modal-btn-group">
+        <button class="m-btn m-btn-jumping" onclick="openInBodyRegModal(); closeChallengeMenuModal();">✍️ 인바디 신규
+          등록</button>
+        <button class="m-btn m-btn-therapy" onclick="openInBodyHistoryModal(); closeChallengeMenuModal();">📋 기록 조회 및
+          수정</button>
+        <button class="m-btn m-btn-combo" onclick="openChallengeRanking(); closeChallengeMenuModal();">📊 챌린지
+          성적/랭킹</button>
+        <button class="m-btn m-btn-cancel" onclick="closeChallengeMenuModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 수동 출석 선택 모달 -->
+  <div class="modal-overlay" id="attendanceModal">
+    <div class="modal-content">
+      <h3 style="margin-bottom:5px;"><span id="modalMemberName" style="color:var(--primary);">회원</span> 님</h3>
+      <p style="color:#666; font-size:0.9rem;">출석 유형을 선택해주세요.</p>
+      <div class="modal-btn-group">
+        <button class="m-btn m-btn-jumping" onclick="selectAttendance('점핑')">🏃‍♀️ 점핑 출석</button>
+        <button class="m-btn m-btn-therapy" onclick="selectAttendance('테라피')">🌿 테라피 출석</button>
+        <button class="m-btn m-btn-combo" onclick="selectAttendance('복합')">✨ 복합 출석</button>
+        <button class="m-btn" id="btnAdminBonus" style="background:#f59e0b; color:#fff; display:none;"
+          onclick="selectAttendance('보너스')">🎁 보너스 사용</button>
+        <button class="m-btn m-btn-cancel" onclick="closeAttendanceModal()">취소</button>
+      </div>
+    </div>
+  </div>
+  <!-- 벙개테라피 및 휴일 설정 모달 -->
+  <div class="modal-overlay" id="flashSettingModal" style="z-index: 5000;">
+    <div class="modal-content" style="background:#ffffff; max-width:450px; padding:30px 25px; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="modal-header">⚙️ 벙개 및 휴무 관리</div>
+      
+      <div style="flex: 1; overflow-y: auto; padding-right: 5px;">
+        <p style="font-size:0.85rem; color:#718096; margin-bottom:20px; text-align:center;">특정 날짜의 운영 여부를 강제로 설정합니다.</p>
+        
+        <div style="background:#f8fafc; padding:20px; border-radius:18px; border:1px solid #edf2f7; margin-bottom:25px;">
+          <div class="form-group">
+            <label class="form-label">📅 설정 날짜</label>
+            <input type="date" id="flashDate" class="form-control" onchange="checkExistingFlashSetting()">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">💡 상태 선택</label>
+            <select id="flashType" class="form-control">
+              <option value="벙개">⚡️ 벙개 운영 (휴일이어도 예약 가능)</option>
+              <option value="휴무">🛑 강제 휴무 (개인사정 등 예약 불가)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">📝 메모(벙개시간)</label>
+            <input type="text" id="flashNote" class="form-control" placeholder="벙개 시: 09:00 / 휴무 시: 사유 입력">
+          </div>
+
+          <div id="flashExistingInfo" style="margin-bottom:15px; font-size:0.8rem; color:var(--primary); text-align:center; display:none; background:#f0f5ff; padding:8px; border-radius:8px;">
+            ℹ️ 해당 날짜에 이미 설정된 기록이 있습니다.
+          </div>
+
+          <button class="btn-submit" onclick="saveFlashSetting()" style="background:#2d3748; padding:15px;">설정 저장하기</button>
+        </div>
+
+        <div style="border-top: 1px dashed #e2e8f0; padding-top: 20px;">
+          <div style="font-weight:800; color:#4a5568; font-size:1rem; margin-bottom:15px; display:flex; align-items:center; gap:8px;">
+            📋 현재 설정 목록
+            <span id="flashListCount" style="font-size:0.75rem; background:#edf2f7; color:#718096; padding:2px 8px; border-radius:20px;">0건</span>
+          </div>
+          <div id="flashSettingList">
+            <!-- 리스트 삽입 -->
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-close" onclick="closeFlashSettingModal()">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    function openFlashSettingModal() {
+      document.getElementById('flashDate').value = document.getElementById('resViewDate').value;
+      document.getElementById('flashNote').value = "";
+      document.getElementById('flashType').value = "벙개";
+      document.getElementById('flashExistingInfo').style.display = "none";
+      document.getElementById('flashSettingModal').classList.add('show');
+      loadFlashSettingsList();
+    }
+
+    function closeFlashSettingModal() {
+      document.getElementById('flashSettingModal').classList.remove('show');
+    }
+
+    function loadFlashSettingsList() {
+      const listEl = document.getElementById('flashSettingList');
+      listEl.innerHTML = '<div style="text-align:center; padding:15px; color:#cbd5e0; font-size:0.85rem;">목록 불러오는 중...</div>';
+      
+      google.script.run.withSuccessHandler(res => {
+        if (!res || res.length === 0) {
+          listEl.innerHTML = '<div style="text-align:center; padding:30px; color:#cbd5e0; font-size:0.85rem; border:2px dashed #edf2f7; border-radius:15px;">설정된 일정이 없습니다.</div>';
+          document.getElementById('flashListCount').innerText = '0건';
+          return;
+        }
+        document.getElementById('flashListCount').innerText = res.length + '건';
+        let html = res.map(item => {
+          let badgeColor = item.type === '벙개' ? '#4299e1' : '#f56565';
+          let badgeIcon = item.type === '벙개' ? '⚡️' : '🛑';
+          return `
+            <div id="flash_item_${item.rowIdx}" style="background:#fff; border:1px solid #edf2f7; padding:15px; border-radius:16px; margin-bottom:10px; transition:all 0.2s; box-shadow:0 4px 6px rgba(0,0,0,0.02); display:flex; justify-content:space-between; align-items:center;">
+              <div style="flex:1;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;">
+                  <span style="font-weight:800; color:#2d3748; font-size:0.95rem;">${item.date}</span>
+                  <span style="font-size:0.75rem; background:${badgeColor}15; color:${badgeColor}; padding:3px 8px; border-radius:8px; font-weight:800; border:1px solid ${badgeColor}30;">${badgeIcon} ${item.type}</span>
+                </div>
+                <div style="font-size:0.85rem; color:#718096; line-height:1.4;">${item.note || '<span style="color:#cbd5e0;">(내용 없음)</span>'}</div>
+              </div>
+              <div style="display:flex; gap:5px;">
+                <button onclick="editFlashSetting('${item.date}', '${item.type}', '${item.note}')" style="background:#f7fafc; border:none; color:#4a5568; padding:8px 12px; border-radius:10px; cursor:pointer; font-size:0.75rem; font-weight:700; transition:all 0.2s;" onmouseover="this.style.background='#edf2f7'" onmouseout="this.style.background='#f7fafc'">✏️ 수정</button>
+                <button id="del_btn_${item.rowIdx}" onclick="confirmDeleteFlash(${item.rowIdx}, '${item.date}')" style="background:#fff5f5; border:none; color:#f56565; padding:8px 12px; border-radius:10px; cursor:pointer; font-size:0.75rem; font-weight:700; transition:all 0.2s;" onmouseover="this.style.background='#feb2b2'; this.style.color='#fff';" onmouseout="this.style.background='#fff5f5'; this.style.color='#f56565';">🗑️ 삭제</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+        listEl.innerHTML = html;
+      }).getAllFlashSettings();
+    }
+
+    function editFlashSetting(date, type, note) {
+      document.getElementById('flashDate').value = date;
+      document.getElementById('flashType').value = (type === '벙개설정' ? '벙개' : (type === '휴일설정' ? '휴무' : type));
+      document.getElementById('flashNote').value = (note === 'undefined' || note === 'null') ? '' : note;
+      document.getElementById('flashExistingInfo').style.display = "block";
+      document.getElementById('flashDate').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // 입력창 강조 효과
+      const formBox = document.querySelector('#flashSettingModal .form-group').parentElement;
+      formBox.style.borderColor = "var(--primary)";
+      formBox.style.boxShadow = "0 0 15px rgba(138, 43, 226, 0.1)";
+      setTimeout(() => {
+        formBox.style.borderColor = "#edf2f7";
+        formBox.style.boxShadow = "none";
+      }, 1000);
+    }
+
+    function confirmDeleteFlash(rowIdx, date) {
+      const btn = document.getElementById('del_btn_' + rowIdx);
+      if (btn.innerText === "🗑️ 삭제") {
+        btn.innerText = "진짜 삭제?";
+        btn.style.background = "#e53e3e";
+        btn.style.color = "#fff";
+        btn.style.padding = "8px 15px";
+        
+        // 3초 뒤에 원래대로 복구
+        setTimeout(() => {
+          if (btn && btn.innerText === "진짜 삭제?") {
+            btn.innerText = "🗑️ 삭제";
+            btn.style.background = "#fff5f5";
+            btn.style.color = "#f56565";
+          }
+        }, 3000);
+      } else {
+        deleteFlashSetting(rowIdx, date);
+      }
+    }
+
+    function checkExistingFlashSetting() {
+      const date = document.getElementById('flashDate').value;
+      if (!date) return;
+      google.script.run.withSuccessHandler(res => {
+        if (res && res.found) {
+          document.getElementById('flashType').value = res.type;
+          document.getElementById('flashNote').value = res.note || "";
+          document.getElementById('flashExistingInfo').style.display = "block";
+        } else {
+          document.getElementById('flashExistingInfo').style.display = "none";
+        }
+      }).getFlashSettingByDate(date);
+    }
+
+    function saveFlashSetting() {
+      const dateVal = document.getElementById('flashDate').value;
+      const typeVal = document.getElementById('flashType').value;
+      const noteVal = document.getElementById('flashNote').value;
+
+      if (!dateVal) return alert("날짜를 선택해주세요.");
+
+      const btn = document.querySelector('#flashSettingModal .btn-submit');
+      const originalText = btn.innerText;
+      btn.innerText = "💾 저장 중...";
+      btn.disabled = true;
+
+      google.script.run.withSuccessHandler(res => {
+        btn.innerText = originalText;
+        btn.disabled = false;
+        if (res.success) {
+          loadFlashSettingsList(); // 리스트 갱신
+          document.getElementById('flashNote').value = "";
+          document.getElementById('flashExistingInfo').style.display = "none";
+          // 성공 피드백 알림
+          const toast = document.createElement('div');
+          toast.style = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#2d3748; color:#fff; padding:10px 25px; border-radius:30px; font-size:0.85rem; z-index:10000; box-shadow:0 10px 20px rgba(0,0,0,0.2); animation: fadeInUp 0.3s;";
+          toast.innerText = "✅ 설정이 안전하게 저장되었습니다.";
+          document.body.appendChild(toast);
+          setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 500); }, 2000);
+        } else {
+          alert("저장 오류: " + res.error);
+        }
+      }).saveFlashSetting({ date: dateVal, type: typeVal, note: noteVal });
+    }
+
+    function deleteFlashSetting(rowIdx, date) {
+      const itemEl = document.getElementById('flash_item_' + rowIdx);
+      itemEl.style.opacity = "0.4";
+      itemEl.style.pointerEvents = "none";
+
+      google.script.run.withSuccessHandler(res => {
+        if (res.success) {
+          itemEl.style.transform = "translateX(50px)";
+          itemEl.style.opacity = "0";
+          setTimeout(() => loadFlashSettingsList(), 300);
+        } else {
+          itemEl.style.opacity = "1";
+          itemEl.style.pointerEvents = "auto";
+          alert("삭제 실패: " + res.error);
+        }
+      }).deleteFlashSettingByRow(rowIdx);
+    }
+  </script>
+</body>
+
+</html>

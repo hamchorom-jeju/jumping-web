@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>회원 연장 / 결제</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #ff5252; --bg: #f8fafc; --card: #ffffff; --text: #2d3748; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 15px; }
+    .container { max-width: 500px; margin: 0 auto; }
+    .card { background: var(--card); border-radius: 15px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    h1 { font-size: 1.4rem; text-align: center; margin-bottom: 20px; color: var(--primary); }
+    .info-box { background: #f1f5f9; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+    .info-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.95rem; }
+    .label { font-weight: 600; color: #64748b; }
+    .value { font-weight: 700; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.9rem; }
+    .form-control { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 1rem; }
+    #sigPad { width: 100%; height: 180px; border: 1px solid #cbd5e0; border-radius: 8px; background: #fff; touch-action: none; }
+    .btn-submit { width: 100%; padding: 15px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 700; cursor: pointer; margin-top: 15px; }
+    #loading { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.9); display:none; flex-direction:column; justify-content:center; align-items:center; z-index:99; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body>
+  <div id="loading"><div>처리 중... 잠시만 기다려 주세요.</div></div>
+  <div class="container">
+    <h1>💳 회원 연장 / 결제 처리</h1>
+    <div class="card">
+      <div id="memberHeader" style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
+        <div class="info-row"><span class="label">성함</span><span id="disp_name" class="value">조회 중...</span></div>
+        <div class="info-row"><span class="label">연락처</span><span id="disp_phone" class="value">조회 중...</span></div>
+      </div>
+      
+      <div id="activeListContainer">
+        <div style="text-align:center; padding:20px; color:#999;">진행 중인 내역을 불러오는 중...</div>
+      </div>
+
+      <form id="renewForm" style="margin-top:20px; border-top:2px solid #ff5252; padding-top:20px;">
+        <h3 style="font-size:1rem; margin-bottom:15px; color:#ff5252;">[새로운 결제/연장 입력]</h3>
+        <div class="form-group">
+          <label>결제 구분 *</label>
+          <select id="renewType" class="form-control" required onchange="updateExpectedValues()">
+            <option value="연장결제">연장결제 (기존 횟수 합산)</option>
+            <option value="재결제">재결제 (기존 횟수 0 처리)</option>
+            <option value="추가결제">추가결제 (별도 내역 생성)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>회원권 선택 *</label>
+          <select id="membership" class="form-control" required onchange="updateExpectedValues()">
+            <option value="">권종을 선택하세요</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>시작일 (적용일) *</label>
+          <input type="date" id="startDate" class="form-control" required onchange="updateExpectedValues()">
+        </div>
+        <div style="background:#fff9db; padding:12px; border-radius:10px; margin-bottom:15px; border:1px dashed #fab005;">
+          <div class="info-row" style="margin-bottom:8px;">
+            <span class="label" style="color:#868e96;">💰 결제 금액</span>
+            <input type="number" id="price" class="form-control" style="width:120px; padding:5px; height:30px; font-weight:700; text-align:right;" required>
+          </div>
+          <div class="info-row" style="margin-bottom:8px;">
+            <span class="label" style="color:#868e96;">📅 예상 만료일</span>
+            <span id="exp_preview" class="value" style="color:#e67700;">-</span>
+          </div>
+          <div class="info-row">
+            <span class="label" style="color:#868e96;">🔢 최종 잔여횟수</span>
+            <span id="count_preview" class="value" style="color:#e67700;">-</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>비고</label>
+          <input type="text" id="memo" class="form-control" placeholder="기기 추가 등 참고사항">
+        </div>
+        <div class="form-group">
+          <label>결제 수단 *</label>
+          <select id="payMethod" class="form-control" required>
+            <option value="카드">카드</option>
+            <option value="현금">현금</option>
+            <option value="계좌이체">계좌이체</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>결제 확인 서명 *</label>
+          <canvas id="sigPad"></canvas>
+          <button type="button" onclick="clearSig()" style="margin-top:5px; padding:5px 10px;">서명 지우기</button>
+        </div>
+        <button type="button" class="btn-submit" onclick="submitData()">결제 기록 완료</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const phoneParam = "<?!= targetPhone ?>";
+    const nameParam = "<?!= targetName ?>";
+    let configs = [];
+    let currentMemberData = null;
+    let canvas, ctx;
+    let signed = false;
+
+    window.onload = function() {
+      try {
+        document.getElementById('disp_phone').innerText = phoneParam || "번호 없음";
+        document.getElementById('disp_name').innerText = (nameParam || "조회 중...").replace(/\d{4}$/, "");
+        
+        canvas = document.getElementById('sigPad');
+        if (canvas) {
+          ctx = canvas.getContext('2d');
+          canvas.width = canvas.offsetWidth;
+          canvas.height = 180;
+          ctx.lineWidth = 3; ctx.lineCap = 'round';
+          initSig();
+        }
+        
+        document.getElementById('startDate').valueAsDate = new Date();
+        loadInitialData();
+      } catch (e) { console.error("Init error:", e); }
+    };
+
+    function renderActiveList(activeList) {
+      const container = document.getElementById('activeListContainer');
+      if (activeList && activeList.length > 0) {
+        let html = '<p style="font-size:0.85rem; color:#666; margin-bottom:10px;">회원님의 이용 내역:</p>';
+        activeList.forEach(m => {
+          const statusStr = String(m.status || "");
+          const isOngoing = statusStr.indexOf("진행") === 0;
+          const cardStyle = isOngoing 
+            ? "border:2px solid #2196f3; background:#f0f7ff;" 
+            : "border:1px solid #e2e8f0; background:#f8fafc; opacity:0.7;";
+          const statusColor = isOngoing ? "#2196f3" : "#94a3b8";
+          const textStyle = isOngoing ? "font-weight:700;" : "text-decoration:line-through; color:#94a3b8;";
+
+          html += `
+            <div style="padding:15px; border-radius:12px; margin-bottom:12px; position:relative; ${cardStyle}">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; border-bottom:1px solid rgba(0,0,0,0.05); padding-bottom:8px;">
+                <span style="font-size:0.95rem; ${textStyle} flex:1; padding-right:10px; word-break:keep-all;">${m.membership || "내역없음"}</span>
+                <span style="font-size:0.7rem; font-weight:700; color:${statusColor}; background:#fff; padding:2px 8px; border-radius:20px; border:1px solid ${statusColor}; white-space:nowrap;">
+                  ${statusStr || "기록없음"}
+                </span>
+              </div>
+              <div class="info-row" style="margin-bottom:4px;"><span class="label">잔여횟수</span><span class="value">${m.remainCount || 0} 회</span></div>
+              <div class="info-row"><span class="label">만료일자</span><span class="value">${m.expireDate || "-"}</span></div>
+            </div>`;
+        });
+        container.innerHTML = html;
+      } else {
+        container.innerHTML = '<div style="text-align:center; padding:20px; background:#f8f9fa; border-radius:10px; color:#999;">기록된 내역이 없습니다.</div>';
+      }
+    }
+
+    function loadInitialData() {
+      if (typeof google === 'undefined') return;
+      const container = document.getElementById('activeListContainer');
+      google.script.run.withSuccessHandler(function(res) {
+        if (res.error) {
+          container.innerHTML = `<div style="color:#ff5252; text-align:center; padding:15px;">❌ 조회 오류: ${res.error}</div>`;
+          return;
+        }
+        if (res.success && res.member) {
+          currentMemberData = res.member;
+          if (res.member.name && res.member.name !== "-") {
+            document.getElementById('disp_name').innerText = res.member.name.replace(/\d{4}$/, "");
+          }
+          renderActiveList(res.member.activeList);
+        }
+        if (res.success && res.config) {
+          configs = res.config;
+          const select = document.getElementById('membership');
+          select.innerHTML = '<option value="">권종을 선택하세요</option>';
+          configs.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.name; opt.innerText = c.name;
+            select.appendChild(opt);
+          });
+        }
+      }).getMemberRenewalData(phoneParam);
+    }
+
+    function updateExpectedValues() {
+      const type = document.getElementById('renewType').value;
+      const mName = document.getElementById('membership').value;
+      const startDateVal = document.getElementById('startDate').value;
+      
+      const found = configs.find(c => c.name === mName);
+      if (!found) return;
+
+      // 1. 결제 금액 자동 입력 (found.price가 이제 실제 가격임)
+      document.getElementById('price').value = found.price || 0;
+
+      // 2. 만료일 및 잔여횟수 계산
+      let baseDate = startDateVal ? new Date(startDateVal) : new Date();
+      let prevCount = 0;
+      const ongoing = (currentMemberData && currentMemberData.activeList) 
+        ? currentMemberData.activeList.find(m => String(m.status || "").indexOf("진행") === 0 && m.membership === mName) 
+        : null;
+
+      if (type === "연장결제" && ongoing) {
+        if (ongoing.expireDate && ongoing.expireDate !== "-") {
+          const oldExp = new Date(ongoing.expireDate);
+          if (!isNaN(oldExp.getTime())) {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            // 기존 만료일이 오늘보다 이후면 기존 만료일부터 가산, 아니면 오늘(시작일)부터 가산
+            baseDate = (oldExp > today) ? oldExp : new Date(startDateVal);
+          }
+        }
+        prevCount = Number(ongoing.remainCount) || 0;
+      }
+
+      // 만료일 계산 (일수 단위로 정직하게 더하기)
+      const expDate = new Date(baseDate);
+      const daysToAdd = Number(found.duration) || 0;
+      expDate.setDate(expDate.getDate() + daysToAdd);
+      
+      if (!isNaN(expDate.getTime())) {
+        const y = expDate.getFullYear();
+        const m = (expDate.getMonth() + 1).toString().padStart(2, '0');
+        const d = expDate.getDate().toString().padStart(2, '0');
+        document.getElementById('exp_preview').innerText = `${y}-${m}-${d}`;
+      }
+
+      // 횟수 계산 (연장결제 시)
+      const isMonthly = (mName.indexOf('월권') !== -1 || mName.indexOf('운동만') !== -1);
+      let totalCount = Number(found.count) || 0;
+      
+      if (type === "연장결제") {
+        if (isMonthly) {
+          // 월권은 합산하지 않고 이월딱지 안내
+          document.getElementById('count_preview').innerText = totalCount + " 회" + (prevCount > 0 ? " (+ 기존 " + prevCount + "회 이월딱지 생성)" : "");
+        } else {
+          // 횟수권은 합산
+          totalCount += prevCount;
+          document.getElementById('count_preview').innerText = totalCount + " 회 (기존 " + prevCount + "회 합산됨)";
+        }
+      } else {
+        document.getElementById('count_preview').innerText = totalCount + " 회";
+      }
+    }
+
+    function initSig() {
+      let drawing = false;
+      function getP(e) {
+        const r = canvas.getBoundingClientRect();
+        const x = e.touches ? e.touches[0].clientX : e.clientX;
+        const y = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: x - r.left, y: y - r.top };
+      }
+      canvas.addEventListener('mousedown', e => { drawing = true; signed = true; const p = getP(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
+      canvas.addEventListener('mousemove', e => { if (drawing) { const p = getP(e); ctx.lineTo(p.x, p.y); ctx.stroke(); } });
+      canvas.addEventListener('mouseup', () => drawing = false);
+      canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; signed = true; const p = getP(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }, {passive:false});
+      canvas.addEventListener('touchmove', e => { e.preventDefault(); if (drawing) { const p = getP(e); ctx.lineTo(p.x, p.y); ctx.stroke(); } }, {passive:false});
+      canvas.addEventListener('touchend', () => drawing = false);
+    }
+    function clearSig() { ctx.clearRect(0, 0, canvas.width, canvas.height); signed = false; }
+
+    function submitData() {
+      if (!signed) return alert("서명을 해주세요.");
+      if (!document.getElementById('membership').value) return alert("권종을 선택하세요.");
+      document.getElementById('loading').style.display = 'flex';
+      
+      const tmp = document.createElement('canvas');
+      tmp.width = canvas.width; tmp.height = canvas.height;
+      const tCtx = tmp.getContext('2d');
+      tCtx.fillStyle = '#fff'; tCtx.fillRect(0,0,tmp.width,tmp.height);
+      tCtx.drawImage(canvas, 0, 0);
+
+      const data = {
+        phone: phoneParam,
+        renewType: document.getElementById('renewType').value,
+        membership: document.getElementById('membership').value,
+        startDate: document.getElementById('startDate').value,
+        price: document.getElementById('price').value,
+        payMethod: document.getElementById('payMethod').value,
+        memo: document.getElementById('memo').value,
+        signature: tmp.toDataURL('image/png')
+      };
+
+      google.script.run.withSuccessHandler(function(res) {
+        document.getElementById('loading').style.display = 'none';
+        if (res.error) alert(res.error);
+        else {
+          showSuccessModal(res.message);
+        }
+      }).submitRenewal(data);
+    }
+
+    function showSuccessModal(msg) {
+      const modal = document.createElement('div');
+      modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; justify-content:center; align-items:center; z-index:1000;";
+      modal.innerHTML = `
+        <div style="background:#fff; padding:30px; border-radius:20px; text-align:center; max-width:90%; width:350px;">
+          <div style="font-size:4rem; margin-bottom:15px;">✅</div>
+          <h2 style="margin-bottom:10px;">처리 완료!</h2>
+          <p style="margin-bottom:25px;">${msg}</p>
+          <button onclick="goBack()" style="width:100%; padding:15px; background:#ff5252; color:#fff; border:none; border-radius:12px; font-size:1.1rem; font-weight:700;">확인 (관리자 화면으로)</button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    function goBack() {
+      window.location.href = "<?!= scriptUrl ?>?page=admin";
+    }
+  </script>
+</body>
+</html>

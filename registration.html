@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>노형점핑 회원 등록/연장</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #ff5252;
+      --primary-dark: #e04040;
+      --bg-light: #f7fafc;
+      --glass-bg: rgba(255, 255, 255, 0.9);
+      --glass-border: rgba(226, 232, 240, 0.8);
+      --text-main: #2d3748;
+      --text-sub: #718096;
+      --input-bg: #ffffff;
+      --input-border: #cbd5e0;
+      --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
+
+    body {
+      background-color: var(--bg-light);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 20px;
+      padding-bottom: 80px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-top: 20px;
+    }
+
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 25px;
+      margin-bottom: 25px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .glass-card h2 {
+      font-size: 1.2rem; 
+      margin-bottom: 20px; 
+      border-bottom: 2px solid var(--glass-border); 
+      padding-bottom:10px;
+      color: #1a202c;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text-main);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 14px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 10px;
+      color: var(--text-main);
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 82, 82, 0.15);
+    }
+
+    .agreement-box {
+      background: #edf2f7;
+      border: 1px solid var(--input-border);
+      border-radius: 10px;
+      padding: 15px;
+      height: 250px;
+      overflow-y: auto;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #4a5568;
+      margin-bottom: 15px;
+    }
+
+    .signature-wrapper {
+      border: 1px solid var(--input-border);
+      border-radius: 10px;
+      background: #ffffff;
+      overflow: hidden;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    
+    #signaturePad {
+      width: 100%;
+      height: 200px;
+      display: block;
+      touch-action: none;
+    }
+
+    .btn-clear {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 16px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 10px;
+      box-shadow: 0 4px 6px rgba(255, 82, 82, 0.2);
+    }
+
+    .btn-submit:active { 
+      transform: translateY(2px);
+    }
+
+    #loadingOverlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.9); z-index: 9999;
+      display: none; justify-content: center; align-items: center; flex-direction: column;
+    }
+    #loadingOverlay.show { display: flex; }
+    .spinner {
+      width: 50px; height: 50px;
+      border: 5px solid #edf2f7;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+      display: none; justify-content: center; align-items: center; z-index: 2000;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .modal-overlay.show { display: flex; opacity: 1; }
+    .modal-content {
+      background: linear-gradient(145deg, #ffffff, #f8f9fa);
+      border-radius: 24px; width: 90%; max-width: 400px; padding: 40px 30px;
+      text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      transform: translateY(20px); transition: transform 0.3s;
+    }
+    .modal-overlay.show .modal-content { transform: translateY(0); }
+    .success-icon { font-size: 4rem; margin-bottom: 20px; display: block; }
+    .success-title { font-size: 1.5rem; font-weight: 700; color: #2d3748; margin-bottom: 10px; }
+    .success-msg { color: #718096; line-height: 1.6; margin-bottom: 30px; }
+    .btn-home {
+      background: var(--primary); color: white; border: none; padding: 15px 30px;
+      border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; width: 100%;
+      position: relative; z-index: 10001;
+    }
+    .btn-home:active { transform: scale(0.98); background: var(--primary-dark); }
+  </style>
+</head>
+<body>
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div style="color:#2d3748; font-weight:bold;">처리 중입니다...</div>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <h1 id="pageTitle">노형점핑 신규 가입</h1>
+      <p id="pageDesc" style="color:var(--text-sub); margin-top:5px;">환영합니다! 정보를 입력해 주세요.</p>
+    </div>
+
+    <form id="regForm" onsubmit="event.preventDefault(); submitForm();">
+      
+      <div class="glass-card">
+        <h2>👤 기본 정보</h2>
+        <div class="form-group">
+          <label>성함 *</label>
+          <input type="text" id="r_name" class="form-control" required placeholder="홍길동">
+        </div>
+        <div class="form-group">
+          <label>휴대폰 번호 *</label>
+          <input type="tel" id="r_phone" class="form-control" required placeholder="010-1234-5678" oninput="autoHyphen(this)">
+        </div>
+        <div class="form-group">
+          <label>생년월일</label>
+          <input type="date" id="r_birth" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>주소</label>
+          <input type="text" id="r_address" class="form-control" placeholder="제주시 노형동 ...">
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <h2>📋 회원권 및 관리 정보</h2>
+        <div class="form-group">
+          <label>등록 권종 *</label>
+          <select id="r_membership" class="form-control" required>
+            <option value="">선택하세요</option>
+            <option value="점핑 30회">점핑 30회</option>
+            <option value="테라피 10회">테라피 10회</option>
+            <option value="월권">월권</option>
+            <option value="운동만">운동만</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>시작일 (결제 적용일) *</label>
+          <input type="date" id="r_startDate" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>결제 수단 *</label>
+          <select id="r_payMethod" class="form-control" required>
+            <option value="카드">카드</option>
+            <option value="현금">현금</option>
+            <option value="계좌이체">계좌이체</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>운동 목표 (감량/체력 등)</label>
+          <input type="text" id="r_goal" class="form-control" placeholder="예: 5kg 감량">
+        </div>
+        <div class="form-group">
+          <label>목표 체중</label>
+          <input type="text" id="r_goalWeight" class="form-control" placeholder="예: 55kg">
+        </div>
+        <div class="form-group">
+          <label>현재 복용 중인 약 / 특이사항</label>
+          <input type="text" id="r_meds" class="form-control" placeholder="없음">
+        </div>
+        <div class="form-group" style="position: relative;">
+          <label>추천인 (선택)</label>
+          <input type="text" id="r_referrer" class="form-control" placeholder="추천인 성함 입력" oninput="searchReferrer(this.value)">
+          <input type="hidden" id="r_referrer_id" value="">
+          <div id="referrerResults" style="position: absolute; top: 100%; left: 0; right: 0; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; z-index: 100; display: none; max-height: 200px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); color: #2d3748;"></div>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <h2>📜 이용 약정서 및 서명</h2>
+        <div class="agreement-box">
+          <h3 style="color:var(--primary); font-size:1.1rem; text-align:center; margin-bottom:15px;">[노형점핑&체온테라피 이용 약정서]</h3>
+          <p><strong>1. 이용권별 유효기간</strong><br>
+          - 모든 이용권은 기간 내 사용 필수, 기간 경과 시 자동 소멸됩니다.<br>
+          - 월권: 30일 / 점핑 30회: 90일 / 테라피 10회: 60일</p>
+          <p style="margin-top:10px;"><strong>2. 환불 규정</strong><br>
+          - 환불 시 총 등록 금액의 10% 위약금 발생.<br>
+          - 기간제: 가입일로부터 경과 일수(1일 15,000원) 공제 후 환불.<br>
+          - 횟수권: 사용 횟수(1회 15,000~25,000원) 공제 후 환불.</p>
+          <p style="margin-top:10px;"><strong>3. 기타</strong><br>
+          - 이벤트 상품은 정지/연장/환불 불가.<br>
+          - 센터는 사전 공지를 통해 운영 규정을 수정할 수 있습니다.</p>
+        </div>
+        <label style="display: block; margin-bottom: 10px; color: var(--primary);">정자체로 서명해 주세요. *</label>
+        <div class="signature-wrapper">
+          <canvas id="signaturePad"></canvas>
+          <button type="button" class="btn-clear" onclick="clearSignature()">지우기</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">약정서 동의 및 가입 완료</button>
+    </form>
+  </div>
+
+  <script>
+    window.onload = function() {
+      initSignature();
+      document.getElementById('r_startDate').valueAsDate = new Date();
+      
+      // URL에서 직접 폰번호 추출 (가장 안전한 방식)
+      const urlParams = new URLSearchParams(window.location.search);
+      const phoneParam = urlParams.get('phone');
+      
+      if (phoneParam) {
+        document.getElementById('pageTitle').innerText = "회원 연장 / 재등록";
+        document.getElementById('pageDesc').innerText = "기존 회원님의 정보를 확인하고 연장을 진행합니다.";
+        document.getElementById('r_phone').value = phoneParam;
+        document.getElementById('submitBtn').innerText = "연장 및 결제 완료";
+        loadExistingMemberInfo(phoneParam);
+      }
+    };
+
+    function autoHyphen(t) {
+      t.value = t.value.replace(/[^0-9]/g, '').replace(/^(\d{0,3})(\d{0,4})(\d{0,4})$/g, "$1-$2-$3").replace(/(\-{1,2})$/g, "");
+    }
+
+    const canvas = document.getElementById('signaturePad');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let hasSignature = false;
+
+    function initSignature() {
+      const wrapper = document.querySelector('.signature-wrapper');
+      canvas.width = wrapper.clientWidth;
+      canvas.height = wrapper.clientHeight;
+      ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.strokeStyle = '#000';
+    }
+
+    canvas.addEventListener('mousedown', s); canvas.addEventListener('mousemove', d); canvas.addEventListener('mouseup', e);
+    canvas.addEventListener('touchstart', s, {passive:false}); canvas.addEventListener('touchmove', d, {passive:false}); canvas.addEventListener('touchend', e);
+
+    function getP(e) { const r = canvas.getBoundingClientRect(); const x = e.touches ? e.touches[0].clientX : e.clientX; const y = e.touches ? e.touches[0].clientY : e.clientY; return {x: x-r.left, y: y-r.top}; }
+    function s(e) { e.preventDefault(); isDrawing = true; hasSignature = true; const p = getP(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+    function d(e) { if(!isDrawing) return; e.preventDefault(); const p = getP(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }
+    function e() { isDrawing = false; }
+    function clearSignature() { ctx.clearRect(0,0,canvas.width,canvas.height); hasSignature = false; }
+
+    function searchReferrer(val) {
+      const div = document.getElementById('referrerResults');
+      if(val.trim().length < 1) { div.style.display='none'; return; }
+      
+      div.innerHTML = '<div style="padding:12px; color:#a0aec0; font-size:0.9rem;">🔍 검색 중...</div>';
+      div.style.display = 'block';
+
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run
+          .withFailureHandler(function(err) {
+            div.innerHTML = '<div style="padding:12px; color:#e53e3e; font-size:0.9rem;">연결 오류가 발생했습니다.</div>';
+          })
+          .withSuccessHandler(function(res) {
+            if(!res.results || res.results.length === 0) { 
+              div.innerHTML = '<div style="padding:12px; color:#718096; font-size:0.9rem;">일치하는 회원이 없습니다.</div>';
+              return; 
+            }
+            div.innerHTML = res.results.map(m => `
+              <div style="padding:12px 15px; border-bottom:1px solid #f7fafc; cursor:pointer; color:#2d3748; font-size:1rem; transition: background 0.2s;" 
+                   onclick="selectRef('${m.name}', '${m.phone}')"
+                   onmouseover="this.style.background='#f1f5f9'" 
+                   onmouseout="this.style.background='transparent'">
+                <span style="font-weight:600;">${m.name}</span> <span style="font-size:0.85rem; color:#a0aec0; margin-left:5px;">(${m.phone.slice(-4)})</span>
+              </div>
+            `).join('');
+          }).searchAllMembers(val);
+      }
+    }
+
+    function selectRef(name, phone) {
+      document.getElementById('r_referrer').value = name;
+      document.getElementById('r_referrer_id').value = phone;
+      document.getElementById('referrerResults').style.display = 'none';
+    }
+
+    function loadExistingMemberInfo(phone) {
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run.withSuccessHandler(function(res) {
+          if(res.success && res.member) {
+            document.getElementById('r_name').value = res.member.name || '';
+            document.getElementById('r_birth').value = res.member.birthdate || '';
+            document.getElementById('r_address').value = res.member.address || '';
+            document.getElementById('r_goal').value = res.member.goal || '';
+            document.getElementById('r_goalWeight').value = res.member.goalWeight || '';
+            document.getElementById('r_meds').value = res.member.medication || '';
+          }
+        }).getMemberInfoForRenewal(phone);
+      }
+    }
+
+    function submitForm() {
+      if (!hasSignature) return alert("약정서에 서명해 주세요.");
+      const btn = document.getElementById('submitBtn');
+      const overlay = document.getElementById('loadingOverlay');
+      btn.disabled = true; overlay.classList.add('show');
+
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
+      const tCtx = tempCanvas.getContext('2d');
+      tCtx.fillStyle = '#fff'; tCtx.fillRect(0,0,tempCanvas.width,tempCanvas.height);
+      tCtx.drawImage(canvas, 0, 0);
+
+      let refName = document.getElementById('r_referrer').value.trim();
+      let refId = document.getElementById('r_referrer_id').value.trim();
+      if (!refName) refId = "";
+
+      const formData = {
+        name: document.getElementById('r_name').value.trim(),
+        phone: document.getElementById('r_phone').value.trim(),
+        birthdate: document.getElementById('r_birth').value,
+        address: document.getElementById('r_address').value,
+        membership: document.getElementById('r_membership').value,
+        startDate: document.getElementById('r_startDate').value,
+        goal: document.getElementById('r_goal').value,
+        goalWeight: document.getElementById('r_goalWeight').value,
+        medication: document.getElementById('r_meds').value,
+        referrer: refName,
+        referrerId: refId,
+        payMethod: document.getElementById('r_payMethod').value,
+        signature: tempCanvas.toDataURL('image/png')
+      };
+
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run.withSuccessHandler(function(res) {
+          overlay.classList.remove('show'); btn.disabled = false;
+          if (res.error) alert(res.error);
+          else {
+            document.getElementById('successModal').classList.add('show');
+          }
+        }).submitRegistration(formData);
+      }
+    }
+
+    // 성공 팝업 닫고 새로고침
+    function finishRegistration() {
+      // 모바일 딜레이 방지를 위해 즉시 실행
+      const url = window.location.href.split('#')[0];
+      window.location.replace(url);
+    }
+  </script>
+  <!-- 성공 안내 모달 -->
+  <div class="modal-overlay" id="successModal">
+    <div class="modal-content">
+      <span class="success-icon">✨</span>
+      <h2 class="success-title">등록 완료!</h2>
+      <p class="success-msg">신규 가입 및 장부 기록이<br>성공적으로 완료되었습니다!</p>
+      <button class="btn-home" id="finalOkBtn" onclick="finishRegistration()">확인</button>
+    </div>
+  </div>
+
+</body>
+</html>

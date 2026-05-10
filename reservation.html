@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4a90e2; /* 예약 시스템은 차분한 블루톤 유지 */
+      --primary-dark: #357abd;
+      --bg-light: #f7fafc;
+      --glass-bg: rgba(255, 255, 255, 0.95);
+      --glass-border: rgba(226, 232, 240, 0.8);
+      --text-main: #2d3748;
+      --text-sub: #718096;
+      --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
+    body { background-color: var(--bg-light); color: var(--text-main); padding: 20px; max-width: 500px; margin: 0 auto; min-height: 100vh; }
+    
+    #notice-banner { 
+      background: #fff3cd; color: #856404; padding: 12px; border-radius: 12px; margin-bottom: 20px; 
+      font-size: 0.95rem; font-weight: 600; overflow: hidden; height: 45px; position: relative; 
+      border: 1px solid #ffeeba; box-shadow: 0 2px 5px rgba(0,0,0,0.02); display: flex; align-items: center;
+    }
+    #notice-content { position: absolute; white-space: nowrap; animation: roll 15s linear infinite; }
+    @keyframes roll { 0% { left: 100%; } 100% { left: -100%; } }
+    
+    .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+    .img-btn { width: 100%; cursor: pointer; border-radius: 16px; box-shadow: var(--card-shadow); transition: transform 0.2s; }
+    .img-btn:active { transform: scale(0.96); }
+    
+    .step { 
+      display: none; background: var(--glass-bg); padding: 25px; border-radius: 16px; 
+      margin-bottom: 15px; border: 1px solid var(--glass-border); box-shadow: var(--card-shadow); 
+    }
+    .active { display: block; border: 2px solid var(--primary); animation: fadeIn 0.3s ease-out; }
+    .completed { display: block; opacity: 0.7; border-left: 5px solid #48bb78; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .step p { margin-bottom: 15px; font-size: 1.1rem; color: #1a202c; }
+    
+    .btn-grid, #idList, #lookupIdList, #lookupResults { display: grid; gap: 10px; }
+    #idList, #lookupIdList, #timeList { grid-template-columns: 1fr 1fr; }
+    #roomList { grid-template-columns: 1fr 1fr 1fr; }
+    
+    .btn-item { 
+      padding: 15px 10px; border: 1px solid #cbd5e0; border-radius: 12px; background: #fff; 
+      cursor: pointer; text-align: center; font-weight: 600; color: var(--text-main);
+      display: flex; flex-direction: column; justify-content: center; align-items: center; 
+      line-height: 1.4; transition: all 0.2s; font-size: 0.95rem;
+    }
+    .btn-item:active { transform: scale(0.98); }
+    .selected { background: var(--primary) !important; color: white !important; border-color: var(--primary); box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3); }
+    .booked { background: #edf2f7; color: #a0aec0; cursor: not-allowed; border-color: #e2e8f0; }
+    
+    #summary-section { 
+      margin-top: 30px; background: var(--glass-bg); padding: 20px; border-radius: 16px; 
+      border: 1px solid var(--glass-border); box-shadow: var(--card-shadow); 
+    }
+    #summary-section strong { display: block; font-size: 1.1rem; margin-bottom: 15px; color: var(--text-main); border-bottom: 2px solid #edf2f7; padding-bottom: 10px;}
+    
+    input { 
+      width: 100%; padding: 16px; font-size: 1.2rem; font-weight: 600; color: var(--text-main);
+      border: 1px solid #cbd5e0; border-radius: 12px; box-sizing: border-box; 
+      text-align: center; letter-spacing: 3px; outline: none; transition: all 0.3s; 
+      background: #fff;
+    }
+    input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15); }
+    
+    .primary-btn { 
+      width: 100%; padding: 16px; background: var(--primary); color: white; border: none; 
+      border-radius: 12px; font-weight: 700; font-size: 1.1rem; cursor: pointer; 
+      margin-top: 15px; transition: background 0.2s, transform 0.1s; box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+    }
+    .primary-btn:active { transform: scale(0.98); }
+    .primary-btn:disabled { background: #cbd5e0; cursor: not-allowed; box-shadow: none; }
+  </style>
+</head>
+<body>
+  <div style="text-align: center; padding: 10px 0;">
+    <img src="https://drive.google.com/thumbnail?id=1294x-K2aBT5CzyoNnaq2-6CPEIfyFEzk&sz=w1000" 
+         style="max-width: 95%; height: auto; display: inline-block;" alt="점핑장 로고">
+  </div> 
+
+  <div id="notice-banner">
+    <div id="notice-content">📢 개인 수건을 꼭 지참해주세요. 클럽 수건 및 찜질복 사용 시 대여비가 추가됩니다!</div>
+  </div>
+  <div class="menu-grid">
+    <div class="action-btn" onclick="startBooking()" style="background: linear-gradient(135deg, #4a90e2, #357abd); color: white;">
+      <span style="font-size: 2rem; margin-bottom: 8px; display: block;">🌿</span>
+      <span>테라피 예약하기</span>
+    </div>
+    <div class="action-btn" onclick="startLookup()" style="background: var(--glass-bg); color: var(--text-main); border: 1px solid var(--glass-border);">
+      <span style="font-size: 2rem; margin-bottom: 8px; display: block;">🔍</span>
+      <span>내 예약 조회</span>
+    </div>
+  </div>
+
+  <style>
+    /* 추가된 버튼 스타일 */
+    .action-btn {
+      padding: 25px 15px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1.1rem;
+      box-shadow: var(--card-shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .action-btn:active {
+      transform: scale(0.96);
+    }
+  </style>
+
+  <div id="booking-flow" style="display:none;">
+    <div id="step1" class="step active"><p><strong>1. 본인 확인</strong> (뒷번호 4자리)</p>
+      <input type="number" id="phoneInput"><button class="primary-btn" onclick="findID()">조회</button>
+    </div>
+    <div id="step2" class="step"><p><strong>2. 회원 선택</strong></p><div id="idList" class="btn-grid"></div></div>
+    <div id="step3" class="step"><p><strong>3. 날짜 선택</strong></p><input type="date" id="dateInput" onchange="loadTimes()"></div>
+    <div id="step4" class="step"><p><strong>4. 시간 선택</strong></p><div id="timeList" class="btn-grid"></div></div>
+    <div id="step5" class="step"><p><strong>5. 방 선택</strong></p><div id="roomList" class="btn-grid"></div>
+      <div id="final-ui" style="display:none; margin-top:15px; padding:15px; background:#e7f3ff; border-radius:10px; border:1px dashed #007bff;">
+        <p id="confirm-info"></p><button class="primary-btn" style="background:#28a745;" onclick="finish()">예약 완료</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="step-lookup" class="step">
+    <p><strong>예약 조회</strong> (뒷번호 4자리)</p>
+    <input type="number" id="lookupPhone" placeholder="예: 1234" oninput="checkLookupInput()">
+    <button id="lookupSearchBtn" class="primary-btn" onclick="findIDForLookup()" style="width:100%; margin-top:10px; padding:12px; background:#ccc; color:white; border:none; border-radius:8px; cursor:not-allowed;" disabled>조회 대상 찾기</button>
+    <div id="lookupIdList" class="btn-grid" style="margin-top:10px;"></div>
+    <div id="lookupResults" style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;"></div>
+  </div>
+
+  <div id="summary-section"><strong>🗓️ 오늘의 예약 현황</strong><div id="summary-list" style="margin-top:10px; font-size:14px;">불러오는 중...</div></div>
+
+  <script>
+    let resData = {};
+
+    window.onload = function() {
+      if (typeof google !== 'undefined' && google.script) {
+        // 공지사항은 하드코딩된 텍스트를 사용하므로 백엔드 호출 제거
+        refreshSummary();
+        setInterval(refreshSummary, 60000);
+      }
+    };
+
+    function refreshSummary() {
+      google.script.run.withSuccessHandler(d => {
+        let h = "";
+        let sortedKeys = Object.keys(d).sort(); 
+        sortedKeys.forEach(t => {
+          h += `<div><strong>${t}</strong> ${Array.isArray(d[t]) ? d[t].join(', ') : d[t]}</div>`;
+        });
+        document.getElementById('summary-list').innerHTML = h || "진행 중인 내역 없음";
+      }).getTodaySummary();
+    }
+
+    function startBooking() { 
+      document.getElementById('step-lookup').style.display='none'; 
+      document.getElementById('booking-flow').style.display='block'; 
+    }
+    
+    function startLookup() { 
+      document.getElementById('booking-flow').style.display='none'; 
+      document.getElementById('step-lookup').style.display='block'; 
+      document.getElementById('lookupPhone').value = "";
+      document.getElementById('lookupIdList').innerHTML = "";
+      document.getElementById('lookupResults').innerHTML = "";
+      checkLookupInput();
+    }
+
+    function checkLookupInput() {
+      const val = document.getElementById('lookupPhone').value;
+      const btn = document.getElementById('lookupSearchBtn');
+      if(val.length === 0) {
+        document.getElementById('lookupIdList').innerHTML = "";
+        document.getElementById('lookupResults').innerHTML = "";
+      }
+      if(val.length === 4) {
+        btn.style.background = "#007bff"; btn.disabled = false; btn.style.cursor = "pointer";
+      } else {
+        btn.style.background = "#ccc"; btn.disabled = true;
+      }
+    }
+
+    function findID() {
+      const phoneVal = document.getElementById('phoneInput').value;
+      if(!phoneVal) return alert("번호를 입력해주세요.");
+
+      for(let i=2; i<=5; i++) { 
+        document.getElementById('step' + i).style.display = 'none'; 
+        document.getElementById('step' + i).classList.remove('active', 'completed');
+      }
+      
+      resData = {};
+      document.getElementById('idList').innerHTML = "조회 중...";
+      document.getElementById('timeList').innerHTML = "";
+      document.getElementById('roomList').innerHTML = "";
+      document.getElementById('final-ui').style.display = 'none';
+
+      google.script.run.withSuccessHandler(list => {
+        if (!list || list.length === 0) {
+          document.getElementById('idList').innerHTML = "검색 결과가 없습니다."; return;
+        }
+        let h = ""; 
+        list.forEach(m => { 
+          // m은 이제 {displayName, name, phone} 객체입니다.
+          h += `<div class="btn-item" onclick='selectMember(${JSON.stringify(m)})'>${m.displayName}</div>`; 
+        });
+        document.getElementById('idList').innerHTML = h;
+        document.getElementById('step2').style.display = 'block';
+        document.getElementById('step2').classList.add('active');
+      }).getMemberIDList(phoneVal);
+    }
+
+    function selectMember(m) {
+      resData.date = ""; resData.time = ""; resData.room = "";
+      document.getElementById('dateInput').value = "";
+      document.getElementById('timeList').innerHTML = "";
+      document.getElementById('roomList').innerHTML = "";
+      document.getElementById('final-ui').style.display = 'none';
+      
+      resData.memberID = m.displayName; 
+      resData.nameOnly = m.name;
+      resData.phone = m.phone; // 전체 전화번호 저장
+
+      const items = document.querySelectorAll('#idList .btn-item');
+      items.forEach(item => { item.classList.toggle('selected', item.innerText === m.displayName); });
+
+      document.getElementById('step1').classList.add('completed');
+      document.getElementById('step2').classList.add('completed');
+      document.getElementById('step3').style.display = 'block';
+      document.getElementById('step3').classList.add('active');
+      document.getElementById('dateInput').value = "";
+      document.getElementById('dateInput').min = new Date().toISOString().split('T')[0];
+    }
+
+    function loadTimes() {
+      resData.time = ""; resData.room = "";
+      document.getElementById('timeList').innerHTML = "시간표 불러오는 중...";
+      document.getElementById('roomList').innerHTML = "";
+      document.getElementById('final-ui').style.display = 'none';
+      const selectedDate = document.getElementById('dateInput').value;
+      if (!selectedDate) return;
+      resData.date = selectedDate;
+
+      google.script.run.withSuccessHandler(times => {
+        let h = "";
+        if (typeof times === 'string' && times.startsWith("휴무:")) {
+          h = `<div style="color:red; font-weight:bold; padding:20px; text-align:center;">${times.split(":")[1]}</div>`;
+        } else if (Array.isArray(times)) {
+          times.forEach(t => {
+            if(t.isFull) h += `<div class="btn-item booked" >${t.display}</div>`;
+            else h += `<div class="btn-item" onclick="selectTime(this, '${t.timeValue}')">${t.display}</div>`;
+          });
+        }
+        document.getElementById('timeList').innerHTML = h || "예약 가능한 시간이 없습니다.";
+        document.getElementById('step3').classList.add('completed'); 
+        document.getElementById('step4').style.display = 'block';
+        document.getElementById('step4').classList.add('active');
+      }).getTodayTimetable(selectedDate);
+    }
+
+    function selectTime(el, t) {
+      resData.time = t; 
+      document.querySelectorAll('#timeList .btn-item').forEach(b => b.classList.remove('selected')); 
+      el.classList.add('selected');
+      
+      google.script.run.withSuccessHandler(rooms => {
+        let h = ""; 
+        rooms.forEach(r => {
+          if (r.isBooked) h += `<div class="btn-item booked">${r.name}<br><small>(예약마감)</small></div>`;
+          else h += `<div class="btn-item" onclick="selectRoom(this, '${r.name}')">${r.name}<br><small>(예약가능)</small></div>`;
+        });
+        document.getElementById('roomList').innerHTML = h;
+        document.getElementById('step4').classList.add('completed'); 
+        document.getElementById('step5').style.display = 'block';
+        document.getElementById('step5').classList.add('active');
+      }).getRoomStatus(resData.date, t);
+    }
+
+    function selectRoom(el, r) {
+      resData.room = r; 
+      document.querySelectorAll('#roomList .btn-item').forEach(b => b.classList.remove('selected')); 
+      el.classList.add('selected');
+      
+      document.getElementById('confirm-info').innerHTML = 
+        `<div style="text-align:center; padding:5px;">` +
+          `<strong style="color:#007bff; font-size:16px;">[예약 내용 확인]</strong><br><br>` +
+          `<div style="text-align:left; background:#fff; padding:10px; border-radius:5px; border:1px solid #ddd; line-height:1.6;">` +
+            `• 성함: ${resData.nameOnly}<br>` +
+            `• 연락처: ${resData.phone}<br>` +
+            `• 예약일시: ${resData.date} ${resData.time}<br>` +
+            `• 배정방: ${resData.room}` +
+          `</div><br>` +
+          `<b style="color:#e63946;">위 내용으로 예약을 진행하시겠습니까?</b>` +
+        `</div>`;
+        
+      const finalBtn = document.querySelector('#final-ui .primary-btn');
+      finalBtn.style.background = "#007bff"; 
+      finalBtn.innerText = "네, 예약 확정합니다";
+        
+      document.getElementById('final-ui').style.display='block';
+    }
+
+    function finish() {
+      const btn = document.querySelector('#final-ui .primary-btn');
+      btn.innerText = "예약 처리 중...";
+      btn.disabled = true;
+
+      google.script.run.withSuccessHandler(() => {
+        document.body.innerHTML = `
+          <div style="text-align:center; padding-top:100px; font-family: 'Noto Sans KR', sans-serif;">
+            <h1 style="color:#28a745; font-size:40px;">✅</h1>
+            <h2 style="color:#333;">예약이 완료되었습니다!</h2>
+            <p style="color:#666;">예약을 전송했습니다.</p>
+          </div>`;
+        
+        setTimeout(() => { location.reload(); }, 2000); 
+      }).submitReservation(resData);
+    }
+
+    function findIDForLookup() {
+      const val = document.getElementById('lookupPhone').value;
+      if(val.length !== 4) return alert("4자리를 입력해주세요.");
+      google.script.run.withSuccessHandler(list => {
+        if(!list.length) return alert("회원을 찾을 수 없습니다.");
+        let html = ""; 
+        list.forEach(id => html += `<div class="btn-item" onclick="finalLookup(event, '${id}')">${id}</div>`);
+        document.getElementById('lookupIdList').innerHTML = html;
+        document.getElementById('lookupResults').innerHTML = ""; 
+      }).getMemberIDList(val);
+    }
+
+    function finalLookup(event, id) {
+      document.querySelectorAll('#lookupIdList .btn-item').forEach(b => b.classList.remove('selected'));
+      event.target.classList.add('selected');
+      google.script.run.withSuccessHandler(list => {
+        let html = "";
+        if(!list.length) html = "<div style='color:red; text-align:center; padding:10px;'>예약 내역이 없습니다.</div>";
+        else list.forEach(r => html += `<div style="border-bottom:1px solid #eee; padding:10px; text-align:left;">✅ ${r.date} ${r.time} (${r.room})</div>`);
+        document.getElementById('lookupResults').innerHTML = html;
+      }).getMyReservations(id);
+    }
+  </script>
+</body>
+</html>
