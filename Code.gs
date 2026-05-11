@@ -852,13 +852,20 @@ function processAttendance(phoneStr, type, isBonus) {
         var resData = resSheet.getDataRange().getValues();
         var todayFormatted = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
         
+        var todayNum = todayFormatted.replace(/[^0-9]/g, "");
+        var phoneClean = String(phoneStr || "").replace(/[^0-9]/g, "");
+        
         for (var rIdx = 1; rIdx < resData.length; rIdx++) {
           var rDateRaw = resData[rIdx][3];
-          var rDateStr = (rDateRaw instanceof Date) ? Utilities.formatDate(rDateRaw, "GMT+9", "yyyy-MM-dd") : String(rDateRaw).split(" ")[0];
-          var rPhone = String(resData[rIdx][1]).replace(/[^0-9]/g, "");
+          var rDateNum = String(rDateRaw).replace(/[^0-9]/g, "");
+          if (rDateNum.length > 8) rDateNum = rDateNum.substring(0, 8); // yyyyMMdd 만 추출
           
-          // 오늘 날짜 + 전화번호 매칭 + '예약'이 포함된 상태인 경우 (예약 완료 등)
-          if (rDateStr === todayFormatted && rPhone === phoneStr && String(resData[rIdx][9]).indexOf("예약") !== -1) {
+          var rPhone = String(resData[rIdx][1]).replace(/[^0-9]/g, "");
+          var resName = String(resData[rIdx][2] || "").trim().normalize("NFC");
+          var logName = String(firstMemberName || "").trim().normalize("NFC");
+          
+          // 오늘 날짜 + 전화번호 매칭 + 이름 매칭 + '예약'이 포함된 상태인 경우
+          if (rDateNum === todayNum && rPhone === phoneClean && resName === logName && String(resData[rIdx][9]).indexOf("예약") !== -1) {
             resSheet.getRange(rIdx + 1, 10).setValue("테라피 진행중");
             resSheet.getRange(rIdx + 1, 11).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
             break;
@@ -912,12 +919,16 @@ function processKioskCheckout(phoneStr) {
     var success = false;
     var memberName = "";
 
+    var todayNum = todayStr.replace(/[^0-9]/g, "");
+    
     for (var i = 1; i < resData.length; i++) {
       var rDateRaw = resData[i][3];
-      var rDateStr = (rDateRaw instanceof Date) ? Utilities.formatDate(rDateRaw, "GMT+9", "yyyy-MM-dd") : String(rDateRaw).split(" ")[0];
+      var rDateNum = String(rDateRaw).replace(/[^0-9]/g, "");
+      if (rDateNum.length > 8) rDateNum = rDateNum.substring(0, 8);
+      
       var rPhone = String(resData[i][1]).replace(/[^0-9]/g, "");
       
-      if (rDateStr === todayStr && rPhone === phoneClean && String(resData[i][9]) === "테라피 진행중") {
+      if (rDateNum === todayNum && rPhone === phoneClean && String(resData[i][9]) === "테라피 진행중") {
         resSheet.getRange(i + 1, 10).setValue("귀가_테라피 완료");
         resSheet.getRange(i + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
         memberName = resData[i][2];
@@ -1495,16 +1506,20 @@ function processAdminCheckout(data) {
     var memberName = logSheet.getRange(rowIdx, cols.name + 1).getValue();
     var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
     
+    var todayNum = todayStr.replace(/[^0-9]/g, "");
+    
     for (var k = 1; k < resData.length; k++) {
       var rDateRaw = resData[k][3];
-      var rDateStr = (rDateRaw instanceof Date) ? Utilities.formatDate(rDateRaw, "GMT+9", "yyyy-MM-dd") : String(rDateRaw).split(" ")[0];
+      var rDateNum = String(rDateRaw).replace(/[^0-9]/g, "");
+      if (rDateNum.length > 8) rDateNum = rDateNum.substring(0, 8);
+      
       var rPhone = String(resData[k][1]).replace(/[^0-9]/g, ""); // 예약DB B열 (회원ID/전화번호)
       
       var resName = String(resData[k][2] || "").trim().normalize("NFC");
       var logName = String(memberName || "").trim().normalize("NFC");
 
-      // 이름과 전화번호 둘 다 매칭 (동명이인 방지)
-      if (rDateStr === todayStr && resName === logName && rPhone === phoneStr && String(resData[k][9]).indexOf("진행중") !== -1) {
+      // 오늘 날짜 + 이름 + 전화번호 매칭 (상태가 진행중인 경우만)
+      if (rDateNum === todayNum && resName === logName && rPhone === phoneStr && String(resData[k][9]).indexOf("진행중") !== -1) {
         resSheet.getRange(k + 1, 10).setValue("귀가_테라피 완료");
         resSheet.getRange(k + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
         break;
@@ -1798,18 +1813,18 @@ function editAdminCheckout(data) {
       try {
         var resSheet = ss.getSheetByName("예약DB");
         var resData = resSheet.getDataRange().getValues();
-        var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
-        var mName = logSheet.getRange(rowIdx, 3).getValue();
-        var mPhone = String(logSheet.getRange(rowIdx, 4).getValue()).replace(/[^0-9]/g, "");
+        var todayNum = todayStr.replace(/[^0-9]/g, "");
 
         for (var k = 1; k < resData.length; k++) {
           var rDateRaw = resData[k][3];
-          var rDateStr = (rDateRaw instanceof Date) ? Utilities.formatDate(rDateRaw, "GMT+9", "yyyy-MM-dd") : String(rDateRaw).split(" ")[0];
+          var rDateNum = String(rDateRaw).replace(/[^0-9]/g, "");
+          if (rDateNum.length > 8) rDateNum = rDateNum.substring(0, 8);
+          
           var rPhone = String(resData[k][1]).replace(/[^0-9]/g, "");
           var resName = String(resData[k][2] || "").trim().normalize("NFC");
           var logName = String(mName || "").trim().normalize("NFC");
 
-          if (rDateStr === todayStr && resName === logName && rPhone === mPhone && String(resData[k][9]).indexOf("진행중") !== -1) {
+          if (rDateNum === todayNum && resName === logName && rPhone === mPhone && String(resData[k][9]).indexOf("진행중") !== -1) {
             resSheet.getRange(k + 1, 10).setValue("귀가_테라피 완료");
             resSheet.getRange(k + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
             break;
