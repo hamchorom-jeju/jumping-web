@@ -863,17 +863,17 @@ function processAttendance(phoneStr, type, isBonus) {
           var rDateNum = rDateParts[0] + (rDateParts[1].length === 1 ? "0" : "") + rDateParts[1] + (rDateParts[2].length === 1 ? "0" : "") + rDateParts[2];
           
           var rPhone = String(resData[rIdx][1]).replace(/[^0-9]/g, "");
-          var resName = String(resData[rIdx][2] || "").trim().normalize("NFC");
-          var logName = String(firstMemberName || "").trim().normalize("NFC");
-          
           var isPhoneMatch = (rPhone === phoneClean) || 
                              (rPhone.length >= 8 && phoneClean.length >= 8 && rPhone.slice(-8) === phoneClean.slice(-8));
 
-          // 오늘 날짜 + 전화번호 매칭 + 이름 매칭 + '예약'이 포함된 상태인 경우
-          if (rDateNum === todayNum && isPhoneMatch && resName === logName && String(resData[rIdx][9]).indexOf("예약") !== -1) {
-            resSheet.getRange(rIdx + 1, 10).setValue("테라피중");
-            resSheet.getRange(rIdx + 1, 11).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
-            break;
+          // 이름 매칭은 생략하고 날짜와 전화번호만으로 매칭 (이름 오타/공백 방지)
+          if (rDateNum === todayNum && isPhoneMatch) {
+            var status = String(resData[rIdx][9]);
+            if (status.indexOf("예약") !== -1 || status.indexOf("테라피") !== -1) {
+              resSheet.getRange(rIdx + 1, 10).setValue("테라피중");
+              resSheet.getRange(rIdx + 1, 11).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
+              break;
+            }
           }
         }
       } catch (resErr) {
@@ -934,13 +934,17 @@ function processKioskCheckout(phoneStr) {
       var rDateNum = rDateParts[0] + (rDateParts[1].length === 1 ? "0" : "") + rDateParts[1] + (rDateParts[2].length === 1 ? "0" : "") + rDateParts[2];
       
       var rPhone = String(resData[i][1]).replace(/[^0-9]/g, "");
+      var isPhoneMatch = (rPhone === phoneClean) || (rPhone.length >= 8 && phoneClean.length >= 8 && rPhone.slice(-8) === phoneClean.slice(-8));
       
-      if (rDateNum === todayNum && rPhone === phoneClean && String(resData[i][9]).indexOf("테라피중") !== -1) {
-        resSheet.getRange(i + 1, 10).setValue("귀가");
-        resSheet.getRange(i + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
-        memberName = resData[i][2];
-        success = true;
-        break;
+      if (rDateNum === todayNum && isPhoneMatch) {
+        var status = String(resData[i][9]);
+        if (status.indexOf("테라피") !== -1 || status.indexOf("예약") !== -1) {
+          resSheet.getRange(i + 1, 10).setValue("귀가");
+          resSheet.getRange(i + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
+          memberName = resData[i][2];
+          success = true;
+          break;
+        }
       }
     }
 
@@ -1530,18 +1534,17 @@ function processAdminCheckout(data) {
       if (!rDateParts || rDateParts.length < 3) continue;
       var rDateNum = rDateParts[0] + (rDateParts[1].length === 1 ? "0" : "") + rDateParts[1] + (rDateParts[2].length === 1 ? "0" : "") + rDateParts[2];
       
-      var rPhone = String(resData[k][1]).replace(/[^0-9]/g, ""); // 예약DB B열 (회원ID/전화번호)
-      
-      var resName = String(resData[k][2] || "").trim().normalize("NFC");
-      var logName = String(memberName || "").trim().normalize("NFC");
-      
+      var rPhone = String(resData[k][1]).replace(/[^0-9]/g, ""); 
       var isPhoneMatch = (rPhone === phoneStr) || (rPhone.length >= 8 && phoneStr.length >= 8 && rPhone.slice(-8) === phoneStr.slice(-8));
 
-      // 오늘 날짜 + 이름 + 전화번호 매칭 (상태가 테라피중인 경우만)
-      if (rDateNum === todayNum && resName === logName && isPhoneMatch && String(resData[k][9]).indexOf("테라피중") !== -1) {
-        resSheet.getRange(k + 1, 10).setValue("귀가");
-        resSheet.getRange(k + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
-        break;
+      // 이름 매칭 생략: 날짜와 전화번호만으로 매칭
+      if (rDateNum === todayNum && isPhoneMatch) {
+        var status = String(resData[k][9]);
+        if (status.indexOf("테라피") !== -1 || status.indexOf("예약") !== -1) {
+          resSheet.getRange(k + 1, 10).setValue("귀가");
+          resSheet.getRange(k + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
+          break;
+        }
       }
     }
     
@@ -1848,13 +1851,15 @@ function editAdminCheckout(data) {
           var rDateNum = rDateParts[0] + (rDateParts[1].length === 1 ? "0" : "") + rDateParts[1] + (rDateParts[2].length === 1 ? "0" : "") + rDateParts[2];
           
           var rPhone = String(resData[k][1]).replace(/[^0-9]/g, "");
-          var resName = String(resData[k][2] || "").trim().normalize("NFC");
-          var logName = String(mName || "").trim().normalize("NFC");
+          var isPhoneMatch = (rPhone === mPhone) || (rPhone.length >= 8 && mPhone.length >= 8 && rPhone.slice(-8) === mPhone.slice(-8));
 
-          if (rDateNum === todayNum && resName === logName && rPhone === mPhone && String(resData[k][9]).indexOf("테라피중") !== -1) {
-            resSheet.getRange(k + 1, 10).setValue("귀가");
-            resSheet.getRange(k + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
-            break;
+          if (rDateNum === todayNum && isPhoneMatch) {
+            var status = String(resData[k][9]);
+            if (status.indexOf("테라피") !== -1 || status.indexOf("예약") !== -1) {
+              resSheet.getRange(k + 1, 10).setValue("귀가");
+              resSheet.getRange(k + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
+              break;
+            }
           }
         }
       } catch(e) {}
