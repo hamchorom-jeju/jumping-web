@@ -866,8 +866,11 @@ function processAttendance(phoneStr, type, isBonus) {
           var resName = String(resData[rIdx][2] || "").trim().normalize("NFC");
           var logName = String(firstMemberName || "").trim().normalize("NFC");
           
+          var isPhoneMatch = (rPhone === phoneClean) || 
+                             (rPhone.length >= 8 && phoneClean.length >= 8 && rPhone.slice(-8) === phoneClean.slice(-8));
+
           // 오늘 날짜 + 전화번호 매칭 + 이름 매칭 + '예약'이 포함된 상태인 경우
-          if (rDateNum === todayNum && rPhone === phoneClean && resName === logName && String(resData[rIdx][9]).indexOf("예약") !== -1) {
+          if (rDateNum === todayNum && isPhoneMatch && resName === logName && String(resData[rIdx][9]).indexOf("예약") !== -1) {
             resSheet.getRange(rIdx + 1, 10).setValue("테라피중");
             resSheet.getRange(rIdx + 1, 11).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
             break;
@@ -1404,7 +1407,11 @@ function getAdminDashboardData() {
         var nowTotalMin = (parseInt(nowParts[0]) * 60) + parseInt(nowParts[1]);
 
         for (var a=0; a<activeJumping.length; a++) {
-          if (activeJumping[a].name === rName) {
+          var mPhone = String(activeJumping[a].phone).replace(/[^0-9]/g, "");
+          var rPhone = String(resData[k][1]).replace(/[^0-9]/g, "");
+          var isPhoneMatch = (rPhone === mPhone) || (rPhone.length >= 8 && mPhone.length >= 8 && rPhone.slice(-8) === mPhone.slice(-8));
+
+          if (activeJumping[a].name === rName && isPhoneMatch) {
             var inParts = activeJumping[a].inTime.split(":");
             var inTotalMin = (parseInt(inParts[0]) * 60) + parseInt(inParts[1]);
             var matchDiff = Math.abs(resTotalMin - inTotalMin);
@@ -1415,7 +1422,11 @@ function getAdminDashboardData() {
           }
         }
         for (var b=0; b<activeTherapy.length; b++) {
-          if (activeTherapy[b].name === rName) {
+          var mPhoneT = String(activeTherapy[b].phone).replace(/[^0-9]/g, "");
+          var rPhoneT = String(resData[k][1]).replace(/[^0-9]/g, "");
+          var isPhoneMatchT = (rPhoneT === mPhoneT) || (rPhoneT.length >= 8 && mPhoneT.length >= 8 && rPhoneT.slice(-8) === mPhoneT.slice(-8));
+
+          if (activeTherapy[b].name === rName && isPhoneMatchT) {
             var inPartsT = activeTherapy[b].inTime.split(":");
             var inTotalMinT = (parseInt(inPartsT[0]) * 60) + parseInt(inPartsT[1]);
             var matchDiffT = Math.abs(resTotalMin - inTotalMinT);
@@ -1523,9 +1534,11 @@ function processAdminCheckout(data) {
       
       var resName = String(resData[k][2] || "").trim().normalize("NFC");
       var logName = String(memberName || "").trim().normalize("NFC");
+      
+      var isPhoneMatch = (rPhone === phoneStr) || (rPhone.length >= 8 && phoneStr.length >= 8 && rPhone.slice(-8) === phoneStr.slice(-8));
 
       // 오늘 날짜 + 이름 + 전화번호 매칭 (상태가 테라피중인 경우만)
-      if (rDateNum === todayNum && resName === logName && rPhone === phoneStr && String(resData[k][9]).indexOf("테라피중") !== -1) {
+      if (rDateNum === todayNum && resName === logName && isPhoneMatch && String(resData[k][9]).indexOf("테라피중") !== -1) {
         resSheet.getRange(k + 1, 10).setValue("귀가");
         resSheet.getRange(k + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
         break;
@@ -1813,10 +1826,16 @@ function editAdminCheckout(data) {
     var currentStatus = String(logSheet.getRange(rowIdx, 12).getValue());
     if (currentStatus === "입실") {
       logSheet.getRange(rowIdx, 12).setValue("귀가");
-      logSheet.getRange(rowIdx, 13).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm"));
+      var now = new Date();
+      var timeStr = Utilities.formatDate(now, "GMT+9", "HH:mm");
+      logSheet.getRange(rowIdx, 13).setValue(timeStr);
       
       // 예약DB 연동 (수정 시에도 귀가로 바뀌면 예약DB 업데이트)
       try {
+        var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+        var mName = logSheet.getRange(rowIdx, 3).getValue();
+        var mPhone = String(logSheet.getRange(rowIdx, 4).getValue()).replace(/[^0-9]/g, "");
+
         var resSheet = ss.getSheetByName("예약DB");
         var resData = resSheet.getDataRange().getDisplayValues();
         var todayParts = todayStr.match(/\d+/g);
