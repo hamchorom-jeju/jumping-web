@@ -849,7 +849,7 @@ function processAttendance(phoneStr, type, isBonus) {
     if (type === '테라피' || type === '복합' || type === '보너스') {
       try {
         var resSheet = ss.getSheetByName("예약DB");
-        var resData = resSheet.getDataRange().getValues();
+        var resData = resSheet.getDataRange().getDisplayValues();
         var todayFormatted = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
         
         var todayNum = todayFormatted.replace(/[^0-9]/g, "");
@@ -911,7 +911,7 @@ function processKioskCheckout(phoneStr) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var resSheet = ss.getSheetByName("예약DB");
-    var resData = resSheet.getDataRange().getValues();
+    var resData = resSheet.getDataRange().getDisplayValues();
     var now = new Date();
     var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
     
@@ -1502,7 +1502,7 @@ function processAdminCheckout(data) {
     
     // 3. 테라피 예약 매칭 (완료 처리)
     var resSheet = ss.getSheetByName("예약DB");
-    var resData = resSheet.getDataRange().getValues();
+    var resData = resSheet.getDataRange().getDisplayValues();
     var memberName = logSheet.getRange(rowIdx, cols.name + 1).getValue();
     var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
     
@@ -1812,7 +1812,7 @@ function editAdminCheckout(data) {
       // 예약DB 연동 (수정 시에도 귀가로 바뀌면 예약DB 업데이트)
       try {
         var resSheet = ss.getSheetByName("예약DB");
-        var resData = resSheet.getDataRange().getValues();
+        var resData = resSheet.getDataRange().getDisplayValues();
         var todayNum = todayStr.replace(/[^0-9]/g, "");
 
         for (var k = 1; k < resData.length; k++) {
