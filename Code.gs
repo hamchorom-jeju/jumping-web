@@ -1457,9 +1457,10 @@ function processAdminCheckout(data) {
     logSheet.getRange(rowIdx, cols.status + 1).setValue("귀가"); 
     logSheet.getRange(rowIdx, cols.outTime + 1).setValue(timeStr);
     
+    var phoneStr = String(logSheet.getRange(rowIdx, cols.phone + 1).getValue()).replace(/[^0-9]/g, "");
+
     // 2. 추가 차감 처리 (체크박스 선택 시)
     if (data.extraDeduct) {
-      var phoneStr = String(logSheet.getRange(rowIdx, cols.phone + 1).getValue()).replace(/[^0-9]/g, "");
       var rData = regSheet.getDataRange().getValues();
       var rCols = getRegColumnIndices(regSheet);
       
@@ -1499,8 +1500,11 @@ function processAdminCheckout(data) {
       var rDateStr = (rDateRaw instanceof Date) ? Utilities.formatDate(rDateRaw, "GMT+9", "yyyy-MM-dd") : String(rDateRaw).split(" ")[0];
       var rPhone = String(resData[k][1]).replace(/[^0-9]/g, ""); // 예약DB B열 (회원ID/전화번호)
       
+      var resName = String(resData[k][2] || "").trim().normalize("NFC");
+      var logName = String(memberName || "").trim().normalize("NFC");
+
       // 이름과 전화번호 둘 다 매칭 (동명이인 방지)
-      if (rDateStr === todayStr && String(resData[k][2]) === memberName && rPhone === phoneStr && String(resData[k][9]).indexOf("진행중") !== -1) {
+      if (rDateStr === todayStr && resName === logName && rPhone === phoneStr && String(resData[k][9]).indexOf("진행중") !== -1) {
         resSheet.getRange(k + 1, 10).setValue("귀가_테라피 완료");
         resSheet.getRange(k + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
         break;
@@ -1802,7 +1806,10 @@ function editAdminCheckout(data) {
           var rDateRaw = resData[k][3];
           var rDateStr = (rDateRaw instanceof Date) ? Utilities.formatDate(rDateRaw, "GMT+9", "yyyy-MM-dd") : String(rDateRaw).split(" ")[0];
           var rPhone = String(resData[k][1]).replace(/[^0-9]/g, "");
-          if (rDateStr === todayStr && String(resData[k][2]) === mName && rPhone === mPhone && String(resData[k][9]).indexOf("진행중") !== -1) {
+          var resName = String(resData[k][2] || "").trim().normalize("NFC");
+          var logName = String(mName || "").trim().normalize("NFC");
+
+          if (rDateStr === todayStr && resName === logName && rPhone === mPhone && String(resData[k][9]).indexOf("진행중") !== -1) {
             resSheet.getRange(k + 1, 10).setValue("귀가_테라피 완료");
             resSheet.getRange(k + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
             break;
