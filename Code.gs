@@ -852,13 +852,15 @@ function processAttendance(phoneStr, type, isBonus) {
         var resData = resSheet.getDataRange().getDisplayValues();
         var todayFormatted = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
         
-        var todayNum = todayFormatted.replace(/[^0-9]/g, "");
+        var todayParts = todayFormatted.match(/\d+/g);
+        var todayNum = todayParts[0] + (todayParts[1].length === 1 ? "0" : "") + todayParts[1] + (todayParts[2].length === 1 ? "0" : "") + todayParts[2];
         var phoneClean = String(phoneStr || "").replace(/[^0-9]/g, "");
         
         for (var rIdx = 1; rIdx < resData.length; rIdx++) {
           var rDateRaw = resData[rIdx][3];
-          var rDateNum = String(rDateRaw).replace(/[^0-9]/g, "");
-          if (rDateNum.length > 8) rDateNum = rDateNum.substring(0, 8); // yyyyMMdd 만 추출
+          var rDateParts = String(rDateRaw).match(/\d+/g);
+          if (!rDateParts || rDateParts.length < 3) continue;
+          var rDateNum = rDateParts[0] + (rDateParts[1].length === 1 ? "0" : "") + rDateParts[1] + (rDateParts[2].length === 1 ? "0" : "") + rDateParts[2];
           
           var rPhone = String(resData[rIdx][1]).replace(/[^0-9]/g, "");
           var resName = String(resData[rIdx][2] || "").trim().normalize("NFC");
@@ -919,12 +921,14 @@ function processKioskCheckout(phoneStr) {
     var success = false;
     var memberName = "";
 
-    var todayNum = todayStr.replace(/[^0-9]/g, "");
+    var todayParts = todayStr.match(/\d+/g);
+    var todayNum = todayParts[0] + (todayParts[1].length === 1 ? "0" : "") + todayParts[1] + (todayParts[2].length === 1 ? "0" : "") + todayParts[2];
     
     for (var i = 1; i < resData.length; i++) {
       var rDateRaw = resData[i][3];
-      var rDateNum = String(rDateRaw).replace(/[^0-9]/g, "");
-      if (rDateNum.length > 8) rDateNum = rDateNum.substring(0, 8);
+      var rDateParts = String(rDateRaw).match(/\d+/g);
+      if (!rDateParts || rDateParts.length < 3) continue;
+      var rDateNum = rDateParts[0] + (rDateParts[1].length === 1 ? "0" : "") + rDateParts[1] + (rDateParts[2].length === 1 ? "0" : "") + rDateParts[2];
       
       var rPhone = String(resData[i][1]).replace(/[^0-9]/g, "");
       
@@ -1506,12 +1510,14 @@ function processAdminCheckout(data) {
     var memberName = logSheet.getRange(rowIdx, cols.name + 1).getValue();
     var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
     
-    var todayNum = todayStr.replace(/[^0-9]/g, "");
+    var todayParts = todayStr.match(/\d+/g);
+    var todayNum = todayParts[0] + (todayParts[1].length === 1 ? "0" : "") + todayParts[1] + (todayParts[2].length === 1 ? "0" : "") + todayParts[2];
     
     for (var k = 1; k < resData.length; k++) {
       var rDateRaw = resData[k][3];
-      var rDateNum = String(rDateRaw).replace(/[^0-9]/g, "");
-      if (rDateNum.length > 8) rDateNum = rDateNum.substring(0, 8);
+      var rDateParts = String(rDateRaw).match(/\d+/g);
+      if (!rDateParts || rDateParts.length < 3) continue;
+      var rDateNum = rDateParts[0] + (rDateParts[1].length === 1 ? "0" : "") + rDateParts[1] + (rDateParts[2].length === 1 ? "0" : "") + rDateParts[2];
       
       var rPhone = String(resData[k][1]).replace(/[^0-9]/g, ""); // 예약DB B열 (회원ID/전화번호)
       
@@ -1813,12 +1819,14 @@ function editAdminCheckout(data) {
       try {
         var resSheet = ss.getSheetByName("예약DB");
         var resData = resSheet.getDataRange().getDisplayValues();
-        var todayNum = todayStr.replace(/[^0-9]/g, "");
+        var todayParts = todayStr.match(/\d+/g);
+        var todayNum = todayParts[0] + (todayParts[1].length === 1 ? "0" : "") + todayParts[1] + (todayParts[2].length === 1 ? "0" : "") + todayParts[2];
 
         for (var k = 1; k < resData.length; k++) {
           var rDateRaw = resData[k][3];
-          var rDateNum = String(rDateRaw).replace(/[^0-9]/g, "");
-          if (rDateNum.length > 8) rDateNum = rDateNum.substring(0, 8);
+          var rDateParts = String(rDateRaw).match(/\d+/g);
+          if (!rDateParts || rDateParts.length < 3) continue;
+          var rDateNum = rDateParts[0] + (rDateParts[1].length === 1 ? "0" : "") + rDateParts[1] + (rDateParts[2].length === 1 ? "0" : "") + rDateParts[2];
           
           var rPhone = String(resData[k][1]).replace(/[^0-9]/g, "");
           var resName = String(resData[k][2] || "").trim().normalize("NFC");
