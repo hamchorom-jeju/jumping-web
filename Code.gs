@@ -868,7 +868,7 @@ function processAttendance(phoneStr, type, isBonus) {
           
           // 오늘 날짜 + 전화번호 매칭 + 이름 매칭 + '예약'이 포함된 상태인 경우
           if (rDateNum === todayNum && rPhone === phoneClean && resName === logName && String(resData[rIdx][9]).indexOf("예약") !== -1) {
-            resSheet.getRange(rIdx + 1, 10).setValue("테라피 진행중");
+            resSheet.getRange(rIdx + 1, 10).setValue("테라피중");
             resSheet.getRange(rIdx + 1, 11).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
             break;
           }
@@ -932,8 +932,8 @@ function processKioskCheckout(phoneStr) {
       
       var rPhone = String(resData[i][1]).replace(/[^0-9]/g, "");
       
-      if (rDateNum === todayNum && rPhone === phoneClean && String(resData[i][9]) === "테라피 진행중") {
-        resSheet.getRange(i + 1, 10).setValue("귀가_테라피 완료");
+      if (rDateNum === todayNum && rPhone === phoneClean && String(resData[i][9]).indexOf("테라피중") !== -1) {
+        resSheet.getRange(i + 1, 10).setValue("귀가");
         resSheet.getRange(i + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
         memberName = resData[i][2];
         success = true;
@@ -1524,9 +1524,9 @@ function processAdminCheckout(data) {
       var resName = String(resData[k][2] || "").trim().normalize("NFC");
       var logName = String(memberName || "").trim().normalize("NFC");
 
-      // 오늘 날짜 + 이름 + 전화번호 매칭 (상태가 진행중인 경우만)
-      if (rDateNum === todayNum && resName === logName && rPhone === phoneStr && String(resData[k][9]).indexOf("진행중") !== -1) {
-        resSheet.getRange(k + 1, 10).setValue("귀가_테라피 완료");
+      // 오늘 날짜 + 이름 + 전화번호 매칭 (상태가 테라피중인 경우만)
+      if (rDateNum === todayNum && resName === logName && rPhone === phoneStr && String(resData[k][9]).indexOf("테라피중") !== -1) {
+        resSheet.getRange(k + 1, 10).setValue("귀가");
         resSheet.getRange(k + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
         break;
       }
@@ -1832,8 +1832,8 @@ function editAdminCheckout(data) {
           var resName = String(resData[k][2] || "").trim().normalize("NFC");
           var logName = String(mName || "").trim().normalize("NFC");
 
-          if (rDateNum === todayNum && resName === logName && rPhone === mPhone && String(resData[k][9]).indexOf("진행중") !== -1) {
-            resSheet.getRange(k + 1, 10).setValue("귀가_테라피 완료");
+          if (rDateNum === todayNum && resName === logName && rPhone === mPhone && String(resData[k][9]).indexOf("테라피중") !== -1) {
+            resSheet.getRange(k + 1, 10).setValue("귀가");
             resSheet.getRange(k + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
             break;
           }
