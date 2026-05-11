@@ -14,15 +14,18 @@
     #installBanner {
       display: none;
       position: fixed;
-      top: 0; left: 0; width: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
       background: var(--primary);
       color: white;
       padding: 15px;
       text-align: center;
       z-index: 9999;
       font-weight: 700;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
+
     #installBtn {
       background: white;
       color: var(--primary);
@@ -33,6 +36,7 @@
       font-weight: 800;
       cursor: pointer;
     }
+
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
 
     :root {
@@ -92,7 +96,8 @@
 
     .container {
       padding: 20px;
-      max-width: 1000px; /* 태블릿 대화면 대응: 가로 폭 확장 */
+      max-width: 1000px;
+      /* 태블릿 대화면 대응: 가로 폭 확장 */
       margin: 0 auto;
       padding-bottom: 100px;
       /* 하단 돋보기 버튼 공간 확보 */
@@ -308,6 +313,7 @@
       border-radius: 12px;
       transition: all 0.2s;
     }
+
     .m-btn-cancel:hover {
       background: #edf2f7;
       border-color: #cbd5e0;
@@ -435,9 +441,11 @@
       display: flex;
       gap: 10px;
     }
+
     .res-bar-container::-webkit-scrollbar {
       display: none;
     }
+
     .res-pill {
       display: inline-flex;
       align-items: center;
@@ -451,6 +459,7 @@
       font-weight: 600;
       flex-shrink: 0;
     }
+
     .res-pill .res-time {
       color: #fff;
       font-weight: 800;
@@ -459,6 +468,7 @@
       border-radius: 20px;
       font-size: 0.75rem;
     }
+
     .res-pill .res-room {
       color: var(--text-sub);
       font-size: 0.75rem;
@@ -476,6 +486,7 @@
       margin-top: 15px;
       transition: all 0.2s;
     }
+
     .btn-close:hover {
       background: #edf2f7;
       border-color: #cbd5e0;
@@ -491,14 +502,17 @@
   </div>
 
   <!-- 테라피 예열 알림 바 -->
-  <div id="therapyAlertBar" style="display:none; background:linear-gradient(90deg, #f56565, #ed64a6); color:white; padding:12px 15px; text-align:center; font-weight:800; font-size:0.95rem; position:sticky; top:0; z-index:5000; box-shadow: 0 4px 12px rgba(245,101,101,0.3); animation: pulse-red 2s infinite;">
+  <div id="therapyAlertBar"
+    style="display:none; background:linear-gradient(90deg, #f56565, #ed64a6); color:white; padding:12px 15px; text-align:center; font-weight:800; font-size:0.95rem; position:sticky; top:0; z-index:5000; box-shadow: 0 4px 12px rgba(245,101,101,0.3); animation: pulse-red 2s infinite;">
     <div style="display:flex; justify-content:center; align-items:center; gap:15px; max-width:500px; margin:0 auto;">
       <span id="therapyAlertMsg">🔥 테라피 예열을 시작하세요!</span>
-      <button onclick="dismissTherapyAlert()" style="background:rgba(255,255,255,0.2); border:1px solid white; color:white; padding:4px 12px; border-radius:20px; font-size:0.8rem; cursor:pointer; font-weight:900;">확인함</button>
+      <button onclick="dismissTherapyAlert()"
+        style="background:rgba(255,255,255,0.2); border:1px solid white; color:white; padding:4px 12px; border-radius:20px; font-size:0.8rem; cursor:pointer; font-weight:900;">확인함</button>
     </div>
   </div>
 
-  <div class="navbar" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 15px;">
+  <div class="navbar"
+    style="display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 15px;">
     <h1 style="font-size: 1rem; line-height: 1.2; flex-shrink: 0; min-width: 70px;">👑 관리자<br>대시보드</h1>
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; flex-grow: 1;">
       <button class="nav-btn" onclick="openChallengeMenu()"
@@ -514,8 +528,11 @@
   </div>
 
   <!-- 문자 발송 대기 알림 바 -->
-  <div id="smsPendingAlert" style="display:none; background:rgba(107, 70, 193, 0.9); color:white; padding:8px 15px; font-size:0.85rem; font-weight:700; text-align:center; border-bottom:1px solid rgba(255,255,255,0.1); cursor:pointer;" onclick="openSmsLogModal()">
-    💬 발송 대기 중인 문자가 <span id="pendingSmsCount" style="color:#fbd38d; font-size:1rem; text-decoration:underline;">0</span>건 있습니다. 바로 확인해보세요!
+  <div id="smsPendingAlert"
+    style="display:none; background:rgba(107, 70, 193, 0.9); color:white; padding:8px 15px; font-size:0.85rem; font-weight:700; text-align:center; border-bottom:1px solid rgba(255,255,255,0.1); cursor:pointer;"
+    onclick="openSmsLogModal()">
+    💬 발송 대기 중인 문자가 <span id="pendingSmsCount"
+      style="color:#fbd38d; font-size:1rem; text-decoration:underline;">0</span>건 있습니다. 바로 확인해보세요!
   </div>
 
   <!-- 33 챌린지: 인바디 등록 모달 -->
@@ -625,16 +642,22 @@
 
   <!-- 테라피 예약 현황 모달 -->
   <div class="modal-overlay" id="reservationModal" style="z-index: 4000;">
-    <div class="modal-content" style="background: #ffffff; max-height: 85vh; display: flex; flex-direction: column; padding: 25px 20px;">
+    <div class="modal-content"
+      style="background: #ffffff; max-height: 85vh; display: flex; flex-direction: column; padding: 25px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
         <div class="modal-header" style="margin-bottom:0;">🌿 테라피 예약 명단</div>
-        <button onclick="openFlashSettingModal()" style="background:#f7fafc; border:1px solid #e2e8f0; padding:6px 10px; border-radius:8px; font-size:0.75rem; font-weight:700; color:#4a5568; cursor:pointer;">⚙️ 벙개/휴일 설정</button>
+        <button onclick="openFlashSettingModal()"
+          style="background:#f7fafc; border:1px solid #e2e8f0; padding:6px 10px; border-radius:8px; font-size:0.75rem; font-weight:700; color:#4a5568; cursor:pointer;">⚙️
+          벙개/휴일 설정</button>
       </div>
-      
+
       <!-- 날짜 선택 영역 -->
       <div style="margin-bottom: 20px; display: flex; gap: 8px; align-items: center;">
-        <input type="date" id="resViewDate" class="form-control" style="flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.9rem;" onchange="loadReservationData()">
-        <button onclick="loadReservationData()" style="background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: 700; font-size: 0.85rem;">조회</button>
+        <input type="date" id="resViewDate" class="form-control"
+          style="flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.9rem;"
+          onchange="loadReservationData()">
+        <button onclick="loadReservationData()"
+          style="background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: 700; font-size: 0.85rem;">조회</button>
       </div>
 
       <div id="reservationListContent" style="flex: 1; overflow-y: auto; padding-right: 2px;">
@@ -646,14 +669,22 @@
 
   <!-- 문자 발송 목록 모달 -->
   <div class="modal-overlay" id="smsLogModal">
-    <div class="modal-content" style="height: 85vh; max-height: 85vh; display: flex; flex-direction: column; background: #ffffff; padding: 25px 15px;">
+    <div class="modal-content"
+      style="height: 85vh; max-height: 85vh; display: flex; flex-direction: column; background: #ffffff; padding: 25px 15px;">
       <div class="modal-header" style="margin-bottom:10px;">📧 문자 발송 관리</div>
-      
+
       <!-- 카테고리 탭 -->
-      <div style="display: flex; gap: 5px; margin-bottom: 20px; background: #f1f5f9; padding: 5px; border-radius: 12px;">
-        <button class="sms-tab-btn active" id="tab-sms-reg" onclick="setSmsCategory('registration')" style="flex:1; border:none; padding:10px 5px; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;">등록 안내</button>
-        <button class="sms-tab-btn" id="tab-sms-absent" onclick="setSmsCategory('absent')" style="flex:1; border:none; padding:10px 5px; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;">장기 미방문</button>
-        <button class="sms-tab-btn" id="tab-sms-return" onclick="setSmsCategory('return')" style="flex:1; border:none; padding:10px 5px; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;">장기 미등록</button>
+      <div
+        style="display: flex; gap: 5px; margin-bottom: 20px; background: #f1f5f9; padding: 5px; border-radius: 12px;">
+        <button class="sms-tab-btn active" id="tab-sms-reg" onclick="setSmsCategory('registration')"
+          style="flex:1; border:none; padding:10px 5px; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;">등록
+          안내</button>
+        <button class="sms-tab-btn" id="tab-sms-absent" onclick="setSmsCategory('absent')"
+          style="flex:1; border:none; padding:10px 5px; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;">장기
+          미방문</button>
+        <button class="sms-tab-btn" id="tab-sms-return" onclick="setSmsCategory('return')"
+          style="flex:1; border:none; padding:10px 5px; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;">장기
+          미등록</button>
       </div>
 
       <div id="smsLogList" style="flex: 1; overflow-y: auto; padding-bottom: 20px;">
@@ -664,8 +695,16 @@
   </div>
 
   <style>
-    .sms-tab-btn { background: transparent; color: #64748b; }
-    .sms-tab-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .sms-tab-btn {
+      background: transparent;
+      color: #64748b;
+    }
+
+    .sms-tab-btn.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
   </style>
 
   <!-- 문자 발송 상세 모달 -->
@@ -677,7 +716,8 @@
       </div>
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:20px;">
         <button class="m-btn" style="background:#4299e1; color:white;" onclick="copySmsInfo('phone')">📞 번호 복사</button>
-        <button class="m-btn" style="background:#6b46c1; color:white;" onclick="copySmsInfo('content')">📝 문구 복사</button>
+        <button class="m-btn" style="background:#6b46c1; color:white;" onclick="copySmsInfo('content')">📝 문구
+          복사</button>
       </div>
       <button class="btn-submit" id="btnSmsComplete" style="margin-top:15px; background:#48bb78;">✅ 발송 완료 처리</button>
       <button class="btn-close" onclick="closeSmsDetailModal()" style="margin-top:10px;">취소</button>
@@ -719,15 +759,36 @@
           transform: rotate(360deg);
         }
       }
+
       @keyframes pulse-red {
-        0% { opacity: 1; }
-        50% { opacity: 0.8; }
-        100% { opacity: 1; }
+        0% {
+          opacity: 1;
+        }
+
+        50% {
+          opacity: 0.8;
+        }
+
+        100% {
+          opacity: 1;
+        }
       }
+
       @keyframes pulse-card {
-        0% { transform: scale(1); box-shadow: 0 4px 15px rgba(245,101,101,0.2); }
-        50% { transform: scale(1.03); box-shadow: 0 4px 25px rgba(245,101,101,0.5); }
-        100% { transform: scale(1); box-shadow: 0 4px 15px rgba(245,101,101,0.2); }
+        0% {
+          transform: scale(1);
+          box-shadow: 0 4px 15px rgba(245, 101, 101, 0.2);
+        }
+
+        50% {
+          transform: scale(1.03);
+          box-shadow: 0 4px 25px rgba(245, 101, 101, 0.5);
+        }
+
+        100% {
+          transform: scale(1);
+          box-shadow: 0 4px 15px rgba(245, 101, 101, 0.2);
+        }
       }
     </style>
 
@@ -852,16 +913,16 @@
           document.getElementById('therapyAlertMsg').innerText = `🔥 예열 알람: ${data.upcomingTherapy.time} [${data.upcomingTherapy.room}] ${data.upcomingTherapy.name} 님`;
           const tCard = document.getElementById('cardTherapy');
           if (tCard) {
-             tCard.style.border = '3px solid #f56565';
-             tCard.style.animation = 'pulse-card 2s infinite';
+            tCard.style.border = '3px solid #f56565';
+            tCard.style.animation = 'pulse-card 2s infinite';
           }
         }
       } else {
         document.getElementById('therapyAlertBar').style.display = 'none';
         const tCard = document.getElementById('cardTherapy');
         if (tCard) {
-           tCard.style.border = 'none';
-           tCard.style.animation = 'none';
+          tCard.style.border = 'none';
+          tCard.style.animation = 'none';
         }
         dismissedTherapyKey = ""; // 새로운 예약이 없으면 초기화
       }
@@ -1030,12 +1091,12 @@
     function dismissTherapyAlert() {
       // 현재 표시된 알람의 키를 저장하여 다음 자동 새로고침 때 안 뜨게 함
       let msg = document.getElementById('therapyAlertMsg').innerText;
-      dismissedTherapyKey = msg.replace("🔥 예열 알람: ", ""); 
+      dismissedTherapyKey = msg.replace("🔥 예열 알람: ", "");
       document.getElementById('therapyAlertBar').style.display = 'none';
       const tCard = document.getElementById('cardTherapy');
       if (tCard) {
-         tCard.style.border = 'none';
-         tCard.style.animation = 'none';
+        tCard.style.border = 'none';
+        tCard.style.animation = 'none';
       }
     }
 
@@ -1183,7 +1244,7 @@
       const modal = document.createElement('div');
       modal.className = 'modal-overlay show';
       modal.style.zIndex = "9999";
-      
+
       const icon = type === "success" ? "✅" : (type === "error" ? "⚠️" : "ℹ️");
       const title = type === "success" ? "처리 완료" : (type === "error" ? "알림" : "안내");
       const color = type === "success" ? "var(--success)" : (type === "error" ? "var(--danger)" : "var(--primary)");
@@ -1206,7 +1267,7 @@
       const modal = document.createElement('div');
       modal.className = 'modal-overlay show';
       modal.style.zIndex = "9999";
-      
+
       modal.innerHTML = `
         <div class="modal-content" style="text-align:center; padding:40px 30px; border-top: 6px solid var(--primary);">
           <div style="font-size:4.5rem; margin-bottom:20px; animation: modalBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);">❓</div>
@@ -1219,7 +1280,7 @@
         </div>
       `;
       document.body.appendChild(modal);
-      
+
       modal.querySelector('#confirmCancel').onclick = () => modal.remove();
       modal.querySelector('#confirmOk').onclick = () => {
         modal.remove();
@@ -1504,13 +1565,13 @@
 
       <div class="form-group">
         <label class="form-label">🏃‍♀️ 점핑 프로그램 목록</label>
-        <textarea id="wlJumping" placeholder="예: 웜업 - 기본바운스, 메인 - BTS 버터..."
+        <textarea id="wlJumping" placeholder="예: 8-1,2 ..."
           style="width: 100%; padding: 12px; height: 80px; font-size: 1rem; border-radius: 10px; background: #f7fafc; color: #1a202c; border: 1px solid #e2e8f0; outline: none; resize: none;"></textarea>
       </div>
 
       <div class="form-group">
         <label class="form-label">💪 근력 프로그램 목록</label>
-        <textarea id="wlMuscle" placeholder="예: 전신 유산소 타바타 1세트..."
+        <textarea id="wlMuscle" placeholder="예: 3..."
           style="width: 100%; padding: 12px; height: 80px; font-size: 1rem; border-radius: 10px; background: #f7fafc; color: #1a202c; border: 1px solid #e2e8f0; outline: none; resize: none;"></textarea>
       </div>
 
@@ -1838,7 +1899,7 @@
     function loadReservationData() {
       let dateStr = document.getElementById('resViewDate').value;
       document.getElementById('reservationListContent').innerHTML = '<div style="text-align:center; padding:30px; color:#718096;"><div style="font-size:1.5rem; margin-bottom:10px;">🔄</div>데이터를 불러오는 중...</div>';
-      
+
       google.script.run.withSuccessHandler(res => {
         if (!res || res.length === 0) {
           document.getElementById('reservationListContent').innerHTML = `
@@ -1848,20 +1909,20 @@
             </div>`;
           return;
         }
-        
+
         // 시간대별 그룹화
         const groups = res.reduce((acc, r) => {
           if (!acc[r.time]) acc[r.time] = [];
           acc[r.time].push(r);
           return acc;
         }, {});
-        
+
         const sortedTimes = Object.keys(groups).sort();
-        
-          let html = sortedTimes.map(time => {
-            let itemsHtml = groups[time].map(r => {
-              let statusColor = r.status.indexOf('취소') !== -1 ? '#c53030' : (r.status.indexOf('완료') !== -1 ? '#2f855a' : '#2b6cb0');
-              return `
+
+        let html = sortedTimes.map(time => {
+          let itemsHtml = groups[time].map(r => {
+            let statusColor = r.status.indexOf('취소') !== -1 ? '#c53030' : (r.status.indexOf('완료') !== -1 ? '#2f855a' : '#2b6cb0');
+            return `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #edf2f7;">
                   <div style="flex:1;">
                     <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
@@ -1877,7 +1938,7 @@
                   <button onclick="confirmDeleteReservation(${r.rowIdx}, '${r.name}')" 
                     style="background:#fff1f1; color:#e53e3e; border:1px solid #ffdada; padding:6px 12px; border-radius:8px; font-size:0.75rem; font-weight:700; cursor:pointer;">취소</button>
                 </div>`;
-            }).join('');
+          }).join('');
 
           return `
             <div style="margin-bottom:20px; background:#fff; border:1px solid #e2e8f0; border-radius:20px; overflow:hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
@@ -1890,7 +1951,7 @@
               </div>
             </div>`;
         }).join('');
-        
+
         document.getElementById('reservationListContent').innerHTML = html;
       }).getAdminReservationData(dateStr);
     }
@@ -2169,10 +2230,14 @@
       <div class="modal-btn-group">
         <button class="m-btn m-btn-jumping" onclick="openWorkLogModal(); closeWorkLogMenuModal();">✍️ 일지 작성하기</button>
         <button class="m-btn m-btn-therapy" onclick="openSalesModal(); closeWorkLogMenuModal();">💰 매출 내역 등록</button>
-        <button class="m-btn m-btn-combo" onclick="openWorkLogHistoryModal(); closeWorkLogMenuModal();">📁 과거 기록 조회</button>
-        <button class="m-btn" style="background:#6b46c1; color:white;" onclick="openSmsLogModal(); closeWorkLogMenuModal();">📧 문자 발송 관리</button>
-        <button class="m-btn" style="background:#ed64a6; color:white;" onclick="handleAbsentees(); closeWorkLogMenuModal();">🔍 장기 미방문자 추출</button>
-        <button class="m-btn" style="background:#38a169; color:white;" onclick="handleInactiveMembers(); closeWorkLogMenuModal();">🔄 장기 미등록자(복귀) 추출</button>
+        <button class="m-btn m-btn-combo" onclick="openWorkLogHistoryModal(); closeWorkLogMenuModal();">📁 과거 기록
+          조회</button>
+        <button class="m-btn" style="background:#6b46c1; color:white;"
+          onclick="openSmsLogModal(); closeWorkLogMenuModal();">📧 문자 발송 관리</button>
+        <button class="m-btn" style="background:#ed64a6; color:white;"
+          onclick="handleAbsentees(); closeWorkLogMenuModal();">🔍 장기 미방문자 추출</button>
+        <button class="m-btn" style="background:#38a169; color:white;"
+          onclick="handleInactiveMembers(); closeWorkLogMenuModal();">🔄 장기 미등록자(복귀) 추출</button>
         <button class="m-btn m-btn-cancel" onclick="closeWorkLogMenuModal()">닫기</button>
       </div>
     </div>
@@ -2219,13 +2284,15 @@
   </div>
   <!-- 벙개테라피 및 휴일 설정 모달 -->
   <div class="modal-overlay" id="flashSettingModal" style="z-index: 5000;">
-    <div class="modal-content" style="background:#ffffff; max-width:450px; padding:30px 25px; max-height: 90vh; display: flex; flex-direction: column;">
+    <div class="modal-content"
+      style="background:#ffffff; max-width:450px; padding:30px 25px; max-height: 90vh; display: flex; flex-direction: column;">
       <div class="modal-header">⚙️ 벙개 및 휴무 관리</div>
-      
+
       <div style="flex: 1; overflow-y: auto; padding-right: 5px;">
         <p style="font-size:0.85rem; color:#718096; margin-bottom:20px; text-align:center;">특정 날짜의 운영 여부를 강제로 설정합니다.</p>
-        
-        <div style="background:#f8fafc; padding:20px; border-radius:18px; border:1px solid #edf2f7; margin-bottom:25px;">
+
+        <div
+          style="background:#f8fafc; padding:20px; border-radius:18px; border:1px solid #edf2f7; margin-bottom:25px;">
           <div class="form-group">
             <label class="form-label">📅 설정 날짜</label>
             <input type="date" id="flashDate" class="form-control" onchange="checkExistingFlashSetting()">
@@ -2244,17 +2311,21 @@
             <input type="text" id="flashNote" class="form-control" placeholder="벙개 시: 09:00 / 휴무 시: 사유 입력">
           </div>
 
-          <div id="flashExistingInfo" style="margin-bottom:15px; font-size:0.8rem; color:var(--primary); text-align:center; display:none; background:#f0f5ff; padding:8px; border-radius:8px;">
+          <div id="flashExistingInfo"
+            style="margin-bottom:15px; font-size:0.8rem; color:var(--primary); text-align:center; display:none; background:#f0f5ff; padding:8px; border-radius:8px;">
             ℹ️ 해당 날짜에 이미 설정된 기록이 있습니다.
           </div>
 
-          <button class="btn-submit" onclick="saveFlashSetting()" style="background:#2d3748; padding:15px;">설정 저장하기</button>
+          <button class="btn-submit" onclick="saveFlashSetting()" style="background:#2d3748; padding:15px;">설정
+            저장하기</button>
         </div>
 
         <div style="border-top: 1px dashed #e2e8f0; padding-top: 20px;">
-          <div style="font-weight:800; color:#4a5568; font-size:1rem; margin-bottom:15px; display:flex; align-items:center; gap:8px;">
+          <div
+            style="font-weight:800; color:#4a5568; font-size:1rem; margin-bottom:15px; display:flex; align-items:center; gap:8px;">
             📋 현재 설정 목록
-            <span id="flashListCount" style="font-size:0.75rem; background:#edf2f7; color:#718096; padding:2px 8px; border-radius:20px;">0건</span>
+            <span id="flashListCount"
+              style="font-size:0.75rem; background:#edf2f7; color:#718096; padding:2px 8px; border-radius:20px;">0건</span>
           </div>
           <div id="flashSettingList">
             <!-- 리스트 삽입 -->
@@ -2283,7 +2354,7 @@
     function loadFlashSettingsList() {
       const listEl = document.getElementById('flashSettingList');
       listEl.innerHTML = '<div style="text-align:center; padding:15px; color:#cbd5e0; font-size:0.85rem;">목록 불러오는 중...</div>';
-      
+
       google.script.run.withSuccessHandler(res => {
         if (!res || res.length === 0) {
           listEl.innerHTML = '<div style="text-align:center; padding:30px; color:#cbd5e0; font-size:0.85rem; border:2px dashed #edf2f7; border-radius:15px;">설정된 일정이 없습니다.</div>';
@@ -2320,7 +2391,7 @@
       document.getElementById('flashNote').value = (note === 'undefined' || note === 'null') ? '' : note;
       document.getElementById('flashExistingInfo').style.display = "block";
       document.getElementById('flashDate').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      
+
       // 입력창 강조 효과
       const formBox = document.querySelector('#flashSettingModal .form-group').parentElement;
       formBox.style.borderColor = "var(--primary)";
@@ -2338,7 +2409,7 @@
         btn.style.background = "#e53e3e";
         btn.style.color = "#fff";
         btn.style.padding = "8px 15px";
-        
+
         // 3초 뒤에 원래대로 복구
         setTimeout(() => {
           if (btn && btn.innerText === "진짜 삭제?") {
@@ -2416,7 +2487,7 @@
       if (tab === 'registration') document.getElementById('tab-sms-reg').classList.add('active');
       else if (tab === 'absent') document.getElementById('tab-sms-absent').classList.add('active');
       else if (tab === 'return') document.getElementById('tab-sms-return').classList.add('active');
-      
+
       renderSmsLogList();
     }
 
@@ -2425,15 +2496,15 @@
       listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#718096;">데이터를 불러오는 중...</div>';
 
       if (typeof google !== 'undefined' && google.script) {
-        google.script.run.withSuccessHandler(function(res) {
+        google.script.run.withSuccessHandler(function (res) {
           if (res.error) {
             listContainer.innerHTML = `<div style="color:var(--danger); padding:20px; text-align:center;">${res.error}</div>`;
             return;
           }
           allSmsLogs = res.logs || [];
           renderSmsLogList();
-        }).withFailureHandler(function(err) {
-           listContainer.innerHTML = `<div style="color:var(--danger); padding:20px; text-align:center;">서버 통신 오류: ${err.message}</div>`;
+        }).withFailureHandler(function (err) {
+          listContainer.innerHTML = `<div style="color:var(--danger); padding:20px; text-align:center;">서버 통신 오류: ${err.message}</div>`;
         }).getSmsLogData();
       } else {
         listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:var(--danger);">서버 연결 환경이 아닙니다. (테스트 모드)</div>';
@@ -2512,8 +2583,8 @@
           <div style="font-size:0.95rem; color:#2d3748; white-space:pre-wrap; line-height:1.6;" id="smsTargetContent">${log.content}</div>
         </div>
       `;
-      
-      document.getElementById('btnSmsComplete').onclick = function() {
+
+      document.getElementById('btnSmsComplete').onclick = function () {
         markSmsSent(log.rowIdx);
       };
 
@@ -2547,8 +2618,8 @@
     }
 
     function markSmsSent(rowIdx) {
-      showAdminConfirm("발송 완료 처리할까요? 목록에서 사라집니다.", function() {
-        google.script.run.withSuccessHandler(function(res) {
+      showAdminConfirm("발송 완료 처리할까요? 목록에서 사라집니다.", function () {
+        google.script.run.withSuccessHandler(function (res) {
           if (res.error) {
             showAdminErrorModal(res.error);
           } else {
@@ -2563,7 +2634,7 @@
 
     function updatePendingSmsCount() {
       if (typeof google !== 'undefined' && google.script) {
-        google.script.run.withSuccessHandler(function(res) {
+        google.script.run.withSuccessHandler(function (res) {
           const banner = document.getElementById('smsPendingAlert');
           const countEl = document.getElementById('pendingSmsCount');
           if (res.count > 0) {
@@ -2577,7 +2648,7 @@
     }
 
     // 초기 실행 및 주기적 갱신
-    window.addEventListener('load', function() {
+    window.addEventListener('load', function () {
       setTimeout(updatePendingSmsCount, 2000);
       setInterval(updatePendingSmsCount, 300000); // 5분마다 갱신
     });
@@ -2602,7 +2673,7 @@
 
     // 장기 미방문자 추출 처리
     function handleAbsentees() {
-      showAdminConfirm("7일 이상 미방문 회원님들을 추출하여 문자 발송 대기 목록을 생성할까요?", function() {
+      showAdminConfirm("7일 이상 미방문 회원님들을 추출하여 문자 발송 대기 목록을 생성할까요?", function () {
         // 로딩 표시
         const btn = document.querySelector('.navbar .nav-btn:nth-child(2)');
         const originalText = btn.innerText;
@@ -2612,7 +2683,7 @@
         google.script.run.withSuccessHandler(res => {
           btn.innerText = originalText;
           btn.disabled = false;
-          
+
           if (res.error) {
             showAdminErrorModal(res.error);
           } else {
@@ -2628,7 +2699,7 @@
 
     // 장기 미등록자(복귀) 추출 처리
     function handleInactiveMembers() {
-      showAdminConfirm("등록이 끝난 지 14일 이상 된 회원님들을 추출하여 복귀 권유 문자 목록을 생성할까요?", function() {
+      showAdminConfirm("등록이 끝난 지 14일 이상 된 회원님들을 추출하여 복귀 권유 문자 목록을 생성할까요?", function () {
         const btn = document.querySelector('.navbar .nav-btn:nth-child(2)');
         const originalText = btn.innerText;
         btn.innerText = "⏳ 대상 분석 중...";
@@ -2637,7 +2708,7 @@
         google.script.run.withSuccessHandler(res => {
           btn.innerText = originalText;
           btn.disabled = false;
-          
+
           if (res.error) {
             showAdminErrorModal(res.error);
           } else {
@@ -2652,9 +2723,9 @@
 
     // 전화번호 일괄 정규화 (데이터 관리)
     function runPhoneFix() {
-      showAppConfirm("시트 내의 모든 전화번호를 '010-0000-0000' 형식으로 일괄 보정하시겠습니까? 데이터가 많을 경우 수 분이 소요될 수 있습니다.", function() {
+      showAppConfirm("시트 내의 모든 전화번호를 '010-0000-0000' 형식으로 일괄 보정하시겠습니까? 데이터가 많을 경우 수 분이 소요될 수 있습니다.", function () {
         showAppAlert("데이터 보정을 시작합니다. 잠시만 기다려 주세요...", "info");
-        
+
         google.script.run.withSuccessHandler(res => {
           if (res.success) {
             showAppAlert(res.message, "success");
