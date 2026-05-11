@@ -3,26 +3,99 @@
  * v1.0 - Core Routing & Database Setup
  */
 
-function doGet(e) {
-  var page = e.parameter.page || 'attendance';
-  var template = HtmlService.createTemplateFromFile(page);
-  
-  // 탭 제목을 페이지별로 다르게 설정하여 확실히 구분
-  var title = "노형점핑 ERP";
-  if (page === 'renewal') title = "💳 [연장 화면]";
-  else if (page === 'admin') title = "⚙️ [관리자 화면]";
-  else if (page === 'attendance') title = "🏃 [출석 화면]";
-  
-  // 주소 뒤의 찌꺼기를 완전히 제거한 순수 주소만 전달
-  template.scriptUrl = getScriptUrl();
-  template.targetPhone = (e.parameter.phone || '').trim();
-  template.targetName = (e.parameter.name || '').trim();
-  
-  return template.evaluate()
-      .setTitle(title)
-      .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no')
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+/**
+ * [Vercel 지원] 외부 사이트(Vercel 등)에서 데이터를 주고받기 위한 API 핸들러
+ */
+function doPost(e) {
+  return handleRequest(e);
 }
+
+function doGet(e) {
+  // 1. 웹 앱 화면을 띄워주는 경우 (구글 내부에서 직접 실행 시)
+  if (!e.parameter.action) {
+    var page = e.parameter.page || 'index';
+    var template;
+    try {
+      template = HtmlService.createTemplateFromFile(page);
+    } catch(err) {
+      // 페이지가 없을 경우 기본 출석 페이지로
+      template = HtmlService.createTemplateFromFile('attendance');
+    }
+    
+    var title = "노형점핑 ERP";
+    if (page === 'index') title = "NOHYUNG MEMBERS PORTAL";
+    else if (page === 'reservation') title = "THERAPY (테라피 예약)";
+    else if (page === 'halloffame') title = "TOP HEROES (시상자&출석왕)";
+    else if (page === 'miracle') title = "MIRACLE (오운완&식단)";
+    else if (page === 'notice') title = "INSIDE (건강 꿀팁 & 공지)";
+    else if (page === 'community') title = "CONNECT (칭찬&수다)";
+    else if (page === 'renewal') title = "💳 [연장 화면]";
+    else if (page === 'admin') title = "⚙️ [관리자 화면]";
+    else if (page === 'attendance') title = "🏃 [출석 화면]";
+    
+    template.scriptUrl = getScriptUrl();
+    template.targetPhone = (e.parameter.phone || '').trim();
+    template.targetName = (e.parameter.name || '').trim();
+    
+    return template.evaluate()
+        .setTitle(title)
+        .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no')
+        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+  
+  // 2. API 요청인 경우 (Vercel 등 외부 연동 시)
+  return handleRequest(e);
+}
+
+/**
+ * [공용] 모든 API 요청을 처리하는 핵심 라우터
+ */
+function handleRequest(e) {
+  var action = e.parameter.action;
+  var payload = {};
+  
+  try {
+    if (e.postData && e.postData.contents) {
+      var contents = e.postData.contents;
+      payload = (typeof contents === 'string') ? JSON.parse(contents) : contents;
+    } else {
+      payload = e.parameter || {};
+    }
+  } catch(err) {
+    payload = e.parameter || {};
+  }
+  
+  var result;
+  try {
+    // [보안강화] 전역 함수 호출 방식 개선
+    var func = this[action] || globalThis[action];
+    
+    if (typeof func === 'function') {
+      var args = (payload && payload.args) ? payload.args : [payload];
+      result = func.apply(this, args);
+    } else {
+      result = { error: '찾을 수 없는 요청(Action)입니다: ' + action, debug: 'Function type: ' + (typeof func) };
+    }
+  } catch (err) {
+    result = { 
+      error: '서버 실행 오류', 
+      message: err.toString(),
+      action: action,
+      stack: err.stack
+    };
+  }
+  
+  // 결과가 undefined일 경우를 위한 안전 장치
+  if (result === undefined) result = { success: true, message: '작업이 완료되었으나 반환 값이 없습니다.' };
+  
+  return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+}
+
+
+
+
+
 
 /**
  * [지능형] 시트 제목을 읽어 열 번호를 자동으로 찾아주는 함수
@@ -521,7 +594,7 @@ function searchMemberByPin(pinStr) {
         var rPhone = String(resData[r][1]).replace(/[^0-9]/g, "");
         var rStatus = String(resData[r][9]);
         
-        if (rDateStr === todayNum && rPhone.slice(-4) === searchPin && rStatus === "테라피 입실") {
+        if (rDateStr === todayNum && rPhone.slice(-4) === searchPin && rStatus === "테라피 진행중") {
           isTherapyActive = true;
           break;
         }
@@ -538,11 +611,44 @@ function searchMemberByPin(pinStr) {
 // 4. 백엔드 API: 출석 처리 및 차감 (태블릿 출석체크용)
 // ──────────────────────────────────────────────
 function processAttendance(phoneStr, type, isBonus) {
+  phoneStr = formatPhoneNumber(phoneStr);
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var memberSheet = ss.getSheetByName("회원명단");
     var logSheet = ss.getSheetByName("출석기록");
     var configSheet = ss.getSheetByName("설정");
+    
+    // [중복 방지] 30분 이내 동일 번호 출석 여부 확인
+    var now = new Date();
+    var lastRow = logSheet.getLastRow();
+    if (lastRow > 1) {
+      // 최근 20개 기록만 확인 (성능 최적화)
+      var checkRange = Math.max(2, lastRow - 20);
+      var lastLogs = logSheet.getRange(checkRange, 1, (lastRow - checkRange + 1), 5).getValues();
+      for (var i = lastLogs.length - 1; i >= 0; i--) {
+        var lDate = lastLogs[i][0]; // A열 날짜
+        var lTime = lastLogs[i][1]; // B열 시간
+        var lPhone = formatPhoneNumber(String(lastLogs[i][3])); // D열 전화번호 정규화 후 비교
+        
+        if (lPhone === phoneStr) {
+          var logDateTime = new Date(lDate);
+          if (lTime instanceof Date) {
+            logDateTime.setHours(lTime.getHours(), lTime.getMinutes(), lTime.getSeconds());
+          } else {
+            var tParts = String(lTime).split(":");
+            if (tParts.length >= 2) {
+              logDateTime.setHours(tParts[0], tParts[1], tParts[2] || 0);
+            }
+          }
+          
+          var diffMinutes = (now.getTime() - logDateTime.getTime()) / (1000 * 60);
+          if (diffMinutes >= 0 && diffMinutes < 30) {
+            return { error: "중복 출석 방지: 방금 전(" + Math.floor(diffMinutes) + "분 전)에 이미 출석하셨습니다.\n잠시 후 다시 시도해 주세요." };
+          }
+          break; // 가장 최근 기록만 찾으면 중단
+        }
+      }
+    }
     
     var mData = memberSheet.getDataRange().getValues();
     var cData = configSheet.getDataRange().getValues();
@@ -599,8 +705,22 @@ function processAttendance(phoneStr, type, isBonus) {
       if (!pass) return { error: "점핑 이용 가능한 회원권이 없습니다." };
       
       var rule = configRules[pass.membershipType];
-      if (!rule || rule.Jumping === "불가") return { error: "[" + pass.membershipType + "]은 점핑 출석이 불가합니다." };
-      selectedPasses.push({ pass: pass, amount: Number(rule.Jumping), reason: "정상 차감 (점핑)" });
+      var deductAmount = 1; // 기본값 1회 차감
+      
+      if (rule && rule.Jumping !== "불가") {
+        deductAmount = Number(rule.Jumping);
+      } else if (!rule) {
+        // 설정 시트에 없는 레거시(50회권 등) 처리: 이름에 '점핑'이나 '회'가 있으면 1회 차감 허용
+        if (pass.membershipType.indexOf("점핑") !== -1 || pass.membershipType.indexOf("회") !== -1) {
+          deductAmount = 1;
+        } else {
+          return { error: "[" + pass.membershipType + "]은 점핑 출석이 불가합니다. (설정 확인 필요)" };
+        }
+      } else {
+        return { error: "[" + pass.membershipType + "]은 점핑 출석이 불가합니다." };
+      }
+      
+      selectedPasses.push({ pass: pass, amount: deductAmount, reason: "정상 차감 (점핑)" });
     } 
     else if (type === '테라피') {
       var therapyPass = null;
@@ -614,38 +734,40 @@ function processAttendance(phoneStr, type, isBonus) {
       if (therapyPass) {
         selectedPasses.push({ pass: therapyPass, amount: 1, reason: "테라피권 우선 차감" });
       } else {
-        var jumping30 = null;
+        var anyJumpingSessionPass = null;
         for (var pIdx = 0; pIdx < activePasses.length; pIdx++) {
-          if (activePasses[pIdx].membershipType.indexOf("점핑 30회") !== -1) {
-            jumping30 = activePasses[pIdx];
+          var pType = activePasses[pIdx].membershipType;
+          if (pType.indexOf("점핑") !== -1 && pType.indexOf("회") !== -1) {
+            anyJumpingSessionPass = activePasses[pIdx];
             break;
           }
         }
         
-        if (jumping30) {
-          selectedPasses.push({ pass: jumping30, amount: 2, reason: "테라피권 없음 -> 점핑30회에서 2회 차감" });
+        if (anyJumpingSessionPass) {
+          selectedPasses.push({ pass: anyJumpingSessionPass, amount: 2, reason: "테라피권 없음 -> [" + anyJumpingSessionPass.membershipType + "]에서 2회 차감" });
         } else {
           var pass = activePasses[0];
           if (!pass) return { error: "테라피 이용 가능한 회원권이 없습니다." };
           var rule = configRules[pass.membershipType];
-          if (!rule || rule.Therapy === "불가") return { error: "테라피 이용 가능한 회원권이 없습니다." };
+          if (!rule || rule.Therapy === "불가") return { error: "테라피 이용 가능한 회원권이 없습니다. (설정 확인 필요)" };
           selectedPasses.push({ pass: pass, amount: Number(rule.Therapy), reason: "정상 차감 (테라피)" });
         }
       }
     } 
     else if (type === '복합') {
-      var jumping30 = null;
+      var anyJumpingSessionPass = null;
       for (var pIdx = 0; pIdx < activePasses.length; pIdx++) {
-        if (activePasses[pIdx].membershipType.indexOf("점핑 30회") !== -1) {
-          jumping30 = activePasses[pIdx];
+        var pType = activePasses[pIdx].membershipType;
+        if (pType.indexOf("점핑") !== -1 && pType.indexOf("회") !== -1) {
+          anyJumpingSessionPass = activePasses[pIdx];
           break;
         }
       }
       
-      if (jumping30) {
-        selectedPasses.push({ pass: jumping30, amount: 3, reason: "복합출석: 점핑30회에서 3회 차감" });
+      if (anyJumpingSessionPass) {
+        selectedPasses.push({ pass: anyJumpingSessionPass, amount: 3, reason: "복합출석: [" + anyJumpingSessionPass.membershipType + "]에서 3회 차감" });
       } else {
-        return { error: "복합 이용은 [점핑 30회] 회원권이 있어야 가능합니다." };
+        return { error: "복합 이용은 [점핑 회수권]이 있어야 가능합니다." };
       }
     }
     else if (type === '보너스') {
@@ -735,9 +857,9 @@ function processAttendance(phoneStr, type, isBonus) {
           var rDateStr = (rDateRaw instanceof Date) ? Utilities.formatDate(rDateRaw, "GMT+9", "yyyy-MM-dd") : String(rDateRaw).split(" ")[0];
           var rPhone = String(resData[rIdx][1]).replace(/[^0-9]/g, "");
           
-          // 오늘 날짜 + 전화번호 매칭 + '예약 완료' 상태인 경우
+          // 오늘 날짜 + 전화번호 매칭 + '예약'이 포함된 상태인 경우 (예약 완료 등)
           if (rDateStr === todayFormatted && rPhone === phoneStr && String(resData[rIdx][9]).indexOf("예약") !== -1) {
-            resSheet.getRange(rIdx + 1, 10).setValue("테라피 입실");
+            resSheet.getRange(rIdx + 1, 10).setValue("테라피 진행중");
             resSheet.getRange(rIdx + 1, 11).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
             break;
           }
@@ -795,8 +917,8 @@ function processKioskCheckout(phoneStr) {
       var rDateStr = (rDateRaw instanceof Date) ? Utilities.formatDate(rDateRaw, "GMT+9", "yyyy-MM-dd") : String(rDateRaw).split(" ")[0];
       var rPhone = String(resData[i][1]).replace(/[^0-9]/g, "");
       
-      if (rDateStr === todayStr && rPhone === phoneClean && String(resData[i][9]) === "테라피 입실") {
-        resSheet.getRange(i + 1, 10).setValue("귀가_테라피완료");
+      if (rDateStr === todayStr && rPhone === phoneClean && String(resData[i][9]) === "테라피 진행중") {
+        resSheet.getRange(i + 1, 10).setValue("귀가_테라피 완료");
         resSheet.getRange(i + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
         memberName = resData[i][2];
         success = true;
@@ -1060,6 +1182,8 @@ function getMemberIDList(v) {
     if (!memberSheet) return [];
     var data = memberSheet.getDataRange().getValues().slice(1);
     var results = [];
+    var seen = {}; // 중복 체크용
+
     for (var i=0; i<data.length; i++) {
       var name = String(data[i][1]).trim();
       var phoneRaw = String(data[i][2]).trim();
@@ -1068,11 +1192,15 @@ function getMemberIDList(v) {
       var status = String(data[i][10]).trim(); // K열 상태
       
       if (status !== "마감" && status !== "정지" && phone4 === v) {
-        results.push({
-          displayName: name + "(" + phone4 + ")",
-          name: name,
-          phone: phoneRaw
-        }); 
+        var key = name + "|" + phone4;
+        if (!seen[key]) {
+          results.push({
+            displayName: name + "(" + phone4 + ")",
+            name: name,
+            phone: phoneRaw
+          }); 
+          seen[key] = true;
+        }
       }
     }
     return results;
@@ -1126,42 +1254,33 @@ function getAdminDashboardData() {
     var activeTherapy = [];
     var goHomeList = [];
     
-    // 1. 출석 로그 조회
+    // 1. 출석 로그 조회 (정확한 날짜 비교를 위해 Values와 DisplayValues를 병행)
     var logData = logSheet.getDataRange().getValues();
+    var logDisplayData = logSheet.getDataRange().getDisplayValues();
+    var cols = getAttendanceColumnIndices(logSheet);
+    
     for (var i = 1; i < logData.length; i++) {
-      var timeRaw = logData[i][0];
-      if (!timeRaw) continue;
-      var logDateStr = (timeRaw instanceof Date) ? Utilities.formatDate(timeRaw, "GMT+9", "yyyy-MM-dd") : String(timeRaw).split(" ")[0];
+      var dateRaw = logData[i][cols.date]; // 날짜 열 (객체 또는 문자열)
+      if (!dateRaw) continue;
+      
+      var logDateStr = (dateRaw instanceof Date) ? Utilities.formatDate(dateRaw, "GMT+9", "yyyy-MM-dd") : String(dateRaw).split(" ")[0];
       
       if (logDateStr === todayStr) {
-        var memberName = logData[i][2]; // C열: 이름
-        var memberPhone = logData[i][3]; // D열: 휴대폰
-        var membership = logData[i][4]; // E열: 유형
-        var status = String(logData[i][11]).trim(); // L열: 상태
-        var reason = String(logData[i][8]); // I열: 사유
-        // 시간 형식 완벽 해결 (HH:mm 추출)
-        var rawInTime = logData[i][1]; // B열: 입실시간
-        var timeOnly = "";
-        if (rawInTime instanceof Date) {
-          timeOnly = Utilities.formatDate(rawInTime, "GMT+9", "HH:mm");
-        } else {
-          var tStr = String(rawInTime || "");
-          var tMatch = tStr.match(/(\d{1,2}:\d{2})/);
-          if (tMatch) {
-            timeOnly = tMatch[1];
-          } else {
-            // Sun May... 형태 대응: 띄어쓰기로 잘라 시간 부분 찾기
-            var parts = tStr.split(" ");
-            var found = parts.find(p => p.indexOf(":") !== -1);
-            timeOnly = found ? found.substring(0, 5) : "시간미정";
-          }
-        }
+        var memberName = logData[i][cols.name]; 
+        var memberPhone = logData[i][cols.phone];
+        var membership = logData[i][cols.type]; 
+        var status = String(logData[i][cols.status] || "").trim(); 
+        var reason = String(logData[i][cols.reason] || "");
+        
+        // 시간 오차 및 형식 해결: 쌍점(:)을 기준으로 시간과 분만 추출
+        var rawTimeStr = String(logDisplayData[i][cols.inTime] || "시간미정");
+        var timeOnly = rawTimeStr.indexOf(":") !== -1 ? rawTimeStr.split(":").slice(0, 2).join(":") : rawTimeStr;
         
         var isCombo = reason.indexOf("복합") !== -1;
         var isTherapy = (reason.indexOf("테라피") !== -1 || reason.indexOf("보너스") !== -1) && !isCombo;
         var isJumping = (reason.indexOf("점핑") !== -1 || reason.indexOf("월권") !== -1 || reason.indexOf("운동만") !== -1) && !isTherapy && !isCombo;
 
-        totalCount++; // 이번 출석 행위를 1회로 먼저 카운트
+        totalCount++; 
 
         if (isCombo) {
           jumpingCount++;
@@ -1180,50 +1299,84 @@ function getAdminDashboardData() {
           inTime: timeOnly,
           type: isCombo ? "복합" : (isTherapy ? "테라피" : (isJumping ? "점핑" : "보너스")),
           status: status,
-          classes: String(logData[i][9]), // J열: 클래스
-          timeLog: String(logData[i][10]), // K열: 운동타임
-          extraText: String(logData[i][13]), // N열: 비고
+          classes: String(logData[i][cols.classes] || ""), 
+          timeLog: String(logData[i][cols.workoutTime] || ""), 
+          extraText: String(logData[i][cols.memo] || ""), 
           reason: reason 
         };
 
-        if (status.indexOf("귀가") !== -1 || status === "퇴실" || status === "퇴실완료") {
+        // 퇴실/귀가 상태 판별
+        var isGoHome = (status.indexOf("귀가") !== -1 || status === "퇴실" || status === "퇴실완료");
+        
+        if (isGoHome) {
           goHomeCount++;
           goHomeList.push(memberObj);
         } else {
           if (isCombo || isJumping) {
             activeJumping.push(memberObj);
-          } else if (isTherapy || reason.indexOf("보너스") !== -1) {
+          } else {
             activeTherapy.push(memberObj);
           }
         }
       }
     }
     
-    // 2. 테라피 예약 매칭 및 예열 알림 체크 (getDisplayValues로 더 정확하게)
+    // 2. 테라피 예약 매칭 및 예열 알림 체크
     var resData = resSheet.getDataRange().getDisplayValues();
     var upcomingTherapy = null;
+    var pendingReservations = []; // 오늘 남은 예약 명단 (입실 전)
     var todayNum = Utilities.formatDate(now, "GMT+9", "yyyyMMdd");
     
+    // 예약DB 열 인덱스 더 유연하게 찾기
+    function getResCols(sheet) {
+      var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      var map = { name: 2, date: 3, time: 4, room: 7, status: 9 };
+      for (var i = 0; i < headers.length; i++) {
+        var h = headers[i].toString().trim();
+        if (h.indexOf("이름") !== -1) map.name = i;
+        else if (h.indexOf("날짜") !== -1) map.date = i;
+        else if (h.indexOf("입실시간") !== -1 || h === "시간") map.time = i;
+        else if (h.indexOf("배정방") !== -1 || h.indexOf("룸") !== -1) map.room = i;
+        else if (h.indexOf("상태") !== -1) map.status = i;
+      }
+      return map;
+    }
+    
+    var resCols = getResCols(resSheet);
+    
     for (var k = 1; k < resData.length; k++) {
-      var rDateRaw = String(resData[k][3]).trim();
+      var rDateRaw = String(resData[k][resCols.date] || "").trim();
       if (!rDateRaw) continue;
       
-      // 날짜에서 숫자만 추출 (예: 2024. 05. 10. -> 20240510)
+      // 날짜 비교: 년/월/일 숫자만 뽑아서 비교 (형식 파괴 방지)
       var rDateNum = rDateRaw.replace(/[^0-9]/g, "");
       if (rDateNum.length > 8) rDateNum = rDateNum.substring(0, 8);
+      // 만약 2024.5.11 처럼 월/일이 한자리인 경우 20240511 형식으로 맞춤
+      if (rDateNum.length < 8) {
+         var dParts = rDateRaw.split(/[^0-9]/).filter(Boolean);
+         if (dParts.length >= 3) {
+           rDateNum = dParts[0] + (dParts[1].length === 1 ? "0"+dParts[1] : dParts[1]) + (dParts[2].length === 1 ? "0"+dParts[2] : dParts[2]);
+         }
+      }
       
       if (rDateNum === todayNum) {
-        var rName = String(resData[k][2]).trim();
-        var rTimeRaw = String(resData[k][4]).trim();
-        if (!rTimeRaw) continue;
+        var rName = String(resData[k][resCols.name] || "").trim();
+        var rTimeRaw = String(resData[k][resCols.time] || "").trim();
+        if (!rName || !rTimeRaw) continue;
         
-        // 시간에서 HH:mm 추출
-        var rTimeShort = "";
-        var tMatch = rTimeRaw.match(/(\d{1,2}:\d{2})/);
-        if (tMatch) rTimeShort = tMatch[1];
-        else continue;
+        var rTimeShort = rTimeRaw.indexOf(":") !== -1 ? rTimeRaw.split(":").slice(0, 2).join(":") : rTimeRaw;
+        var rRoom = String(resData[k][resCols.room] || "").trim();
+        var rStatus = String(resData[k][resCols.status] || "").trim();
         
-        var rRoom = String(resData[k][7]).trim();
+        // '예약' 글자가 포함되어 있고, '취소' 글자가 없어야 함
+        if (rStatus.indexOf("예약") !== -1 && rStatus.indexOf("취소") === -1) {
+          pendingReservations.push({
+            name: rName,
+            time: rTimeShort,
+            room: rRoom,
+            sortVal: rTimeShort.replace(":", "")
+          });
+        }
         
         // [스마트 매칭] 입실 시간과 예약 시간이 일정 범위(90분) 내인 경우에만 매칭
         var rParts = rTimeShort.split(":");
@@ -1231,19 +1384,16 @@ function getAdminDashboardData() {
         var resMinVal = parseInt(rParts[1]);
         var resTotalMin = (resHour * 60) + resMinVal;
 
-        // 현재 시간을 KST(GMT+9) 기준으로 분 단위 환산
         var nowKSTStr = Utilities.formatDate(now, "GMT+9", "HH:mm");
         var nowParts = nowKSTStr.split(":");
         var nowTotalMin = (parseInt(nowParts[0]) * 60) + parseInt(nowParts[1]);
 
-        // A. 진행중인 회원과 매칭 (대시보드 표시용)
         for (var a=0; a<activeJumping.length; a++) {
           if (activeJumping[a].name === rName) {
             var inParts = activeJumping[a].inTime.split(":");
             var inTotalMin = (parseInt(inParts[0]) * 60) + parseInt(inParts[1]);
             var matchDiff = Math.abs(resTotalMin - inTotalMin);
-            
-            if (matchDiff <= 90) { // 입실과 예약 간격이 90분 이내일 때만 매칭
+            if (matchDiff <= 90) {
               activeJumping[a].therapyTime = rTimeShort;
               activeJumping[a].therapyRoom = rRoom;
             }
@@ -1254,7 +1404,6 @@ function getAdminDashboardData() {
             var inPartsT = activeTherapy[b].inTime.split(":");
             var inTotalMinT = (parseInt(inPartsT[0]) * 60) + parseInt(inPartsT[1]);
             var matchDiffT = Math.abs(resTotalMin - inTotalMinT);
-            
             if (matchDiffT <= 90) {
               activeTherapy[b].therapyTime = rTimeShort;
               activeTherapy[b].therapyRoom = rRoom;
@@ -1262,20 +1411,17 @@ function getAdminDashboardData() {
           }
         }
         
-        // B. 예열 알림 대상 체크 (30분 이내로 복구)
         if (!upcomingTherapy) {
           var diffMin = resTotalMin - nowTotalMin;
-          
           if (diffMin > 0 && diffMin <= 30) {
-            upcomingTherapy = {
-              time: rTimeShort,
-              name: rName,
-              room: rRoom
-            };
+            upcomingTherapy = { time: rTimeShort, name: rName, room: rRoom };
           }
         }
       }
     }
+    
+    // 예약 명단 시간순 정렬
+    pendingReservations.sort(function(a, b) { return a.sortVal - b.sortVal; });
     
     return {
       success: true,
@@ -1286,7 +1432,8 @@ function getAdminDashboardData() {
       activeJumping: activeJumping,
       activeTherapy: activeTherapy,
       goHomeList: goHomeList,
-      upcomingTherapy: upcomingTherapy
+      upcomingTherapy: upcomingTherapy,
+      pendingReservations: pendingReservations // 프론트엔드로 전달
     };
     
   } catch (e) { return { error: "서버 오류: " + e.toString() }; }
@@ -1353,8 +1500,8 @@ function processAdminCheckout(data) {
       var rPhone = String(resData[k][1]).replace(/[^0-9]/g, ""); // 예약DB B열 (회원ID/전화번호)
       
       // 이름과 전화번호 둘 다 매칭 (동명이인 방지)
-      if (rDateStr === todayStr && String(resData[k][2]) === memberName && rPhone === phoneStr && String(resData[k][9]).indexOf("테라피중") !== -1) {
-        resSheet.getRange(k + 1, 10).setValue("완료");
+      if (rDateStr === todayStr && String(resData[k][2]) === memberName && rPhone === phoneStr && String(resData[k][9]).indexOf("진행중") !== -1) {
+        resSheet.getRange(k + 1, 10).setValue("귀가_테라피 완료");
         resSheet.getRange(k + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
         break;
       }
@@ -1538,9 +1685,16 @@ function autoCheckoutJob() {
         var isJumping = reason.indexOf("점핑") !== -1 && !isCombo;
         var isTherapy = reason.indexOf("테라피") !== -1 && !isCombo;
 
-        // 시간차 계산 (입장 후 경과 시간)
-        var inTimeDate = new Date(logDateRaw); // 날짜 객체 기준
-        var diffMs = now.getTime() - inTimeDate.getTime();
+        // 시간차 계산 (날짜(A) + 입실시간(B)을 합쳐서 정확한 입장 시각 계산)
+        var inTimeStr = String(data[i][cols.inTime] || "");
+        var entryDateTime = new Date(logDateRaw);
+        
+        if (inTimeStr.indexOf(":") !== -1) {
+          var tParts = inTimeStr.split(":");
+          entryDateTime.setHours(parseInt(tParts[0]), parseInt(tParts[1]), 0, 0);
+        }
+
+        var diffMs = now.getTime() - entryDateTime.getTime();
         var diffHours = diffMs / (1000 * 60 * 60);
 
         var shouldAutoCheckout = false;
@@ -1634,6 +1788,27 @@ function editAdminCheckout(data) {
     var currentStatus = String(logSheet.getRange(rowIdx, 12).getValue());
     if (currentStatus === "입실") {
       logSheet.getRange(rowIdx, 12).setValue("귀가");
+      logSheet.getRange(rowIdx, 13).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm"));
+      
+      // 예약DB 연동 (수정 시에도 귀가로 바뀌면 예약DB 업데이트)
+      try {
+        var resSheet = ss.getSheetByName("예약DB");
+        var resData = resSheet.getDataRange().getValues();
+        var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+        var mName = logSheet.getRange(rowIdx, 3).getValue();
+        var mPhone = String(logSheet.getRange(rowIdx, 4).getValue()).replace(/[^0-9]/g, "");
+
+        for (var k = 1; k < resData.length; k++) {
+          var rDateRaw = resData[k][3];
+          var rDateStr = (rDateRaw instanceof Date) ? Utilities.formatDate(rDateRaw, "GMT+9", "yyyy-MM-dd") : String(rDateRaw).split(" ")[0];
+          var rPhone = String(resData[k][1]).replace(/[^0-9]/g, "");
+          if (rDateStr === todayStr && String(resData[k][2]) === mName && rPhone === mPhone && String(resData[k][9]).indexOf("진행중") !== -1) {
+            resSheet.getRange(k + 1, 10).setValue("귀가_테라피 완료");
+            resSheet.getRange(k + 1, 12).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
+            break;
+          }
+        }
+      } catch(e) {}
     }
 
     return { success: true, message: "수정 내역이 안전하게 반영되었습니다." };
@@ -1673,7 +1848,7 @@ function getClassMembersByDate(targetDateStr) {
           timeLog: timeLog,
           extraDeduct: extraDeduct,
           status: status,
-          inTime: String(timeRaw).substring(0,5),
+          inTime: String(timeRaw).indexOf(":") !== -1 ? String(timeRaw).split(":").slice(0, 2).join(":") : String(timeRaw),
           type: (reason.indexOf("테라피") !== -1 || reason.indexOf("보너스") !== -1) ? "테라피" : "점핑"
         });
         
@@ -1744,6 +1919,8 @@ function getMemberRenewalData(phoneStr) {
 }
 
 function submitRegistration(data) {
+  if (data.phone) data.phone = formatPhoneNumber(data.phone);
+  if (data.referrerId) data.referrerId = formatPhoneNumber(data.referrerId);
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var memberSheet = ss.getSheetByName("회원명단");
@@ -1795,7 +1972,6 @@ function submitRegistration(data) {
     
     if (existingRowIdx !== -1) {
       // --- 재등록/연장 로직 ---
-      payCategory = "재결제"; 
       var isNotExpired = false;
       if (existingExpDate && existingExpDate !== "undefined" && existingExpDate !== "-") {
         var expD = new Date(existingExpDate);
@@ -1803,7 +1979,13 @@ function submitRegistration(data) {
         if (now <= expD) isNotExpired = true;
       }
       
-      var curRemainVal = (existingRemain === "(무제한)" || existingRemain === "무제한") ? 0 : (Number(existingRemain) || 0);
+      payCategory = isNotExpired ? "연장결제" : "재결제"; 
+      
+      var gapDays = 0;
+      if (existingExpDate && existingExpDate !== "undefined" && existingExpDate !== "-") {
+        var prevExp = new Date(existingExpDate);
+        gapDays = Math.floor((now.getTime() - prevExp.getTime()) / (1000 * 60 * 60 * 24));
+      }
 
       var isMonthly = (data.membership.indexOf("월권") !== -1 || data.membership.indexOf("운동만") !== -1);
       
@@ -1901,16 +2083,84 @@ function submitRegistration(data) {
       }
     }
 
+    // 6. [원장님 요청] 문자발송 시트에 자동 기록 생성
+    try {
+      var smsSheet = ss.getSheetByName("문자발송");
+      if (smsSheet) {
+        var smsContent = generateSmsContent(data.name, payCategory, data.membership, finalExpDate, finalRemain, gapDays);
+        smsSheet.appendRow([
+          logTimeStr,    // 기록시간
+          data.name,      // 이름
+          data.phone,     // 전화번호
+          payCategory,    // 안내분류 (신규등록/재결제)
+          smsContent,     // 생성된문자내용
+          "대기"          // 상태
+        ]);
+      }
+    } catch(smsErr) {
+      console.error("문자발송 기록 실패: " + smsErr.toString());
+    }
+
     return { success: true, message: (existingRowIdx !== -1 ? "재등록 및 장부 기록이 완료되었습니다!" : "신규 가입 및 장부 기록이 완료되었습니다!") };
   } catch (e) {
     return { error: "처리 중 오류가 발생했습니다: " + e.toString() };
   }
 }
 
+
+/**
+ * [공용] 알려주신 수식을 바탕으로 문자 메시지 내용을 생성하는 함수
+ * @param {number} gapDays - 이전 만료일로부터 지난 일수 (재결제 시 구분용)
+ */
+function generateSmsContent(name, category, membership, expireDate, remainCount, gapDays) {
+  var content = name + " 회원님, 노형점핑클럽입니다! ❤️\n\n";
+  
+  if (category === "신규등록") {
+    content += "노형점핑과의 첫 만남을 진심으로 환영합니다! 😊\n" +
+               "선택하신 [" + membership + "] 등록이 완료되었습니다.\n" +
+               "📅 유효기간: ~ " + expireDate + "\n\n" +
+               "회원님의 건강과 미모가 빛나도록 정성을 다해 돕겠습니다!";
+  } else if (category === "연장결제") {
+    content += "잊지 않고 연장 등록 해주셔서 감사합니다! ✨\n" +
+               "기존 잔여분과 꼼꼼히 합산하여 [" + membership + "] 등록을 마쳤습니다.\n" +
+               "📊 총 잔여횟수: " + remainCount + "회\n" +
+               "📅 최종 만료일: ~ " + expireDate + "\n\n" +
+               "꾸준한 관리가 최고의 결과를 만듭니다. 화이팅입니다! 🔥";
+  } else if (category === "재결제") {
+    if (gapDays > 30) {
+      // 30일 이상 지난 경우 (오랜만에 오신 분)
+      content += "다시 노형점핑을 찾아주셔서 정말 기뻐요! 🥰\n" +
+                 "결제하신 [" + membership + "] 등록이 완료되었습니다.\n" +
+                 "📅 유효기간: ~ " + expireDate + "\n\n" +
+                 "다시 한번 믿고 등록해 주신 만큼, 정성을 다해 관리해 드릴게요! 💪";
+    } else {
+      // 30일 이내인 경우 (며칠 늦게 결제하신 분)
+      content += "노형점핑을 다시 믿고 선택해 주셔서 감사합니다! 😊\n" +
+                 "결제하신 [" + membership + "] 등록이 완료되었습니다.\n" +
+                 "📅 유효기간: ~ " + expireDate + "\n\n" +
+                 "이번에도 회원님의 건강한 변화를 위해 최선을 다하겠습니다! 🔥";
+    }
+  } else if (category === "추가결제") {
+    content += "기존 프로그램과 더불어 [" + membership + "]을 추가해 주셔서 감사합니다! 🥰\n" +
+               "회원님의 열정적인 도전을 보며 저희도 더 힘이 나네요.\n" +
+               "📅 신규 권종 만료일: ~ " + expireDate + "\n\n" +
+               "두 가지 프로그램 모두 시너지가 나도록 세심하게 관리해 드릴게요! ✨";
+  } else {
+    content += "결제하신 [" + membership + "] 등록이 완료되었습니다.\n" +
+               "📅 유효기간: ~ " + expireDate + "\n\n" +
+               "정성을 다해 관리해 드릴게요! 💪";
+  }
+  return content;
+}
+
+
+
+
 /**
  * [연장 전용] 회원 연장 / 재결제 처리
  */
 function submitRenewal(data) {
+  if (data.phone) data.phone = formatPhoneNumber(data.phone);
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var memberSheet = ss.getSheetByName("회원명단");
@@ -1943,8 +2193,25 @@ function submitRenewal(data) {
       if (String(regData[k][2]) === data.phone) {
         if (!memberName) memberName = regData[k][1];
         
-        // 이름이 정확히 똑같고 '진행중'인 것만 타겟으로 잡음 (선택한 권종과 일치하는 내역만)
-        if (String(regData[k][8]).trim() === "진행중" && String(regData[k][4]).trim() === data.membership.trim()) {
+        // 이전 방식: 이름이 정확히 똑같아야 했음
+        // 수정 방식: 같은 "점핑 회수권" 계열이거나 "테라피 회수권" 계열이면 연장 대상으로 인정
+        var isOngoing = (String(regData[k][8]).trim() === "진행중");
+        var oldType = String(regData[k][4]).trim();
+        var newType = data.membership.trim();
+        
+        var isSameFamily = (oldType === newType); // 1. 이름이 완전히 같은 경우
+        
+        // 2. 점핑 회수권 계열인지 확인 (예: 50회 -> 30회)
+        if (!isSameFamily && oldType.indexOf("점핑") !== -1 && oldType.indexOf("회") !== -1 && newType.indexOf("점핑") !== -1 && newType.indexOf("회") !== -1) {
+          isSameFamily = true;
+        }
+        
+        // 3. 테라피 회수권 계열인지 확인
+        if (!isSameFamily && oldType.indexOf("테라피") !== -1 && oldType.indexOf("회") !== -1 && newType.indexOf("테라피") !== -1 && newType.indexOf("회") !== -1) {
+          isSameFamily = true;
+        }
+
+        if (isOngoing && isSameFamily) {
           targetRowIdx = k + 1;
           currentExp = String(regData[k][6]);
           currentRemain = Number(regData[k][7]) || 0;
@@ -1964,6 +2231,13 @@ function submitRenewal(data) {
     var finalExp = "";
     var finalRemain = passInfo.baseCount;
     var finalMemo = data.memo || "";
+    
+    // 이전 만료일로부터 지난 일수 계산
+    var gapDays = 0;
+    if (currentExp && currentExp !== "undefined" && currentExp !== "-") {
+      var prevExp = new Date(currentExp);
+      gapDays = Math.floor((now.getTime() - prevExp.getTime()) / (1000 * 60 * 60 * 24));
+    }
 
     // 5. 연장 유형별 로직
     if (data.renewType === "연장결제") {
@@ -2073,7 +2347,28 @@ function submitRenewal(data) {
       memo: (data.renewType === "연장결제" || data.renewType === "재결제") ? "재등록" : "추가등록"
     });
 
+    // 9. [원장님 요청] 문자발송 시트에 자동 기록 생성
+    try {
+      var smsSheet = ss.getSheetByName("문자발송");
+      if (smsSheet) {
+        var smsContent = generateSmsContent(memberName, data.renewType, data.membership, finalExp, finalRemain, gapDays);
+        smsSheet.appendRow([
+          Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss"),
+          memberName,
+          data.phone,
+          data.renewType,
+          smsContent,
+          "대기"
+        ]);
+      }
+    } catch(smsErr) {
+      console.error("문자발송 기록 실패: " + smsErr.toString());
+    }
+
+
+
     return { success: true, message: "연장 결제 처리가 범주별로 정확히 합산되었습니다!" };
+
   } catch (e) {
     return { error: "연장 처리 오류: " + e.toString() };
   }
@@ -2308,8 +2603,9 @@ function getTodayWorkLogStats(dateVal) {
     var stats = { "09시": 0, "10시": 0, "17시": 0, "18시": 0, "19시": 0, "20시": 0, "total": 0, "jumping": 0, "therapy": 0 };
 
     for (var i = 1; i < data.length; i++) {
-      var logDateRaw = data[i][cols.date];
-      var logDateStr = (logDateRaw instanceof Date) ? Utilities.formatDate(logDateRaw, "GMT+9", "yyyy-MM-dd") : String(logDateRaw).split(" ")[0];
+      var dateRaw = data[i][cols.date];
+      if (!dateRaw) continue;
+      var logDateStr = (dateRaw instanceof Date) ? Utilities.formatDate(dateRaw, "GMT+9", "yyyy-MM-dd") : String(dateRaw).split(" ")[0];
       
       if (logDateStr === dateVal) {
         stats.total++; // 중복 제거 없이 모든 출석행 카운트
@@ -3233,3 +3529,458 @@ function autoCloseDailyLog() {
     return { error: e.toString() };
   }
 }
+/**
+ * [관리자 전용] 문자발송 대기 목록 가져오기
+ */
+function getSmsLogData() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("문자발송");
+    if (!sheet) return { error: "문자발송 시트가 없습니다." };
+    
+    var data = sheet.getDataRange().getDisplayValues();
+    var results = [];
+    
+    // 헤더 제외, 역순으로 최신 것부터 확인
+    for (var i = data.length - 1; i >= 1; i--) {
+      var rowStatus = String(data[i][5] || "").trim();
+      // 원장님 요청: 기본적으로 대기 상태만 반환하거나 클라이언트에서 처리하도록 전체 반환
+      results.push({
+        rowIdx: i + 1,
+        time: data[i][0],
+        name: data[i][1],
+        phone: data[i][2],
+        category: data[i][3],
+        content: data[i][4],
+        status: rowStatus
+      });
+    }
+    return { success: true, logs: results };
+  } catch (e) {
+    return { error: "문자 목록 조회 실패: " + e.toString() };
+  }
+}
+
+/**
+ * 대시보드용 대기 중인 문자 개수 조회
+ */
+function getPendingSmsCount() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("문자발송");
+    if (!sheet) return { count: 0 };
+    
+    var data = sheet.getDataRange().getDisplayValues();
+    var count = 0;
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][5]).trim() === "대기") count++;
+    }
+    return { count: count };
+  } catch(e) { return { count: 0 }; }
+}
+
+/**
+ * [자동화 전용] 매일 자정 혹은 주기적으로 실행하여 미방문/미등록 리스트를 최신화합니다.
+ * '대기' 상태인 자동 생성 문자들을 삭제하고 다시 추출하여 방문 완료자를 명단에서 제외합니다.
+ */
+function autoRefreshSmsLists() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("문자발송");
+    if (!sheet) return;
+    
+    var data = sheet.getDataRange().getValues();
+    // 아래에서부터 지워야 행 번호가 안 꼬임
+    for (var i = data.length - 1; i >= 1; i--) {
+      var category = String(data[i][3]);
+      var status = String(data[i][5]).trim();
+      
+      // 자동 생성 카테고리이면서 아직 발송하지 않은(대기) 건만 상태 변경
+      if ((category === "장기미방문" || category === "복귀권유") && status === "대기") {
+        sheet.getRange(i + 1, 6).setValue("완료(재방문)");
+      }
+    }
+    
+    // 다시 추출 (이미 방문한 사람은 lastAttendanceMap에 의해 제외됨)
+    checkLongTermAbsentees();
+    checkInactiveMembers();
+    
+    Logger.log("SMS 발송 대기 목록 자동 최신화 완료");
+  } catch (e) {
+    Logger.log("SMS 자동 최신화 오류: " + e.toString());
+  }
+}
+
+/**
+ * [관리자 전용] 문자발송 상태 업데이트 (완료 등)
+ */
+function updateSmsStatus(rowIdx, status) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("문자발송");
+    if (!sheet) return { error: "시트를 찾을 수 없습니다." };
+    
+    sheet.getRange(rowIdx, 6).setValue(status);
+    return { success: true, message: "상태가 " + status + "(으)로 업데이트되었습니다." };
+  } catch (e) {
+    return { error: "상태 업데이트 실패: " + e.toString() };
+  }
+}
+
+/**
+ * [관리자 전용] 7일 이상 미방문 회원 추출 및 문자 생성
+ */
+function checkLongTermAbsentees() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var regSheet = ss.getSheetByName("등록 현황");
+    var logSheet = ss.getSheetByName("출석기록");
+    var smsSheet = ss.getSheetByName("문자발송");
+    
+    if (!regSheet || !logSheet || !smsSheet) return { error: "필요한 시트(등록현황/출석기록/문자발송)가 없습니다." };
+    
+    var regData = regSheet.getDataRange().getDisplayValues();
+    var logData = logSheet.getDataRange().getDisplayValues();
+    var smsData = smsSheet.getDataRange().getDisplayValues();
+    
+    var regCols = getRegColumnIndices(regSheet);
+    var logCols = getAttendanceColumnIndices(logSheet);
+    
+    var now = new Date();
+    var sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(now.getDate() - 7);
+    
+    // 1. 마지막 출석일 맵 작성 (폰번호 기준)
+    var lastAttendanceMap = {};
+    for (var i = 1; i < logData.length; i++) {
+      var phone = String(logData[i][logCols.phone] || "").replace(/[^0-9]/g, "");
+      var dateStr = logData[i][logCols.date];
+      if (!phone || !dateStr) continue;
+      
+      var attendanceDate = new Date(dateStr);
+      if (!lastAttendanceMap[phone] || attendanceDate > lastAttendanceMap[phone]) {
+        lastAttendanceMap[phone] = attendanceDate;
+      }
+    }
+    
+    // 2. 이미 발송 대기 중인 목록 확인 (중복 생성 방지)
+    var existingSmsMap = {};
+    for (var j = 1; j < smsData.length; j++) {
+      var sPhone = String(smsData[j][2] || "").replace(/[^0-9]/g, "");
+      var sCategory = smsData[j][3];
+      var sStatus = smsData[j][5];
+      if (sCategory === "장기미방문" && (sStatus === "대기" || sStatus === "완료")) {
+        existingSmsMap[sPhone] = true;
+      }
+    }
+    
+    // 3. 미방문자 추출 및 문자 생성
+    var count = 0;
+    var addedNames = [];
+    
+    for (var k = 1; k < regData.length; k++) {
+      var status = String(regData[k][regCols.status]).trim();
+      if (status !== "진행중" && status !== "진행 중") continue;
+      
+      var phone = String(regData[k][regCols.phone] || "").replace(/[^0-9]/g, "");
+      var name = regData[k][regCols.name];
+      if (!phone) continue;
+      
+      var lastDate = lastAttendanceMap[phone];
+      
+      // 마지막 출석일이 없거나(한번도 안옴), 7일 이상 지난 경우
+      if (!lastDate || lastDate < sevenDaysAgo) {
+        // 이미 보냈거나 대기 중이면 패스
+        if (existingSmsMap[phone]) continue;
+        
+        var cleanName = name.replace(/\d{4}$/, ""); // 이름 뒤 번호 제거
+        var msg = cleanName + "회원님, 노형 점핑클럽입니다. 😊 클럽에서 뵙지 못한 지 너무 오래된 것 같아요. 😢 혹시 어디 불편하신 건 아니시죠? 바쁜 일상 속에서도 건강만큼은 꼭 챙기셨으면 하는 마음에 연락드렸습니다. ❤️ 잠시 짬을 내어 신나게 뛰러 오시는 건 어때요? 🏃‍♀️ 아니면 편안하게 테라피를 하러 오셔도 좋고요. 🔥 이번 주는 꼭 얼굴 뵀으면 좋겠어요! 😊";
+        
+        // 휴대폰 번호 보정 (0 누락 방지)
+        var formattedPhone = formatPhoneForSms(regData[k][regCols.phone]);
+
+        // 문자발송 시트에 추가
+        smsSheet.appendRow([
+          Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm"),
+          cleanName,
+          formattedPhone,
+          "장기미방문",
+          msg,
+          "대기"
+        ]);
+        
+        count++;
+        addedNames.push(cleanName);
+      }
+    }
+    
+    return { 
+      success: true, 
+      count: count, 
+      message: count > 0 ? count + "명의 미방문 회원을 추출했습니다." : "새로운 미방문 회원이 없습니다.",
+      addedNames: addedNames
+    };
+    
+  } catch (e) {
+    return { error: "미방문자 추출 중 오류: " + e.toString() };
+  }
+}
+
+/**
+ * [관리자 전용] 등록이 끊긴 지 14일 이상 된 장기 미등록 회원 추출
+ */
+function checkInactiveMembers() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var regSheet = ss.getSheetByName("등록 현황");
+    var smsSheet = ss.getSheetByName("문자발송");
+    
+    if (!regSheet || !smsSheet) return { error: "필요한 시트(등록현황/문자발송)가 없습니다." };
+    
+    var regData = regSheet.getDataRange().getDisplayValues();
+    var smsData = smsSheet.getDataRange().getDisplayValues();
+    var regCols = getRegColumnIndices(regSheet);
+    
+    var now = new Date();
+    var fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(now.getDate() - 14);
+    
+    // 1. 회원별 상태 체크 (가장 최근 만료일 및 활성 여부)
+    var memberInfoMap = {};
+    for (var i = 1; i < regData.length; i++) {
+      var phone = String(regData[i][regCols.phone] || "").replace(/[^0-9]/g, "");
+      var status = String(regData[i][regCols.status] || "").trim(); 
+      var expireDateStr = regData[i][regCols.expire];
+      var name = regData[i][regCols.name];
+      
+      if (!phone) continue;
+      
+      if (!memberInfoMap[phone]) {
+        memberInfoMap[phone] = { isActive: false, lastExpire: new Date(0), name: name, phoneRaw: regData[i][regCols.phone] };
+      }
+      
+      // 하나라도 진행중이면 활성 회원
+      if (status === "진행중" || status === "진행 중") {
+        memberInfoMap[phone].isActive = true;
+      }
+      
+      // 만료일 업데이트
+      if (expireDateStr) {
+        var expDate = new Date(expireDateStr);
+        if (expDate > memberInfoMap[phone].lastExpire) {
+          memberInfoMap[phone].lastExpire = expDate;
+        }
+      }
+    }
+    
+    // 2. 이미 발송 목록에 있는지 확인
+    var existingSmsMap = {};
+    for (var j = 1; j < smsData.length; j++) {
+      var sPhone = String(smsData[j][2] || "").replace(/[^0-9]/g, "");
+      var sCategory = smsData[j][3];
+      var sStatus = smsData[j][5];
+      // 이미 복귀권유 대기 중이거나 최근 발송 완료된 경우 제외
+      if (sCategory === "복귀권유" && (sStatus === "대기" || sStatus === "완료")) {
+        existingSmsMap[sPhone] = true;
+      }
+    }
+    
+    // 3. 비활성 회원 중 14일 이상 된 분들 추출
+    var count = 0;
+    var addedNames = [];
+    
+    var phones = Object.keys(memberInfoMap);
+    for (var pIdx = 0; pIdx < phones.length; pIdx++) {
+      var m = memberInfoMap[phones[pIdx]];
+      
+      // 활성 회원이 아니고, 마지막 만료일이 14일보다 더 과거라면
+      if (!m.isActive && m.lastExpire < fourteenDaysAgo && m.lastExpire.getTime() > 0) {
+        if (existingSmsMap[phones[pIdx]]) continue;
+        
+        var cleanName = m.name.replace(/\d{4}$/, "");
+        var msg = "";
+        
+        // 잔여 횟수 확인 (memberInfoMap 생성 시 합산 로직 추가 필요 - 아래 루프에서 보완)
+        var totalRemain = 0;
+        for (var k = 1; k < regData.length; k++) {
+          if (String(regData[k][regCols.phone] || "").replace(/[^0-9]/g, "") === phones[pIdx]) {
+            var r = parseInt(regData[k][regCols.remain]) || 0;
+            totalRemain += r;
+          }
+        }
+
+        if (totalRemain >= 5) {
+          // 유형 A: 횟수가 5회 이상 남은 분들 (보너스 제안)
+          msg = cleanName + "회원님! 노형점핑 클럽입니다. 😊 잘 지내고 계시죠? 지난번 이용하실 때 아깝게 남은 횟수들이 기간이 지나 만료되는 바람에 저희도 참 마음이 쓰였답니다. 😢 이번 기회에 다시 오시면 보너스권으로 넉넉히 채워드릴게요. 🔥 다시 한번 활기차게 건강관리 시작해 보시는 건 어떨까요? 기다리고 있겠습니다. ❤️";
+        } else {
+          // 유형 B: 다 썼거나 5회 미만 남은 분들 (열정 재점화)
+          msg = cleanName + "회원님, 노형점핑클럽입니다. 😊 그동안 잘 지내셨나요? 문득 회원님과 함께 신나게 땀 흘리며 운동하던 시간이 떠올라 소식 전해요. 🏃‍♀️ 다시 운동을 시작하고 싶은 마음이 드신다면 언제든 가볍게 들러주세요. 제가 그동안 더 연마한(?) 비법으로 점핑 자세 하나하나 기깔나게 다시 잡아드릴게요. 🔥 우리 다시 한번 뜨거운 열정을 불태워봐요! 😊";
+        }
+        
+        // 휴대폰 번호 보정 (0 누락 방지)
+        var formattedPhone = formatPhoneForSms(m.phoneRaw);
+
+        smsSheet.appendRow([
+          Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm"),
+          cleanName,
+          formattedPhone,
+          "복귀권유",
+          msg,
+          "대기"
+        ]);
+        
+        count++;
+        addedNames.push(cleanName);
+      }
+    }
+    
+    return { 
+      success: true, 
+      count: count, 
+      message: count > 0 ? count + "명의 복귀 권유 대상을 추출했습니다." : "새로운 복귀 권유 대상이 없습니다.",
+      addedNames: addedNames
+    };
+    
+  } catch (e) {
+    return { error: "복귀 대상 추출 중 오류: " + e.toString() };
+  }
+}
+
+/**
+ * [공용] 휴대폰 번호 정규화 (010-0000-0000 형식 강제)
+ */
+function formatPhoneNumber(phoneStr) {
+  if (!phoneStr) return "";
+  var phone = String(phoneStr).replace(/[^0-9]/g, "");
+  
+  // 1012345678 -> 01012345678 (맨 앞 0이 빠진 경우 보정)
+  if (phone.startsWith("1") && (phone.length === 10 || phone.length === 9)) {
+    phone = "0" + phone;
+  }
+  
+  if (phone.length === 11) {
+    return phone.replace(/(\d{3})(\d{4})(\d{4})/, "$1-$2-$3");
+  } else if (phone.length === 10) {
+    return phone.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3");
+  }
+  
+  return phoneStr; 
+}
+
+/**
+ * [관리자용] 시트 내의 모든 잘못된 전화번호 일괄 수정
+ * 실행 방법: 웹앱 URL 뒤에 ?action=fixAllPhoneNumbersInSheet 붙여서 접속
+ */
+function fixAllPhoneNumbersInSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheets = ["회원명단", "출석기록", "등록 현황", "예약DB", "문자발송"];
+  var fixedCount = 0;
+  
+  sheets.forEach(function(name) {
+    var sheet = ss.getSheetByName(name);
+    if (!sheet) return;
+    
+    var data = sheet.getDataRange().getValues();
+    if (data.length < 2) return;
+    
+    var headers = data[0];
+    var phoneCols = [];
+    
+    // "폰", "번호", "연락처", "휴대폰", "ID" 등이 들어간 모든 열 찾기
+    for (var i = 0; i < headers.length; i++) {
+      var h = String(headers[i]);
+      if (h.indexOf("폰") !== -1 || h.indexOf("번호") !== -1 || h.indexOf("연락처") !== -1 || h.indexOf("휴대폰") !== -1 || h.indexOf("ID") !== -1) {
+        phoneCols.push(i);
+      }
+    }
+    
+    if (phoneCols.length > 0) {
+      phoneCols.forEach(function(colIdx) {
+        for (var r = 1; r < data.length; r++) {
+          var original = String(data[r][colIdx] || "");
+          if (!original || original.trim() === "" || original === "-") continue;
+          
+          var formatted = formatPhoneNumber(original);
+          
+          // [안전장치] 정말 전화번호인 경우에만 업데이트 (숫자 9~10자리 & 1로 시작)
+          var digitsOnly = original.replace(/[^0-9]/g, "");
+          if (original !== formatted && (digitsOnly.length === 9 || digitsOnly.length === 10) && digitsOnly.startsWith("1")) {
+            sheet.getRange(r + 1, colIdx + 1).setValue("'" + formatted); 
+            fixedCount++;
+          }
+        }
+      });
+    }
+  });
+  
+  return { success: true, message: "총 " + fixedCount + "개의 전화번호를 정규화(010-xxxx-xxxx)했습니다." };
+}
+
+function formatPhoneForSms(phoneStr) {
+  return formatPhoneNumber(phoneStr);
+}
+
+/**
+ * [추가] 테라피 예약 시 사용 가능한 회원권이나 보너스권이 있는지 검사하는 함수
+ */
+function checkMemberTicket(name, phone) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+    var memberSheet = ss.getSheetByName("회원명단");
+    
+    if (!regSheet) return { success: false, error: "등록 현황 시트를 찾을 수 없습니다." };
+    
+    var phoneClean = String(phone || "").replace(/[^0-9]/g, "");
+    var regData = regSheet.getDataRange().getValues();
+    var cols = getRegColumnIndices(regSheet);
+    
+    var hasValidTicket = false;
+    var foundTickets = [];
+    
+    // 1. 등록현황 확인 (테라피, 점핑회수권, 월권 등)
+    for (var i = 1; i < regData.length; i++) {
+      var rPhone = String(regData[i][cols.phone]).replace(/[^0-9]/g, "");
+      var rStatus = String(regData[i][cols.status]).trim();
+      
+      if (rPhone === phoneClean && (rStatus === "진행중" || rStatus === "진행 중")) {
+        var membership = String(regData[i][cols.membership]);
+        var remainRaw = regData[i][cols.remain];
+        var remain = parseInt(remainRaw) || 0;
+        
+        // 테라피권, 점핑 회수권, 월권 등 예약 가능한 모든 권종 포함
+        if (membership.indexOf("테라피") !== -1 || membership.indexOf("점핑") !== -1 || membership.indexOf("회") !== -1 || membership.indexOf("월권") !== -1) {
+          if (remain > 0 || String(remainRaw).indexOf("무제한") !== -1) {
+            hasValidTicket = true;
+            foundTickets.push(membership + "(" + remainRaw + "회)");
+          }
+        }
+      }
+    }
+    
+    // 2. 보너스권 확인 (회원명단 J열 -> Index 9)
+    if (memberSheet) {
+      var mData = memberSheet.getDataRange().getValues();
+      for (var j = 1; j < mData.length; j++) {
+        var mPhone = String(mData[j][2]).replace(/[^0-9]/g, "");
+        if (mPhone === phoneClean) {
+          var bonus = parseInt(mData[j][9]) || 0;
+          if (bonus > 0) {
+            hasValidTicket = true;
+            foundTickets.push("보너스권(" + bonus + "회)");
+          }
+          break;
+        }
+      }
+    }
+    
+    return {
+      success: true,
+      hasValidTicket: hasValidTicket,
+      tickets: foundTickets.join(", ") || "없음"
+    };
+  } catch (e) {
+    return { success: false, error: "서버 오류: " + e.toString() };
+  }
+}
+

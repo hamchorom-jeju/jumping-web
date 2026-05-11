@@ -1,0 +1,19 @@
+{
+  "name": "노형점핑 & 체온테라피",
+  "short_name": "노형점핑",
+  "description": "노형점핑 & 체온테라피 멤버스 포털",
+  "id": "/main-portal",
+  "start_url": "/?page=index",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#6b46c1",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/final-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

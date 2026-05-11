@@ -1,0 +1,17 @@
+{
+  "name": "노형점핑 출석체크",
+  "short_name": "점핑출석",
+  "id": "nohyung-jumping-attendance-v1",
+  "start_url": "/attendance.html?mode=app",
+  "scope": "/attendance.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#6b46c1",
+  "icons": [
+    {
+      "src": "/attendance-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

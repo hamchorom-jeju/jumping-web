@@ -24,6 +24,7 @@
     #loading { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.9); display:none; flex-direction:column; justify-content:center; align-items:center; z-index:99; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   </style>
+  <script src="bridge.js"></script>
 </head>
 <body>
   <div id="loading"><div>처리 중... 잠시만 기다려 주세요.</div></div>
@@ -97,8 +98,13 @@
   </div>
 
   <script>
-    const phoneParam = "<?!= targetPhone ?>";
-    const nameParam = "<?!= targetName ?>";
+    const urlParams = new URLSearchParams(window.location.search);
+    let phoneParam = urlParams.get('phone') || "<?!= targetPhone ?>";
+    let nameParam = urlParams.get('name') || "<?!= targetName ?>";
+    
+    // Vercel 환경에서 template variable이 치환되지 않은 경우 처리
+    if (phoneParam.startsWith("<?")) phoneParam = "";
+    if (nameParam.startsWith("<?")) nameParam = "";
     let configs = [];
     let currentMemberData = null;
     let canvas, ctx;
@@ -261,8 +267,8 @@
     function clearSig() { ctx.clearRect(0, 0, canvas.width, canvas.height); signed = false; }
 
     function submitData() {
-      if (!signed) return alert("서명을 해주세요.");
-      if (!document.getElementById('membership').value) return alert("권종을 선택하세요.");
+      if (!signed) return showAppAlert("서명을 해주세요.", "error");
+      if (!document.getElementById('membership').value) return showAppAlert("권종을 선택하세요.", "error");
       document.getElementById('loading').style.display = 'flex';
       
       const tmp = document.createElement('canvas');
@@ -284,29 +290,17 @@
 
       google.script.run.withSuccessHandler(function(res) {
         document.getElementById('loading').style.display = 'none';
-        if (res.error) alert(res.error);
+        if (res.error) showAppAlert(res.error, "error");
         else {
-          showSuccessModal(res.message);
+          showAppAlert(res.message, "success");
+          setTimeout(goBack, 2500);
         }
       }).submitRenewal(data);
     }
 
-    function showSuccessModal(msg) {
-      const modal = document.createElement('div');
-      modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; justify-content:center; align-items:center; z-index:1000;";
-      modal.innerHTML = `
-        <div style="background:#fff; padding:30px; border-radius:20px; text-align:center; max-width:90%; width:350px;">
-          <div style="font-size:4rem; margin-bottom:15px;">✅</div>
-          <h2 style="margin-bottom:10px;">처리 완료!</h2>
-          <p style="margin-bottom:25px;">${msg}</p>
-          <button onclick="goBack()" style="width:100%; padding:15px; background:#ff5252; color:#fff; border:none; border-radius:12px; font-size:1.1rem; font-weight:700;">확인 (관리자 화면으로)</button>
-        </div>
-      `;
-      document.body.appendChild(modal);
-    }
 
     function goBack() {
-      window.location.href = "<?!= scriptUrl ?>?page=admin";
+      navigateTo('admin');
     }
   </script>
 </body>

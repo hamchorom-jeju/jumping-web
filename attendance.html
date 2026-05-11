@@ -4,7 +4,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>노형점핑 출석체크</title>
+  <link rel="manifest" href="manifest-attendance.json?v=1.1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="점핑출석">
+  <link rel="apple-touch-icon" href="attendance-icon.png">
   <style>
+    /* Installation Banner Styles */
+    #installBanner {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%;
+      background: var(--primary);
+      color: white;
+      padding: 15px;
+      text-align: center;
+      z-index: 9999;
+      font-weight: 700;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    #installBtn {
+      background: white;
+      color: var(--primary);
+      border: none;
+      padding: 8px 20px;
+      margin-left: 15px;
+      border-radius: 20px;
+      font-weight: 800;
+      cursor: pointer;
+    }
     /* Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
 
@@ -42,120 +70,152 @@
 
     .container {
       width: 100%;
-      max-width: 480px;
-      padding: 20px;
+      max-width: 100%; /* 태블릿 대화면 대응: 가로 폭 제한 해제 */
+      padding: 30px;
       display: flex;
       flex-direction: column;
       height: 100vh;
       justify-content: center;
+      margin: 0 auto;
     }
 
     /* 헤더 영역 */
     .header {
       text-align: center;
-      margin-bottom: 25px;
+      margin-bottom: 40px;
     }
     .logo-img {
-      max-height: 65px;
+      max-height: 100px;
       max-width: 100%;
-      margin-bottom: 8px;
+      margin-bottom: 15px;
       object-fit: contain;
       background-color: rgba(255, 255, 255, 0.95);
-      padding: 8px 20px;
-      border-radius: 14px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      padding: 12px 30px;
+      border-radius: 20px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
     }
     .header p {
       color: var(--text-sub);
-      font-size: 0.9rem;
-      font-weight: 300;
+      font-size: 1.3rem;
+      font-weight: 400;
     }
 
-    /* 입력창 (Glassmorphism) */
+    /* 입력창 (Kiosk 스타일) */
     .input-display {
       background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-radius: 18px;
-      height: 70px;
+      border: 2px solid var(--glass-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 24px;
+      height: 110px;
       display: flex;
       justify-content: center;
       align-items: center;
-      margin-bottom: 20px;
-      font-size: 2.2rem;
-      font-weight: 600;
-      letter-spacing: 12px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      margin-bottom: 40px;
+      font-size: 4rem;
+      font-weight: 700;
+      letter-spacing: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
       transition: all 0.3s ease;
     }
     .input-display.active {
       border-color: var(--primary-light);
-      box-shadow: 0 0 20px rgba(138, 43, 226, 0.3);
+      box-shadow: 0 0 35px rgba(138, 43, 226, 0.5);
     }
     .placeholder {
-      color: rgba(255, 255, 255, 0.2);
-      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.15);
+      font-size: 1.8rem;
       letter-spacing: 0;
       font-weight: 400;
     }
 
-    /* 키패드 */
+    /* 키패드 (태블릿 최적화) */
     .keypad {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      gap: 20px;
       width: 100%;
-      max-width: 360px;
+      max-width: 550px;
       margin: 0 auto;
     }
     .key {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 50%;
       aspect-ratio: 1/1;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 1.6rem;
-      font-weight: 500;
+      font-size: 2.5rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.1s ease;
       -webkit-tap-highlight-color: transparent;
     }
     .key:active {
       background: var(--primary);
-      transform: scale(0.92);
+      transform: scale(0.9);
     }
     .key.action {
-      font-size: 1.1rem;
+      font-size: 1.5rem;
       color: var(--text-sub);
       background: transparent;
       border: none;
     }
-    .key.action:active {
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-    }
     .key.submit {
       background: var(--primary);
       border: none;
-      box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+      box-shadow: 0 6px 20px rgba(138, 43, 226, 0.5);
       color: #fff;
-      font-weight: 600;
-      font-size: 1.2rem;
+      font-weight: 800;
+      font-size: 1.8rem;
     }
 
-    /* 작은 화면용 최적화 */
-    @media (max-height: 740px) {
-      .container { padding: 10px; }
-      .header { margin-bottom: 15px; }
-      .logo-img { max-height: 50px; padding: 6px 15px; }
-      .header p { font-size: 0.85rem; }
-      .input-display { height: 60px; margin-bottom: 15px; font-size: 2rem; }
-      .keypad { gap: 10px; }
-      .key { font-size: 1.4rem; }
-      .key.submit, .key.action { font-size: 1rem; }
+    /* 태블릿/노트북 가로 모드 대응 (기준 완화) */
+    @media (min-width: 700px) {
+      .container { max-width: 100%; padding: 40px; justify-content: flex-start; padding-top: 80px; }
+      .keypad { max-width: 1000px; gap: 40px; }
+      .key { font-size: 4.5rem; }
+      .key.action { font-size: 2.2rem; }
+      .key.submit { font-size: 2.8rem; }
+      .input-display { height: 180px; font-size: 7rem; margin-bottom: 60px; }
+      .logo-img { max-height: 180px; margin-bottom: 40px; }
+
+      /* 모달 및 버튼 확장 (회원선택 화면 포함) */
+      .modal-content { max-width: 1000px !important; width: 95% !important; padding: 60px !important; border-radius: 40px !important; }
+      #userListArea { grid-template-columns: repeat(3, 1fr) !important; gap: 20px !important; max-height: 600px !important; }
+      .user-list-btn { padding: 40px 20px !important; border-radius: 24px !important; }
+      .user-list-btn .u-name { font-size: 2.5rem !important; }
+      
+      .success-content { max-width: 1000px !important; padding: 100px !important; border-radius: 40px !important; }
+      .user-greeting { font-size: 4.5rem !important; margin-bottom: 30px !important; }
+      .user-status { font-size: 2.2rem !important; margin-bottom: 60px !important; }
+      .btn { padding: 40px !important; font-size: 2.5rem !important; border-radius: 25px !important; margin-bottom: 20px !important; }
+      .success-icon { font-size: 10rem !important; }
+      .success-text { font-size: 3rem !important; line-height: 1.6 !important; }
+
+      /* 회원권 및 상세 정보 '왕글씨' 보정 */
+      .pass-type { font-size: 2.5rem !important; margin-bottom: 15px !important; }
+      .pass-detail { font-size: 2rem !important; line-height: 1.4 !important; }
+      .pass-warning { font-size: 1.8rem !important; font-weight: 800 !important; margin-left: 10px !important; }
+      .searching-text { font-size: 3.5rem !important; }
+      .header p { font-size: 2.2rem !important; }
+      .user-greeting { font-size: 4.5rem !important; margin-bottom: 40px !important; }
+      .user-status-title { font-size: 2rem !important; margin-bottom: 30px !important; }
+      .btn-cancel { font-size: 2rem !important; padding: 20px !important; }
+      .success-pass-info { font-size: 2rem !important; margin-top: 25px !important; }
+    }
+
+    /* 모바일 세로 모드 대응 (기존 유지) */
+    @media (max-width: 600px) {
+      .container { padding: 15px; max-width: 100%; }
+      .header { margin-bottom: 20px; }
+      .logo-img { max-height: 60px; padding: 8px 20px; }
+      .header p { font-size: 1rem; }
+      .input-display { height: 75px; margin-bottom: 20px; font-size: 2.5rem; letter-spacing: 10px; }
+      .keypad { gap: 12px; max-width: 340px; }
+      .key { font-size: 1.8rem; }
+      .placeholder { font-size: 1.2rem; }
     }
 
     /* 2단계 팝업 (본인확인 및 옵션 선택) */
@@ -226,97 +286,6 @@
     .btn-cancel { background: transparent; color: var(--text-sub); margin-top: 10px; font-weight: 400; }
     
     /* 성공 알림 모달 (예쁘게 꾸미기) */
-    .success-modal-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.85);
-      backdrop-filter: blur(15px);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 200;
-      opacity: 0;
-      transition: opacity 0.4s ease;
-    }
-    .success-modal-overlay.show {
-      display: flex;
-      opacity: 1;
-    }
-    .success-content {
-      background: linear-gradient(145deg, #2a0845, #6441a5);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 24px;
-      width: 85%;
-      max-width: 380px;
-      padding: 50px 30px;
-      text-align: center;
-      box-shadow: 0 0 40px rgba(138, 43, 226, 0.6);
-      transform: scale(0.8);
-      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .success-modal-overlay.show .success-content {
-      transform: scale(1);
-    }
-    .success-icon {
-      font-size: 4rem;
-      margin-bottom: 20px;
-      display: inline-block;
-      animation: bounce 1s infinite alternate;
-    }
-    @keyframes bounce {
-      from { transform: translateY(0); }
-      to { transform: translateY(-10px); }
-    }
-    /* 에러 알림 모달 (진동 효과) */
-    .error-modal-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.85);
-      backdrop-filter: blur(15px);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 200;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    .error-modal-overlay.show {
-      display: flex;
-      opacity: 1;
-    }
-    .error-content {
-      background: linear-gradient(145deg, #4a0000, #ff5252);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 24px;
-      width: 85%;
-      max-width: 380px;
-      padding: 50px 30px;
-      text-align: center;
-      box-shadow: 0 0 40px rgba(255, 82, 82, 0.6);
-      transform: scale(0.8);
-      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .error-modal-overlay.show .error-content {
-      transform: scale(1);
-      animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-    }
-    @keyframes shake {
-      10%, 90% { transform: scale(1) translate3d(-2px, 0, 0); }
-      20%, 80% { transform: scale(1) translate3d(4px, 0, 0); }
-      30%, 50%, 70% { transform: scale(1) translate3d(-6px, 0, 0); }
-      40%, 60% { transform: scale(1) translate3d(6px, 0, 0); }
-    }
-    .error-icon {
-      font-size: 4rem;
-      margin-bottom: 20px;
-      display: inline-block;
-    }
-    .error-text {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: #fff;
-      line-height: 1.5;
-    }
 
     #userListArea {
       display: grid;
@@ -344,9 +313,22 @@
       transform: scale(0.95);
     }
     .user-list-btn .u-name { font-weight: 600; font-size: 1.2rem; }
+
+    /* 회원권 정보 기본 스타일 */
+    .pass-type { font-weight: 600; color: var(--primary-light); font-size: 1rem; margin-bottom: 4px; }
+    .pass-detail { font-size: 0.9rem; }
+    .pass-warning { font-size: 0.8rem; font-weight: 700; }
+    .searching-text { font-size: 1.5rem; color: var(--primary-light); font-weight: 600; }
+    .user-status-title { font-size: 0.9rem; opacity: 0.7; margin-bottom: 20px; }
+    .success-pass-info { margin-top: 15px; font-size: 1.05rem; opacity: 0.9; }
   </style>
+  <script src="bridge.js"></script>
 </head>
 <body>
+  <div id="installBanner">
+    📱 노형점핑 출석 앱을 홈 화면에 깔아보세요!
+    <button id="installBtn">지금 설치</button>
+  </div>
 
   <div class="container">
     <div class="header">
@@ -379,7 +361,7 @@
   <div class="modal-overlay" id="multiUserModal">
     <div class="modal-content">
       <div class="user-greeting">회원님을 선택해주세요</div>
-      <div class="user-status" style="margin-bottom:20px; font-size: 0.9rem; opacity: 0.7;">동일한 번호의 회원님이 계십니다.</div>
+      <div class="user-status-title">동일한 번호의 회원님이 계십니다.</div>
       <div id="userListArea">
         <!-- 리스트가 여기에 그리드로 생성됨 -->
       </div>
@@ -403,19 +385,6 @@
     </div>
   </div>
 
-  <!-- 성공 알림 팝업 -->
-  <div class="success-modal-overlay" id="successModal">
-    <div class="success-content">
-      <div class="success-icon">✨</div>
-      <div class="success-text" id="successMessage">출석이 완료되었습니다!<br>오늘도 화이팅!</div>
-    </div>
-  </div>
-
-  <!-- 에러 알림 팝업 -->
-  <div class="error-modal-overlay" id="errorModal">
-    <div class="error-content">
-      <div class="error-icon">⚠️</div>
-      <div class="error-text" id="errorMessage">에러 메시지가 여기에 표시됩니다.</div>
     </div>
   </div>
 
@@ -447,14 +416,7 @@
 
     // 에러 팝업 띄우기 함수
     function showError(message) {
-      const errorModal = document.getElementById('errorModal');
-      document.getElementById('errorMessage').innerText = message;
-      errorModal.classList.add('show');
-      
-      // 2.5초 뒤에 닫기
-      setTimeout(() => {
-        errorModal.classList.remove('show');
-      }, 2500);
+      showAppAlert(message, "error");
     }
 
     let selectedMemberPhone = "";
@@ -466,7 +428,7 @@
       }
       
       // 검색 중 시각적 피드백
-      display.innerHTML = '<span style="font-size: 1.5rem;">조회중...</span>';
+      display.innerHTML = '<span class="searching-text">조회중...</span>';
       
       // 실제 구글 앱스 스크립트 환경인지 확인 (로컬 파일로 열었을 때 무한 로딩 방지)
       if (typeof google === 'undefined' || !google.script) {
@@ -559,18 +521,18 @@
           if (isLowSessions || isNearExpiry) {
             color = "#ff5252";
             if (diffDays < 0) {
-              warning = " <span style='font-size:0.8rem;'>⚠️ 기한만료</span>";
+              warning = " <span class='pass-warning'>⚠️ 기한만료</span>";
             } else if (diffDays === 0) {
-              warning = " <span style='font-size:0.8rem;'>⚠️ 오늘만료</span>";
+              warning = " <span class='pass-warning'>⚠️ 오늘만료</span>";
             } else if (isNearExpiry) {
-              warning = ` <span style='font-size:0.8rem;'>⚠️ ${diffDays}일전</span>`;
+              warning = ` <span class='pass-warning'>⚠️ ${diffDays}일전</span>`;
             } else {
-              warning = " <span style='font-size:0.8rem;'>⚠️ 연장필요</span>";
+              warning = " <span class='pass-warning'>⚠️ 연장필요</span>";
             }
           }
           
-          passDiv.innerHTML = `<div style="font-weight:600; color:var(--primary-light); font-size:1rem; margin-bottom:4px;">${pass.membershipType}</div>` + 
-                              `<div style="color:${color}; font-size:0.9rem;">잔여: ${pass.remainCount}회 | 기한: ~${pass.expireDate}${warning}</div>`;
+          passDiv.innerHTML = `<div class="pass-type">${pass.membershipType}</div>` + 
+                              `<div class="pass-detail" style="color:${color};">잔여: ${pass.remainCount}회 | 기한: ~${pass.expireDate}${warning}</div>`;
           statusArea.appendChild(passDiv);
         });
       } else {
@@ -615,46 +577,63 @@
           return;
         }
         
-        // 성공 팝업 예쁘게 띄우기
-        const successModal = document.getElementById('successModal');
-        const msgBox = document.getElementById('successMessage');
-        
+        let successMsg = "";
         if(type === '점핑') {
-          msgBox.innerHTML = "점핑 출석 완료!🏃‍♀️<br>신나게 뛰어볼까요?";
+          successMsg = "점핑 출석 완료! 🏃‍♀️<br>신나게 뛰어볼까요?";
         } else if(type === '테라피') {
-          msgBox.innerHTML = "테라피 출석 완료!🌿<br>편안한 시간 되세요.";
+          successMsg = "테라피 출석 완료! 🌿<br>편안한 시간 되세요.";
         } else if(type === '복합') {
-          msgBox.innerHTML = "복합 출석 완료!✨<br>오늘도 고생하셨습니다.";
+          successMsg = "복합 출석 완료! ✨<br>오늘도 고생하셨습니다.";
         } else if(type === '보너스') {
-          msgBox.innerHTML = "보너스 출석 완료!🎁<br>감사합니다!";
+          successMsg = "보너스 출석 완료! 🎁<br>감사합니다!";
         } else {
-          msgBox.innerHTML = "출석이 완료되었습니다!✨<br>오늘도 화이팅!";
+          successMsg = "출석이 완료되었습니다! ✨<br>오늘도 화이팅!";
         }
         
         // 잔여 횟수 정보 추가 표시
         if (res.updatedRemain !== undefined) {
           const countInfo = res.isUnlimited ? "(무제한 이용 중)" : `잔여: ${res.updatedRemain}회`;
-          
-          // 회원권이 여러 개인 경우(혹은 usedPassName이 있는 경우) 이름도 함께 표시
           let finalInfo = "";
           if (res.usedPassName && res.usedPassName !== "보너스권") {
-             finalInfo = `<span style="color:var(--primary-light); font-weight:600;">${res.usedPassName}</span>: ${countInfo}`;
+             finalInfo = `<span style="color:#8a2be2; font-weight:600;">${res.usedPassName}</span>: ${countInfo}`;
           } else {
              finalInfo = `(${countInfo})`;
           }
-          
-          msgBox.innerHTML += `<div style="margin-top:15px; font-size:1.05rem; opacity:0.9;">${finalInfo}</div>`;
+          successMsg += `<div style="margin-top:15px; font-size:1rem; opacity:0.8;">${finalInfo}</div>`;
         }
 
-        successModal.classList.add('show');
-
-        // 2.5초 뒤에 자동으로 팝업 닫히고 초기 화면으로
-        setTimeout(() => {
-          successModal.classList.remove('show');
-        }, 2500);
-        
+        showAppAlert(successMsg, "success");
       }).processAttendance(selectedMemberPhone, type, false);
     }
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js');
+      });
+    }
+
+    // PWA Install Logic
+    let deferredPrompt;
+    const installBanner = document.getElementById('installBanner');
+    const installBtn = document.getElementById('installBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBanner.style.display = 'block';
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installBanner.style.display = 'none';
+        }
+        deferredPrompt = null;
+      }
+    });
   </script>
 </body>
 </html>

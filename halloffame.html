@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>명예의 전당 - 노형점핑</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6b46c1;
+      --gold: #f6e05e;
+      --silver: #cbd5e1;
+      --bronze: #ed8936;
+      --bg-dark: #0f172a;
+    }
+
+    body {
+      font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+      background-color: var(--bg-dark);
+      color: white;
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: white;
+      text-decoration: none;
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      background: linear-gradient(to right, #f6e05e, #ed8936);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .rank-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .rank-item {
+      display: flex;
+      align-items: center;
+      padding: 16px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .rank-item:last-child { border-bottom: none; }
+
+    .rank-num {
+      width: 40px;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .rank-1 { color: var(--gold); }
+    .rank-2 { color: var(--silver); }
+    .rank-3 { color: var(--bronze); }
+
+    .rank-name {
+      flex: 1;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .rank-val {
+      font-size: 1rem;
+      color: #94a3b8;
+    }
+
+    .val-num {
+      color: var(--primary);
+      font-weight: 700;
+      margin-right: 4px;
+    }
+
+    .empty-msg {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="?page=index" class="back-btn">← 돌아가기</a>
+    <header>
+      <h1>HALL OF FAME</h1>
+      <p>노형점핑을 빛내는 이달의 주인공들</p>
+    </header>
+
+    <div class="rank-card">
+      <h2 style="font-size: 1.2rem; margin-bottom: 20px; color: #a78bfa;">🔥 이달의 출석 왕</h2>
+      <div id="attendanceRank">
+        <!-- 샘플 데이터 -->
+        <div class="rank-item">
+          <span class="rank-num rank-1">1</span>
+          <span class="rank-name">김*정</span>
+          <span class="rank-val"><span class="val-num">24</span>회 출석</span>
+        </div>
+        <div class="rank-item">
+          <span class="rank-num rank-2">2</span>
+          <span class="rank-name">이*혜</span>
+          <span class="rank-val"><span class="val-num">22</span>회 출석</span>
+        </div>
+        <div class="rank-item">
+          <span class="rank-num rank-3">3</span>
+          <span class="rank-name">박*민</span>
+          <span class="rank-val"><span class="val-num">20</span>회 출석</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rank-card">
+      <h2 style="font-size: 1.2rem; margin-bottom: 20px; color: #ed64a6;">✨ 33챌린지 명예 회원</h2>
+      <div id="challengeSuccess">
+        <div class="empty-msg">아직 공개된 성공 스토리가 없습니다.</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

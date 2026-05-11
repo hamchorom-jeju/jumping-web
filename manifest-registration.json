@@ -1,0 +1,17 @@
+{
+  "name": "노형점핑 회원등록",
+  "short_name": "점핑등록",
+  "id": "nohyung-jumping-registration-v1",
+  "start_url": "/registration.html?mode=app",
+  "scope": "/registration.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#6b46c1",
+  "icons": [
+    {
+      "src": "/registration-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

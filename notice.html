@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>소통방 - 노형점핑</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6b46c1;
+      --bg-dark: #0f172a;
+    }
+
+    body {
+      font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+      background-color: var(--bg-dark);
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: white;
+      text-decoration: none;
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    .notice-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .category {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    .title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .content {
+      font-size: 0.95rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .date {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 16px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="?page=index" class="back-btn">← 돌아가기</a>
+    <header>
+      <h1 style="font-size: 2rem; margin-bottom: 8px;">COMMUNICATION</h1>
+      <p style="color: #94a3b8;">클럽 소식과 다이어트 꿀팁</p>
+    </header>
+
+    <div id="noticeList">
+      <!-- 샘플 공지 -->
+      <div class="notice-card">
+        <span class="category">공지</span>
+        <div class="title">🏃‍♀️ 5월 가정의 달 특별 이벤트 안내</div>
+        <div class="content">안녕하세요! 노형점핑입니다. 5월을 맞아 가족과 함께 건강을 챙길 수 있는 특별한 이벤트를 준비했습니다. 자세한 내용은 센터 내 게시판이나 원장님께 문의해 주세요!</div>
+        <div class="date">2026.05.01</div>
+      </div>
+
+      <div class="notice-card">
+        <span class="category" style="background: #ed64a6;">꿀팁</span>
+        <div class="title">🔥 운동 후 체온 관리가 중요한 이유!</div>
+        <div class="content">운동 직후 찬물 샤워보다는 미온수로 체온을 유지해 주는 것이 근육 회복과 기초대사량 증진에 훨씬 효과적입니다. 우리 클럽의 테라피실을 적극 활용해 보세요!</div>
+        <div class="date">2026.04.28</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

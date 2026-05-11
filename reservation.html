@@ -1,270 +1,505 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+  <title>노형점핑 테라피 예약</title>
+  <link rel="manifest" href="manifest-therapy.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="점핑테라피">
+  <link rel="apple-touch-icon" href="therapy-icon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #4a90e2; /* 예약 시스템은 차분한 블루톤 유지 */
-      --primary-dark: #357abd;
-      --bg-light: #f7fafc;
-      --glass-bg: rgba(255, 255, 255, 0.95);
-      --glass-border: rgba(226, 232, 240, 0.8);
-      --text-main: #2d3748;
+      --primary: #6b46c1; /* 고급스러운 보라색 톤으로 변경 */
+      --primary-light: #9f7aea;
+      --secondary: #4a90e2;
+      --bg-light: #f8fafc;
+      --white: #ffffff;
+      --text-main: #1a202c;
       --text-sub: #718096;
-      --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+      --danger: #e53e3e;
+      --success: #38a169;
+      --shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      --glass: rgba(255, 255, 255, 0.8);
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
-    body { background-color: var(--bg-light); color: var(--text-main); padding: 20px; max-width: 500px; margin: 0 auto; min-height: 100vh; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; }
     
+    body { 
+      background-color: var(--bg-light); 
+      background-image: radial-gradient(circle at top right, rgba(107, 70, 193, 0.05), transparent),
+                        radial-gradient(circle at bottom left, rgba(74, 144, 226, 0.05), transparent);
+      color: var(--text-main); 
+      padding: 30px; 
+      max-width: 700px; /* 태블릿 맞춤 너비 */
+      margin: 0 auto; 
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* 태블릿/키오스크용 강력한 확대 */
+    @media (min-width: 768px) {
+      body { max-width: 950px; padding: 50px; }
+      .header img { max-width: 300px; margin-bottom: 20px; }
+      .action-btn { padding: 60px 30px; font-size: 1.5rem; border-radius: 30px; }
+      .btn-icon { font-size: 4rem; margin-bottom: 15px; }
+      .step { padding: 40px; border-radius: 32px; }
+      .step-title { font-size: 1.8rem; margin-bottom: 30px; }
+      .step-num { width: 35px; height: 35px; font-size: 1.1rem; }
+      input { padding: 30px; font-size: 2rem; border-radius: 20px; }
+      .primary-btn { padding: 30px; font-size: 1.6rem; border-radius: 20px; }
+      .btn-grid { gap: 20px; }
+      .btn-item { padding: 35px 20px; font-size: 1.3rem; border-radius: 24px; }
+      .summary-header { font-size: 1.6rem; margin-bottom: 25px; }
+      .summary-item { padding: 20px 0; }
+      .summary-time { font-size: 1.3rem; min-width: 120px; }
+      .summary-names { font-size: 1.3rem; }
+    }
+
+    /* 로고 영역 */
+    .header { text-align: center; padding: 20px 0 10px; }
+    .header img { max-width: 320px; height: auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+
+    /* 공지사항 배너 */
     #notice-banner { 
-      background: #fff3cd; color: #856404; padding: 12px; border-radius: 12px; margin-bottom: 20px; 
-      font-size: 0.95rem; font-weight: 600; overflow: hidden; height: 45px; position: relative; 
-      border: 1px solid #ffeeba; box-shadow: 0 2px 5px rgba(0,0,0,0.02); display: flex; align-items: center;
+      background: var(--white);
+      border-left: 4px solid var(--primary);
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 25px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+      position: relative;
     }
-    #notice-content { position: absolute; white-space: nowrap; animation: roll 15s linear infinite; }
-    @keyframes roll { 0% { left: 100%; } 100% { left: -100%; } }
-    
-    .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-    .img-btn { width: 100%; cursor: pointer; border-radius: 16px; box-shadow: var(--card-shadow); transition: transform 0.2s; }
-    .img-btn:active { transform: scale(0.96); }
-    
+    #notice-content { 
+      font-size: 0.95rem; 
+      font-weight: 700; 
+      color: var(--text-main);
+      white-space: nowrap;
+      width: max-content;
+      animation: marquee 14s linear infinite;
+    }
+    @keyframes marquee {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+
+    /* 메인 버튼 그리드 */
+    .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
+    .action-btn {
+      padding: 30px 15px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 1rem;
+      text-align: center;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--white);
+    }
+    .action-btn:active { transform: scale(0.95); }
+    .btn-booking { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; }
+    .btn-lookup { background: var(--white); color: var(--text-main); }
+    .btn-icon { font-size: 2.2rem; margin-bottom: 10px; display: block; }
+
+    /* 스텝 영역 */
     .step { 
-      display: none; background: var(--glass-bg); padding: 25px; border-radius: 16px; 
-      margin-bottom: 15px; border: 1px solid var(--glass-border); box-shadow: var(--card-shadow); 
+      display: none; 
+      background: var(--white); 
+      padding: 25px; 
+      border-radius: 24px; 
+      margin-bottom: 20px; 
+      box-shadow: var(--shadow);
+      border: 1px solid #f1f5f9;
     }
-    .active { display: block; border: 2px solid var(--primary); animation: fadeIn 0.3s ease-out; }
-    .completed { display: block; opacity: 0.7; border-left: 5px solid #48bb78; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .active { display: block; animation: slideUp 0.4s ease-out; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     
-    .step p { margin-bottom: 15px; font-size: 1.1rem; color: #1a202c; }
-    
-    .btn-grid, #idList, #lookupIdList, #lookupResults { display: grid; gap: 10px; }
-    #idList, #lookupIdList, #timeList { grid-template-columns: 1fr 1fr; }
-    #roomList { grid-template-columns: 1fr 1fr 1fr; }
-    
-    .btn-item { 
-      padding: 15px 10px; border: 1px solid #cbd5e0; border-radius: 12px; background: #fff; 
-      cursor: pointer; text-align: center; font-weight: 600; color: var(--text-main);
-      display: flex; flex-direction: column; justify-content: center; align-items: center; 
-      line-height: 1.4; transition: all 0.2s; font-size: 0.95rem;
-    }
-    .btn-item:active { transform: scale(0.98); }
-    .selected { background: var(--primary) !important; color: white !important; border-color: var(--primary); box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3); }
-    .booked { background: #edf2f7; color: #a0aec0; cursor: not-allowed; border-color: #e2e8f0; }
-    
-    #summary-section { 
-      margin-top: 30px; background: var(--glass-bg); padding: 20px; border-radius: 16px; 
-      border: 1px solid var(--glass-border); box-shadow: var(--card-shadow); 
-    }
-    #summary-section strong { display: block; font-size: 1.1rem; margin-bottom: 15px; color: var(--text-main); border-bottom: 2px solid #edf2f7; padding-bottom: 10px;}
-    
+    .step-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 20px; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+    .step-num { background: var(--primary); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+
+    /* 입력창 & 버튼 */
     input { 
-      width: 100%; padding: 16px; font-size: 1.2rem; font-weight: 600; color: var(--text-main);
-      border: 1px solid #cbd5e0; border-radius: 12px; box-sizing: border-box; 
-      text-align: center; letter-spacing: 3px; outline: none; transition: all 0.3s; 
-      background: #fff;
+      width: 100%; padding: 18px; font-size: 1.4rem; font-weight: 700; 
+      border: 2px solid #e2e8f0; border-radius: 16px; background: #f8fafc;
+      text-align: center; outline: none; transition: all 0.2s; margin-bottom: 15px;
     }
-    input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15); }
+    input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(107, 70, 193, 0.1); }
     
     .primary-btn { 
-      width: 100%; padding: 16px; background: var(--primary); color: white; border: none; 
-      border-radius: 12px; font-weight: 700; font-size: 1.1rem; cursor: pointer; 
-      margin-top: 15px; transition: background 0.2s, transform 0.1s; box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+      width: 100%; padding: 18px; background: var(--primary); color: white; border: none; 
+      border-radius: 16px; font-weight: 700; font-size: 1.1rem; cursor: pointer; 
+      box-shadow: 0 4px 12px rgba(107, 70, 193, 0.3); transition: all 0.2s;
     }
-    .primary-btn:active { transform: scale(0.98); }
+    .primary-btn:active { transform: scale(0.97); }
     .primary-btn:disabled { background: #cbd5e0; cursor: not-allowed; box-shadow: none; }
+
+    /* 리스트 버튼 그리드 */
+    .btn-grid { display: grid; gap: 12px; }
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    .btn-item { 
+      padding: 18px 10px; border: 1.5px solid #e2e8f0; border-radius: 16px; background: white; 
+      cursor: pointer; text-align: center; font-weight: 700; color: var(--text-main);
+      transition: all 0.2s; font-size: 0.95rem; display: flex; flex-direction: column; gap: 4px;
+    }
+    .btn-item:active { transform: scale(0.96); }
+    .selected { background: var(--primary) !important; color: white !important; border-color: var(--primary); transform: scale(1.02); box-shadow: 0 8px 15px rgba(107, 70, 193, 0.2); }
+    .booked { background: #f1f5f9; color: #cbd5e0; cursor: not-allowed; border-color: #f1f5f9; }
+
+    /* 하단 현황 섹션 */
+    #summary-section { 
+      margin-top: 40px; background: var(--white); padding: 25px; border-radius: 24px; 
+      box-shadow: var(--shadow); border: 1px solid #f1f5f9;
+    }
+    .summary-header { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-weight: 800; font-size: 1.1rem; }
+    .summary-item { padding: 12px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+    .summary-item:last-child { border-bottom: none; }
+    .summary-time { font-weight: 700; color: var(--primary); min-width: 70px; }
+    .summary-names { color: var(--text-main); font-weight: 500; flex: 1; text-align: right; }
+
+    .back-btn {
+      background: #edf2f7;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+    .back-btn:active { transform: scale(0.95); background: #e2e8f0; }
+
+    /* 완료 알림 */
+    /* 스켈레톤 로딩 애니메이션 */
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+      border-radius: 16px;
+      margin-bottom: 10px;
+    }
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
   </style>
+  <script src="bridge.js"></script>
 </head>
 <body>
-  <div style="text-align: center; padding: 10px 0;">
-    <img src="https://drive.google.com/thumbnail?id=1294x-K2aBT5CzyoNnaq2-6CPEIfyFEzk&sz=w1000" 
-         style="max-width: 95%; height: auto; display: inline-block;" alt="점핑장 로고">
+  <div class="header">
+    <img src="https://drive.google.com/thumbnail?id=1294x-K2aBT5CzyoNnaq2-6CPEIfyFEzk&sz=w1000" alt="점핑장 로고">
   </div> 
 
   <div id="notice-banner">
     <div id="notice-content">📢 개인 수건을 꼭 지참해주세요. 클럽 수건 및 찜질복 사용 시 대여비가 추가됩니다!</div>
   </div>
+
   <div class="menu-grid">
-    <div class="action-btn" onclick="startBooking()" style="background: linear-gradient(135deg, #4a90e2, #357abd); color: white;">
-      <span style="font-size: 2rem; margin-bottom: 8px; display: block;">🌿</span>
-      <span>테라피 예약하기</span>
+    <div class="action-btn btn-booking" onclick="startBooking()">
+      <span class="btn-icon">🌿</span>
+      <span>테라피 예약</span>
     </div>
-    <div class="action-btn" onclick="startLookup()" style="background: var(--glass-bg); color: var(--text-main); border: 1px solid var(--glass-border);">
-      <span style="font-size: 2rem; margin-bottom: 8px; display: block;">🔍</span>
-      <span>내 예약 조회</span>
+    <div class="action-btn btn-lookup" onclick="startLookup()">
+      <span class="btn-icon">🔍</span>
+      <span>예약 조회</span>
     </div>
   </div>
 
-  <style>
-    /* 추가된 버튼 스타일 */
-    .action-btn {
-      padding: 25px 15px;
-      border-radius: 16px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 1.1rem;
-      box-shadow: var(--card-shadow);
-      transition: transform 0.2s, box-shadow 0.2s;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    .action-btn:active {
-      transform: scale(0.96);
-    }
-  </style>
-
+  <!-- 예약 흐름 영역 -->
   <div id="booking-flow" style="display:none;">
-    <div id="step1" class="step active"><p><strong>1. 본인 확인</strong> (뒷번호 4자리)</p>
-      <input type="number" id="phoneInput"><button class="primary-btn" onclick="findID()">조회</button>
+    <!-- Step 1: 본인 확인 -->
+    <div id="step1" class="step active">
+      <div class="step-title"><span class="step-num">1</span> 본인 확인</div>
+      <p style="font-size:0.9rem; color:var(--text-sub); margin-bottom:15px; text-align:center;">휴대폰 번호 뒷자리 4자리를 입력하세요.</p>
+      <input type="number" id="phoneInput" placeholder="예: 1234" pattern="\d*">
+      <button class="primary-btn" id="nextBtn1" onclick="findID(true)">조회하기</button>
+      <!-- 에러 메시지 표시용 영역 추가 -->
+      <div id="step1-msg" style="margin-top:15px; text-align:center; font-weight:700;"></div>
     </div>
-    <div id="step2" class="step"><p><strong>2. 회원 선택</strong></p><div id="idList" class="btn-grid"></div></div>
-    <div id="step3" class="step"><p><strong>3. 날짜 선택</strong></p><input type="date" id="dateInput" onchange="loadTimes()"></div>
-    <div id="step4" class="step"><p><strong>4. 시간 선택</strong></p><div id="timeList" class="btn-grid"></div></div>
-    <div id="step5" class="step"><p><strong>5. 방 선택</strong></p><div id="roomList" class="btn-grid"></div>
-      <div id="final-ui" style="display:none; margin-top:15px; padding:15px; background:#e7f3ff; border-radius:10px; border:1px dashed #007bff;">
-        <p id="confirm-info"></p><button class="primary-btn" style="background:#28a745;" onclick="finish()">예약 완료</button>
+
+    <!-- Step 2: 회원 선택 -->
+    <div id="step2" class="step">
+      <div class="step-title">
+        <button class="back-btn" onclick="showStep(1)">이전으로</button>
+        <span class="step-num">2</span> 회원 선택
+      </div>
+      <div id="idList" class="btn-grid grid-2"></div>
+    </div>
+
+    <!-- Step 3: 날짜 선택 -->
+    <div id="step3" class="step">
+      <div class="step-title">
+        <button class="back-btn" onclick="showStep(2)">이전으로</button>
+        <span class="step-num">3</span> 날짜 선택
+      </div>
+      <p style="font-size:0.95rem; color:var(--text-sub); margin-bottom:15px; text-align:center;">예약하실 날짜를 확인해주세요.</p>
+      <input type="date" id="dateInput">
+      <button class="primary-btn" onclick="loadTimes()">시간 확인하기</button>
+    </div>
+
+    <!-- Step 4: 시간 선택 -->
+    <div id="step4" class="step">
+      <div class="step-title">
+        <button class="back-btn" onclick="showStep(3)">이전으로</button>
+        <span class="step-num">4</span> 시간 선택
+      </div>
+      <div id="timeList" class="btn-grid grid-2"></div>
+    </div>
+
+    <!-- Step 5: 방 선택 -->
+    <div id="step5" class="step">
+      <div class="step-title">
+        <button class="back-btn" onclick="showStep(4)">이전으로</button>
+        <span class="step-num">5</span> 테라피 룸 선택
+      </div>
+      <div id="roomList" class="btn-grid grid-3"></div>
+      
+      <div id="final-ui" style="display:none; margin-top:25px; padding:20px; background:#f0f7ff; border-radius:20px; border:2px dashed var(--primary-light);">
+        <div id="confirm-info"></div>
+        <button class="primary-btn" style="margin-top:20px; background:var(--success); box-shadow:0 4px 12px rgba(56, 161, 105, 0.3);" onclick="finish()">예약 확정하기</button>
       </div>
     </div>
   </div>
 
+  <!-- 조회 영역 -->
   <div id="step-lookup" class="step">
-    <p><strong>예약 조회</strong> (뒷번호 4자리)</p>
+    <div class="step-title">🔍 내 예약 조회</div>
+    <p style="font-size:0.9rem; color:var(--text-sub); margin-bottom:15px; text-align:center;">휴대폰 번호 뒷자리 4자리</p>
     <input type="number" id="lookupPhone" placeholder="예: 1234" oninput="checkLookupInput()">
-    <button id="lookupSearchBtn" class="primary-btn" onclick="findIDForLookup()" style="width:100%; margin-top:10px; padding:12px; background:#ccc; color:white; border:none; border-radius:8px; cursor:not-allowed;" disabled>조회 대상 찾기</button>
-    <div id="lookupIdList" class="btn-grid" style="margin-top:10px;"></div>
-    <div id="lookupResults" style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;"></div>
+    <button id="lookupSearchBtn" class="primary-btn" onclick="findIDForLookup()" disabled>조회하기</button>
+    <div id="lookupIdList" class="btn-grid grid-2" style="margin-top:20px;"></div>
+    <div id="lookupResults" style="margin-top:25px; border-top:1px solid #f1f5f9; padding-top:20px;"></div>
   </div>
 
-  <div id="summary-section"><strong>🗓️ 오늘의 예약 현황</strong><div id="summary-list" style="margin-top:10px; font-size:14px;">불러오는 중...</div></div>
+  <!-- 하단 현황 -->
+  <div id="summary-section">
+    <div class="summary-header">🗓️ 오늘의 예약 현황</div>
+    <div id="summary-list" style="font-size:0.95rem; color:var(--text-sub);">불러오는 중...</div>
+  </div>
 
   <script>
     let resData = {};
 
     window.onload = function() {
       if (typeof google !== 'undefined' && google.script) {
-        // 공지사항은 하드코딩된 텍스트를 사용하므로 백엔드 호출 제거
         refreshSummary();
         setInterval(refreshSummary, 60000);
       }
     };
 
+    // 이름 마스킹 함수 (개인정보 보호)
+    function maskName(name) {
+      if (!name) return "";
+      if (name.length <= 2) return name[0] + "*";
+      return name[0] + "*".repeat(name.length - 2) + name[name.length - 1];
+    }
+
     function refreshSummary() {
       google.script.run.withSuccessHandler(d => {
         let h = "";
         let sortedKeys = Object.keys(d).sort(); 
-        sortedKeys.forEach(t => {
-          h += `<div><strong>${t}</strong> ${Array.isArray(d[t]) ? d[t].join(', ') : d[t]}</div>`;
-        });
-        document.getElementById('summary-list').innerHTML = h || "진행 중인 내역 없음";
+        if (sortedKeys.length === 0) {
+          h = "<div style='text-align:center; padding:10px;'>오늘 예약된 내역이 없습니다.</div>";
+        } else {
+          // 백엔드에서 이미 HTML 포맷팅(마스킹 포함)이 완료되어 오므로 그대로 출력
+          sortedKeys.forEach(key => {
+            h += `
+              <div class="summary-item" style="display:block; border-bottom:1px solid #eee; padding:10px 0;">
+                <div style="margin-bottom:5px;">${key}</div>
+                <div style="padding-left:15px; color:#555;">${d[key]}</div>
+              </div>`;
+          });
+        }
+        document.getElementById('summary-list').innerHTML = h;
       }).getTodaySummary();
     }
 
     function startBooking() { 
       document.getElementById('step-lookup').style.display='none'; 
       document.getElementById('booking-flow').style.display='block'; 
+      const phoneInput = document.getElementById('phoneInput');
+      phoneInput.focus();
+      // 번호 4자리 입력 시 자동 조회
+      phoneInput.oninput = function() {
+        if (this.value.toString().length >= 4) findID(false);
+      };
+      window.scrollTo({ top: document.getElementById('booking-flow').offsetTop - 20, behavior: 'smooth' });
     }
     
     function startLookup() { 
       document.getElementById('booking-flow').style.display='none'; 
       document.getElementById('step-lookup').style.display='block'; 
-      document.getElementById('lookupPhone').value = "";
-      document.getElementById('lookupIdList').innerHTML = "";
-      document.getElementById('lookupResults').innerHTML = "";
-      checkLookupInput();
+      const lookupPhone = document.getElementById('lookupPhone');
+      lookupPhone.focus();
+      window.scrollTo({ top: document.getElementById('step-lookup').offsetTop - 20, behavior: 'smooth' });
     }
 
     function checkLookupInput() {
       const val = document.getElementById('lookupPhone').value;
       const btn = document.getElementById('lookupSearchBtn');
-      if(val.length === 0) {
-        document.getElementById('lookupIdList').innerHTML = "";
-        document.getElementById('lookupResults').innerHTML = "";
-      }
       if(val.length === 4) {
-        btn.style.background = "#007bff"; btn.disabled = false; btn.style.cursor = "pointer";
+        btn.disabled = false;
+        findIDForLookup(); // 자동 조회
       } else {
-        btn.style.background = "#ccc"; btn.disabled = true;
+        btn.disabled = true;
       }
     }
 
-    function findID() {
-      const phoneVal = document.getElementById('phoneInput').value;
-      if(!phoneVal) return alert("번호를 입력해주세요.");
+    let currentMemberList = [];
+    let lastQuery = "";
 
-      for(let i=2; i<=5; i++) { 
-        document.getElementById('step' + i).style.display = 'none'; 
-        document.getElementById('step' + i).classList.remove('active', 'completed');
-      }
+    function findID(isManual) {
+      const inputEl = document.getElementById('phoneInput');
+      const phoneVal = inputEl.value.toString().trim();
+      const msgEl = document.getElementById('step1-msg');
       
-      resData = {};
-      document.getElementById('idList').innerHTML = "조회 중...";
-      document.getElementById('timeList').innerHTML = "";
-      document.getElementById('roomList').innerHTML = "";
-      document.getElementById('final-ui').style.display = 'none';
+      if(!phoneVal || phoneVal.length < 4) return;
+      
+      // [개선] 이미 조회가 완료된 번호고 회원 목록이 있다면 즉시 2단계로 이동
+      if(isManual && phoneVal === lastQuery && currentMemberList.length > 0) {
+        showStep(2);
+        return;
+      }
 
+      if(!isManual && phoneVal === lastQuery) return; 
+      
+      lastQuery = phoneVal;
+      const idList = document.getElementById('idList');
+      const nextBtn = document.getElementById('nextBtn1');
+      
+      msgEl.innerHTML = ""; 
+      idList.innerHTML = `<div class="skeleton" style="height:60px; grid-column:span 2;"></div>`; 
+      nextBtn.innerText = "조회 중...";
+      nextBtn.disabled = true;
+      inputEl.disabled = true;
+      
       google.script.run.withSuccessHandler(list => {
-        if (!list || list.length === 0) {
-          document.getElementById('idList').innerHTML = "검색 결과가 없습니다."; return;
+        inputEl.disabled = false;
+        currentMemberList = list || [];
+        
+        if (currentMemberList.length === 0) {
+          nextBtn.innerText = "다시 조회하기";
+          nextBtn.disabled = false;
+          msgEl.innerHTML = `<span style="color:var(--danger);">❌ 일치하는 회원이 없습니다.</span>`;
+          lastQuery = ""; 
+          return;
         }
+        
+        nextBtn.innerText = "조회 완료";
+        nextBtn.disabled = false; // 항상 버튼 활성화 유지
         let h = ""; 
-        list.forEach(m => { 
-          // m은 이제 {displayName, name, phone} 객체입니다.
-          h += `<div class="btn-item" onclick='selectMember(${JSON.stringify(m)})'>${m.displayName}</div>`; 
+        currentMemberList.forEach((m, idx) => { 
+          h += `<div class="btn-item" onclick="selectMemberByIndex(${idx})">${m.displayName}</div>`; 
         });
-        document.getElementById('idList').innerHTML = h;
-        document.getElementById('step2').style.display = 'block';
-        document.getElementById('step2').classList.add('active');
+        idList.innerHTML = h;
+        showStep(2);
+      }).withFailureHandler(err => {
+        nextBtn.innerText = "다시 조회하기";
+        nextBtn.disabled = false;
+        inputEl.disabled = false;
+        lastQuery = ""; 
+        msgEl.innerHTML = `<span style="color:var(--danger);">⚠️ 오류: ${err.message}</span>`;
       }).getMemberIDList(phoneVal);
     }
 
+    function selectMemberByIndex(idx) {
+      const m = currentMemberList[idx];
+      if (m) selectMember(m);
+    }
+
+    function showStep(num) {
+      for(let i=1; i<=5; i++) {
+        const step = document.getElementById('step' + i);
+        if (!step) continue;
+        
+        if (i === num) {
+          step.style.display = 'block';
+          step.classList.add('active');
+          step.style.opacity = "1";
+        } else {
+          // 이전/이후 단계는 모두 숨겨서 현재 단계에만 집중하도록 함
+          step.style.display = 'none';
+          step.classList.remove('active');
+        }
+      }
+      // 화면 상단으로 부드럽게 이동
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function selectMember(m) {
-      resData.date = ""; resData.time = ""; resData.room = "";
-      document.getElementById('dateInput').value = "";
-      document.getElementById('timeList').innerHTML = "";
-      document.getElementById('roomList').innerHTML = "";
-      document.getElementById('final-ui').style.display = 'none';
-      
-      resData.memberID = m.displayName; 
-      resData.nameOnly = m.name;
-      resData.phone = m.phone; // 전체 전화번호 저장
-
       const items = document.querySelectorAll('#idList .btn-item');
-      items.forEach(item => { item.classList.toggle('selected', item.innerText === m.displayName); });
+      items.forEach(item => { 
+        if(item.innerText === m.displayName) item.classList.add('selected');
+        else item.classList.remove('selected');
+      });
 
-      document.getElementById('step1').classList.add('completed');
-      document.getElementById('step2').classList.add('completed');
-      document.getElementById('step3').style.display = 'block';
-      document.getElementById('step3').classList.add('active');
-      document.getElementById('dateInput').value = "";
-      document.getElementById('dateInput').min = new Date().toISOString().split('T')[0];
+      // [추가] 회원권 유효성 체크
+      const msgEl = document.getElementById('step1-msg'); // 1단계 메시지창 재활용 또는 별도 알림
+      showAppAlert("회원권 정보를 확인하고 있습니다...", "info");
+
+      google.script.run.withSuccessHandler(res => {
+        if (!res.success) {
+          showAppAlert("회원권 조회 중 오류가 발생했습니다.", "error");
+          return;
+        }
+        
+        if (!res.hasValidTicket) {
+          showAppAlert(`[${m.name}] 회원님은 현재 사용 가능한 회원권이 없습니다.\n(테라피/점핑권 만료 혹은 잔여횟수 부족)`, "error");
+          return;
+        }
+
+        // 유효한 경우 진행
+        resData.memberID = m.displayName; 
+        resData.nameOnly = m.name;
+        resData.phone = m.phone;
+        
+        showAppAlert(`${m.name}님, 확인되었습니다.\n보유권종: ${res.tickets}`, "success");
+
+        // [오늘 날짜 자동 세팅]
+        const dateInput = document.getElementById('dateInput');
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.min = today;
+        dateInput.value = today;
+        
+        showStep(3);
+      }).checkMemberTicket(m.name, m.phone);
     }
 
     function loadTimes() {
-      resData.time = ""; resData.room = "";
-      document.getElementById('timeList').innerHTML = "시간표 불러오는 중...";
-      document.getElementById('roomList').innerHTML = "";
-      document.getElementById('final-ui').style.display = 'none';
       const selectedDate = document.getElementById('dateInput').value;
       if (!selectedDate) return;
       resData.date = selectedDate;
 
+      const timeList = document.getElementById('timeList');
+      timeList.innerHTML = `<div class="skeleton" style="height:120px; grid-column:span 2;"></div>`;
+
       google.script.run.withSuccessHandler(times => {
         let h = "";
         if (typeof times === 'string' && times.startsWith("휴무:")) {
-          h = `<div style="color:red; font-weight:bold; padding:20px; text-align:center;">${times.split(":")[1]}</div>`;
+          h = `<div style="color:var(--danger); font-weight:bold; padding:20px; text-align:center; grid-column:span 2;">${times.split(":")[1]}</div>`;
         } else if (Array.isArray(times)) {
           times.forEach(t => {
-            if(t.isFull) h += `<div class="btn-item booked" >${t.display}</div>`;
+            if(t.isFull) h += `<div class="btn-item booked">${t.display}</div>`;
             else h += `<div class="btn-item" onclick="selectTime(this, '${t.timeValue}')">${t.display}</div>`;
           });
         }
-        document.getElementById('timeList').innerHTML = h || "예약 가능한 시간이 없습니다.";
-        document.getElementById('step3').classList.add('completed'); 
-        document.getElementById('step4').style.display = 'block';
-        document.getElementById('step4').classList.add('active');
+        timeList.innerHTML = h || "예약 가능한 시간이 없습니다.";
+        showStep(4);
       }).getTodayTimetable(selectedDate);
     }
 
@@ -273,16 +508,17 @@
       document.querySelectorAll('#timeList .btn-item').forEach(b => b.classList.remove('selected')); 
       el.classList.add('selected');
       
+      const roomList = document.getElementById('roomList');
+      roomList.innerHTML = `<div class="skeleton" style="height:100px; grid-column:span 3;"></div>`;
+
       google.script.run.withSuccessHandler(rooms => {
         let h = ""; 
         rooms.forEach(r => {
-          if (r.isBooked) h += `<div class="btn-item booked">${r.name}<br><small>(예약마감)</small></div>`;
-          else h += `<div class="btn-item" onclick="selectRoom(this, '${r.name}')">${r.name}<br><small>(예약가능)</small></div>`;
+          if (r.isBooked) h += `<div class="btn-item booked"><span>${r.name}</span><span style="font-size:0.7rem; font-weight:400;">마감</span></div>`;
+          else h += `<div class="btn-item" onclick="selectRoom(this, '${r.name}')"><span>${r.name}</span><span style="font-size:0.7rem; font-weight:400; color:var(--primary-light);">가능</span></div>`;
         });
-        document.getElementById('roomList').innerHTML = h;
-        document.getElementById('step4').classList.add('completed'); 
-        document.getElementById('step5').style.display = 'block';
-        document.getElementById('step5').classList.add('active');
+        roomList.innerHTML = h;
+        showStep(5);
       }).getRoomStatus(resData.date, t);
     }
 
@@ -291,63 +527,80 @@
       document.querySelectorAll('#roomList .btn-item').forEach(b => b.classList.remove('selected')); 
       el.classList.add('selected');
       
-      document.getElementById('confirm-info').innerHTML = 
-        `<div style="text-align:center; padding:5px;">` +
-          `<strong style="color:#007bff; font-size:16px;">[예약 내용 확인]</strong><br><br>` +
-          `<div style="text-align:left; background:#fff; padding:10px; border-radius:5px; border:1px solid #ddd; line-height:1.6;">` +
-            `• 성함: ${resData.nameOnly}<br>` +
-            `• 연락처: ${resData.phone}<br>` +
-            `• 예약일시: ${resData.date} ${resData.time}<br>` +
-            `• 배정방: ${resData.room}` +
-          `</div><br>` +
-          `<b style="color:#e63946;">위 내용으로 예약을 진행하시겠습니까?</b>` +
-        `</div>`;
-        
-      const finalBtn = document.querySelector('#final-ui .primary-btn');
-      finalBtn.style.background = "#007bff"; 
-      finalBtn.innerText = "네, 예약 확정합니다";
+      document.getElementById('confirm-info').innerHTML = `
+        <div style="color:var(--text-main); font-size:0.95rem; line-height:1.8;">
+          <div style="font-weight:800; color:var(--primary); font-size:1.1rem; margin-bottom:10px; text-align:center;">✨ 예약 정보 확인</div>
+          • 성함: <b>${resData.nameOnly}</b><br>
+          • 일시: <b>${resData.date} / ${resData.time}</b><br>
+          • 배정 기기: <b>${resData.room}</b>
+        </div>`;
         
       document.getElementById('final-ui').style.display='block';
     }
 
     function finish() {
       const btn = document.querySelector('#final-ui .primary-btn');
+      const originalText = btn.innerText;
       btn.innerText = "예약 처리 중...";
       btn.disabled = true;
 
       google.script.run.withSuccessHandler(() => {
         document.body.innerHTML = `
-          <div style="text-align:center; padding-top:100px; font-family: 'Noto Sans KR', sans-serif;">
-            <h1 style="color:#28a745; font-size:40px;">✅</h1>
-            <h2 style="color:#333;">예약이 완료되었습니다!</h2>
-            <p style="color:#666;">예약을 전송했습니다.</p>
+          <div class="success-ui">
+            <span class="success-icon">✅</span>
+            <h2 style="font-weight:800; margin-bottom:10px;">예약이 완료되었습니다!</h2>
+            <p style="color:var(--text-sub); margin-bottom:30px;">정성을 다해 준비하겠습니다.<br>예약 시간에 늦지 않게 방문해주세요.</p>
+            <button class="primary-btn" onclick="location.reload()">처음으로</button>
           </div>`;
-        
-        setTimeout(() => { location.reload(); }, 2000); 
+      }).withFailureHandler(err => {
+        showAppAlert("예약 오류: " + err.message, "error");
+        btn.innerText = originalText;
+        btn.disabled = false;
       }).submitReservation(resData);
     }
 
     function findIDForLookup() {
       const val = document.getElementById('lookupPhone').value;
-      if(val.length !== 4) return alert("4자리를 입력해주세요.");
+      const idList = document.getElementById('lookupIdList');
+      idList.innerHTML = "조회 중...";
+
       google.script.run.withSuccessHandler(list => {
-        if(!list.length) return alert("회원을 찾을 수 없습니다.");
+        if(!list.length) {
+          idList.innerHTML = "<div style='grid-column:span 2; text-align:center; padding:20px; color:var(--danger);'>회원을 찾을 수 없습니다.</div>";
+          return;
+        }
         let html = ""; 
         list.forEach(id => html += `<div class="btn-item" onclick="finalLookup(event, '${id}')">${id}</div>`);
-        document.getElementById('lookupIdList').innerHTML = html;
-        document.getElementById('lookupResults').innerHTML = ""; 
+        idList.innerHTML = html;
       }).getMemberIDList(val);
     }
 
     function finalLookup(event, id) {
       document.querySelectorAll('#lookupIdList .btn-item').forEach(b => b.classList.remove('selected'));
       event.target.classList.add('selected');
+      const results = document.getElementById('lookupResults');
+      results.innerHTML = "내역 확인 중...";
+
       google.script.run.withSuccessHandler(list => {
         let html = "";
-        if(!list.length) html = "<div style='color:red; text-align:center; padding:10px;'>예약 내역이 없습니다.</div>";
-        else list.forEach(r => html += `<div style="border-bottom:1px solid #eee; padding:10px; text-align:left;">✅ ${r.date} ${r.time} (${r.room})</div>`);
-        document.getElementById('lookupResults').innerHTML = html;
+        if(!list.length) html = "<div style='color:var(--danger); text-align:center; padding:10px;'>진행 중인 예약 내역이 없습니다.</div>";
+        else {
+          html = "<div style='font-weight:700; margin-bottom:10px; font-size:0.9rem;'>확정된 예약 내역:</div>";
+          list.forEach(r => html += `
+            <div style="background:#f8fafc; border-radius:12px; padding:15px; margin-bottom:10px; border-left:4px solid var(--primary);">
+              <div style="font-weight:700;">✅ ${r.date}</div>
+              <div style="font-size:0.9rem; color:var(--text-sub);">${r.time} (${r.room})</div>
+            </div>`);
+        }
+        results.innerHTML = html;
       }).getMyReservations(id);
+    }
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js');
+      });
     }
   </script>
 </body>
