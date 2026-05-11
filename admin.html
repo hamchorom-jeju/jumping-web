@@ -1632,6 +1632,22 @@
               return;
             }
             currentWorkLogStats = res.stats;
+            
+            // 기존 기록이 있으면 필드 채우기
+            if (res.existingLog) {
+              document.getElementById('wlAuthor').value = res.existingLog.author || "미진";
+              document.getElementById('wlJumping').value = res.existingLog.jumpingList || "";
+              document.getElementById('wlMuscle').value = res.existingLog.muscleList || "";
+              document.getElementById('wlRemarks').value = res.existingLog.remarks || "";
+              document.getElementById('wlIssues').value = res.existingLog.issues || "";
+            } else {
+              // 기존 기록 없으면 초기화 (작성자는 기본값 유지)
+              document.getElementById('wlJumping').value = "";
+              document.getElementById('wlMuscle').value = "";
+              document.getElementById('wlRemarks').value = "";
+              document.getElementById('wlIssues').value = "";
+            }
+
             document.getElementById('workLogStats').innerHTML =
               '<div>• 09시: <strong style="color:var(--primary);">' + res.stats['09시'] + '명</strong></div>' +
               '<div>• 10시: <strong style="color:var(--primary);">' + res.stats['10시'] + '명</strong></div>' +

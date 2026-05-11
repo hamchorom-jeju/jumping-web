@@ -2690,7 +2690,28 @@ function getTodayWorkLogStats(dateVal) {
         }
       }
     }
-    return { success: true, stats: stats };
+    // 업무일지 시트에서 기존 기록이 있는지 확인
+    var existingLog = null;
+    var workLogSheet = ss.getSheetByName("업무일지");
+    if (workLogSheet) {
+      var wlData = workLogSheet.getDataRange().getValues();
+      for (var j = 1; j < wlData.length; j++) {
+        var rowDateRaw = wlData[j][0];
+        var rowDateStr = (rowDateRaw instanceof Date) ? Utilities.formatDate(rowDateRaw, "GMT+9", "yyyy-MM-dd") : String(rowDateRaw).split(" ")[0];
+        if (rowDateStr === dateVal) {
+          existingLog = {
+            author: wlData[j][1],
+            jumpingList: wlData[j][2],
+            muscleList: wlData[j][3],
+            remarks: wlData[j][13],
+            issues: wlData[j][14]
+          };
+          break;
+        }
+      }
+    }
+
+    return { success: true, stats: stats, existingLog: existingLog };
   } catch (e) {
     return { error: "통계 계산 오류: " + e.toString() };
   }
