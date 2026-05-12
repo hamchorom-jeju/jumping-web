@@ -109,13 +109,21 @@ function showAppAlert(msg, type = "success") {
   const title = type === "success" ? "처리 완료" : (type === "error" ? "알림" : "안내");
   const color = type === "success" ? "#38a169" : (type === "error" ? "#e53e3e" : "#6b46c1");
 
+  const isLargeScreen = window.innerWidth > 700;
+  const modalWidth = isLargeScreen ? "600px" : "380px";
+  const iconSize = isLargeScreen ? "7rem" : "4.5rem";
+  const titleSize = isLargeScreen ? "2.5rem" : "1.6rem";
+  const textSize = isLargeScreen ? "1.8rem" : "1.05rem";
+  const btnSize = isLargeScreen ? "1.8rem" : "1.15rem";
+  const btnPadding = isLargeScreen ? "25px" : "18px";
+
   modal.innerHTML = `
-    <div style="background:#fff; width:90%; max-width:380px; border-radius:24px; padding:40px 30px; text-align:center; transform:scale(0.8); transition:transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow:0 20px 40px rgba(0,0,0,0.3); border-top: 6px solid ${color};">
-      <div style="font-size:4.5rem; margin-bottom:20px; animation: modalBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);">${icon}</div>
-      <h2 style="font-size:1.6rem; margin-bottom:12px; color:#1a202c; font-weight:800; font-family: sans-serif;">${title}</h2>
-      <p style="font-size:1.05rem; color:#4a5568; margin-bottom:30px; line-height:1.6; word-break:keep-all; font-family: sans-serif;">${msg}</p>
+    <div style="background:#fff; width:90%; max-width:${modalWidth}; border-radius:32px; padding:${isLargeScreen ? '60px 40px' : '40px 30px'}; text-align:center; transform:scale(0.8); transition:transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow:0 30px 60px rgba(0,0,0,0.4); border-top: 10px solid ${color};">
+      <div style="font-size:${iconSize}; margin-bottom:25px; animation: modalBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);">${icon}</div>
+      <h2 style="font-size:${titleSize}; margin-bottom:15px; color:#1a202c; font-weight:800; font-family: sans-serif;">${title}</h2>
+      <p style="font-size:${textSize}; color:#4a5568; margin-bottom:40px; line-height:1.6; word-break:keep-all; font-family: sans-serif;">${msg}</p>
       <button onclick="closeAppModal(this)" 
-        style="width:100%; padding:18px; background:${color}; color:#fff; border:none; border-radius:16px; font-size:1.15rem; font-weight:700; cursor:pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+        style="width:100%; padding:${btnPadding}; background:${color}; color:#fff; border:none; border-radius:20px; font-size:${btnSize}; font-weight:700; cursor:pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         확인
       </button>
     </div>
