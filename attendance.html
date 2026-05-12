@@ -376,10 +376,10 @@
       <div class="user-status" id="userStatus">잔여 12회 (월권)</div>
       
       <div class="btn-group">
-        <button class="btn btn-primary" onclick="submitLog('점핑')">점핑 출석</button>
-        <button class="btn btn-secondary" onclick="submitLog('테라피')">테라피 출석</button>
-        <button class="btn btn-secondary" onclick="submitLog('복합')">복합 출석</button>
-        <button class="btn btn-bonus" id="btnBonus" onclick="submitLog('보너스')">🎁 보너스 횟수 1회 사용</button>
+        <button class="btn" style="background: #8a2be2; color: #fff;" onclick="submitLog('점핑')">🏃‍♀️ 점핑 출석</button>
+        <button class="btn" style="background: #38a169; color: #fff;" onclick="submitLog('테라피')">🌿 테라피 출석</button>
+        <button class="btn" style="background: #ed64a6; color: #fff;" onclick="submitLog('복합')">✨ 복합 출석</button>
+        <button class="btn btn-bonus" id="btnBonus" style="background: #f59e0b; color: #fff;" onclick="submitLog('보너스')">🎁 보너스 횟수 1회 사용</button>
         <button class="btn btn-cancel" onclick="closeModal()">아니오, 잘못 눌렀습니다</button>
       </div>
     </div>
@@ -590,16 +590,16 @@
           successMsg = "출석이 완료되었습니다! ✨<br>오늘도 화이팅!";
         }
         
-        // 잔여 횟수 정보 추가 표시
+        // 잔여 횟수 정보 추가 표시 (아주 크게)
         if (res.updatedRemain !== undefined) {
-          const countInfo = res.isUnlimited ? "(무제한 이용 중)" : `잔여: ${res.updatedRemain}회`;
+          const countInfo = res.isUnlimited ? "무제한 이용 중" : `잔여: ${res.updatedRemain}회`;
           let finalInfo = "";
           if (res.usedPassName && res.usedPassName !== "보너스권") {
-             finalInfo = `<span style="color:#8a2be2; font-weight:600;">${res.usedPassName}</span>: ${countInfo}`;
+             finalInfo = `<div style="color:#8a2be2; margin-bottom:10px;">[${res.usedPassName}]</div>${countInfo}`;
           } else {
-             finalInfo = `(${countInfo})`;
+             finalInfo = countInfo;
           }
-          successMsg += `<div style="margin-top:20px; font-size:1.2rem; font-weight:700; color:#2d3748; background:#f7fafc; padding:15px; border-radius:15px; border:1px solid #edf2f7;">${finalInfo}</div>`;
+          successMsg += `<div style="margin-top:30px; font-size:1.5rem; font-weight:900; color:#1a202c; background:#f0f7ff; padding:25px; border-radius:20px; border:3px solid #8a2be2;">${finalInfo}</div>`;
         }
 
         showAppAlert(successMsg, "success");
