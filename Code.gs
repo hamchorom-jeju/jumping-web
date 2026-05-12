@@ -843,6 +843,7 @@ function processAttendance(phoneStr, type, isBonus) {
     // 복합 로그는 루프 종료 후 한 번만 기록
     if (type === '복합' && selectedPasses.length > 0) {
       logSheet.appendRow([dateStr, timeStr, firstMemberName, phoneStr, "복합", comboLogInfo.prev, "-" + comboLogInfo.change, comboLogInfo.remain, comboLogInfo.reason, "", "", "입실", "", ""]);
+      nextCount = comboLogInfo.remain; // 반환값 업데이트
     }
 
     // --- [예약DB 실시간 연동] 테라피/복합 출석 시 예약 상태 업데이트 ---

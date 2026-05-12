@@ -110,20 +110,20 @@ function showAppAlert(msg, type = "success") {
   const color = type === "success" ? "#38a169" : (type === "error" ? "#e53e3e" : "#6b46c1");
 
   const isLargeScreen = window.innerWidth > 700;
-  const modalWidth = isLargeScreen ? "600px" : "380px";
-  const iconSize = isLargeScreen ? "7rem" : "4.5rem";
-  const titleSize = isLargeScreen ? "2.5rem" : "1.6rem";
-  const textSize = isLargeScreen ? "1.8rem" : "1.05rem";
-  const btnSize = isLargeScreen ? "1.8rem" : "1.15rem";
-  const btnPadding = isLargeScreen ? "25px" : "18px";
+  const modalWidth = isLargeScreen ? "650px" : "420px";
+  const iconSize = isLargeScreen ? "8rem" : "5rem";
+  const titleSize = isLargeScreen ? "2.8rem" : "1.8rem";
+  const textSize = isLargeScreen ? "2rem" : "1.4rem";
+  const btnSize = isLargeScreen ? "2rem" : "1.3rem";
+  const btnPadding = isLargeScreen ? "28px" : "22px";
 
   modal.innerHTML = `
-    <div style="background:#fff; width:90%; max-width:${modalWidth}; border-radius:32px; padding:${isLargeScreen ? '60px 40px' : '40px 30px'}; text-align:center; transform:scale(0.8); transition:transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow:0 30px 60px rgba(0,0,0,0.4); border-top: 10px solid ${color};">
+    <div style="background:#fff; width:92%; max-width:${modalWidth}; border-radius:32px; padding:${isLargeScreen ? '70px 45px' : '50px 35px'}; text-align:center; transform:scale(0.8); transition:transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow:0 35px 70px rgba(0,0,0,0.4); border-top: 12px solid ${color};">
       <div style="font-size:${iconSize}; margin-bottom:25px; animation: modalBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);">${icon}</div>
       <h2 style="font-size:${titleSize}; margin-bottom:15px; color:#1a202c; font-weight:800; font-family: sans-serif;">${title}</h2>
-      <p style="font-size:${textSize}; color:#4a5568; margin-bottom:40px; line-height:1.6; word-break:keep-all; font-family: sans-serif;">${msg}</p>
+      <p style="font-size:${textSize}; color:#2d3748; margin-bottom:40px; line-height:1.6; word-break:keep-all; font-family: sans-serif; font-weight:500;">${msg}</p>
       <button onclick="closeAppModal(this)" 
-        style="width:100%; padding:${btnPadding}; background:${color}; color:#fff; border:none; border-radius:20px; font-size:${btnSize}; font-weight:700; cursor:pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        style="width:100%; padding:${btnPadding}; background:${color}; color:#fff; border:none; border-radius:24px; font-size:${btnSize}; font-weight:800; cursor:pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
         확인
       </button>
     </div>
