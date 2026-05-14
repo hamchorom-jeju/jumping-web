@@ -46,7 +46,7 @@ const Village = {
         h4: { title: "슬로우 치잉", icon: "🦷", guide: "한 입당 20회 이상 천천히 씹는 습관은 소화를 돕고 뇌가 포만감을 느낄 시간을 충분히 부여합니다. 식사 시간을 최소 20분 이상 유지하는 것은 과식 방지의 핵심입니다.", link: "miracle.html?cat=h4" },
         h5: { title: "7,000보 달성", icon: "👟", guide: "일상 활동량을 정량적으로 확보하여 기초 대사량을 유지하고 혈당 조절에 기여합니다. 스마트폰 기준으로 7,000보를 달성하며 꾸준한 에너지 소모를 실천해 보세요.", link: "miracle.html?cat=h5" },
         h6: { title: "스테어 마법", icon: "🪜", guide: "3층 이하의 낮은 층수는 계단을 이용함으로써 하체 근력을 강화하고 유산소 효과를 얻습니다. 특히 기록소(아카이브)에 사진 인증을 남기시면 5점의 보너스 점수가 부여됩니다.", link: "miracle.html?cat=h6" },
-        h7: { title: "나이트 컷", icon: "🌙", guide: "밤 20시 이후의 금식은 신체가 소화가 아닌 '지방 연소와 세포 재생'에 집중하게 만듭니다. 물을 제외한 절대 금식은 체중 감량을 위한 가장 강력하고 중요한 규칙입니다.", link: "miracle.html?cat=h7" },
+        h7: { title: "나이트 컷", icon: "🌙", guide: "밤 20시 이후의 금식은 신체가 소화가 아닌 '지방 연소와 세포 재생'에 집중하게 만듭니다. 지금 이 시간부터 아무것도 먹지 않겠다고 [모험가의 오아시스]에 다짐의 선언을 남겨보세요!\n\n\"저 지금부터는 아무것도 안 먹어요.. 약속합니다!!\" 라는 한마디가 강력한 수호의 시작입니다.", link: "oasis.html" },
         h8: { title: "굿 슬립", icon: "💤", guide: "세포가 재생되고 성장 호르몬이 활발히 분비되는 자정(24:00) 전 취침으로 신체 회복을 최적화하세요. 충분한 수면은 식욕 억제 호르몬인 렙틴의 분비를 도와 다이어트를 수월하게 만듭니다.", link: "miracle.html?cat=h8" },
         h9: { title: "셀프 칭찬", icon: "👏", guide: "오늘 하루도 노력한 자신을 위해 따뜻한 한마디를 기록하며 긍정적인 심리 상태를 유지하세요. [모험가의 오아시스] 게시판에 소중한 마음을 남기시면 2포인트가 지급됩니다.", link: "oasis.html" },
         plus: { title: "미라클 플러스", icon: "✨", guide: "새벽 기상, 독서, 환경 수호 등 여러분의 인생을 풍요롭게 만드는 사소하지만 위대한 승리들을 기록해 보세요. 기록소(아카이브) 인증 시 5점의 보너스 점수가 추가됩니다.", link: "miracle.html?cat=plus" }
@@ -101,8 +101,9 @@ const Village = {
             confirmBtn.style.flex = "1";
         } else {
             cancelBtn.style.display = 'block';
-            cancelBtn.innerText = (type === 'habit') ? (key === 'h9' ? "나중에" : "체크만 하기") : "나중에";
-            confirmBtn.innerText = (type === 'habit') ? (key === 'h9' ? "게시판 이동" : "인증하러 가기") : data.btn;
+            const isBoardHabit = (key === 'h7' || key === 'h9');
+            cancelBtn.innerText = (type === 'habit') ? (isBoardHabit ? "나중에" : "체크만 하기") : "나중에";
+            confirmBtn.innerText = (type === 'habit') ? (isBoardHabit ? "게시판 이동" : "인증하러 가기") : data.btn;
             confirmBtn.style.flex = "1.5";
         }
         
