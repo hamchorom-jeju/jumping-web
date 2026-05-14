@@ -3,129 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GENIE WORLD - Nohyung Village v42.0</title>
-    <!-- Warm Game Village CSS -->
+    <title>GENIE WORLD - Nohyung Village v42.1</title>
+    <!-- Warm Game Village v42.1 CSS -->
     <link rel="stylesheet" href="index.css">
     <!-- Icon Library -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-    <!-- 📢 VILLAGE HEADER (Wall & Pillar) -->
-    <header class="village-header">
-        <div class="ticker-wall" id="ticker-text">
-            📢 [기록의 기둥] 이번 주 수행력 1위: '강열정' 님! ✨ | [마을 벽보] "오늘 수분 슬라이더 끝까지 밀면 이장님의 보너스 하사!" | [마을 공지] 시즌 4주차 결산이 목요일에 시작됩니다.
-        </div>
-    </header>
-
     <div class="village-container">
         
-        <!-- 📋 모험가 상태창 (User Status Window) -->
-        <section class="status-window">
-            <div class="status-header">
-                <div class="avatar-circle">🧚‍♂️</div>
-                <div>
-                    <h2 style="font-size: 1.2rem; font-weight: 900;"><span id="user-name">모험가</span> 님의 능력치</h2>
-                    <span style="font-size: 0.75rem; color: var(--text-dim); font-weight: 800;">TIER: <span id="tier-name" style="color: var(--performance);">꿈나무 요정</span></span>
+        <!-- 🏛️ VILLAGE SQUARE TOP (Notice Wall & Ranking Pillar) -->
+        <section class="village-square-top">
+            <!-- Village Wall (Notice Board) -->
+            <div class="village-wall">
+                <div class="notice-content">
+                    • 33 챌린지 시즌 4주차 결산 (목)<br>
+                    • 이장님 가이드: 수분은 보약입니다.<br>
+                    • 마을 수칙: 20시 이후 금식 엄수!
                 </div>
             </div>
 
-            <!-- 📊 Stat Grid: Health, Performance, Defense -->
+            <!-- Pillar of Records (Hall of Fame) -->
+            <div class="pillar-of-records">
+                <div class="pillar-title">🏆 명예의 전당</div>
+                <div class="ranking-ticker" id="ranking-text">
+                    [지난주 킹]<br>
+                    강열정 님
+                </div>
+            </div>
+        </section>
+
+        <!-- 📋 모험가 상태창 (User Status Window) -->
+        <section class="status-window">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                <div style="width: 60px; height: 60px; background: #fff; border-radius: 50%; border: 2px solid var(--performance); display: flex; align-items: center; justify-content: center; font-size: 1.8rem;">🧚‍♂️</div>
+                <div>
+                    <h2 style="font-size: 1rem; font-weight: 900;"><span id="user-name">모험가</span> 님의 능력치</h2>
+                    <span style="font-size: 0.7rem; color: var(--text-dim); font-weight: 800;">TIER: <span id="tier-name" style="color: var(--performance);">꿈나무 요정</span></span>
+                </div>
+            </div>
+
+            <!-- Stat Grid -->
             <div class="stat-grid">
-                <!-- Health (Diet/Inbody) -->
-                <div class="stat-item" style="border-top: 4px solid var(--health);">
+                <div class="stat-item" style="border-top: 3px solid var(--health);">
                     <span class="stat-label">❤️ 체력 (Health)</span>
                     <span class="stat-val" id="health-total">15,400</span>
                     <div class="stat-sub">주간: <span id="health-weekly">450</span></div>
-                    <div class="stat-sub">월간: <span id="health-monthly">1,200</span></div>
                 </div>
-                <!-- Performance (Mission) -->
-                <div class="stat-item" style="border-top: 4px solid var(--performance);">
+                <div class="stat-item" style="border-top: 3px solid var(--performance);">
                     <span class="stat-label">🗡️ 수행력 (Perf.)</span>
                     <span class="stat-val" id="perf-total">24,500</span>
                     <div class="stat-sub">주간: <span id="perf-weekly">680</span></div>
-                    <div class="stat-sub">월간: <span id="perf-monthly">2,400</span></div>
                 </div>
-                <!-- Defense (Habit) -->
-                <div class="stat-item" style="border-top: 4px solid var(--defense);">
+                <div class="stat-item" style="border-top: 3px solid var(--defense);">
                     <span class="stat-label">🛡️ 방어력 (Def.)</span>
                     <span class="stat-val" id="def-total">18,200</span>
                     <div class="stat-sub">주간: <span id="def-weekly">320</span></div>
-                    <div class="stat-sub">월간: <span id="def-monthly">950</span></div>
                 </div>
             </div>
         </section>
 
         <!-- ⚔️ 퀘스트 수행지 (Quest Center) -->
         <section class="quest-section">
-            <h3 class="section-title"><i class="fa-solid fa-fire"></i> 기본 퀘스트 (General)</h3>
-            <div class="general-quest-box">
-                <!-- Water Hunter Slider -->
-                <div style="background: rgba(255,255,255,0.4); padding: 15px; border-radius: 20px;">
-                    <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">
-                        <span>💧 워터 헌터 (수분 보충)</span>
-                        <span id="water-val">1.2L / 2.0L</span>
-                    </div>
-                    <input type="range" class="custom-range" id="water-range" min="0" max="20" value="12">
+            <h3 style="font-size: 0.9rem; font-weight: 900; color: var(--village-wood); margin-bottom: 10px;">⚔️ 활성화된 퀘스트</h3>
+            
+            <!-- Water Slider -->
+            <div style="background: rgba(255,255,255,0.4); padding: 12px; border-radius: 15px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.75rem; margin-bottom: 5px;">
+                    <span>💧 워터 헌터 (수분 보충)</span>
+                    <span id="water-val">1.2L / 2.0L</span>
                 </div>
+                <input type="range" style="width: 100%;" id="water-range" min="0" max="20" value="12">
+            </div>
 
-                <!-- Quest Buttons Grid -->
-                <div class="quest-btn-grid">
-                    <div class="village-btn" onclick="location.href='miracle.html?cat=meal'">
-                        <span class="btn-icon">🍱</span>
-                        <span class="btn-text">식단 인증</span>
-                    </div>
-                    <div class="village-btn" onclick="syncClubRecord()">
-                        <span class="btn-icon">⚡</span>
-                        <span class="btn-text">클럽 동기화</span>
-                    </div>
-                    <div class="village-btn" onclick="location.href='miracle.html?cat=visit'">
-                        <span class="btn-icon">📸</span>
-                        <span class="btn-text">방문 인증</span>
-                    </div>
-                    <div class="village-btn" onclick="location.href='miracle.html?cat=plus'">
-                        <span class="btn-icon">✨</span>
-                        <span class="btn-text">보너스/돌발</span>
-                    </div>
-                </div>
+            <!-- Action Grid -->
+            <div class="quest-btn-grid">
+                <div class="village-btn" onclick="location.href='miracle.html?cat=meal'">🍱 식단 인증</div>
+                <div class="village-btn" onclick="syncClubRecord()">⚡ 클럽 동기화</div>
+                <div class="village-btn" onclick="location.href='miracle.html?cat=visit'">📸 방문 인증</div>
+                <div class="village-btn" onclick="triggerSuddenMission()">✨ 돌발 퀘스트</div>
             </div>
         </section>
 
-        <!-- 📋 습관 퀘스트 (Habit List) -->
+        <!-- 📋 습관 퀘스트 -->
         <section class="quest-section">
-            <h3 class="section-title"><i class="fa-solid fa-shield-halved"></i> 습관 퀘스트 (Habit)</h3>
-            <div id="habit-list-container">
-                <!-- Habits with tooltips will be rendered here -->
-            </div>
-            <button class="village-btn" style="width: 100%; margin-top: 10px; border-color: var(--defense); color: var(--defense);" onclick="location.href='miracle.html?cat=habit'">
-                <span class="btn-text">습관 인증샷 봉헌하기</span>
-            </button>
+            <h3 style="font-size: 0.9rem; font-weight: 900; color: var(--village-wood); margin-bottom: 10px;">🛡️ 습관 수호 (Habit)</h3>
+            <div id="habit-list-container"></div>
         </section>
 
     </div>
 
-    <!-- 📱 VILLAGE LANDMARKS (Navigation) -->
+    <!-- ⚡ SUDDEN MISSION ALERT -->
+    <div id="sudden-alert">
+        <h2 style="color: var(--health); font-weight: 900; margin-bottom: 15px;">⚡ [돌발 계시] ⚡</h2>
+        <p id="sudden-title" style="font-weight: 800; margin-bottom: 10px;"></p>
+        <p id="sudden-desc" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;"></p>
+        <button onclick="hideSuddenMission()" style="background: var(--health); color: #fff; border: none; padding: 10px 25px; border-radius: 10px; font-weight: 800; cursor: pointer;">퀘스트 수락!</button>
+    </div>
+
+    <!-- 📱 VILLAGE LANDMARKS -->
     <nav class="landmark-nav">
-        <a href="index.html" class="landmark-item active">
-            <i class="fa-solid fa-city"></i>
-            <span>광장</span>
-        </a>
-        <a href="miracle.html" class="landmark-item">
-            <i class="fa-solid fa-shrine"></i>
-            <span>기록소</span>
-        </a>
-        <a href="community.html" class="landmark-item">
-            <i class="fa-solid fa-tent"></i>
-            <span>여행자 숙소</span>
-        </a>
-        <a href="library.html" class="landmark-item">
-            <i class="fa-solid fa-book-atlas"></i>
-            <span>지식 창고</span>
-        </a>
-        <a href="gate.html" class="landmark-item">
-            <i class="fa-solid fa-torii-gate"></i>
-            <span>지니 게이트</span>
-        </a>
+        <a href="index.html" class="landmark-item active"><i class="fa-solid fa-city"></i><span>광장</span></a>
+        <a href="miracle.html" class="landmark-item"><i class="fa-solid fa-shrine"></i><span>기록소</span></a>
+        <a href="community.html" class="landmark-item"><i class="fa-solid fa-tent"></i><span>여행자 숙소</span></a>
+        <a href="library.html" class="landmark-item"><i class="fa-solid fa-book-atlas"></i><span>지식 창고</span></a>
+        <a href="gate.html" class="landmark-item"><i class="fa-solid fa-torii-gate"></i><span>지니 게이트</span></a>
     </nav>
 
     <script src="dashboard.js"></script>

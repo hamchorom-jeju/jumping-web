@@ -1,6 +1,6 @@
 /**
- * Nohyung Village Dashboard Logic (v42.0 - Warm Game Fantasy)
- * Concept: Status Window (Health, Performance, Defense) + Quest Center
+ * Nohyung Village Dashboard Logic (v42.1 - Refined Landmarks)
+ * Features: Pillar of Records (Ranking), Village Wall (Notice), Sudden Alert
  */
 
 const Village = {
@@ -14,56 +14,85 @@ const Village = {
         },
         water: 1.2,
         habits: [
-            { id: 'h1', title: '모닝 티', guide: '기상 직후 따뜻한 물 한잔으로 대사를 점화하세요!', score: 2, done: false },
-            { id: 'h2', title: '베지 퍼스트', guide: '혈당 스파이크 방지를 위해 채소를 먼저 섭취하세요.', score: 2, done: false },
-            { id: 'h3', title: '슬로우 치잉', guide: '한 입당 20회 이상 천천히 저작하여 소화를 돕습니다.', score: 2, done: false },
-            { id: 'h4', title: '일일 7,000보', guide: '꾸준한 활동량 확보는 기초대사량 유지의 핵심입니다.', score: 3, done: false },
-            { id: 'h5', title: '계단 마법', guide: '3층 이하는 계단을 이용해 하체 근력을 키우세요!', score: 2, done: false },
-            { id: 'h6', title: '나이트 컷', guide: '20시 이후 금식은 지방 연소를 위한 강력한 규칙입니다.', score: 10, done: false },
-            { id: 'h7', title: '굿 슬립', guide: '자정 전 취침은 세포 재생과 호복을 최적화합니다.', score: 2, done: false },
-            { id: 'h8', title: '셀프 칭찬', guide: '노력한 자신을 위한 한마디는 지속 가능한 힘이 됩니다.', score: 2, done: false },
-            { id: 'h9', title: '스트레칭', guide: '5분의 스트레칭이 하루의 컨디션을 결정합니다.', score: 2, done: false }
+            { id: 'h1', title: '모닝 티', guide: '기상 직후 따뜻한 물 한잔으로 대사 점화!', score: 2, done: false },
+            { id: 'h2', title: '베지 퍼스트', guide: '혈당 관리를 위해 채소를 먼저 드세요.', score: 2, done: false },
+            { id: 'h3', title: '슬로우 치잉', guide: '20회 이상 꼭꼭 씹어 소화를 돕습니다.', score: 2, done: false },
+            { id: 'h4', title: '일일 7,000보', guide: '기초 대사량을 지키는 든든한 습관!', score: 3, done: false },
+            { id: 'h5', title: '계단 마법', guide: '하체 근육은 제 2의 심장입니다.', score: 2, done: false },
+            { id: 'h6', title: '나이트 컷', guide: '20시 이후 금식은 지방 연소의 지름길.', score: 10, done: false },
+            { id: 'h7', title: '굿 슬립', guide: '성장 호르몬을 위한 자정 전 취침.', score: 2, done: false },
+            { id: 'h8', title: '셀프 칭찬', guide: '나를 아끼는 마음이 성장의 동력입니다.', score: 2, done: false },
+            { id: 'h9', title: '스트레칭', guide: '유연한 몸에 건강한 정신이 깃듭니다.', score: 2, done: false }
         ]
     },
 
+    rankings: [
+        { category: "지난주 킹", name: "강열정 님" },
+        { category: "이번 달 킹", name: "이성실 님" },
+        { category: "전설의 수호자", name: "박지니 님" }
+    ],
+    currentRankIndex: 0,
+
     init() {
-        console.log("Welcome to Nohyung Village v42.0!");
+        console.log("Welcome to Nohyung Village v42.1 (Pillar & Wall Mode)!");
         this.renderStatus();
         this.renderHabits();
+        this.startPillarRotation();
         this.bindEvents();
+    },
+
+    // 🏛️ Pillar Rotation (Ranking Billboard)
+    startPillarRotation() {
+        const pillarText = document.getElementById('ranking-text');
+        setInterval(() => {
+            this.currentRankIndex = (this.currentRankIndex + 1) % this.rankings.length;
+            const r = this.rankings[this.currentRankIndex];
+            pillarText.style.opacity = 0;
+            setTimeout(() => {
+                pillarText.innerHTML = `[${r.category}]<br>${r.name}`;
+                pillarText.style.opacity = 1;
+                pillarText.style.transition = 'opacity 0.5s';
+            }, 500);
+        }, 5000);
+    },
+
+    // ⚡ Sudden Mission Logic
+    triggerSuddenMission() {
+        const missions = [
+            { title: "지금 바로 플랭크!", desc: "60초 플랭크 인증 시 방어력 +20 EXP 하사!" },
+            { title: "깜짝 수분 보충!", desc: "지금 500ml 원샷 후 슬라이더 밀면 +10 EXP!" },
+            { title: "동료 칭찬하기", desc: "여행자 숙소에 따뜻한 댓글 1개 작성 시 +5 EXP!" }
+        ];
+        const m = missions[Math.floor(Math.random() * missions.length)];
+        document.getElementById('sudden-title').innerText = m.title;
+        document.getElementById('sudden-desc').innerText = m.desc;
+        document.getElementById('sudden-alert').classList.add('active');
+    },
+
+    hideSuddenMission() {
+        document.getElementById('sudden-alert').classList.remove('active');
     },
 
     renderStatus() {
         document.getElementById('user-name').innerText = this.user.name;
         document.getElementById('tier-name').innerText = this.user.tier;
-        
-        // Health
         document.getElementById('health-total').innerText = this.user.stats.health.total.toLocaleString();
         document.getElementById('health-weekly').innerText = this.user.stats.health.weekly.toLocaleString();
-        document.getElementById('health-monthly').innerText = this.user.stats.health.monthly.toLocaleString();
-        
-        // Performance
         document.getElementById('perf-total').innerText = this.user.stats.perf.total.toLocaleString();
         document.getElementById('perf-weekly').innerText = this.user.stats.perf.weekly.toLocaleString();
-        document.getElementById('perf-monthly').innerText = this.user.stats.perf.monthly.toLocaleString();
-        
-        // Defense
         document.getElementById('def-total').innerText = this.user.stats.def.total.toLocaleString();
         document.getElementById('def-weekly').innerText = this.user.stats.def.weekly.toLocaleString();
-        document.getElementById('def-monthly').innerText = this.user.stats.def.monthly.toLocaleString();
-
         document.getElementById('water-val').innerText = `${this.user.water}L / 2.0L`;
     },
 
     renderHabits() {
         const container = document.getElementById('habit-list-container');
         if (!container) return;
-
         container.innerHTML = this.user.habits.map(h => `
-            <div class="habit-row" title="${h.guide} (점수: +${h.score} EXP)">
-                <span class="habit-name" onclick="Village.showHabitGuide('${h.id}')">${h.title} <i class="fa-solid fa-circle-info" style="font-size:0.6rem; color:var(--text-dim);"></i></span>
-                <div class="habit-check" onclick="Village.checkHabit('${h.id}')" style="background: ${h.done ? 'var(--defense)' : 'transparent'}; color: white;">
-                    ${h.done ? '<i class="fa-solid fa-check"></i>' : ''}
+            <div class="habit-row" title="${h.guide}" onclick="Village.showHabitGuide('${h.id}')" style="cursor: pointer; padding: 10px; background: rgba(255,255,255,0.3); border-radius: 12px; margin-bottom: 5px; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size: 0.8rem; font-weight: 700;">${h.title}</span>
+                <div style="width: 20px; height: 20px; border: 2px solid var(--village-border); border-radius: 4px; display:flex; align-items:center; justify-content:center;">
+                    ${h.done ? '✅' : ''}
                 </div>
             </div>
         `).join('');
@@ -71,19 +100,7 @@ const Village = {
 
     showHabitGuide(id) {
         const habit = this.user.habits.find(h => h.id === id);
-        this.showVillageNotice(`[습관 비책: ${habit.title}]`, `${habit.guide}\n\n완수 시 방어력 +${habit.score} EXP 하사!`);
-    },
-
-    checkHabit(id) {
-        const habit = this.user.habits.find(h => h.id === id);
-        if (habit && !habit.done) {
-            habit.done = true;
-            this.user.stats.def.total += habit.score;
-            this.user.stats.def.weekly += habit.score;
-            this.renderStatus();
-            this.renderHabits();
-            this.showVillageNotice("방어력 상승!", `${habit.title} 완수! 습관이 당신을 지키는 방어력이 되었습니다. ✨`);
-        }
+        this.showVillageNotice(`[습관 비책: ${habit.title}]`, `${habit.guide}\n\n완수 시 방어력 +${habit.score} EXP!`);
     },
 
     bindEvents() {
@@ -98,11 +115,9 @@ const Village = {
     },
 
     async syncClubRecord() {
-        console.log("Synchronizing with Nohyung Village Records...");
         setTimeout(() => {
-            this.showVillageNotice("이장님의 전갈", "허허, 오늘 클럽 출석과 운동 기록이 확인되었소! \n수행력(미션) 점수가 크게 상승했구려! ✨");
+            this.showVillageNotice("이장님의 전갈", "오늘의 클럽 활동이 동기화되었습니다! \n수행력(Perf) 점수가 상승했습니다. ✨");
             this.user.stats.perf.total += 35;
-            this.user.stats.perf.weekly += 35;
             this.renderStatus();
         }, 1200);
     },
@@ -112,6 +127,8 @@ const Village = {
     }
 };
 
-// Start Village Life
+// Start Village
 window.onload = () => Village.init();
 window.syncClubRecord = () => Village.syncClubRecord();
+window.triggerSuddenMission = () => Village.triggerSuddenMission();
+window.hideSuddenMission = () => Village.hideSuddenMission();
