@@ -190,6 +190,11 @@
       <div class="section-title">✨ 지금 마을의 기적들</div>
       <div id="feed-loader" class="loader"></div>
       <div id="archive-feed"></div>
+      
+      <!-- 🛠️ 진단 도구 (추후 삭제 예정) -->
+      <div style="margin-top: 50px; text-align: center;">
+        <button onclick="checkConnection()" style="background:none; border:1px solid var(--v-border); color:var(--text-dim); padding:10px 20px; border-radius:10px; font-size:0.7rem; font-weight:800;">🛰️ 서버 연결 확인</button>
+      </div>
     </section>
   </div>
 
@@ -351,6 +356,17 @@
         })
         .withFailureHandler(() => {})
         .getActiveEvents();
+    }
+    function checkConnection() {
+      alert("서버에 응답을 요청합니다... 잠시만 기다려 주세요.");
+      google.script.run
+        .withSuccessHandler(res => {
+          alert(`🛰️ 서버 연결 성공!\n현재 서버 시트 목록: ${res.sheets.join(', ')}\n사용자: ${res.user}`);
+        })
+        .withFailureHandler(err => {
+          alert(`🚨 서버 연결 실패: ${err.toString()}\n\n구글 로그인이 되어 있는지, 혹은 웹앱 배포가 정상인지 확인이 필요합니다.`);
+        })
+        .pingServer();
     }
   </script>
 </body>

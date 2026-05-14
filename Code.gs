@@ -4,6 +4,23 @@
  */
 
 /**
+ * [진단] 서버 연결 확인 및 시트 목록 반환 (v44.141)
+ */
+function pingServer() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheets = ss.getSheets().map(function(s) { return s.getName(); });
+    return { 
+      success: true, 
+      sheets: sheets, 
+      user: Session.getActiveUser().getEmail() || "알 수 없는 사용자" 
+    };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
  * [아카이브] 최신 인증 피드 데이터 가져오기 (최우선 배치 v44.139)
  */
 function getArchiveFeed() {
