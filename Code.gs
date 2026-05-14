@@ -314,6 +314,9 @@ function getArchiveFeed() {
 /**
  * [아카이브] 인증 기록 제출 (사진 업로드 포함)
  */
+/**
+ * [아카이브] 인증 기록 제출 (사진 업로드 포함)
+ */
 function submitArchive(payload) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -328,25 +331,31 @@ function submitArchive(payload) {
     var now = new Date();
     var photoId = "";
     
-    if (payload.image) {
-      var folderName = "GenieWorld_Archive";
-      var folder;
-      var folders = DriveApp.getFoldersByName(folderName);
-      if (folders.hasNext()) {
-        folder = folders.next();
-      } else {
-        folder = DriveApp.createFolder(folderName);
+    // 📸 사진 처리 로직 (원장님 피드백 반영: 공유 및 변환 최적화)
+    if (payload.image && payload.image.indexOf(",") > -1) {
+      try {
+        var folderName = "GenieWorld_Archive";
+        var folder;
+        var folders = DriveApp.getFoldersByName(folderName);
+        folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+        
+        var fileName = payload.name + "_" + payload.item + "_" + Utilities.formatDate(now, "GMT+9", "yyyyMMdd_HHmmss");
+        var contentType = payload.image.split(";")[0].split(":")[1];
+        var base64Data = payload.image.split(",")[1];
+        var blob = Utilities.newBlob(Utilities.base64Decode(base64Data), contentType, fileName);
+        
+        var file = folder.createFile(blob);
+        // 원장님이 강조하신 공유 권한 설정
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        photoId = file.getId();
+      } catch (err) {
+        console.error("Photo Upload Error: " + err.toString());
+        // 사진 저장 실패해도 데이터는 남기기 위해 계속 진행
       }
-      
-      var fileName = payload.name + "_" + payload.item + "_" + Utilities.formatDate(now, "GMT+9", "yyyyMMdd_HHmmss");
-      var blob = Utilities.newBlob(Utilities.base64Decode(payload.image.split(",")[1]), "image/jpeg", fileName);
-      var file = folder.createFile(blob);
-      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-      photoId = file.getId();
     }
     
     sheet.appendRow([
-      new Date(), // 날짜 자동 기록
+      new Date(), 
       Utilities.formatDate(now, "GMT+9", "HH:mm:ss"),
       payload.name,
       payload.phone,
@@ -359,8 +368,8 @@ function submitArchive(payload) {
     
     return { success: true, photoId: photoId };
   } catch (e) {
-    console.error("Archive Save Error: " + e.toString());
-    return { success: false, error: e.toString() };
+    console.error("Submit Archive Fatal Error: " + e.toString());
+    return { success: false, error: "서버 오류: " + e.toString() + "\n(구글 드라이브 권한을 확인해 주세요)" };
   }
 }
 

@@ -127,8 +127,7 @@
           <option value="방문">🏰 방문 인증</option>
           <option value="오운완">🔥 오운완 (운동 완료)</option>
           <option value="수분">💧 수분 섭취 인증</option>
-          <option value="식단">🍱 식단 인증 (아침/점심/저녁)</option>
-          <optgroup label="⚡ 실시간 돌발 퀘스트" id="surprise-optgroup"></optgroup>
+          <!-- 식단 인증 삭제 (하단 전용 버튼 사용) -->
         </select>
         <input type="text" id="quest-comment" class="comment-input" placeholder="오늘의 소감을 한마디 남겨주세요!">
         <button id="btn-submit-quest" onclick="submitEntry('quest')" style="width: 100%; margin-top: 15px; background: var(--emerald); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2);">퀘스트 기록 완료</button>
@@ -238,8 +237,22 @@
     }
 
     function quickMeal(mealType) {
-      document.getElementById('quest-select').value = "식단";
-      document.getElementById('quest-comment').value = `[${mealType}] 인증합니다! `;
+      // 식단은 특별 카테고리이므로 직접 지정
+      const mealCategory = "식단";
+      const commentField = document.getElementById('quest-comment');
+      const selectField = document.getElementById('quest-select');
+      
+      // ⚡ 선택 항목에 '식단'이 없으면 임시로 추가 (제출을 위해)
+      if (!Array.from(selectField.options).some(opt => opt.value === mealCategory)) {
+        const opt = document.createElement('option');
+        opt.value = mealCategory;
+        opt.innerText = "🍱 식단 인증";
+        opt.hidden = true;
+        selectField.appendChild(opt);
+      }
+      
+      selectField.value = mealCategory;
+      commentField.value = `[${mealType}] 인증합니다! `;
       document.getElementById('file-input-quest').click();
     }
 
@@ -325,7 +338,7 @@
           .withFailureHandler(err => {
             btn.disabled = false;
             btn.innerText = "기록 완료";
-            alert("서버 통신 오류: " + err.toString());
+            alert("서버 통신 오류: " + err.toString() + "\n\n(구글 로그인이 풀렸거나 드라이브 권한이 필요할 수 있습니다)");
           })
           .submitArchive(payload);
       };
@@ -337,8 +350,17 @@
       google.script.run
         .withSuccessHandler(events => {
           if(events && events.length > 0) {
+            // ⚡ 구분선 추가 (이미 없으면)
+            const dividerExists = Array.from(select.options).some(opt => opt.value === "---");
+            if (!dividerExists) {
+              const div = document.createElement('option');
+              div.value = "---";
+              div.innerText = "──────────────";
+              div.disabled = true;
+              select.appendChild(div);
+            }
+            
             events.forEach(e => {
-              // ⚡ 이미 존재하는지 확인 후 추가
               const exists = Array.from(select.options).some(opt => opt.value === e.title);
               if (!exists) {
                 const opt = document.createElement('option');
