@@ -108,7 +108,7 @@ function submitArchive(payload) {
  */
 function getUserDashboardData(payload) {
   try {
-    var phone = String(payload.phone || "").trim();
+    var phone = String(payload.phone || "").replace(/[^0-9]/g, ""); // [v44.173] 숫자만 남기도록 정규화
     if (!phone) return { error: "전화번호가 없습니다." };
     
     var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -121,7 +121,7 @@ function getUserDashboardData(payload) {
       var regCols = getRegColumnIndices(regSheet);
       for (var i = 1; i < regData.length; i++) {
         var sheetPhone = String(regData[i][regCols.phone]).replace(/[^0-9]/g, ""); 
-        if (sheetPhone.indexOf(phone) > -1 || phone.indexOf(sheetPhone) > -1) {
+        if (sheetPhone === phone || sheetPhone.indexOf(phone) > -1 || phone.indexOf(sheetPhone) > -1) {
           memberInfo.name = regData[i][regCols.name];
           memberInfo.tier = regData[i][regCols.membership] || "새싹";
           break;
@@ -131,21 +131,22 @@ function getUserDashboardData(payload) {
 
     // [v44.165] 일일 출석 점수(5점) 자동 지급 로직
     var arcSheet = ss.getSheetByName("아카이브") || ss.insertSheet("아카이브");
-    var now = new Date();
-    var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    var nowRef = new Date(); // 기준 시각
+    var todayStr = Utilities.formatDate(nowRef, "GMT+9", "yyyy-MM-dd");
     var isFirstLoginToday = false;
     
     // [v44.170] 중복 기록 방지를 위한 서버 잠금(Lock) 도입
     var lock = LockService.getScriptLock();
     try {
       lock.waitLock(10000); 
-      var arcDataCheck = arcSheet.getDataRange().getValues();
+      // [v44.174] 32분의 저주 방지를 위해 getDisplayValues 사용
+      var arcDataCheck = arcSheet.getDataRange().getDisplayValues(); 
       var alreadyLogged = false;
       for (var j = 1; j < arcDataCheck.length; j++) {
-        var recDate = Utilities.formatDate(new Date(arcDataCheck[j][0]), "GMT+9", "yyyy-MM-dd");
+        var recDateStr = arcDataCheck[j][0]; // "yyyy-MM-dd" 형태
         var recPhone = String(arcDataCheck[j][3]).replace(/[^0-9]/g, "");
         var recType = String(arcDataCheck[j][4]);
-        if (recDate === todayStr && recPhone === phone && recType === "로그인") {
+        if (recDateStr === todayStr && recPhone === phone && recType === "로그인") {
           alreadyLogged = true;
           break;
         }
@@ -153,8 +154,8 @@ function getUserDashboardData(payload) {
       
       if (!alreadyLogged) {
         arcSheet.appendRow([
-          now,
-          Utilities.formatDate(now, "GMT+9", "HH:mm:ss"),
+          nowRef,
+          Utilities.formatDate(nowRef, "GMT+9", "HH:mm:ss"),
           memberInfo.name,
           phone,
           "로그인",
@@ -172,25 +173,27 @@ function getUserDashboardData(payload) {
     }
 
     // 2. 능력치 및 점수 계산 (아카이브 시트)
-    var arcSheet = ss.getSheetByName("아카이브");
     var stats = { health: 0, perf: 0, def: 0 };
     var scores = { lifetime: 0, season: 0, weekly: 0 };
     
-    var now = new Date();
+    var calcNow = new Date();
     // 주간 기준 (이번 주 월요일 00:00)
-    var startOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1))); 
+    var startOfWeek = new Date(calcNow.getFullYear(), calcNow.getMonth(), calcNow.getDate() - calcNow.getDay() + (calcNow.getDay() === 0 ? -6 : 1));
     startOfWeek.setHours(0, 0, 0, 0);
-    // 시즌 기준 (v39: 4주 주기 - 여기서는 현재 월의 1일로 임시 설정, 추후 시즌제 시트 연동 가능)
-    var startOfSeason = new Date(now.getFullYear(), now.getMonth(), 1);
+    // 시즌 기준 (v39: 현재 월의 1일)
+    var startOfSeason = new Date(calcNow.getFullYear(), calcNow.getMonth(), 1);
     startOfSeason.setHours(0, 0, 0, 0);
 
     if (arcSheet) {
-      var arcData = arcSheet.getDataRange().getValues();
+      // [v44.174] 32분의 저주 방지를 위해 getDisplayValues 사용
+      var arcData = arcSheet.getDataRange().getDisplayValues();
       for (var j = 1; j < arcData.length; j++) {
         var arcPhone = String(arcData[j][3]).replace(/[^0-9]/g, ""); 
         if (arcPhone === phone) {
           var score = Number(arcData[j][8] || 0);
-          var recDate = new Date(arcData[j][0]);
+          // 문자열 날짜를 안전하게 Date 객체로 변환 (시간은 00:00:00 고정)
+          var dateParts = arcData[j][0].split("-");
+          var recDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
           
           // 1) 누적 (Lifetime)
           scores.lifetime += score;
