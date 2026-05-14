@@ -151,6 +151,8 @@ function getUserDashboardData(payload) {
         monthly: { health: totalScore, perf: totalScore, def: totalScore }
       }
     };
+  } catch (e) {
+    return { success: false, error: e.toString() };
   }
 }
 
