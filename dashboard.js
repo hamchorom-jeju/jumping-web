@@ -46,7 +46,7 @@ const Village = {
     ],
     currentRankIndex: 0,
 
-    // ⚔️ Quest Content Data (v44.93 Corrected)
+    // ⚔️ Quest Content Data (v44.94 Final Consistency)
     quests: {
         sync: { 
             title: "클럽 동기화", icon: "⚡", 
@@ -65,7 +65,7 @@ const Village = {
         },
         water: { 
             title: "워터 헌터", icon: "💧", 
-            guide: "수분 섭취량에 따라 점수 차등 지급!\n섭취량만큼 게이지를 조절하고 인증 시 15포인트가 추가 하사됩니다!", 
+            guide: "수분 섭취량에 따라 점수가 차등 지급됩니다!\n섭취량만큼 아래 게이지를 조절해 보세요.\n인증 기록소에 사진을 남기시면 15포인트가 추가 하사됩니다!", 
             btn: "인증하러 가기", link: "miracle.html?cat=water", single: false 
         },
         bonus: { 
