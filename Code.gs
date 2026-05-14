@@ -311,18 +311,26 @@ function getArchiveFeed() {
   }
 }
 
-/**
- * [아카이브] 인증 기록 제출 (사진 업로드 포함)
- */
 function submitArchive(payload) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("아카이브");
-    var now = new Date();
     
+    // 시트가 없으면 즉시 자동 생성 (Hangs 방지)
+    if (!sheet) {
+      sheet = ss.insertSheet("아카이브");
+      var arHeaders = ["날짜", "시간", "이름", "전화번호", "유형", "항목", "코멘트", "사진ID", "점수"];
+      sheet.getRange(1, 1, 1, arHeaders.length).setValues([arHeaders]);
+    }
+
+    var now = new Date();
     var photoId = "";
+    
     if (payload.image) {
-      var folder = getOrCreateFolder("GenieWorld_Archive");
+      var folderName = "GenieWorld_Archive";
+      var folders = DriveApp.getFoldersByName(folderName);
+      var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+      
       var fileName = payload.name + "_" + payload.item + "_" + Utilities.formatDate(now, "GMT+9", "yyyyMMdd_HHmmss");
       var blob = Utilities.newBlob(Utilities.base64Decode(payload.image.split(",")[1]), "image/jpeg", fileName);
       var file = folder.createFile(blob);
@@ -344,7 +352,8 @@ function submitArchive(payload) {
     
     return { success: true, photoId: photoId };
   } catch (e) {
-    return { error: e.toString() };
+    console.error("Archive Error: " + e.toString());
+    return { success: false, error: e.toString() };
   }
 }
 

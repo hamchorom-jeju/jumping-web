@@ -107,14 +107,22 @@
     <div id="tab-quest" class="tab-content active">
       <div class="premium-cert-card">
         <div class="section-title">⚔️ 퀘스트 인증하기 (15점)</div>
-        <div onclick="document.getElementById('file-input-quest').click()" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
+        
+        <!-- 📸 촬영 구역 (사진 없을 때만 버튼 표시) -->
+        <div id="quest-upload-placeholder" onclick="document.getElementById('file-input-quest').click()" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
           <span style="font-size:2.5rem; margin-bottom:10px;">📸</span>
           <p style="font-size:0.85rem; color:var(--text-dim); font-weight:800;">퀘스트 인증 사진 촬영</p>
-          <input type="file" id="file-input-quest" hidden accept="image/*" capture="camera" onchange="previewImage('quest', this)">
         </div>
-        <div id="quest-preview-box" style="display: none; margin-top: 15px;">
-          <img id="quest-preview-img" src="" style="width: 100%; border-radius: 20px; border: 2px solid var(--emerald);">
+        
+        <div id="quest-preview-box" style="display: none; margin-top: 5px;">
+          <div style="position: relative;">
+            <img id="quest-preview-img" src="" style="width: 100%; border-radius: 20px; border: 2px solid var(--emerald); display: block;">
+            <div onclick="document.getElementById('file-input-quest').click()" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 10px; font-size: 0.75rem; font-weight: 800; backdrop-filter: blur(5px);">다시 촬영</div>
+          </div>
         </div>
+        
+        <input type="file" id="file-input-quest" hidden accept="image/*" capture="camera" onchange="previewImage('quest', this)">
+
         <select id="quest-select" style="width: 100%; margin-top: 15px; background: #fff; border: 2px solid var(--v-paper); padding: 15px; border-radius: 15px; font-weight: 800; outline: none; color: var(--text-main);">
           <option value="방문">🏰 방문 인증</option>
           <option value="오운완">🔥 오운완 (운동 완료)</option>
@@ -145,15 +153,22 @@
     <!-- 습관 탭 -->
     <div id="tab-habit" class="tab-content">
       <div class="premium-cert-card">
-        <div class="section-title">🌿 습관 & 플러스 인증</div>
-        <div onclick="document.getElementById('file-input-habit').click()" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
+        <div class="section-title">🌿 습관 & 플러스 인증 (5점)</div>
+        
+        <div id="habit-upload-placeholder" onclick="document.getElementById('file-input-habit').click()" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
           <span style="font-size:2.5rem; margin-bottom:10px;">📜</span>
           <p style="font-size:0.85rem; color:var(--text-dim); font-weight:800;">습관 실천 인증 촬영</p>
-          <input type="file" id="file-input-habit" hidden accept="image/*" capture="camera" onchange="previewImage('habit', this)">
         </div>
-        <div id="habit-preview-box" style="display: none; margin-top: 15px;">
-          <img id="habit-preview-img" src="" style="width: 100%; border-radius: 20px; border: 2px solid var(--v-wood);">
+        
+        <div id="habit-preview-box" style="display: none; margin-top: 5px;">
+          <div style="position: relative;">
+            <img id="habit-preview-img" src="" style="width: 100%; border-radius: 20px; border: 2px solid var(--v-wood); display: block;">
+            <div onclick="document.getElementById('file-input-habit').click()" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 10px; font-size: 0.75rem; font-weight: 800; backdrop-filter: blur(5px);">다시 촬영</div>
+          </div>
         </div>
+        
+        <input type="file" id="file-input-habit" hidden accept="image/*" capture="camera" onchange="previewImage('habit', this)">
+
         <select id="habit-select" style="width: 100%; margin-top: 15px; background: #fff; border: 2px solid var(--v-paper); padding: 15px; border-radius: 15px; font-weight: 800; outline: none; color: var(--text-main);">
           <optgroup label="🌱 9대 데일리 습관">
             <option value="모닝티">🍵 모닝 티 (따뜻한 물)</option>
@@ -214,6 +229,9 @@
         reader.onload = e => {
           document.getElementById(type + '-preview-img').src = e.target.result;
           document.getElementById(type + '-preview-box').style.display = 'block';
+          // 📸 촬영 버튼(Placeholder) 숨기기
+          const placeholder = document.getElementById(type + '-upload-placeholder');
+          if (placeholder) placeholder.style.display = 'none';
         };
         reader.readAsDataURL(input.files[0]);
       }
@@ -233,7 +251,7 @@
       google.script.run
         .withSuccessHandler(data => {
           loader.style.display = 'none';
-          if (!data || data.length === 0) {
+          if (!data || data.length === 0 || data.error) {
             feed.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:0.8rem; margin-top:20px;">첫 번째 기적의 주인공이 되어보세요!</p>';
             return;
           }
@@ -266,7 +284,8 @@
       const btn = document.getElementById('btn-submit-' + type);
       const item = document.getElementById(type + '-select').value;
       const comment = document.getElementById(type + '-comment').value;
-      const file = document.getElementById('file-input-' + type).files[0];
+      const fileInput = document.getElementById('file-input-' + type);
+      const file = fileInput.files[0];
       
       if (!file) return alert("인증 사진을 촬영해 주세요!");
       
@@ -289,11 +308,15 @@
             btn.innerText = type === 'quest' ? "퀘스트 기록 완료" : "습관 기록 완료";
             if (res.success) {
               alert("기록이 마을 아카이브에 영구 보존되었습니다! ✨");
+              // UI 초기화
               document.getElementById(type + '-comment').value = "";
               document.getElementById(type + '-preview-box').style.display = 'none';
+              const placeholder = document.getElementById(type + '-upload-placeholder');
+              if (placeholder) placeholder.style.display = 'flex';
+              fileInput.value = ""; // 파일 입력 초기화
               loadArchiveFeed();
             } else {
-              alert("저장 실패: " + res.error);
+              alert("저장 실패: " + (res.error || "알 수 없는 오류"));
             }
           })
           .withFailureHandler(err => {
@@ -311,11 +334,11 @@
         .withSuccessHandler(events => {
           if(events && events.length > 0) {
             const surpriseGroup = document.getElementById('surprise-optgroup');
-            surpriseGroup.innerHTML = "";
+            surpriseGroup.innerHTML = ""; // 초기화
             events.forEach(e => {
               const opt = document.createElement('option');
               opt.value = e.title;
-              opt.innerText = `⚡ [돌발] ${e.title} (15점)`;
+              opt.innerText = `⚡ [돌발] ${e.title}`;
               surpriseGroup.appendChild(opt);
             });
           }
