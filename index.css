@@ -10,6 +10,7 @@
     --perf: #f1c40f;
     --def: #3498db;
     --gold: #f1c40f;
+    --emerald: #2ed573;
     
     --text-main: #2b1d0e;
     --text-dim: #5d4037;
@@ -38,50 +39,33 @@ body {
     gap: 15px;
 }
 
-/* --- 📢 TOP NEWS SYSTEM (v44.0 Single Block) --- */
+/* --- 🏛️ GLOBAL APP HEADER --- */
+.v-global-header {
+    background: var(--v-wood);
+    color: var(--gold);
+    padding: 15px;
+    text-align: center;
+    border-bottom: 3px solid var(--gold);
+}
+
+.v-global-header h1 {
+    font-size: 1.1rem;
+    font-weight: 900;
+}
+
+/* --- 📢 NEWS SYSTEM --- */
 .v-top-news {
     background: var(--v-wood);
     color: #fff;
     border-radius: 15px;
     overflow: hidden;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-.v-notice-fixed {
-    background: #4e342e;
-    padding: 8px 15px;
-    font-size: 0.75rem;
-    font-weight: 800;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
+.v-notice-fixed { background: #4e342e; padding: 8px 15px; font-size: 0.75rem; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.v-pillar-ticker { padding: 10px 15px; height: 45px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 900; color: var(--gold); }
+.v-sudden-bar { background: var(--health); padding: 6px 15px; font-size: 0.7rem; font-weight: 900; display: none; }
 
-.v-pillar-ticker {
-    padding: 10px 15px;
-    height: 45px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
-    font-weight: 900;
-    color: var(--gold);
-    text-align: center;
-}
-
-.v-sudden-bar {
-    background: var(--health);
-    padding: 6px 15px;
-    font-size: 0.7rem;
-    font-weight: 900;
-    display: none;
-    animation: flash 1.5s infinite;
-}
-
-@keyframes flash {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-}
-
-/* --- 📋 STATUS WINDOW v44.0 (Balanced Split) --- */
+/* --- 📋 STATUS WINDOW (Balanced) --- */
 .status-window-v43 {
     background: var(--v-paper);
     border: 3px solid var(--v-border);
@@ -93,114 +77,69 @@ body {
     align-items: center;
 }
 
-.profile-card {
-    text-align: center;
-    border-right: 1px solid var(--v-border);
-    padding-right: 10px;
-}
+.profile-card { text-align: center; border-right: 1px solid var(--v-border); padding-right: 10px; }
+.avatar-v43 { width: 70px; height: 70px; margin: 0 auto 10px; background: #fff; border-radius: 50%; border: 3px solid var(--perf); display: flex; align-items: center; justify-content: center; font-size: 2.2rem; }
+.total-score-val { font-size: 1.6rem; font-weight: 900; color: var(--v-wood); }
+.gauge-bar-bg { background: rgba(0,0,0,0.05); height: 10px; border-radius: 5px; overflow: hidden; }
+.gauge-fill { height: 100%; transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-.avatar-v43 {
-    width: 70px; height: 70px;
-    margin: 0 auto 10px;
-    background: #fff;
-    border-radius: 50%;
-    border: 3px solid var(--perf);
-    display: flex; align-items: center; justify-content: center; font-size: 2.2rem;
-}
-
-.total-score-label { font-size: 0.65rem; font-weight: 800; color: var(--text-dim); }
-.total-score-val { font-size: 1.6rem; font-weight: 900; display: block; margin: 2px 0; color: var(--v-wood); }
-.rank-badge { 
-    background: var(--v-wood); color: #fff; 
-    padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 900;
-}
-
-/* Ability Gauges */
-.gauge-section {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.gauge-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.gauge-header {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.85rem;
-    font-weight: 900;
-}
-
-.gauge-bar-bg {
-    background: rgba(0,0,0,0.05);
-    height: 12px;
-    border-radius: 6px;
-    overflow: hidden;
-    border: 1px solid rgba(0,0,0,0.02);
-}
-
-.gauge-fill {
-    height: 100%;
-    transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* --- ⚔️ QUEST HUB --- */
-.v-quest-hub {
-    background: rgba(255,255,255,0.7);
-    backdrop-filter: blur(10px);
-    border-radius: 25px;
+/* --- 🛡️ PREMIUM MODAL STYLING --- */
+.v-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+    display: none; /* Hidden by default */
+    align-items: center; justify-content: center;
+    z-index: 9999;
     padding: 20px;
-    border: 1px solid var(--v-border);
 }
 
-.v-btn-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-}
-
-.v-action-btn {
+.v-modal-card {
     background: #fff;
-    border: 2px solid var(--v-border);
-    padding: 15px 10px;
-    border-radius: 20px;
+    width: 100%; max-width: 400px;
+    border-radius: 35px;
+    padding: 35px 25px;
     text-align: center;
-    cursor: pointer;
-    font-weight: 900;
-    font-size: 0.9rem;
-    transition: all 0.2s;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+    border: 2px solid var(--gold);
+    animation: modal-slide-up 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* --- 📋 HABIT & PLUS --- */
-.habit-plus-section {
-    background: rgba(255,255,255,0.5);
-    border-radius: 25px;
-    padding: 20px;
-    border: 1px solid rgba(93, 64, 55, 0.1);
+@keyframes modal-slide-up {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }
 
-/* --- 📱 NAV BAR (v44.0 Clean) --- */
-.v-nav {
-    position: fixed;
-    bottom: 0; left: 0; width: 100%;
-    background: #fff;
-    display: flex; justify-content: space-around;
-    padding: 12px 10px 35px;
-    border-top: 2px solid var(--v-paper);
-    z-index: 2000;
+.v-modal-header span { font-size: 3.5rem; display: block; margin-bottom: 10px; }
+.v-modal-header h2 { font-size: 1.6rem; font-weight: 900; color: var(--v-wood); margin-bottom: 20px; }
+
+.v-modal-guide {
+    font-size: 0.95rem; line-height: 1.6; color: var(--text-dim); font-weight: 700;
+    padding: 20px; background: var(--v-paper); border-radius: 20px; margin-bottom: 20px;
 }
 
-.v-nav-item {
-    text-align: center;
-    color: var(--text-dim);
-    text-decoration: none;
-    font-size: 0.7rem;
-    font-weight: 900;
+.v-modal-reward {
+    margin-bottom: 25px;
 }
 
+.reward-label { font-size: 0.7rem; font-weight: 900; color: var(--text-dim); display: block; text-transform: uppercase; }
+.reward-val { font-size: 1.3rem; font-weight: 900; color: var(--emerald); }
+
+.v-modal-footer { display: flex; gap: 10px; }
+.v-modal-btn {
+    flex: 1; padding: 16px; border-radius: 20px; border: none;
+    font-size: 0.9rem; font-weight: 900; cursor: pointer; transition: all 0.2s;
+}
+
+.v-modal-btn.primary { background: var(--v-wood); color: var(--gold); box-shadow: 0 5px 0 #3e2723; }
+.v-modal-btn.secondary { background: #eee; color: #777; }
+.v-modal-btn:active { transform: translateY(4px); box-shadow: none; }
+
+/* --- 📱 NAV & BUTTONS --- */
+.v-quest-hub { background: rgba(255,255,255,0.7); border-radius: 25px; padding: 20px; border: 1px solid var(--v-border); }
+.v-btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.v-action-btn { background: #fff; border: 2px solid var(--v-border); padding: 15px; border-radius: 20px; text-align: center; font-weight: 900; font-size: 0.9rem; }
+.v-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; display: flex; justify-content: space-around; padding: 12px 10px 35px; border-top: 2px solid var(--v-paper); }
+.v-nav-item { text-align: center; color: var(--text-dim); text-decoration: none; font-size: 0.7rem; font-weight: 900; }
 .v-nav-item i { font-size: 1.8rem; display: block; margin-bottom: 4px; }
 .v-nav-item.active { color: var(--perf); }
