@@ -287,11 +287,11 @@ function getArchiveFeed() {
     if (!sheet) return [];
     
     var lastRow = sheet.getLastRow();
-    if (lastRow < 2) return []; // 헤더만 있는 경우
+    if (lastRow < 2) return []; 
     
     var startRow = Math.max(2, lastRow - 19);
     var numRows = lastRow - startRow + 1;
-    var data = sheet.getRange(startRow, 1, numRows, 9).getValues(); // getValues로 변경하여 속도 향상
+    var data = sheet.getRange(startRow, 1, numRows, 9).getValues();
     
     return data.reverse().map(function(row) {
       return {
@@ -306,16 +306,36 @@ function getArchiveFeed() {
       };
     });
   } catch (e) {
-    console.error("Feed Fetch Error: " + e.toString());
-    return { error: e.toString() };
+    console.error("Feed Error: " + e.toString());
+    return [];
   }
 }
 
 /**
- * [아카이브] 인증 기록 제출 (사진 업로드 포함)
+ * [아카이브] 진행 중인 돌발 퀘스트 가져오기
  */
+function getActiveEvents() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var configSheet = ss.getSheetByName("설정");
+    if (!configSheet) return [];
+    
+    var data = configSheet.getDataRange().getValues();
+    var events = [];
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][0] === "돌발퀘스트" && data[i][2] === "진행중") {
+        events.push({ title: data[i][1] });
+      }
+    }
+    return events;
+  } catch (e) {
+    console.error("Event Fetch Error: " + e.toString());
+    return [];
+  }
+}
+
 /**
- * [아카이브] 인증 기록 제출 (사진 업로드 포함)
+ * [아카이브] 인증 기록 제출
  */
 function submitArchive(payload) {
   try {
@@ -331,26 +351,19 @@ function submitArchive(payload) {
     var now = new Date();
     var photoId = "";
     
-    // 📸 사진 처리 로직 (원장님 피드백 반영: 공유 및 변환 최적화)
     if (payload.image && payload.image.indexOf(",") > -1) {
       try {
         var folderName = "GenieWorld_Archive";
-        var folder;
         var folders = DriveApp.getFoldersByName(folderName);
-        folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+        var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
         
-        var fileName = payload.name + "_" + payload.item + "_" + Utilities.formatDate(now, "GMT+9", "yyyyMMdd_HHmmss");
-        var contentType = payload.image.split(";")[0].split(":")[1];
         var base64Data = payload.image.split(",")[1];
-        var blob = Utilities.newBlob(Utilities.base64Decode(base64Data), contentType, fileName);
-        
+        var blob = Utilities.newBlob(Utilities.base64Decode(base64Data), "image/jpeg", payload.name + "_" + Date.now());
         var file = folder.createFile(blob);
-        // 원장님이 강조하신 공유 권한 설정
         file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
         photoId = file.getId();
       } catch (err) {
-        console.error("Photo Upload Error: " + err.toString());
-        // 사진 저장 실패해도 데이터는 남기기 위해 계속 진행
+        console.error("Photo Save Error: " + err.toString());
       }
     }
     
@@ -368,8 +381,8 @@ function submitArchive(payload) {
     
     return { success: true, photoId: photoId };
   } catch (e) {
-    console.error("Submit Archive Fatal Error: " + e.toString());
-    return { success: false, error: "서버 오류: " + e.toString() + "\n(구글 드라이브 권한을 확인해 주세요)" };
+    console.error("Submit Error: " + e.toString());
+    return { success: false, error: e.toString() };
   }
 }
 
