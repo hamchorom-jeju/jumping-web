@@ -65,9 +65,38 @@
     .magic-frame {
       position: absolute; inset: 0; border: 3px solid var(--emerald);
       box-shadow: inset 0 0 10px rgba(46, 204, 113, 0.2); pointer-events: none;
-      opacity: 0; transition: opacity 0.3s;
+      opacity: 0; transi    /* 💬 코멘트 입력창 스타일 */
+    .comment-input {
+      width: 100%; padding: 15px; border: 2px solid var(--v-paper);
+      border-radius: 15px; margin-top: 12px; font-size: 0.9rem;
+      font-weight: 700; color: var(--text-main); outline: none;
+      transition: all 0.2s; background: #fff;
     }
-    .meal-slot.has-img .magic-frame { opacity: 1; }
+    .comment-input:focus { border-color: var(--emerald); }
+
+    /* 📰 실시간 피드 스타일 */
+    .feed-section { margin-top: 40px; }
+    .feed-card {
+      background: #fff; border-radius: 25px; overflow: hidden;
+      margin-bottom: 25px; border: 1px solid var(--v-paper);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.02);
+    }
+    .feed-header { padding: 15px; display: flex; align-items: center; gap: 10px; }
+    .feed-avatar { width: 40px; height: 40px; background: var(--v-paper); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; color: var(--v-wood); border: 1px solid var(--v-border); }
+    .feed-user-info { flex: 1; }
+    .feed-user-name { font-size: 0.95rem; font-weight: 900; color: var(--text-main); }
+    .feed-time { font-size: 0.7rem; color: #94a3b8; font-weight: 700; }
+    .feed-badge { background: var(--emerald); color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.65rem; font-weight: 800; }
+    
+    .feed-img-box { width: 100%; aspect-ratio: 4/3; background: #f8fafc; overflow: hidden; }
+    .feed-img { width: 100%; height: 100%; object-fit: cover; }
+    .feed-content { padding: 18px; }
+    .feed-text { font-size: 0.9rem; font-weight: 700; color: var(--text-dim); line-height: 1.5; }
+    .feed-item-label { font-size: 0.75rem; color: var(--emerald); font-weight: 900; margin-bottom: 5px; display: block; }
+
+    /* 🔄 로딩 스피너 */
+    .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--emerald); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; display: none; margin: 20px auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
     /* 📱 GLOBAL VILLAGE NAV (Standardized v44.116) */
     .v-nav {
@@ -106,12 +135,6 @@
     <!-- ⚔️ 퀘스트 인증 탭 -->
     <div id="tab-quest" class="tab-content active">
       
-      <!-- ⚡ 실시간 돌발 계시 -->
-      <div id="active-quests-container" style="display: none; background: #fff; border-radius: 20px; padding: 18px; margin-bottom: 25px; border: 2px solid #3498db;">
-        <div style="font-size: 0.8rem; color: #3498db; font-weight: 900; margin-bottom: 12px;">⚡ 실시간 돌발 퀘스트 (15점)</div>
-        <div id="active-quest-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
-      </div>
-
       <!-- 📸 퀘스트 사진 인증 (통합) -->
       <div class="premium-cert-card">
         <div class="section-title">⚔️ 퀘스트 인증하기</div>
@@ -130,18 +153,17 @@
           <option value="방문">🏰 방문 인증 (15점)</option>
           <option value="오운완">🔥 오운완 (운동 완료) (15점)</option>
           <option value="수분">💧 수분 섭취 인증 (15점)</option>
-          <optgroup label="⚡ 실시간 돌발 계시" id="surprise-optgroup">
-            <!-- 돌발 퀘스트 동적 추가 -->
-          </optgroup>
+          <optgroup label="⚡ 실시간 돌발 계시" id="surprise-optgroup"></optgroup>
         </select>
+
+        <input type="text" id="quest-comment" class="comment-input" placeholder="오늘의 소감을 한마디 남겨주세요!">
         
-        <button onclick="submitQuest()" style="width: 100%; margin-top: 15px; background: var(--emerald); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 8px 20px rgba(46, 204, 113, 0.2);">퀘스트 기록 완료</button>
+        <button id="btn-submit-quest" onclick="submitQuest()" style="width: 100%; margin-top: 15px; background: var(--emerald); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 8px 20px rgba(46, 204, 113, 0.2);">퀘스트 기록 완료</button>
       </div>
 
-      <!-- 🍱 식단 인증 (특수 그리드) -->
+      <!-- 🍱 식단 인증 -->
       <div class="cert-section">
         <div class="section-title">🍱 오늘의 식단 인증하기</div>
-        <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:12px; font-weight:700;">모든 끼니 완수 시 30점의 축복이 하사됩니다.</p>
         <div class="meal-grid">
           <div class="meal-slot" id="meal-morning" onclick="uploadMeal('morning')">
             <span class="icon">🌅</span>
@@ -164,15 +186,16 @@
 
     <!-- 🌿 습관 인증 탭 -->
     <div id="tab-habit" class="tab-content">
-      
-      <!-- 📸 습관 사진 인증 -->
       <div class="premium-cert-card">
         <div class="section-title">🌿 습관 & 플러스 인증</div>
-        
         <div onclick="document.getElementById('file-input-habit').click()" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
           <span style="font-size:2.5rem; margin-bottom:10px;">📜</span>
           <p style="font-size:0.85rem; color:var(--text-dim); font-weight:800;">습관 실천 인증 촬영</p>
           <input type="file" id="file-input-habit" hidden accept="image/*" capture="camera" onchange="previewHabitImage(this)">
+        </div>
+        
+        <div id="habit-preview-container" style="display: none; margin-top: 15px;">
+          <img id="habit-image-preview" src="" style="width: 100%; border-radius: 20px; border: 2px solid var(--v-wood);">
         </div>
 
         <select id="habit-select" style="width: 100%; margin-top: 15px; background: #fff; border: 2px solid var(--v-paper); padding: 15px; border-radius: 15px; font-weight: 800; font-size: 0.95rem; color: var(--text-main); outline: none;">
@@ -191,16 +214,22 @@
             <option value="새벽기상">☀️ 새벽 기상 인증</option>
             <option value="독서">📚 지혜의 탐구 (독서)</option>
             <option value="환경수호">🌍 환경 수호 (플로깅 등)</option>
-            <option value="기타성취">🏆 기타 사소한 성취</option>
           </optgroup>
         </select>
-        
-        <button onclick="submitHabit()" style="width: 100%; margin-top: 15px; background: var(--v-wood); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 8px 20px rgba(93, 64, 55, 0.2);">습관 기록 완료</button>
+        <input type="text" id="habit-comment" class="comment-input" placeholder="실천 소감을 남겨주세요!">
+        <button id="btn-submit-habit" onclick="submitHabit()" style="width: 100%; margin-top: 15px; background: var(--v-wood); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 8px 20px rgba(93, 64, 55, 0.2);">습관 기록 완료</button>
       </div>
     </div>
+
+    <!-- 📰 실시간 기적 피드 -->
+    <section class="feed-section">
+      <div class="section-title">✨ 지금 마을의 기적들</div>
+      <div id="feed-loader" class="loader"></div>
+      <div id="archive-feed"></div>
+    </section>
+
   </div>
 
-  <!-- 📱 GLOBAL VILLAGE NAV (Standardized v44.116) -->
   <nav class="v-nav">
     <a href="index.html" class="v-nav-item">
       <i class="fas fa-home"></i>
@@ -224,9 +253,9 @@
     </a>
   </nav>
 
-  <!-- 🏷️ VERSION STAMP (For Verification) -->
-  <div style="text-align: center; font-size: 0.6rem; color: #cbd5e1; margin-top: 10px; font-weight: 700; padding-bottom: 120px;">
-    v44.123 - UI Fix Applied
+  <!-- 🏷️ VERSION STAMP -->
+  <div style="text-align: center; font-size: 0.6rem; color: #cbd5e1; margin-top: 20px; font-weight: 700; padding-bottom: 120px;">
+    v44.125 - Social Feed Enabled
   </div>
 
   <script>
@@ -234,19 +263,17 @@
     const TARGET_NAME = '<?= targetName ?>';
 
     window.onload = function() {
-      // 딥링크 체크
       const params = new URLSearchParams(window.location.search);
-      const tab = params.get('tab');
-      if (tab === 'habit') switchTab('habit');
+      if (params.get('tab') === 'habit') switchTab('habit');
       else switchTab('quest');
-
+      
+      loadArchiveFeed();
       loadActiveEvents();
     };
 
     function switchTab(type) {
       document.querySelectorAll('.v-tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-      
       if (type === 'quest') {
         document.getElementById('btn-quest').classList.add('active');
         document.getElementById('tab-quest').classList.add('active');
@@ -256,38 +283,155 @@
       }
     }
 
-    function loadActiveEvents() {
-      google.script.run.withSuccessHandler(events => {
-        if(events && events.length > 0) {
-          const container = document.getElementById('active-quests-container');
-          const list = document.getElementById('active-quest-list');
-          const surpriseGroup = document.getElementById('surprise-optgroup');
-          
-          container.style.display = 'block';
-          list.innerHTML = events.map(e => `
-            <div style="background: var(--v-paper); padding: 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 800; color: #3498db; border: 1px solid #d0e7f9;">
-              ⚔️ 돌발: ${e.title} (15점)
-            </div>
-          `).join('');
-
-          events.forEach(e => {
-            const opt = document.createElement('option');
-            opt.value = e.title;
-            opt.innerText = `⚡ [돌발] ${e.title}`;
-            surpriseGroup.appendChild(opt);
-          });
+    function loadArchiveFeed() {
+      const loader = document.getElementById('feed-loader');
+      const feed = document.getElementById('archive-feed');
+      loader.style.display = 'block';
+      
+      google.script.run.withSuccessHandler(data => {
+        loader.style.display = 'none';
+        if (!data || data.length === 0) {
+          feed.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:0.8rem;">첫 번째 기적의 주인공이 되어보세요!</p>';
+          return;
         }
-      }).getActiveEvents();
+        
+        feed.innerHTML = data.map(item => `
+          <div class="feed-card">
+            <div class="feed-header">
+              <div class="feed-avatar">${item.name.charAt(0)}</div>
+              <div class="feed-user-info">
+                <div class="feed-user-name">${item.name}</div>
+                <div class="feed-time">${item.date} ${item.time}</div>
+              </div>
+              <div class="feed-badge">${item.type}</div>
+            </div>
+            ${item.photoId ? `
+              <div class="feed-img-box">
+                <img src="https://drive.google.com/uc?id=${item.photoId}" class="feed-img" loading="lazy">
+              </div>
+            ` : ''}
+            <div class="feed-content">
+              <span class="feed-item-label">💎 ${item.item}</span>
+              <p class="feed-text">${item.comment || '말없이 실천 중인 멋진 모험가입니다!'}</p>
+            </div>
+          </div>
+        `).join('');
+      }).getArchiveFeed();
     }
 
     function previewQuestImage(input) {
       if (input.files && input.files[0]) {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = e => {
           document.getElementById('quest-image-preview').src = e.target.result;
           document.getElementById('quest-preview-container').style.display = 'block';
-        }
+        };
         reader.readAsDataURL(input.files[0]);
+      }
+    }
+    
+    function previewHabitImage(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          document.getElementById('habit-image-preview').src = e.target.result;
+          document.getElementById('habit-preview-container').style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function submitQuest() {
+      const btn = document.getElementById('btn-submit-quest');
+      const item = document.getElementById('quest-select').value;
+      const comment = document.getElementById('quest-comment').value;
+      const file = document.getElementById('file-input-quest').files[0];
+      
+      if (!file) return alert("인증 사진을 촬영해 주세요!");
+      
+      btn.disabled = true;
+      btn.innerText = "기록 저장 중...";
+      
+      const reader = new FileReader();
+      reader.onload = e => {
+        const payload = {
+          name: TARGET_NAME,
+          phone: TARGET_PHONE,
+          type: '퀘스트',
+          item: item,
+          comment: comment,
+          image: e.target.result,
+          score: 15
+        };
+        
+        google.script.run.withSuccessHandler(res => {
+          btn.disabled = false;
+          btn.innerText = "퀘스트 기록 완료";
+          if (res.success) {
+            alert("기록이 마을 아카이브에 영구 보존되었습니다! ✨");
+            document.getElementById('quest-comment').value = "";
+            document.getElementById('quest-preview-container').style.display = 'none';
+            loadArchiveFeed();
+          }
+        }).submitArchive(payload);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function submitHabit() {
+      const btn = document.getElementById('btn-submit-habit');
+      const item = document.getElementById('habit-select').value;
+      const comment = document.getElementById('habit-comment').value;
+      const file = document.getElementById('file-input-habit').files[0];
+      
+      if (!file) return alert("인증 사진을 촬영해 주세요!");
+      
+      btn.disabled = true;
+      btn.innerText = "기록 저장 중...";
+      
+      const reader = new FileReader();
+      reader.onload = e => {
+        const payload = {
+          name: TARGET_NAME,
+          phone: TARGET_PHONE,
+          type: '습관',
+          item: item,
+          comment: comment,
+          image: e.target.result,
+          score: 5
+        };
+        
+        google.script.run.withSuccessHandler(res => {
+          btn.disabled = false;
+          btn.innerText = "습관 기록 완료";
+          if (res.success) {
+            alert("나의 습관이 역사가 되었습니다! 🌿");
+            document.getElementById('habit-comment').value = "";
+            document.getElementById('habit-preview-container').style.display = 'none';
+            loadArchiveFeed();
+          }
+        }).submitArchive(payload);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function loadActiveEvents() {
+      google.script.run.withSuccessHandler(events => {
+        if(events && events.length > 0) {
+          const surpriseGroup = document.getElementById('surprise-optgroup');
+          events.forEach(e => {
+            const opt = document.createElement('option');
+            opt.value = e.title;
+            opt.innerText = `⚡ [돌발] ${e.title} (15점)`;
+            surpriseGroup.appendChild(opt);
+          });
+        }
+      }).getActiveEvents();
+    }
+  </script>
+</body>
+</html>
+    reader.readAsDataURL(input.files[0]);
       }
     }
 

@@ -257,8 +257,13 @@ function forceUpdateAllHeaders() {
     noticeSheet.appendRow([1, "일반", "환영합니다! 노형점핑&체온테라피입니다."]);
   }
 
+  // 5. 아카이브 (실시간 피드용)
+  var archiveSheet = ss.getSheetByName("아카이브") || ss.insertSheet("아카이브");
+  var arHeaders = ["날짜", "시간", "이름", "전화번호", "유형", "항목", "코멘트", "사진ID", "점수"];
+  archiveSheet.getRange(1, 1, 1, arHeaders.length).setValues([arHeaders]);
+
   // 서식 정리
-  var allSheets = [regSheet, memberSheet, workLogSheet, logSheet, ibInput, ibWeekly, ibRank, ibSeason, resSheet, configSheet, salesSheet, holidaySheet];
+  var allSheets = [regSheet, memberSheet, workLogSheet, logSheet, ibInput, ibWeekly, ibRank, ibSeason, resSheet, configSheet, salesSheet, holidaySheet, archiveSheet];
   allSheets.forEach(function(s) {
     if (s) {
       var lastCol = s.getLastColumn();
@@ -269,7 +274,84 @@ function forceUpdateAllHeaders() {
     }
   });
 
-  SpreadsheetApp.getUi().alert("✅ [예약DB, 설정, 판매내역]을 포함한 모든 시트 구조가 완벽하게 정돈되었습니다!\n\n이제 ERP와 테라피 시스템을 동시에 사용하실 수 있습니다.");
+  SpreadsheetApp.getUi().alert("✅ [아카이브, 예약DB, 설정, 판매내역]을 포함한 모든 시트 구조가 완벽하게 정돈되었습니다!\n\n이제 ERP와 실시간 소셜 피드를 사용하실 수 있습니다.");
+}
+
+/**
+ * [아카이브] 최신 인증 피드 데이터 가져오기
+ */
+function getArchiveFeed() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("아카이브");
+    if (!sheet) return [];
+    
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return [];
+    
+    var startRow = Math.max(2, lastRow - 19); // 최신 20개
+    var numRows = lastRow - startRow + 1;
+    var data = sheet.getRange(startRow, 1, numRows, 9).getDisplayValues();
+    
+    // 역순 정렬 (최신이 위로)
+    return data.reverse().map(function(row) {
+      return {
+        date: row[0],
+        time: row[1],
+        name: row[2],
+        type: row[4],
+        item: row[5],
+        comment: row[6],
+        photoId: row[7],
+        score: row[8]
+      };
+    });
+  } catch (e) {
+    return { error: e.toString() };
+  }
+}
+
+/**
+ * [아카이브] 인증 기록 제출 (사진 업로드 포함)
+ */
+function submitArchive(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("아카이브");
+    var now = new Date();
+    
+    var photoId = "";
+    if (payload.image) {
+      var folder = getOrCreateFolder("GenieWorld_Archive");
+      var fileName = payload.name + "_" + payload.item + "_" + Utilities.formatDate(now, "GMT+9", "yyyyMMdd_HHmmss");
+      var blob = Utilities.newBlob(Utilities.base64Decode(payload.image.split(",")[1]), "image/jpeg", fileName);
+      var file = folder.createFile(blob);
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      photoId = file.getId();
+    }
+    
+    sheet.appendRow([
+      Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd"),
+      Utilities.formatDate(now, "GMT+9", "HH:mm:ss"),
+      payload.name,
+      payload.phone,
+      payload.type,
+      payload.item,
+      payload.comment || "",
+      photoId,
+      payload.score || 0
+    ]);
+    
+    return { success: true, photoId: photoId };
+  } catch (e) {
+    return { error: e.toString() };
+  }
+}
+
+function getOrCreateFolder(folderName) {
+  var folders = DriveApp.getFoldersByName(folderName);
+  if (folders.hasNext()) return folders.next();
+  return DriveApp.createFolder(folderName);
 }
 
 /**
