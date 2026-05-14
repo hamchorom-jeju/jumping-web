@@ -34,14 +34,40 @@ body {
 .v-global-header {
     background: var(--v-wood);
     color: var(--gold);
-    padding: 15px 20px;
-    text-align: center;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     border-bottom: 3px solid var(--gold);
+    position: sticky;
+    top: 0;
+    z-index: 3000;
 }
 
 .v-global-header h1 {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 900;
+    margin: 0;
+}
+
+.v-logout-btn {
+    background: transparent;
+    border: 1.5px solid var(--gold);
+    color: var(--gold);
+    padding: 5px 12px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+}
+
+.v-logout-btn:active {
+    transform: scale(0.95);
+    background: rgba(241, 196, 15, 0.1);
 }
 
 .v-container {

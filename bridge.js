@@ -74,6 +74,34 @@ if (typeof google === 'undefined' || !google.script) {
 }
 
 /**
+ * [v44.171] 글로벌 인증 및 로그아웃 시스템
+ */
+const Auth = {
+  check: function() {
+    const isLoginPage = window.location.pathname.includes('login.html');
+    if (isLoginPage) return;
+
+    const name = localStorage.getItem('v44_user_name');
+    const phone = localStorage.getItem('v44_user_phone');
+
+    if (!name || !phone) {
+      console.warn("🛡️ Auth: 세션이 만료되었거나 정보가 없습니다. 로그인 페이지로 이동합니다.");
+      window.location.href = 'login.html';
+    }
+  },
+  logout: function() {
+    if (confirm("🕌 지니 월드에서 퇴장하시겠습니까?")) {
+      localStorage.removeItem('v44_user_name');
+      localStorage.removeItem('v44_user_phone');
+      window.location.href = 'login.html';
+    }
+  }
+};
+
+// 페이지 로드 시 즉시 인증 체크 실행
+Auth.check();
+
+/**
  * [공용] 환경에 맞는 페이지 이동 도우미
  */
 function navigateTo(page, params = {}, openInNewTab = false) {
