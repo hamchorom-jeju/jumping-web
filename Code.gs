@@ -128,15 +128,40 @@ function getUserDashboardData(payload) {
       }
     }
 
-    // 2. 누적 점수 계산 (아카이브 시트)
+    // 2. 능력치 및 점수 계산 (아카이브 시트)
     var arcSheet = ss.getSheetByName("아카이브");
     var totalScore = 0;
+    var stats = { health: 0, perf: 0, def: 0 };
+    
+    var now = new Date();
+    var startOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1))); // 이번 주 월요일
+    startOfWeek.setHours(0, 0, 0, 0);
+
     if (arcSheet) {
       var arcData = arcSheet.getDataRange().getValues();
       for (var j = 1; j < arcData.length; j++) {
         var arcPhone = String(arcData[j][3]).replace(/[^0-9]/g, ""); // D열: 휴대폰
         if (arcPhone.indexOf(phone) > -1 || phone.indexOf(arcPhone) > -1) {
-          totalScore += Number(arcData[j][8] || 0); // I열: 점수
+          var score = Number(arcData[j][8] || 0);
+          totalScore += score;
+          
+          // 이번 주 기록인 경우 능력치 합산
+          var recDate = new Date(arcData[j][0]);
+          if (recDate >= startOfWeek) {
+            var type = String(arcData[j][4] || ""); // E열: 구분
+            if (type.indexOf("인바디") > -1 || type.indexOf("건강") > -1) {
+              stats.health += score;
+            } else if (type.indexOf("퀘스트") > -1) {
+              stats.perf += score;
+            } else if (type.indexOf("습관") > -1) {
+              stats.def += score;
+            } else { 
+              // 출석/로그인 또는 기타: 원장님 철학에 따라 3:4:3 분배
+              stats.health += Math.floor(score * 0.3);
+              stats.perf += Math.floor(score * 0.4);
+              stats.def += Math.floor(score * 0.3);
+            }
+          }
         }
       }
     }
@@ -147,9 +172,8 @@ function getUserDashboardData(payload) {
       tier: memberInfo.tier,
       totalScore: totalScore,
       rank: memberInfo.rank,
-      // 가짜 스탯 데이터 (추후 실제 데이터 연결 가능)
       stats: {
-        weekly: { health: Math.floor(totalScore*0.3), perf: Math.floor(totalScore*0.4), def: Math.floor(totalScore*0.3) },
+        weekly: stats,
         monthly: { health: totalScore, perf: totalScore, def: totalScore }
       }
     };
