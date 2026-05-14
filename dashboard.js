@@ -1,6 +1,6 @@
 /**
- * Nohyung Village Dashboard Logic (v44.105 - Grand Consistency Cleanup)
- * Features: Clean Habit Guides, Fixed Night Cut Buttons, Unified Points, v44.0 Immutable Base
+ * Nohyung Village Dashboard Logic (v44.107 - Context-Aware Modal & Final Miracle Plus)
+ * Features: Correct Quest Labels (나중에), Habit Labels (체크만 하기), Miracle Plus Final Text, v44.0 Immutable Base
  */
 
 const Village = {
@@ -38,7 +38,6 @@ const Village = {
         ]
     },
 
-    // 📜 Pure Guide Texts (v44.105 - No redundant point info in raw strings)
     habitData: {
         h1: { title: "모닝 티", icon: "🍵", guide: "기상 직후 따뜻한 물이나 차 한 잔은 밤새 잠들었던 장기를 깨우고 신진대사의 점화를 유도합니다. 체온보다 약간 높은 온도의 미온수를 권장하며, 이는 대사 촉진 및 독소 배출의 소중한 첫 단계가 됩니다.", link: "miracle.html?cat=habit&item=h1" },
         h2: { title: "모닝 스트레칭", icon: "🧘", guide: "기상 후 5분 내외의 가벼운 전신 스트레칭은 신체의 가동 범위를 확보하고 근육에 산소를 공급합니다. 목, 어깨, 허리 위주의 부드러운 이완으로 활기찬 하루를 시작해 보세요.", link: "miracle.html?cat=habit&item=h2" },
@@ -49,7 +48,7 @@ const Village = {
         h7: { title: "나이트 컷", icon: "🌙", guide: "밤 20시 이후의 금식은 신체가 소화가 아닌 '지방 연소와 세포 재생'에 집중하게 만듭니다. 지금 이 시간부터 아무것도 먹지 않겠다고 [모험가의 오아시스]에 다짐의 선언을 남겨보세요!\n\n\"저 지금부터는 아무것도 안 먹어요.. 약속합니다!!\" 라는 한마디가 강력한 수호의 시작입니다.", link: "oasis.html" },
         h8: { title: "굿 슬립", icon: "💤", guide: "세포가 재생되고 성장 호르몬이 활발히 분비되는 자정(24:00) 전 취침으로 신체 회복을 최적화하세요. 충분한 수면은 식욕 억제 호르몬인 렙틴의 분비를 도와 다이어트를 수월하게 만듭니다.", link: "#", single: true },
         h9: { title: "셀프 칭찬", icon: "👏", guide: "오늘 하루도 노력한 나자신을 위해 따뜻한 한마디를 해주며 셀프 허그를 해주세요.\n\"오늘도 수고했어 영희야!\"\n모험가의 오아시스 게시판에 셀프칭찬글도 남겨보세요.", link: "oasis.html" },
-        plus: { title: "미라클 플러스", icon: "✨", guide: "새벽 기상, 독서, 환경 수호 등 여러분의 인생을 풍요롭게 만드는 사소하지만 위대한 승리들을 기록해 보세요.", link: "miracle.html?cat=plus", single: true }
+        plus: { title: "미라클 플러스", icon: "✨", guide: "건강 습관 외에 인생을 풍요롭게 만드는 사소하지만 위대한 승리들을 인증해주세요.\n새벽기상, 독서인증, 환경수호 활동(플로깅 등) 등...\n\n📸 아카이브에 등록시 5점이 지급됩니다.\n(일 최대 1건 등록 가능)", link: "miracle.html?cat=plus", single: true }
     },
 
     rankings: [
@@ -68,14 +67,14 @@ const Village = {
     },
 
     init() {
-        console.log("v44.105 Grand Consistency Cleanup Initialized.");
+        console.log("v44.107 Area-Aware Logic Initialized.");
         this.renderAll();
         this.updateEvolution();
         this.startTicker();
         this.bindEvents();
     },
 
-    // ✨ Unified Premium Modal (Grand Cleaned v44.105)
+    // ✨ Area-Aware Premium Modal (v44.107)
     openModal(key, type = 'quest') {
         const data = (type === 'quest') ? this.quests[key] : this.habitData[key];
         const habit = (type === 'habit') ? this.user.habits.find(h => h.id === key) : null;
@@ -86,14 +85,14 @@ const Village = {
         
         let guideText = data.guide;
         if (type === 'habit') {
-            if (data.single) {
+            if (key === 'plus') {
+                // No extra footer needed, raw guide is perfect
+            } else if (data.single) {
                 guideText += `\n\n🌿 수호 완료 시 ${habit.base}점 지급`;
             } else if (key === 'h7') {
                 guideText += `\n\n🌿 수호 완료 시 ${habit.base}점 지급\n🌵 다짐의 선언 게시글 등록 시 5점 추가`;
             } else if (key === 'h9') {
                 guideText += `\n\n🌿 수호 완료 시 ${habit.base}점 지급\n👏 셀프칭찬 등록 시 5점 추가`;
-            } else if (key === 'plus') {
-                guideText += `\n\n📸 아카이브 인증 시 5점 추가`;
             } else {
                 guideText += `\n\n🌿 수호 완료 시 ${habit.base}점 지급\n📸 아카이브 인증 시 5점 추가`;
             }
@@ -103,27 +102,30 @@ const Village = {
         const cancelBtn = document.getElementById('modal-cancel-btn');
         const confirmBtn = document.getElementById('modal-confirm-btn');
         
+        // 🚨 BUTTON LOGIC RECOVERY (QUEST vs HABIT)
         if ((type === 'quest' && data.single) || (type === 'habit' && data.single)) {
             cancelBtn.style.display = 'none';
-            confirmBtn.innerText = (key === 'plus') ? "인증하러 가기" : "수호 완료";
+            confirmBtn.innerText = (key === 'plus') ? "인증하러 가기" : (type === 'habit' ? "수호 완료" : data.btn);
             confirmBtn.style.flex = "1";
         } else {
             cancelBtn.style.display = 'block';
-            const isBoardHabit = (key === 'h7' || key === 'h9');
-            cancelBtn.innerText = "체크만 하기";
-            confirmBtn.innerText = isBoardHabit ? "게시판 이동" : "인증하러 가기";
+            // Context-Aware Labels
+            cancelBtn.innerText = (type === 'habit') ? "체크만 하기" : "나중에";
+            confirmBtn.innerText = (type === 'habit') ? ((key === 'h7' || key === 'h9') ? "게시판 이동" : "인증하러 가기") : data.btn;
             confirmBtn.style.flex = "1.5";
         }
         
         cancelBtn.onclick = () => {
-            if (type === 'habit' && habit) this.applyHabitCheck(key, false);
+            if (type === 'habit' && habit && key !== 'h7' && key !== 'h9') this.applyHabitCheck(key, false);
             this.closeModal();
         };
 
         confirmBtn.onclick = () => {
             if (data.link !== "#") {
                 if (type === 'habit' && habit) this.applyHabitCheck(key, true);
-                location.href = data.link;
+                const finalLink = (type === 'habit' && key !== 'h7' && key !== 'h9' && key !== 'plus') 
+                    ? `miracle.html?cat=habit&item=${key}` : data.link;
+                location.href = finalLink;
             } else if (key === 'sync') {
                 this.syncClubRecordActual();
             } else if (type === 'habit' && data.single) {
