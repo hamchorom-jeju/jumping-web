@@ -78,8 +78,20 @@ const Village = {
 
     loadRealData() {
         const params = new URLSearchParams(window.location.search);
-        const phone = (params.get('phone') || '').trim();
-        if (!phone) return;
+        let phone = (params.get('phone') || '').trim();
+        
+        // [v44.169] URL에 정보가 없으면 브라우저 저장소(localStorage)에서 복원 시도
+        if (!phone) {
+            phone = (localStorage.getItem('v44_user_phone') || '').trim();
+            if (phone) {
+                console.log("v44.169 Session Restored from Storage:", phone);
+            }
+        }
+        
+        if (!phone) {
+            console.warn("v44.169 No user identity found. Redirecting to login.");
+            return;
+        }
 
         if (typeof google !== 'undefined' && google.script && google.script.run) {
             google.script.run
