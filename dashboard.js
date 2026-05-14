@@ -1,6 +1,6 @@
 /**
- * Nohyung Village Dashboard Logic (v44.91 - Premium Quest Modals)
- * Features: Rich Quest Instructions, Reordered Hub, v44.0 Immutable Base
+ * Nohyung Village Dashboard Logic (v44.93 - Logic Correction)
+ * Features: Single/Dual Modal Buttons, Descriptive Guides, v44.0 Immutable Base
  */
 
 const Village = {
@@ -46,35 +46,73 @@ const Village = {
     ],
     currentRankIndex: 0,
 
-    // ⚔️ Quest Content Data
+    // ⚔️ Quest Content Data (v44.93 Corrected)
     quests: {
-        sync: { title: "클럽 동기화", icon: "⚡", guide: "클럽 출석 점수를 반영합니다.\n출석점수 15포인트, 운동량에 따라 최대 20포인트!", reward: "+20 EXP 하사", link: "#" },
-        visit: { title: "방문 인증", icon: "📸", guide: "클럽에 출석하셨나요? 방문인증을 남겨보세요.\n아카이브에 사진 등록 시 15포인트 추가!", reward: "+15 EXP 하사", link: "miracle.html?cat=visit" },
-        meal: { title: "식단 인증", icon: "🍱", guide: "오늘 어떤 영양으로 몸을 채우셨나요? 식단 사진을 기록소에 남겨보세요.\n꾸준한 식단 기록은 아바타 진화의 가장 강력한 연료입니다!\n(인증 시 15포인트 추가!)", reward: "+15 EXP 하사", link: "miracle.html?cat=meal" },
-        water: { title: "워터 헌터", icon: "💧", guide: "수분 섭취량에 따라 점수 차등 지급!\n섭취량만큼 게이지를 조정하고 인증 시 15포인트 추가!", reward: "+15 EXP 하사", link: "miracle.html?cat=water" },
-        bonus: { title: "보너스 퀘스트", icon: "✨", guide: "돌발 미션을 수행하시겠어요?\n아카이브로 이동해 인증을 남기실 수 있습니다.\n이동하시겠어요?", reward: "+20 EXP 하사", link: "miracle.html?cat=bonus" }
+        sync: { 
+            title: "클럽 동기화", icon: "⚡", 
+            guide: "클럽 출석 점수를 반영하시겠어요?\n오늘 클럽에 출석 하셨다면 15포인트,\n운동량에 따라 최대 20포인트가 반영됩니다.", 
+            btn: "동기화 수행", link: "#", single: true 
+        },
+        visit: { 
+            title: "방문 인증", icon: "📸", 
+            guide: "클럽에 출석하셨나요? 방문 인증을 남겨보세요.\n아카이브에 사진 등록 시 15포인트가 추가 하사됩니다!", 
+            btn: "인증하러 가기", link: "miracle.html?cat=visit", single: false 
+        },
+        meal: { 
+            title: "식단 인증", icon: "🍱", 
+            guide: "오늘 어떤 영양으로 몸을 채우셨나요?\n식단 사진을 기록소에 남겨보세요. 15포인트가 추가 하사됩니다!", 
+            btn: "인증하러 가기", link: "miracle.html?cat=meal", single: false 
+        },
+        water: { 
+            title: "워터 헌터", icon: "💧", 
+            guide: "수분 섭취량에 따라 점수 차등 지급!\n섭취량만큼 게이지를 조절하고 인증 시 15포인트가 추가 하사됩니다!", 
+            btn: "인증하러 가기", link: "miracle.html?cat=water", single: false 
+        },
+        bonus: { 
+            title: "보너스 퀘스트", icon: "✨", 
+            guide: "돌발 미션을 수행하시겠어요?\n아카이브로 이동해 인증을 남기실 수 있습니다.\n이동하시겠어요?", 
+            btn: "이동하기", link: "miracle.html?cat=bonus", single: false 
+        }
     },
 
     init() {
-        console.log("v44.91 Premium Quest Logic Initialized.");
+        console.log("v44.93 Logical Correction Engine Initialized.");
         this.renderAll();
         this.updateEvolution();
         this.startTicker();
         this.bindEvents();
     },
 
-    // ✨ Premium Modal Handling
+    // ✨ Refined Modal Handling
     openQuestModal(key) {
         const q = this.quests[key];
         if (!q) return;
+        
         document.getElementById('modal-habit-icon').innerText = q.icon;
         document.getElementById('modal-habit-title').innerText = q.title;
         document.getElementById('modal-habit-guide').innerText = q.guide;
-        document.getElementById('modal-reward-val').innerText = q.reward;
         
+        const cancelBtn = document.getElementById('modal-cancel-btn');
         const confirmBtn = document.getElementById('modal-confirm-btn');
+        
+        // Single/Dual Button Toggle
+        if (q.single) {
+            cancelBtn.style.display = 'none';
+            confirmBtn.innerText = q.btn;
+            confirmBtn.style.flex = "1";
+        } else {
+            cancelBtn.style.display = 'block';
+            cancelBtn.innerText = "나중에";
+            confirmBtn.innerText = q.btn;
+            confirmBtn.style.flex = "1.5";
+        }
+        
         confirmBtn.onclick = () => {
-            if (q.link !== "#") location.href = q.link;
+            if (q.link !== "#") {
+                location.href = q.link;
+            } else if (key === 'sync') {
+                this.syncClubRecordActual();
+            }
             this.closeModal();
         };
 
@@ -85,6 +123,16 @@ const Village = {
         document.getElementById('habit-modal').style.display = 'none';
     },
 
+    syncClubRecordActual() {
+        setTimeout(() => {
+            alert("🏡 [클럽 동기화 완료!] 15 EXP가 반영되었습니다.");
+            this.user.stats.weekly.perf += 15;
+            this.user.totalScore += 15;
+            this.renderAll();
+            this.updateEvolution();
+        }, 1000);
+    },
+
     startTicker() {
         const ticker = document.getElementById('ranking-ticker');
         setInterval(() => {
@@ -92,7 +140,7 @@ const Village = {
             const r = this.rankings[this.currentRankIndex];
             ticker.style.opacity = 0;
             setTimeout(() => {
-                ticker.innerHTML = `<span style="font-size:0.7rem; opacity:0.7; display:block; margin-bottom:2px;">[${r.type}]</span>${r.content}`;
+                ticker.innerHTML = `<span style="font-size:0.75rem; opacity:0.7; display:block; margin-bottom:4px;">[${r.type}]</span>${r.content}`;
                 ticker.style.opacity = 1;
                 ticker.style.transition = 'opacity 0.5s';
             }, 500);
@@ -104,15 +152,12 @@ const Village = {
         document.getElementById('total-score').innerText = this.user.totalScore.toLocaleString();
         document.getElementById('current-rank').innerText = this.user.rank;
         document.getElementById('water-val').innerText = `${this.user.water}L / 2.0L`;
-
         const view = this.perspective;
         const currentData = this.user.stats[view];
         const maxData = this.user.max[view];
-
         this.updateGauge('health', currentData.health, maxData.health);
         this.updateGauge('perf', currentData.perf, maxData.perf);
         this.updateGauge('def', currentData.def, maxData.def);
-
         this.renderHabits();
     },
 

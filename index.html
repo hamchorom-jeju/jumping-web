@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GENIE WORLD - Nohyung Village v44.91</title>
-    <!-- v44.91 Quest Hub Optimization CSS -->
+    <title>GENIE WORLD - Nohyung Village v44.93</title>
+    <!-- v44.93 Quest Logic Correction CSS -->
     <link rel="stylesheet" href="index.css">
     <!-- Icon Library -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -31,7 +31,7 @@
             ⚡ [보너스 퀘스트] 지금 바로 인증 시 방어력 +20!
         </div>
 
-        <!-- 📋 모험가 상태창 (v44.0 LITERAL CLONE - IMMUTABLE) -->
+        <!-- 📋 모험가 상태창 (v44.0 IMMUTABLE) -->
         <section class="status-window-v43">
             <div class="profile-card">
                 <div class="avatar-v43">🧚‍♂️</div>
@@ -75,11 +75,11 @@
             </div>
         </section>
 
-        <!-- ⚔️ 퀘스트 허브 (v44.91 Reordered) -->
+        <!-- ⚔️ 퀘스트 허브 -->
         <section class="v-quest-hub">
             <h3 style="font-size: 1rem; font-weight: 900; color: var(--v-wood); margin-bottom: 15px;">⚔️ 퀘스트 활성화 (Quest)</h3>
             
-            <!-- 💧 Water Hunter (Moved to Top) -->
+            <!-- 💧 Water Hunter (Top) -->
             <div style="background: #fff; padding: 15px; border-radius: 20px; border: 2px solid var(--v-border); margin-bottom: 15px; cursor: pointer;" onclick="Village.openQuestModal('water')">
                 <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.85rem; margin-bottom: 10px;">
                     <span>💧 워터 헌터 (수분 보충)</span><span id="water-val">1.2L / 2.0L</span>
@@ -104,7 +104,7 @@
 
     </div>
 
-    <!-- ✨ PREMIUM QUEST MODAL (Shared with Habit logic) -->
+    <!-- ✨ PREMIUM QUEST MODAL (Refined for v44.93) -->
     <div id="habit-modal" class="v-modal-overlay" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); align-items: center; justify-content: center; z-index: 9999; padding: 20px;">
         <div class="v-modal-card" style="background: #fff; width: 100%; max-width: 400px; border-radius: 35px; padding: 35px 25px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.3); border: 2.5px solid var(--gold);">
             <div class="v-modal-header">
@@ -112,15 +112,17 @@
                 <h2 id="modal-habit-title" style="font-size: 1.5rem; font-weight: 900; color: var(--v-wood); margin-bottom: 20px;">퀘스트 가이드</h2>
             </div>
             <div class="v-modal-body">
-                <p id="modal-habit-guide" style="font-size: 0.95rem; line-height: 1.6; color: var(--text-dim); font-weight: 700; padding: 20px; background: var(--v-paper); border-radius: 20px; margin-bottom: 20px;"></p>
-                <div class="v-modal-reward" id="modal-reward-area">
-                    <span style="font-size: 0.7rem; font-weight: 900; color: var(--text-dim); display: block; text-transform: uppercase;">수행 보상</span>
-                    <span id="modal-reward-val" style="font-size: 1.3rem; font-weight: 900; color: var(--emerald);">+15 EXP 하사!</span>
+                <!-- Descriptive Text (Primary Content) -->
+                <p id="modal-habit-guide" style="font-size: 1rem; line-height: 1.6; color: var(--text-dim); font-weight: 700; padding: 20px; background: var(--v-paper); border-radius: 20px; margin-bottom: 20px; white-space: pre-wrap;"></p>
+                <!-- Optional Reward Area (Hidden by default in v44.93 for cleaner look) -->
+                <div class="v-modal-reward" id="modal-reward-area" style="display:none; margin-bottom: 25px;">
+                    <span style="font-size: 0.7rem; font-weight: 900; color: var(--text-dim); display: block; text-transform: uppercase;">예상 보상</span>
+                    <span id="modal-reward-val" style="font-size: 1.3rem; font-weight: 900; color: var(--emerald);"></span>
                 </div>
             </div>
             <div class="v-modal-footer" style="display: flex; gap: 10px;">
-                <button class="v-modal-btn secondary" onclick="Village.closeModal()" style="background:#eee; color:#777; border-radius:15px; padding:15px; border:none; flex:1; cursor:pointer; font-weight:900;">머무르기</button>
-                <button class="v-modal-btn primary" id="modal-confirm-btn" style="background: var(--v-wood); color: var(--gold); border-radius:15px; flex:1.2; padding:15px; border:none; cursor:pointer; font-weight:900;">기록소 이동</button>
+                <button class="v-modal-btn secondary" id="modal-cancel-btn" onclick="Village.closeModal()" style="background:#eee; color:#777; border-radius:15px; padding:15px; border:none; flex:1; cursor:pointer; font-weight:900;">나중에</button>
+                <button class="v-modal-btn primary" id="modal-confirm-btn" style="background: var(--v-wood); color: var(--gold); border-radius:15px; flex:1.5; padding:15px; border:none; cursor:pointer; font-weight:900;">수행하기</button>
             </div>
         </div>
     </div>
