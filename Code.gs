@@ -12,8 +12,7 @@ function pingServer() {
     var sheets = ss.getSheets().map(function(s) { return s.getName(); });
     return { 
       success: true, 
-      sheets: sheets, 
-      user: Session.getActiveUser().getEmail() || "알 수 없는 사용자" 
+      sheets: sheets 
     };
   } catch (e) {
     return { success: false, error: e.toString() };

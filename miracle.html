@@ -358,13 +358,29 @@
         .getActiveEvents();
     }
     function checkConnection() {
-      alert("서버에 응답을 요청합니다... 잠시만 기다려 주세요.");
+      if (typeof google === 'undefined' || !google.script || !google.script.run) {
+        alert("🚨 구글 통신 엔진을 찾을 수 없습니다.\n\n현재 구글 공식 주소가 아닌 외부 주소(Vercel 등)로 접속하신 것 같습니다. 카톡으로 보내드린 '구글 앱스 스크립트' 공식 링크로 접속해 주세요!");
+        return;
+      }
+
+      alert("🛰️ 서버 연결을 시도합니다. (최대 10초)\n확인을 누르고 잠시만 기다려 주세요.");
+      
+      const timeout = setTimeout(() => {
+        alert("🚨 통신 타임아웃!\n서버가 10초 동안 응답하지 않습니다.\n\n[해결 방법]\n1. 구글 계정이 여러 개 로그인되어 있다면 하나만 남기고 로그아웃해 보세요.\n2. 브라우저의 '시크릿 모드'로 접속해 보세요.");
+      }, 10000);
+
       google.script.run
         .withSuccessHandler(res => {
-          alert(`🛰️ 서버 연결 성공!\n현재 서버 시트 목록: ${res.sheets.join(', ')}\n사용자: ${res.user}`);
+          clearTimeout(timeout);
+          if (res && res.success) {
+            alert(`✅ 연결 성공!\n\n시트 목록: ${res.sheets.join(', ')}\n\n이제 기록 저장을 시도해 보세요!`);
+          } else {
+            alert("🚨 서버는 응답했으나 내부 오류가 있습니다: " + (res ? res.error : "알 수 없음"));
+          }
         })
         .withFailureHandler(err => {
-          alert(`🚨 서버 연결 실패: ${err.toString()}\n\n구글 로그인이 되어 있는지, 혹은 웹앱 배포가 정상인지 확인이 필요합니다.`);
+          clearTimeout(timeout);
+          alert("🚨 서버 통신 실패: " + err.toString());
         })
         .pingServer();
     }
