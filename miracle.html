@@ -6,6 +6,7 @@
   <title>ALTAR OF MIRACLES - GENIE WORLD</title>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="bridge.js"></script>
   <style>
     :root {
       --v-wood: #5d4037;
@@ -190,11 +191,6 @@
       <div class="section-title">✨ 지금 마을의 기적들</div>
       <div id="feed-loader" class="loader"></div>
       <div id="archive-feed"></div>
-      
-      <!-- 🛠️ 진단 도구 (추후 삭제 예정) -->
-      <div style="margin-top: 50px; text-align: center;">
-        <button onclick="checkConnection()" style="background:none; border:1px solid var(--v-border); color:var(--text-dim); padding:10px 20px; border-radius:10px; font-size:0.7rem; font-weight:800;">🛰️ 서버 연결 확인</button>
-      </div>
     </section>
   </div>
 
@@ -356,33 +352,6 @@
         })
         .withFailureHandler(() => {})
         .getActiveEvents();
-    }
-    function checkConnection() {
-      if (typeof google === 'undefined' || !google.script || !google.script.run) {
-        alert("🚨 구글 통신 엔진을 찾을 수 없습니다.\n\n현재 구글 공식 주소가 아닌 외부 주소(Vercel 등)로 접속하신 것 같습니다. 카톡으로 보내드린 '구글 앱스 스크립트' 공식 링크로 접속해 주세요!");
-        return;
-      }
-
-      alert("🛰️ 서버 연결을 시도합니다. (최대 10초)\n확인을 누르고 잠시만 기다려 주세요.");
-      
-      const timeout = setTimeout(() => {
-        alert("🚨 통신 타임아웃!\n서버가 10초 동안 응답하지 않습니다.\n\n[해결 방법]\n1. 구글 계정이 여러 개 로그인되어 있다면 하나만 남기고 로그아웃해 보세요.\n2. 브라우저의 '시크릿 모드'로 접속해 보세요.");
-      }, 10000);
-
-      google.script.run
-        .withSuccessHandler(res => {
-          clearTimeout(timeout);
-          if (res && res.success) {
-            alert(`✅ 연결 성공!\n\n시트 목록: ${res.sheets.join(', ')}\n\n이제 기록 저장을 시도해 보세요!`);
-          } else {
-            alert("🚨 서버는 응답했으나 내부 오류가 있습니다: " + (res ? res.error : "알 수 없음"));
-          }
-        })
-        .withFailureHandler(err => {
-          clearTimeout(timeout);
-          alert("🚨 서버 통신 실패: " + err.toString());
-        })
-        .pingServer();
     }
   </script>
 </body>
