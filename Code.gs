@@ -149,19 +149,34 @@ function getUserDashboardData(payload) {
           var recDate = new Date(arcData[j][0]);
           if (recDate >= startOfWeek) {
             var type = String(arcData[j][4] || ""); // E열: 구분
-            if (type.indexOf("인바디") > -1 || type.indexOf("건강") > -1) {
-              stats.health += score;
-            } else if (type.indexOf("퀘스트") > -1) {
+            if (type.indexOf("퀘스트") > -1) {
               stats.perf += score;
             } else if (type.indexOf("습관") > -1) {
               stats.def += score;
+            } else if (type.indexOf("인바디") > -1 || type.indexOf("건강") > -1) {
+              stats.health += score;
             } else { 
-              // 출석/로그인 또는 기타: 원장님 철학에 따라 3:4:3 분배
+              // 출석/로그인 또는 기타: 3:4:3 분배
               stats.health += Math.floor(score * 0.3);
               stats.perf += Math.floor(score * 0.4);
               stats.def += Math.floor(score * 0.3);
             }
           }
+        }
+      }
+    }
+
+    // 3. 인바디 전용 점수 합산 (33챌린지_인바디 시트) - v39 규격 적용 (v44.159)
+    // 3. 인바디 점수 합산 (33챌린지_인바디 시트) - v39 규격 적용 (v44.160)
+    var inbodySheet = ss.getSheetByName("33챌린지_인바디");
+    if (inbodySheet) {
+      var inbodyData = inbodySheet.getDataRange().getValues();
+      for (var k = 1; k < inbodyData.length; k++) {
+        var inbodyPhone = String(inbodyData[k][2]).replace(/[^0-9]/g, ""); // C열: 연락처
+        if (inbodyPhone.indexOf(phone) > -1 || phone.indexOf(inbodyPhone) > -1) {
+          var inbodyScore = Number(inbodyData[k][6] || 0); // G열: 변화점수
+          stats.health += inbodyScore;
+          totalScore += inbodyScore;
         }
       }
     }
@@ -177,6 +192,62 @@ function getUserDashboardData(payload) {
         monthly: { health: totalScore, perf: totalScore, def: totalScore }
       }
     };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * [v44.160] 인바디 기록 저장 및 v39 자동 점수 계산
+ */
+function submitInBodyRecord(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("33챌린지_인바디") || ss.insertSheet("33챌린지_인바디");
+    
+    var name = payload.name;
+    var phone = String(payload.phone || "").replace(/[^0-9]/g, "");
+    var weight = Number(payload.weight);
+    var muscle = Number(payload.muscle);
+    var fat = Number(payload.fat);
+    
+    // 이전 기록 찾기 (점수 계산용)
+    var data = sheet.getDataRange().getValues();
+    var prevRecord = null;
+    for (var i = data.length - 1; i >= 1; i--) {
+      if (String(data[i][2]).replace(/[^0-9]/g, "") === phone) {
+        prevRecord = { weight: data[i][3], muscle: data[i][4], fat: data[i][5] };
+        break;
+      }
+    }
+    
+    var changeScore = 0;
+    if (prevRecord) {
+      // v39 공식 적용 (100g = 0.1kg)
+      var diffWeight = Number((prevRecord.weight - weight).toFixed(2)); // 감량(+)
+      var diffMuscle = Number((muscle - prevRecord.muscle).toFixed(2)); // 증량(+)
+      var diffFat = Number((prevRecord.fat - fat).toFixed(1)); // 감량(+)
+      
+      if (diffWeight > 0) changeScore += (diffWeight * 10) * 50; 
+      if (diffMuscle > 0) changeScore += (diffMuscle * 10) * 100;
+      if (diffFat > 0) changeScore += (diffFat * 10) * 75;
+      
+      // 유지 보너스 (+100)
+      if (Math.abs(diffWeight) <= 0.2) changeScore += 100;
+    }
+    
+    sheet.appendRow([
+      new Date(),
+      name,
+      phone,
+      weight,
+      muscle,
+      fat,
+      changeScore,
+      payload.remarks || ""
+    ]);
+    
+    return { success: true, score: changeScore };
   } catch (e) {
     return { success: false, error: e.toString() };
   }
