@@ -9,65 +9,85 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="점핑테라피">
   <link rel="apple-touch-icon" href="therapy-icon.png">
-  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <style>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&disp  <style>
     :root {
-      --primary: #6b46c1; /* 고급스러운 보라색 톤으로 변경 */
-      --primary-light: #9f7aea;
-      --secondary: #4a90e2;
-      --bg-light: #f8fafc;
-      --white: #ffffff;
-      --text-main: #1a202c;
-      --text-sub: #718096;
-      --danger: #e53e3e;
-      --success: #38a169;
+      --v-bg: #fffdf5;
+      --v-wood: #5d4037;
+      --v-paper: #fef9e7;
+      --v-border: #d2b48c;
+      --emerald: #2ecc71;
+      --gold: #f1c40f;
+      --text-main: #2b1d0e;
+      --text-dim: #5d4037;
+      --primary: var(--v-wood);
+      --success: var(--emerald);
       --shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-      --glass: rgba(255, 255, 255, 0.8);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; }
     
     body { 
-      background-color: var(--bg-light); 
-      background-image: radial-gradient(circle at top right, rgba(107, 70, 193, 0.05), transparent),
-                        radial-gradient(circle at bottom left, rgba(74, 144, 226, 0.05), transparent);
+      background-color: var(--v-bg); 
       color: var(--text-main); 
-      padding: 30px; 
-      max-width: 700px; /* 태블릿 맞춤 너비 */
+      padding-bottom: 120px; 
+      max-width: 700px; 
       margin: 0 auto; 
       min-height: 100vh;
-      line-height: 1.6;
     }
 
-    /* 태블릿/키오스크용 강력한 확대 */
-    @media (min-width: 768px) {
-      body { max-width: 950px; padding: 50px; }
-      .header img { max-width: 300px; margin-bottom: 20px; }
-      .action-btn { padding: 60px 30px; font-size: 1.5rem; border-radius: 30px; }
-      .btn-icon { font-size: 4rem; margin-bottom: 15px; }
-      .step { padding: 40px; border-radius: 32px; }
-      .step-title { font-size: 1.8rem; margin-bottom: 30px; }
-      .step-num { width: 35px; height: 35px; font-size: 1.1rem; }
-      input { padding: 30px; font-size: 2rem; border-radius: 20px; }
-      .primary-btn { padding: 30px; font-size: 1.6rem; border-radius: 20px; }
-      .btn-grid { gap: 20px; }
-      .btn-item { padding: 35px 20px; font-size: 1.3rem; border-radius: 24px; }
-      .summary-header { font-size: 1.6rem; margin-bottom: 25px; }
-      .summary-item { padding: 20px 0; }
-      .summary-time { font-size: 1.3rem; min-width: 120px; }
-      .summary-names { font-size: 1.3rem; }
+    /* 🏛️ GLOBAL APP HEADER (Fixed) */
+    .v-global-header {
+        background: #fff;
+        padding: 18px;
+        text-align: center;
+        border-bottom: 2px solid var(--v-paper);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+    }
+    .v-global-header h1 {
+        font-size: 1.1rem;
+        font-weight: 900;
+        color: var(--v-wood);
+        letter-spacing: -0.5px;
     }
 
-    /* 로고 영역 */
-    .header { text-align: center; padding: 20px 0 10px; }
-    .header img { max-width: 320px; height: auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+    /* 📱 GLOBAL VILLAGE NAV (Standardized v44.116) */
+    .v-nav {
+        position: fixed;
+        bottom: 0; left: 0; width: 100%;
+        background: #fff;
+        display: flex; justify-content: space-around;
+        padding: 12px 10px 35px;
+        border-top: 2px solid var(--v-paper);
+        z-index: 2000;
+    }
+    .v-nav-item {
+        text-align: center;
+        color: #94a3b8;
+        text-decoration: none;
+        font-size: 0.65rem;
+        font-weight: 900;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        flex: 1;
+    }
+    .v-nav-item i { font-size: 1.6rem; }
+    .v-nav-item img { width: 22px; height: 22px; border-radius: 4px; }
+    .v-nav-item.active { color: var(--gold); } /* Golden highlight for active */
+
+    .container { padding: 20px; }
 
     /* 공지사항 배너 */
     #notice-banner { 
-      background: var(--white);
-      border-left: 4px solid var(--primary);
-      padding: 12px 16px;
-      border-radius: 12px;
+      background: var(--v-paper);
+      border-left: 4px solid var(--emerald);
+      padding: 15px;
+      border-radius: 15px;
       margin-bottom: 25px;
       box-shadow: var(--shadow);
       display: flex;
@@ -75,13 +95,13 @@
       gap: 10px;
       overflow: hidden;
       position: relative;
+      border: 1px solid var(--v-border);
     }
     #notice-content { 
-      font-size: 0.95rem; 
-      font-weight: 700; 
-      color: var(--text-main);
+      font-size: 0.9rem; 
+      font-weight: 800; 
+      color: var(--v-wood);
       white-space: nowrap;
-      width: max-content;
       animation: marquee 14s linear infinite;
     }
     @keyframes marquee {
@@ -92,10 +112,10 @@
     /* 메인 버튼 그리드 */
     .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
     .action-btn {
-      padding: 30px 15px;
-      border-radius: 20px;
+      padding: 25px 15px;
+      border-radius: 25px;
       cursor: pointer;
-      font-weight: 800;
+      font-weight: 900;
       font-size: 1rem;
       text-align: center;
       transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -104,44 +124,46 @@
       align-items: center;
       justify-content: center;
       box-shadow: var(--shadow);
-      border: 1px solid var(--white);
+      background: #fff;
+      border: 2px solid var(--v-border);
+      color: var(--v-wood);
     }
     .action-btn:active { transform: scale(0.95); }
-    .btn-booking { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; }
-    .btn-lookup { background: var(--white); color: var(--text-main); }
-    .btn-icon { font-size: 2.2rem; margin-bottom: 10px; display: block; }
+    .btn-booking { background: var(--v-paper); border-color: var(--emerald); }
+    .btn-icon { font-size: 2.2rem; margin-bottom: 8px; display: block; }
 
     /* 스텝 영역 */
     .step { 
       display: none; 
-      background: var(--white); 
+      background: #fff; 
       padding: 25px; 
-      border-radius: 24px; 
+      border-radius: 25px; 
       margin-bottom: 20px; 
       box-shadow: var(--shadow);
-      border: 1px solid #f1f5f9;
+      border: 2px solid var(--v-paper);
     }
     .active { display: block; animation: slideUp 0.4s ease-out; }
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     
-    .step-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 20px; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
-    .step-num { background: var(--primary); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+    .step-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 20px; color: var(--v-wood); display: flex; align-items: center; gap: 10px; }
+    .step-num { background: var(--emerald); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
 
     /* 입력창 & 버튼 */
     input { 
-      width: 100%; padding: 18px; font-size: 1.4rem; font-weight: 700; 
-      border: 2px solid #e2e8f0; border-radius: 16px; background: #f8fafc;
+      width: 100%; padding: 18px; font-size: 1.5rem; font-weight: 800; 
+      border: 2px solid var(--v-border); border-radius: 20px; background: var(--v-paper);
       text-align: center; outline: none; transition: all 0.2s; margin-bottom: 15px;
+      color: var(--v-wood);
     }
-    input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(107, 70, 193, 0.1); }
+    input:focus { border-color: var(--emerald); background: white; }
     
     .primary-btn { 
-      width: 100%; padding: 18px; background: var(--primary); color: white; border: none; 
-      border-radius: 16px; font-weight: 700; font-size: 1.1rem; cursor: pointer; 
-      box-shadow: 0 4px 12px rgba(107, 70, 193, 0.3); transition: all 0.2s;
+      width: 100%; padding: 18px; background: var(--v-wood); color: #fff; border: none; 
+      border-radius: 20px; font-weight: 900; font-size: 1.1rem; cursor: pointer; 
+      transition: all 0.2s;
     }
     .primary-btn:active { transform: scale(0.97); }
-    .primary-btn:disabled { background: #cbd5e0; cursor: not-allowed; box-shadow: none; }
+    .primary-btn:disabled { background: #ccc; cursor: not-allowed; }
 
     /* 리스트 버튼 그리드 */
     .btn-grid { display: grid; gap: 12px; }
@@ -149,109 +171,71 @@
     .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
 
     .btn-item { 
-      padding: 18px 10px; border: 1.5px solid #e2e8f0; border-radius: 16px; background: white; 
-      cursor: pointer; text-align: center; font-weight: 700; color: var(--text-main);
+      padding: 18px 10px; border: 2px solid var(--v-border); border-radius: 18px; background: #fff; 
+      cursor: pointer; text-align: center; font-weight: 800; color: var(--v-wood);
       transition: all 0.2s; font-size: 0.95rem; display: flex; flex-direction: column; gap: 4px;
     }
     .btn-item:active { transform: scale(0.96); }
-    .selected { background: var(--primary) !important; color: white !important; border-color: var(--primary); transform: scale(1.02); box-shadow: 0 8px 15px rgba(107, 70, 193, 0.2); }
-    .booked { background: #f1f5f9; color: #cbd5e0; cursor: not-allowed; border-color: #f1f5f9; }
+    .selected { background: var(--emerald) !important; color: white !important; border-color: var(--emerald); }
+    .booked { background: #f0f0f0; color: #ccc; cursor: not-allowed; border-color: #eee; }
 
     /* 하단 현황 섹션 */
     #summary-section { 
-      margin-top: 40px; background: var(--white); padding: 25px; border-radius: 24px; 
-      box-shadow: var(--shadow); border: 1px solid #f1f5f9;
+      margin-top: 40px; background: #fff; padding: 25px; border-radius: 25px; 
+      box-shadow: var(--shadow); border: 2px solid var(--v-paper);
     }
-    .summary-header { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-weight: 800; font-size: 1.1rem; }
-    .summary-item { padding: 12px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
-    .summary-item:last-child { border-bottom: none; }
-    .summary-time { font-weight: 700; color: var(--primary); min-width: 70px; }
-    .summary-names { color: var(--text-main); font-weight: 500; flex: 1; text-align: right; }
-
-    .back-btn {
-      background: #edf2f7;
-      border: none;
-      border-radius: 12px;
-      padding: 10px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--text-main);
-      transition: all 0.2s;
-    }
-    .back-btn:active { transform: scale(0.95); background: #e2e8f0; }
-
+    .summary-header { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-weight: 900; font-size: 1.1rem; color: var(--v-wood); }
+    
     /* 예약 현황 카드 스타일 */
-    .cards-container { display: flex; flex-direction: column; gap: 20px; }
+    .cards-container { display: flex; flex-direction: column; gap: 15px; }
     .summary-card { 
-      background: #ffffff; border-radius: 20px; border: 1px solid #edf2f7; 
-      box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow: hidden; 
-      transition: transform 0.2s;
+      background: #ffffff; border-radius: 20px; border: 1.5px solid var(--v-paper); 
+      overflow: hidden; 
     }
-    .card-today { border: 2px solid var(--primary); box-shadow: 0 10px 20px rgba(107, 70, 193, 0.1); }
-    
-    .card-header { 
-      padding: 12px 20px; background: #f8fafc; border-bottom: 1px solid #edf2f7;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .card-today .card-header { background: rgba(107, 70, 193, 0.05); }
-    
-    .card-date { font-weight: 800; font-size: 1.1rem; color: var(--text-main); }
-    .today-badge { 
-      background: var(--primary); color: white; padding: 4px 10px; 
-      border-radius: 8px; font-size: 0.75rem; font-weight: 800; 
-    }
-    
-    .card-body { padding: 10px 20px; }
-    .no-res { padding: 15px; text-align: center; color: var(--text-sub); font-size: 0.9rem; opacity: 0.6; }
-    
-    .res-row { 
-      padding: 12px 0; border-bottom: 1px dashed #edf2f7; 
-      display: grid; grid-template-columns: 80px 1fr 100px; align-items: center;
-      font-size: 1rem;
-    }
-    .res-row:last-child { border-bottom: none; }
-    .res-time { font-weight: 700; color: var(--primary); }
-    .res-name { font-weight: 600; color: var(--text-main); }
-    .res-room { font-size: 0.85rem; color: var(--text-sub); text-align: right; }
+    .card-today { border: 2px solid var(--emerald); }
+    .card-header { padding: 12px 20px; background: var(--v-paper); display: flex; justify-content: space-between; align-items: center; }
+    .card-date { font-weight: 900; font-size: 1rem; color: var(--v-wood); }
+    .today-badge { background: var(--emerald); color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 900; }
+    .res-row { padding: 12px 15px; border-bottom: 1px dashed var(--v-border); display: grid; grid-template-columns: 80px 1fr 80px; align-items: center; font-size: 0.9rem; }
+    .res-time { font-weight: 800; color: var(--emerald); }
+    .res-name { font-weight: 700; color: var(--v-wood); }
+    .res-room { font-size: 0.8rem; color: var(--text-dim); text-align: right; }
 
-    /* 태블릿용 글씨 크기 보정 */
-    @media (min-width: 768px) {
-      .card-date { font-size: 1.4rem; }
-      .res-row { font-size: 1.25rem; grid-template-columns: 120px 1fr 150px; padding: 18px 0; }
-      .res-room { font-size: 1.1rem; }
-      .today-badge { font-size: 1rem; padding: 6px 15px; }
-    }
-
-    /* 로딩 애니메이션 복구 */
-    .skeleton {
-      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-      background-size: 200% 100%;
-      animation: skeleton-loading 1.5s infinite;
-      border-radius: 16px;
-      margin-bottom: 10px;
-    }
-    @keyframes skeleton-loading {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
+    .back-btn { background: var(--v-paper); border: none; border-radius: 12px; padding: 10px 15px; font-size: 0.85rem; font-weight: 800; color: var(--v-wood); cursor: pointer; }
   </style>
   <script src="bridge.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-  <div class="header">
-    <img src="https://drive.google.com/thumbnail?id=1294x-K2aBT5CzyoNnaq2-6CPEIfyFEzk&sz=w1000" alt="점핑장 로고">
-  </div> 
+  <!-- 🏛️ GLOBAL APP HEADER (Fixed) -->
+  <header class="v-global-header">
+      <h1>GENIE WORLD : 노형 빌리지</h1>
+  </header>
 
-  <div id="notice-banner">
-    <div id="notice-content">📢 개인 수건을 꼭 지참해주세요. 클럽 수건 및 찜질복 사용 시 대여비가 추가됩니다!</div>
-  </div>
+  <div class="container">
+    <div id="notice-banner">
+        <div id="notice-content">📢 개인 수건을 꼭 지참해주세요. 클럽 수건 및 찜질복 사용 시 대여비가 추가됩니다!</div>
+    </div>
 
-  <div id="main-screen">
-    <div class="menu-grid">
+    <div id="main-screen">
+        <div class="menu-grid">
+        <div class="action-btn btn-booking" onclick="startBooking()">
+            <span class="btn-icon">🌿</span>
+            <span>테라피 예약</span>
+        </div>
+        <div class="action-btn" onclick="startLookup()">
+            <span class="btn-icon">🔍</span>
+            <span>예약 조회</span>
+        </div>
+        </div>
+
+        <!-- 하단 현황 -->
+        <div id="summary-section">
+        <div class="summary-header">🗓️ 오늘의 예약 현황</div>
+        <div id="summary-list" style="font-size:0.95rem; color:var(--text-sub);">불러오는 중...</div>
+        </div>
+    </div>
+
       <div class="action-btn btn-booking" onclick="startBooking()">
         <span class="btn-icon">🌿</span>
         <span>테라피 예약</span>
@@ -699,6 +683,30 @@
       }).getMyReservations(id);
     }
   </script>
+  <!-- 📱 GLOBAL VILLAGE NAV (Standardized v44.116) -->
+  <nav class="v-nav">
+      <a href="index.html" class="v-nav-item">
+          <i class="fas fa-home"></i>
+          <span>광장</span>
+      </a>
+      <a href="miracle.html" class="v-nav-item">
+          <i class="fas fa-camera"></i>
+          <span>아카이브</span>
+      </a>
+      <a href="oasis.html" class="v-nav-item">
+          <i class="fas fa-water"></i>
+          <span>오아시스</span>
+      </a>
+      <a href="wisdom.html" class="v-nav-item">
+          <i class="fas fa-book"></i>
+          <span>지식창고</span>
+      </a>
+      <a href="reservation.html" class="v-nav-item active">
+          <img src="therapy-icon.png" alt="테라피">
+          <span>테라피(예약)</span>
+      </a>
+  </nav>
+
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
