@@ -1,6 +1,6 @@
 /**
- * Nohyung Village Dashboard Logic (v44.93 - Logic Correction)
- * Features: Single/Dual Modal Buttons, Descriptive Guides, v44.0 Immutable Base
+ * Nohyung Village Dashboard Logic (v44.97 - Premium Habit Guides)
+ * Features: 9 Habits Logic, Miracle Plus, Oasis Link, v44.0 Immutable Base
  */
 
 const Village = {
@@ -25,20 +25,33 @@ const Village = {
         ],
         water: 1.2,
         habits: [
-            { id: 'h1', title: '모닝 티', done: false },
-            { id: 'h2', title: '베지 퍼스트', done: false },
-            { id: 'h3', title: '슬로우 치잉', done: false },
-            { id: 'h4', title: '일일 7,000보', done: false },
-            { id: 'h5', title: '계단 마법', done: false },
-            { id: 'h6', title: '나이트 컷', done: false },
-            { id: 'h7', title: '굿 슬립', done: false },
-            { id: 'h8', title: '셀프 칭찬', done: false },
-            { id: 'h9', title: '스트레칭', done: false },
-            { id: 'plus', title: '✨ 미라클 플러스', done: false }
+            { id: 'h1', title: '모닝 티', done: false, base: 2 },
+            { id: 'h2', title: '모닝 스트레칭', done: false, base: 2 },
+            { id: 'h3', title: '베지 퍼스트', done: false, base: 2 },
+            { id: 'h4', title: '슬로우 치잉', done: false, base: 2 },
+            { id: 'h5', title: '7,000보 달성', done: false, base: 3 },
+            { id: 'h6', title: '스테어 마법', done: false, base: 2 },
+            { id: 'h7', title: '나이트 컷', done: false, base: 10 },
+            { id: 'h8', title: '굿 슬립', done: false, base: 2 },
+            { id: 'h9', title: '셀프 칭찬', done: false, base: 2 },
+            { id: 'plus', title: '✨ 미라클 플러스', done: false, base: 0 }
         ]
     },
 
-    // 🏆 Multi-Tier Ranking Data
+    // 📜 9 Habits & Plus Metadata (v39 Plan)
+    habitData: {
+        h1: { icon: "🍵", meaning: "기상 직후 신진대사 점화", guide: "체온보다 약간 높은 온도의 미온수 권장. 독소 배출의 첫 단계!", link: "miracle.html?cat=h1" },
+        h2: { icon: "🧘", meaning: "가동 범위 확보 및 산소 공급", guide: "5분 내외 전신 스트레칭. 목, 어깨, 허리 위주의 부드러운 이완.", link: "miracle.html?cat=h2" },
+        h3: { icon: "🥗", meaning: "인슐린 스파이크 방지", guide: "첫 젓가락은 무조건 채소류! 이후 단백질, 탄수화물 순 섭취.", link: "miracle.html?cat=h3" },
+        h4: { icon: "🦷", meaning: "포만감 인식 및 소화 증대", guide: "한 입당 20회 이상 천천히 저작. 식사 시간 20분 이상 유지.", link: "miracle.html?cat=h4" },
+        h5: { icon: "👟", meaning: "기초 대사량 및 혈당 조절", guide: "스마트폰 기준 7,000보 달성. 꾸준한 일상 속 에너지 소모.", link: "miracle.html?cat=h5" },
+        h6: { icon: "🪜", meaning: "하체 근력 및 유산소 강화", guide: "3층 이하는 계단 이용! [아카이브] 인증 시 5점 추가 보너스.", link: "miracle.html?cat=h6" },
+        h7: { icon: "🌙", meaning: "지방 연소 및 세포 재생 집중", guide: "20시 이후 절대 금식! 체중 감량을 위한 가장 강력한 규칙.", link: "miracle.html?cat=h7" },
+        h8: { icon: "💤", meaning: "최적의 신체 회복 및 성장 호르몬", guide: "자정(24:00) 이전 취침 권장. 충분한 수면은 식욕 억제를 도움.", link: "miracle.html?cat=h8" },
+        h9: { icon: "👏", meaning: "긍정적 심리 상태와 자존감 유지", guide: "[모험가의 오아시스] 게시판에 기록해 보세요. 2포인트 지급!", link: "oasis.html" },
+        plus: { icon: "✨", meaning: "위대한 승리의 기록 (Miracle Plus)", guide: "새벽기상, 독서, 환경수호 등 나를 대견하게 만드는 모든 성취.\n[아카이브] 인증 시 5점 추가 보너스!", link: "miracle.html?cat=plus" }
+    },
+
     rankings: [
         { type: "금주 랭킹", content: "체력왕: 홍길동 | 미션왕: 김개똥 | 수호왕: 이성실" },
         { type: "월간 랭킹", content: "다이어트킹: 박지니 | 미션 선두: 최열정" },
@@ -46,70 +59,64 @@ const Village = {
     ],
     currentRankIndex: 0,
 
-    // ⚔️ Quest Content Data (v44.96 Final Literal Refinement)
     quests: {
-        sync: { 
-            title: "클럽 동기화", icon: "⚡", 
-            guide: "클럽 출석 점수를 반영하시겠어요?\n오늘 클럽에 출석 하셨다면 15포인트,\n운동량에 따라 최대 20포인트가 반영됩니다.", 
-            btn: "동기화 수행", link: "#", single: true 
-        },
-        visit: { 
-            title: "방문 인증", icon: "📸", 
-            guide: "오늘 클럽에 출석하셨나요?\n그렇다면 방문 인증을 남겨보세요\n아카이브에 인증시 15점이 추가됩니다.", 
-            btn: "인증하러 가기", link: "miracle.html?cat=visit", single: false 
-        },
-        meal: { 
-            title: "식단 인증", icon: "🍱", 
-            guide: "꾸준한 식단 기록은 강력한 변화의 열쇠입니다.\n아카이브에 인증시 최대 30점이 지급됩니다.", 
-            btn: "인증하러 가기", link: "miracle.html?cat=meal", single: false 
-        },
-        water: { 
-            title: "워터 헌터", icon: "💧", 
-            guide: "수분 섭취량 만큼 게이지를 조정해보세요.\n섭취량에 따라 점수를 차등지급합니다. (최대 20점)\n아카이브에 인증시 15점이 추가됩니다.", 
-            btn: "인증하러 가기", link: "miracle.html?cat=water", single: false 
-        },
-        bonus: { 
-            title: "보너스 퀘스트", icon: "✨", 
-            guide: "돌발 미션을 수행하시겠어요?\n아카이브로 이동해 인증을 남기실 수 있습니다.\n아카이브 인증시 15점이 추가됩니다.", 
-            btn: "이동하기", link: "miracle.html?cat=bonus", single: false 
-        }
+        sync: { title: "클럽 동기화", icon: "⚡", guide: "클럽 출석 점수를 반영하시겠어요?\n오늘 클럽에 출석 하셨다면 15포인트,\n운동량에 따라 최대 20포인트가 반영됩니다.", btn: "동기화 수행", link: "#", single: true },
+        visit: { title: "방문 인증", icon: "📸", guide: "오늘 클럽에 출석하셨나요?\n그렇다면 방문 인증을 남겨보세요\n아카이브에 인증시 15점이 추가됩니다.", btn: "인증하러 가기", link: "miracle.html?cat=visit", single: false },
+        meal: { title: "식단 인증", icon: "🍱", guide: "꾸준한 식단 기록은 강력한 변화의 열쇠입니다.\n아카이브에 인증시 최대 30점이 지급됩니다.", btn: "인증하러 가기", link: "miracle.html?cat=meal", single: false },
+        water: { title: "워터 헌터", icon: "💧", guide: "수분 섭취량 만큼 게이지를 조정해보세요.\n섭취량에 따라 점수를 차등지급합니다. (최대 20점)\n아카이브에 인증시 15점이 추가됩니다.", btn: "인증하러 가기", link: "miracle.html?cat=water", single: false },
+        bonus: { title: "보너스 퀘스트", icon: "✨", guide: "돌발 미션을 수행하시겠어요?\n아카이브로 이동해 인증을 남기실 수 있습니다.\n아카이브 인증시 15점이 추가됩니다.", btn: "이동하기", link: "miracle.html?cat=bonus", single: false }
     },
 
     init() {
-        console.log("v44.93 Logical Correction Engine Initialized.");
+        console.log("v44.97 Premium Habit Guides Initialized.");
         this.renderAll();
         this.updateEvolution();
         this.startTicker();
         this.bindEvents();
     },
 
-    // ✨ Refined Modal Handling
-    openQuestModal(key) {
-        const q = this.quests[key];
-        if (!q) return;
+    // ✨ Unified Premium Modal
+    openModal(key, type = 'quest') {
+        const data = (type === 'quest') ? this.quests[key] : this.habitData[key];
+        const habit = (type === 'habit') ? this.user.habits.find(h => h.id === key) : null;
         
-        document.getElementById('modal-habit-icon').innerText = q.icon;
-        document.getElementById('modal-habit-title').innerText = q.title;
-        document.getElementById('modal-habit-guide').innerText = q.guide;
+        if (!data) return;
+        
+        document.getElementById('modal-habit-icon').innerText = data.icon;
+        document.getElementById('modal-habit-title').innerText = data.title || data.meaning;
+        
+        // Build Guide Text with Significance
+        let guideText = data.guide;
+        if (type === 'habit') {
+            guideText = `[의의] ${data.meaning}\n\n[가이드] ${data.guide}\n\n기본 수호 점수: +${habit.base}점\n(아카이브 인증 시 추가 5점 합산)`;
+        }
+        document.getElementById('modal-habit-guide').innerText = guideText;
         
         const cancelBtn = document.getElementById('modal-cancel-btn');
         const confirmBtn = document.getElementById('modal-confirm-btn');
         
-        // Single/Dual Button Toggle
-        if (q.single) {
+        if (type === 'quest' && data.single) {
             cancelBtn.style.display = 'none';
-            confirmBtn.innerText = q.btn;
+            confirmBtn.innerText = data.btn;
             confirmBtn.style.flex = "1";
         } else {
             cancelBtn.style.display = 'block';
-            cancelBtn.innerText = "나중에";
-            confirmBtn.innerText = q.btn;
+            cancelBtn.innerText = (type === 'habit') ? "체크만 하기" : "나중에";
+            confirmBtn.innerText = (type === 'habit') ? "인증하러 가기" : data.btn;
             confirmBtn.style.flex = "1.5";
         }
         
+        // Cancel = Only Check (for Habit)
+        cancelBtn.onclick = () => {
+            if (type === 'habit' && habit) this.applyHabitCheck(key, false);
+            this.closeModal();
+        };
+
+        // Confirm = Auth/Link
         confirmBtn.onclick = () => {
-            if (q.link !== "#") {
-                location.href = q.link;
+            if (data.link !== "#") {
+                if (type === 'habit' && habit) this.applyHabitCheck(key, true);
+                location.href = data.link;
             } else if (key === 'sync') {
                 this.syncClubRecordActual();
             }
@@ -119,9 +126,24 @@ const Village = {
         document.getElementById('habit-modal').style.display = 'flex';
     },
 
+    applyHabitCheck(id, withAuth) {
+        const habit = this.user.habits.find(h => h.id === id);
+        if (habit && !habit.done) {
+            habit.done = true;
+            const points = habit.base + (withAuth ? 5 : 0);
+            this.user.totalScore += points;
+            this.user.stats.weekly.def += points;
+            this.renderAll();
+            this.updateEvolution();
+            console.log(`Habit ${id} secured. Points: ${points}`);
+        }
+    },
+
     closeModal() {
         document.getElementById('habit-modal').style.display = 'none';
     },
+
+    openQuestModal(key) { this.openModal(key, 'quest'); },
 
     syncClubRecordActual() {
         setTimeout(() => {
@@ -203,24 +225,11 @@ const Village = {
         container.innerHTML = this.user.habits.map(h => `
             <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:${h.id === 'plus' ? '#fff9c4' : '#fff'}; border-radius:15px; margin-bottom:8px; border:1px solid var(--v-border);">
                 <span style="font-size:0.9rem; font-weight:800; color:var(--v-wood);">${h.title}</span>
-                <div onclick="Village.checkHabit('${h.id}')" style="width:28px; height:28px; border:2px solid var(--v-border); border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; background:${h.done ? 'var(--def)' : 'transparent'};">
+                <div onclick="Village.openModal('${h.id}', 'habit')" style="width:28px; height:28px; border:2px solid var(--v-border); border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; background:${h.done ? 'var(--def)' : 'transparent'};">
                     ${h.done ? '✅' : ''}
                 </div>
             </div>
         `).join('');
-    },
-
-    checkHabit(id) {
-        const habit = this.user.habits.find(h => h.id === id);
-        if (habit && !habit.done) {
-            const ok = confirm(`🏡 [수호 완료!] 기록소로 이동하시겠습니까?`);
-            habit.done = true;
-            this.user.totalScore += 10;
-            this.user.stats.weekly.def += 10;
-            this.renderAll();
-            this.updateEvolution();
-            if (ok) location.href = `miracle.html?cat=${(id === 'plus' ? 'plus' : 'habit')}&item=${id}`;
-        }
     },
 
     bindEvents() {
