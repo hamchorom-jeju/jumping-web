@@ -114,14 +114,15 @@ function getUserDashboardData(payload) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
     // 1. 회원 정보 (등록현황 시트)
-    var regSheet = ss.getSheetByName("등록현황");
+    var regSheet = ss.getSheetByName("등록현황") || ss.getSheetByName("등록 현황");
     var memberInfo = { name: "모험가", tier: "씨앗", rank: "-" };
     if (regSheet) {
       var regData = regSheet.getDataRange().getValues();
       for (var i = 1; i < regData.length; i++) {
-        if (String(regData[i][1]).trim().indexOf(phone) > -1) { // 전화번호 매칭
-          memberInfo.name = regData[i][0];
-          memberInfo.tier = regData[i][2] || "새싹";
+        var sheetPhone = String(regData[i][2]).replace(/[^0-9]/g, ""); // C열: 휴대폰
+        if (sheetPhone.indexOf(phone) > -1 || phone.indexOf(sheetPhone) > -1) {
+          memberInfo.name = regData[i][1]; // B열: 이름
+          memberInfo.tier = regData[i][4] || "새싹"; // E열: 권종 또는 티어
           break;
         }
       }
@@ -133,8 +134,9 @@ function getUserDashboardData(payload) {
     if (arcSheet) {
       var arcData = arcSheet.getDataRange().getValues();
       for (var j = 1; j < arcData.length; j++) {
-        if (String(arcData[j][3]).trim().indexOf(phone) > -1) {
-          totalScore += Number(arcData[j][8] || 0);
+        var arcPhone = String(arcData[j][3]).replace(/[^0-9]/g, ""); // D열: 휴대폰
+        if (arcPhone.indexOf(phone) > -1 || phone.indexOf(arcPhone) > -1) {
+          totalScore += Number(arcData[j][8] || 0); // I열: 점수
         }
       }
     }
