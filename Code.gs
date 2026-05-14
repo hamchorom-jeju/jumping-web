@@ -108,7 +108,7 @@ function submitArchive(payload) {
  */
 function getUserDashboardData(payload) {
   try {
-    var phone = String(payload.phone || "").replace(/[^0-9]/g, ""); // [v44.173] 숫자만 남기도록 정규화
+    var phone = String(payload.phone || "").replace(/[^0-9]/g, ""); 
     if (!phone) return { error: "전화번호가 없습니다." };
     
     var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -131,29 +131,24 @@ function getUserDashboardData(payload) {
 
     // [v44.165] 일일 출석 점수(5점) 자동 지급 로직
     var arcSheet = ss.getSheetByName("아카이브") || ss.insertSheet("아카이브");
-    var nowRef = new Date(); // 기준 시각
+    var nowRef = new Date(); 
     var todayStr = Utilities.formatDate(nowRef, "GMT+9", "yyyy-MM-dd");
     var isFirstLoginToday = false;
     
-    // [v44.170] 중복 기록 방지를 위한 서버 잠금(Lock) 도입
     var lock = LockService.getScriptLock();
     try {
       lock.waitLock(10000); 
-      // [v44.174] 32분의 저주 방지를 위해 getDisplayValues 사용
       var arcDataCheck = arcSheet.getDataRange().getDisplayValues(); 
       var alreadyLogged = false;
       for (var j = 1; j < arcDataCheck.length; j++) {
-        // [v44.175] 날짜 형식 정규화 (2026. 5. 15 -> 2026-05-15)
-        var rawDateStr = arcDataCheck[j][0].split(" ")[0].replace(/\./g, "-").replace(/-$/, "");
-        var parts = rawDateStr.split("-").filter(function(p){ return p !== ""; });
+        var dateMatch = arcDataCheck[j][0].match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
         var normDateStr = "";
-        if (parts.length >= 3) {
-          var y = parts[0];
-          var m = parts[1].length === 1 ? "0" + parts[1] : parts[1];
-          var d = parts[2].length === 1 ? "0" + parts[2] : parts[2];
+        if (dateMatch) {
+          var y = dateMatch[1];
+          var m = dateMatch[2].length === 1 ? "0" + dateMatch[2] : dateMatch[2];
+          var d = dateMatch[3].length === 1 ? "0" + dateMatch[3] : dateMatch[3];
           normDateStr = y + "-" + m + "-" + d;
         }
-
         var recPhone = String(arcDataCheck[j][3]).replace(/[^0-9]/g, "");
         var recType = String(arcDataCheck[j][4]);
         if (normDateStr === todayStr && recPhone === phone && recType === "로그인") {
@@ -187,40 +182,40 @@ function getUserDashboardData(payload) {
     var scores = { lifetime: 0, season: 0, weekly: 0 };
     
     var calcNow = new Date();
-    // 주간 기준 (이번 주 월요일 00:00)
     var startOfWeek = new Date(calcNow.getFullYear(), calcNow.getMonth(), calcNow.getDate() - calcNow.getDay() + (calcNow.getDay() === 0 ? -6 : 1));
     startOfWeek.setHours(0, 0, 0, 0);
-    // 시즌 기준 (v39: 현재 월의 1일)
     var startOfSeason = new Date(calcNow.getFullYear(), calcNow.getMonth(), 1);
     startOfSeason.setHours(0, 0, 0, 0);
 
     if (arcSheet) {
-      // [v44.174] 32분의 저주 방지를 위해 getDisplayValues 사용
       var arcData = arcSheet.getDataRange().getDisplayValues();
       for (var j = 1; j < arcData.length; j++) {
         var arcPhone = String(arcData[j][3]).replace(/[^0-9]/g, ""); 
         if (arcPhone === phone) {
           var score = Number(arcData[j][8] || 0);
-          // 문자열 날짜를 안전하게 Date 객체로 변환 (시간은 00:00:00 고정)
-          var dateParts = arcData[j][0].split("-");
-          var recDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+          var dMatch = arcData[j][0].match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
+          var recDate = null;
+          if (dMatch) {
+            var ry = dMatch[1];
+            var rm = parseInt(dMatch[2], 10) - 1;
+            var rd = parseInt(dMatch[3], 10);
+            recDate = new Date(ry, rm, rd);
+          }
           
-          // 1) 누적 (Lifetime)
-          scores.lifetime += score;
-          // 2) 시즌 (Season)
-          if (recDate >= startOfSeason) scores.season += score;
-          // 3) 주간 (Weekly)
-          if (recDate >= startOfWeek) {
-            scores.weekly += score;
-            // 능력치 분배 (주간 뷰용)
-            var type = String(arcData[j][4] || "");
-            if (type.indexOf("퀘스트") > -1) stats.perf += score;
-            else if (type.indexOf("습관") > -1) stats.def += score;
-            else if (type.indexOf("인바디") > -1 || type.indexOf("건강") > -1) stats.health += score;
-            else { 
-              stats.health += (score * 0.3);
-              stats.perf += (score * 0.4);
-              stats.def += (score * 0.3);
+          if (recDate && !isNaN(recDate.getTime())) {
+            scores.lifetime += score;
+            if (recDate >= startOfSeason) scores.season += score;
+            if (recDate >= startOfWeek) {
+              scores.weekly += score;
+              var type = String(arcData[j][4] || "");
+              if (type.indexOf("퀘스트") > -1) stats.perf += score;
+              else if (type.indexOf("습관") > -1) stats.def += score;
+              else if (type.indexOf("인바디") > -1 || type.indexOf("건강") > -1) stats.health += score;
+              else { 
+                stats.health += (score * 0.3);
+                stats.perf += (score * 0.4);
+                stats.def += (score * 0.3);
+              }
             }
           }
         }
@@ -253,7 +248,7 @@ function getUserDashboardData(payload) {
       { name: "나무 🌳", min: 3001, max: 8000 },
       { name: "꽃 🌸", min: 8001, max: 15000 },
       { name: "꿈나무 요정 🧚‍♂️", min: 15001, max: 30000 },
-      { name: "전설의 점퍼 👑", min: 3001, max: 60000 },
+      { name: "전설의 점퍼 👑", min: 30001, max: 60000 },
       { name: "지니 월드 수호신 🌌", min: 60001, max: 9999999 }
     ];
     
@@ -266,15 +261,13 @@ function getUserDashboardData(payload) {
       } else break;
     }
     
-    // 진화도 계산 (%)
     var tierRange = nextTier.max - currentTier.min;
     var progressInTier = scores.lifetime - currentTier.min;
     var evolutionPercent = Math.min(100, Math.floor((progressInTier / tierRange) * 100));
 
-    // 5. 랭킹 산출 (시즌 점수 기준 - v39)
+    // 5. 랭킹 산출 (시즌 점수 기준)
     var rank = "-";
     try {
-      // 모든 모험가의 시즌 점수를 합산하여 순위 매기기
       var allSeasonScores = {};
       if (arcSheet) {
         var allArc = arcSheet.getDataRange().getValues();
@@ -288,8 +281,7 @@ function getUserDashboardData(payload) {
         }
       }
       var sortedScores = Object.values(allSeasonScores).sort(function(a, b) { return b - a; });
-      var mySeasonScore = scores.season;
-      rank = sortedScores.indexOf(mySeasonScore) + 1;
+      rank = sortedScores.indexOf(scores.season) + 1;
     } catch(e) { rank = "-"; }
 
     return {
@@ -305,11 +297,11 @@ function getUserDashboardData(payload) {
       isFirstLoginToday: isFirstLoginToday,
       stats: {
         weekly: stats,
-        monthly: { health: stats.health * 4, perf: stats.perf * 4, def: stats.def * 4 }, // 시즌 누적 추산
+        monthly: { health: stats.health * 4, perf: stats.perf * 4, def: stats.def * 4 },
         targets: { 
           total: { weekly: 1000, monthly: 4000 },
           items: {
-            weekly: { health: 300, perf: 400, def: 300 }, // v39 3:4:3 비율 적용
+            weekly: { health: 300, perf: 400, def: 300 },
             monthly: { health: 1200, perf: 1600, def: 1200 }
           }
         }
