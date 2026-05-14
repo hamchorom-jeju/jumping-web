@@ -381,10 +381,10 @@ function forceUpdateAllHeaders() {
 }
 
 
+
 /**
  * [공용 도구] 폴더 가져오기 또는 생성
  */
-function getOrCreateFolder(folderName) {
 
 function getOrCreateFolder(folderName) {
   var folders = DriveApp.getFoldersByName(folderName);
