@@ -68,11 +68,34 @@ const Village = {
     },
 
     init() {
-        console.log("v44.110 Premium Ranking Ticker Initialized.");
+        console.log("v44.146 Real Data Sync Initialized.");
+        this.loadRealData();
         this.renderAll();
         this.updateEvolution();
         this.startTicker();
         this.bindEvents();
+    },
+
+    loadRealData() {
+        const params = new URLSearchParams(window.location.search);
+        const phone = (params.get('phone') || '').trim();
+        if (!phone) return;
+
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run
+                .withSuccessHandler(res => {
+                    if (res && res.success) {
+                        this.user.name = res.name;
+                        this.user.tier = res.tier;
+                        this.user.totalScore = res.totalScore;
+                        this.user.rank = res.rank;
+                        if (res.stats) this.user.stats = res.stats;
+                        this.renderAll();
+                        this.updateEvolution();
+                    }
+                })
+                .getUserDashboardData({ phone: phone });
+        }
     },
 
     openModal(key, type = 'quest') {

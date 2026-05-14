@@ -103,6 +103,59 @@ function submitArchive(payload) {
   }
 }
 
+/**
+ * [대시보드] 특정 회원의 실시간 데이터(정보 + 점수) 가져오기 (v44.146)
+ */
+function getUserDashboardData(payload) {
+  try {
+    var phone = String(payload.phone || "").trim();
+    if (!phone) return { error: "전화번호가 없습니다." };
+    
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    
+    // 1. 회원 정보 (등록현황 시트)
+    var regSheet = ss.getSheetByName("등록현황");
+    var memberInfo = { name: "모험가", tier: "씨앗", rank: "-" };
+    if (regSheet) {
+      var regData = regSheet.getDataRange().getValues();
+      for (var i = 1; i < regData.length; i++) {
+        if (String(regData[i][1]).trim().indexOf(phone) > -1) { // 전화번호 매칭
+          memberInfo.name = regData[i][0];
+          memberInfo.tier = regData[i][2] || "새싹";
+          break;
+        }
+      }
+    }
+
+    // 2. 누적 점수 계산 (아카이브 시트)
+    var arcSheet = ss.getSheetByName("아카이브");
+    var totalScore = 0;
+    if (arcSheet) {
+      var arcData = arcSheet.getDataRange().getValues();
+      for (var j = 1; j < arcData.length; j++) {
+        if (String(arcData[j][3]).trim().indexOf(phone) > -1) {
+          totalScore += Number(arcData[j][8] || 0);
+        }
+      }
+    }
+
+    return {
+      success: true,
+      name: memberInfo.name,
+      tier: memberInfo.tier,
+      totalScore: totalScore,
+      rank: memberInfo.rank,
+      // 가짜 스탯 데이터 (추후 실제 데이터 연결 가능)
+      stats: {
+        weekly: { health: Math.floor(totalScore*0.3), perf: Math.floor(totalScore*0.4), def: Math.floor(totalScore*0.3) },
+        monthly: { health: totalScore, perf: totalScore, def: totalScore }
+      }
+    };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
 
 /**
  * [Vercel 지원] 외부 사이트(Vercel 등)에서 데이터를 주고받기 위한 API 핸들러
