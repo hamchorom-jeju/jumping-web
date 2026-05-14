@@ -375,12 +375,12 @@
       <div class="user-greeting" id="userName">김홍철 님</div>
       <div class="user-status" id="userStatus">잔여 12회 (월권)</div>
       
-      <div class="btn-group">
-        <button class="btn" style="background: #8a2be2; color: #fff;" onclick="submitLog('점핑')">🏃‍♀️ 점핑 출석</button>
-        <button class="btn" style="background: #38a169; color: #fff;" onclick="submitLog('테라피')">🌿 테라피 출석</button>
-        <button class="btn" style="background: #ed64a6; color: #fff;" onclick="submitLog('복합')">✨ 복합 출석</button>
-        <button class="btn btn-bonus" id="btnBonus" style="background: #f59e0b; color: #fff;" onclick="submitLog('보너스')">🎁 보너스 횟수 1회 사용</button>
-        <button class="btn btn-cancel" onclick="closeModal()">아니오, 잘못 눌렀습니다</button>
+      <div class="btn-group" id="attendanceBtnGroup">
+        <button class="btn" id="btnJumping" style="background: #8a2be2; color: #fff;" onclick="submitLog('점핑', false)">🏃‍♀️ 점핑 출석</button>
+        <button class="btn" id="btnTherapy" style="background: #38a169; color: #fff;" onclick="submitLog('테라피', false)">🌿 테라피 출석</button>
+        <button class="btn" id="btnCombo" style="background: #ed64a6; color: #fff;" onclick="submitLog('복합', false)">✨ 복합 출석</button>
+        <button class="btn btn-bonus" id="btnBonus" style="background: #f59e0b; color: #fff;" onclick="submitLog('보너스', true)">🎁 보너스 횟수 1회 사용</button>
+        <button class="btn btn-cancel" id="btnCancel" onclick="closeModal()">아니오, 잘못 눌렀습니다</button>
       </div>
     </div>
   </div>
@@ -420,6 +420,7 @@
     }
 
     let selectedMemberPhone = "";
+    let selectedMemberName = "";
 
     function searchUser() {
       if (pin.length !== 4) {
@@ -481,8 +482,10 @@
     }
 
     function selectUser(member) {
+      resetButtons(); 
       selectedMemberPhone = member.phone;
-      document.getElementById('userName').innerText = member.name + " 님";
+      selectedMemberName = member.name;
+      document.getElementById('userName').innerText = selectedMemberName + " 님";
       
       const statusArea = document.getElementById('userStatus');
       statusArea.innerHTML = ""; // 기존 내용 비우기
@@ -503,7 +506,7 @@
           
           // 1. 횟수 기준 체크 (3회 이하)
           const remain = Number(pass.remainCount);
-          const isLowSessions = (pass.membershipType.indexOf("월권") === -1 && !isNaN(remain) && remain <= 3);
+          const isLowSessions = (!isNaN(remain) && remain <= 3);
           
           // 2. 기한 기준 체크 (5일 이하)
           let isNearExpiry = false;
@@ -517,17 +520,19 @@
             if (diffDays <= 5) isNearExpiry = true;
           }
           
-          // 둘 중 하나라도 해당되면 빨간색 강조
+          // 강조 처리 및 문구 조립
           if (isLowSessions || isNearExpiry) {
             color = "#ff5252";
-            if (diffDays < 0) {
-              warning = " <span class='pass-warning'>⚠️ 기한만료</span>";
-            } else if (diffDays === 0) {
-              warning = " <span class='pass-warning'>⚠️ 오늘만료</span>";
-            } else if (isNearExpiry) {
-              warning = ` <span class='pass-warning'>⚠️ ${diffDays}일전</span>`;
-            } else {
-              warning = " <span class='pass-warning'>⚠️ 연장필요</span>";
+            let warnings = [];
+            
+            if (isLowSessions) warnings.push(remain + "회 남음");
+            
+            if (diffDays < 0) warnings.push("기한만료");
+            else if (diffDays === 0) warnings.push("오늘만료");
+            else if (isNearExpiry) warnings.push(diffDays + "일 남음");
+            
+            if (warnings.length > 0) {
+              warning = " <span class='pass-warning'>⚠️ " + warnings.join(" / ") + "</span>";
             }
           }
           
@@ -556,8 +561,26 @@
 
     function closeModal() {
       document.getElementById('userModal').classList.remove('show');
+      resetButtons(); 
       clearAll();
       selectedMemberPhone = "";
+    }
+
+    // 버튼 상태 초기화 함수
+    function resetButtons() {
+      const btnJumping = document.getElementById('btnJumping');
+      const btnTherapy = document.getElementById('btnTherapy');
+      const btnCombo = document.getElementById('btnCombo');
+      const btnBonus = document.getElementById('btnBonus');
+
+      if (btnJumping) { btnJumping.innerHTML = '점핑 출석'; btnJumping.style.opacity = '1'; btnJumping.style.pointerEvents = 'auto'; }
+      if (btnTherapy) { btnTherapy.innerHTML = '테라피 출석'; btnTherapy.style.opacity = '1'; btnTherapy.style.pointerEvents = 'auto'; }
+      if (btnCombo) { btnCombo.innerHTML = '복합 출석'; btnCombo.style.opacity = '1'; btnCombo.style.pointerEvents = 'auto'; }
+      if (btnBonus) { 
+        btnBonus.innerHTML = '🎁 보너스 출석'; // 기본 텍스트로 일단 복구 (selectUser에서 다시 갱신됨)
+        btnBonus.style.opacity = '1'; 
+        btnBonus.style.pointerEvents = 'auto'; 
+      }
     }
 
     function closeMultiModal() {
@@ -565,47 +588,75 @@
       clearAll();
     }
 
-    function submitLog(type) {
-      // 팝업 닫기 전 로딩 텍스트로 변경 (이중 클릭 방지)
+    function submitLog(type, isBonus) {
+      let btnId = '';
+      if (isBonus) {
+        btnId = 'btnBonus';
+      } else if (type === '점핑') {
+        btnId = 'btnJumping';
+      } else if (type === '테라피') {
+        btnId = 'btnTherapy';
+      } else if (type === '복합') {
+        btnId = 'btnCombo';
+      }
+      
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+
+      const originalText = btn.innerHTML;
+      
+      // 모든 버튼 비활성화 (이중 클릭 방지)
+      const allButtons = document.querySelectorAll('.user-modal-content .btn');
+      allButtons.forEach(b => {
+        b.style.opacity = '0.5';
+        b.style.pointerEvents = 'none';
+      });
+      
+      btn.innerHTML = `<span style="display:flex; align-items:center; justify-content:center;"><svg class="spinner" viewBox="0 0 50 50" style="width:24px; height:24px; margin-right:10px; animation: rotate 2s linear infinite;"><circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5" stroke-dasharray="90,150" stroke-dashoffset="0" stroke-linecap="round"></circle></svg> 처리 중...</span>`;
       document.getElementById('userName').innerText = "출석 처리중...";
       
       google.script.run.withSuccessHandler(function(res) {
-        closeModal();
-        
+        resetButtons();
         if (res.error) {
           showError(res.error);
-          return;
-        }
-        
-        let successMsg = "";
-        if(type === '점핑') {
-          successMsg = "점핑 출석 완료! 🏃‍♀️<br>신나게 뛰어볼까요?";
-        } else if(type === '테라피') {
-          successMsg = "테라피 출석 완료! 🌿<br>편안한 시간 되세요.";
-        } else if(type === '복합') {
-          successMsg = "복합 출석 완료! ✨<br>오늘도 고생하셨습니다.";
-        } else if(type === '보너스') {
-          successMsg = "보너스 출석 완료! 🎁<br>감사합니다!";
-        } else {
-          successMsg = "출석이 완료되었습니다! ✨<br>오늘도 화이팅!";
-        }
-        
-        // 잔여 횟수 정보 추가 표시 (아주 크게)
-        if (res.updatedRemain !== undefined) {
-          const countInfo = res.isUnlimited ? "무제한 이용 중" : `잔여: ${res.updatedRemain}회`;
-          let finalInfo = "";
-          if (res.usedPassName && res.usedPassName !== "보너스권") {
-             finalInfo = `<div style="color:#8a2be2; margin-bottom:10px;">[${res.usedPassName}]</div>${countInfo}`;
+          // '이미 출석' 문구가 포함된 경우만 처음으로 돌아가고, 나머지는 팝업 유지
+          if (res.error.indexOf("이미 출석") !== -1) {
+            closeModal();
           } else {
-             finalInfo = countInfo;
+            // 회원권 부족 등의 에러는 팝업을 닫지 않고 이름만 다시 표시 (처리중 지우기)
+            document.getElementById('userName').innerText = selectedMemberName + " 님";
           }
-          successMsg += `<div style="margin-top:30px; font-size:1.5rem; font-weight:900; color:#1a202c; background:#f0f7ff; padding:25px; border-radius:20px; border:3px solid #8a2be2;">${finalInfo}</div>`;
+        } else {
+          closeModal();
+          let successMsg = "";
+          if(type === '점핑') successMsg = "점핑 출석 완료! 🏃‍♀️<br>신나게 뛰어볼까요?";
+          else if(type === '테라피') successMsg = "테라피 출석 완료! 🌿<br>편안한 시간 되세요.";
+          else if(type === '복합') successMsg = "복합 출석 완료! ✨<br>오늘도 고생하셨습니다.";
+          else if(type === '보너스') successMsg = "보너스 출석 완료! 🎁<br>감사합니다!";
+          
+          if (res.updatedRemain !== undefined) {
+            const countInfo = res.isUnlimited ? "무제한 이용 중" : `잔여: ${res.updatedRemain}회`;
+            const expireInfo = (res.expireDate && res.expireDate !== "-") ? `<div style="font-size: 3.5rem; margin-top: 30px; opacity: 1; font-weight: 800; color: #4a5568;">기한: ~${res.expireDate}</div>` : "";
+            
+            let finalInfo = `<div style="font-size: 5.5rem; letter-spacing:-2px; line-height:1;">${countInfo}</div>` + expireInfo;
+            if (res.usedPassName && res.usedPassName !== "보너스권") {
+              finalInfo = `<div style="font-size: 2rem; color:#8a2be2; margin-bottom:15px; opacity:0.8;">[${res.usedPassName}]</div>` + finalInfo;
+            }
+            successMsg += `<div style="margin-top:45px; font-weight:900; color:#1a202c; background:#f0f7ff; padding:50px 20px; border-radius:40px; border:8px solid #8a2be2; box-shadow: 0 20px 45px rgba(138, 43, 226, 0.3);">${finalInfo}</div>`;
+          }
+          showAppAlert(successMsg, "success");
         }
-
-        showAppAlert(successMsg, "success");
-      }).processAttendance(selectedMemberPhone, type, false);
+      }).withFailureHandler(function(err) {
+        resetButtons();
+        showError("서버 통신 오류가 발생했습니다.");
+      }).processAttendance(selectedMemberPhone, type, isBonus);
     }
   </script>
+  <style>
+    @keyframes rotate {
+      100% { transform: rotate(360deg); }
+    }
+  </style>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

@@ -100,13 +100,13 @@ function navigateTo(page, params = {}, openInNewTab = false) {
 /**
  * [공용] 프리미엄 알림창 (Alert)
  */
-function showAppAlert(msg, type = "success") {
+function showAppAlert(msg, type = "success", customTitle = "") {
   const modal = document.createElement('div');
   modal.className = 'app-modal-overlay';
   modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center; z-index:10000; opacity:0; transition:opacity 0.3s;";
   
   const icon = type === "success" ? "✅" : (type === "error" ? "⚠️" : "ℹ️");
-  const title = type === "success" ? "처리 완료" : (type === "error" ? "알림" : "안내");
+  const title = customTitle || (type === "success" ? "확인 완료" : (type === "error" ? "알림" : "안내"));
   const color = type === "success" ? "#38a169" : (type === "error" ? "#e53e3e" : "#6b46c1");
 
   const isLargeScreen = window.innerWidth > 700;
