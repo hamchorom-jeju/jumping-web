@@ -4535,6 +4535,7 @@ function getRecentCertifications() {
     
     var data = sheet.getDataRange().getDisplayValues();
     var recent = [];
+    for (var i = 1; i < data.length; i++) {
       // 오직 '대기' 상태인 식단/퀘스트만 추출
       if ((data[i][3] === "식단" || data[i][3] === "퀘스트") && data[i][8] === "대기") {
         recent.push({
