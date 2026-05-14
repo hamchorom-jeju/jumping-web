@@ -1,6 +1,6 @@
 /**
- * Nohyung Village Dashboard Logic (v44.8 - Multi-Tier Ranking & Global Header)
- * Features: 3-Tier Ranking Ticker (Weekly/Monthly/Total), App Header Ready
+ * Nohyung Village Dashboard Logic (v44.91 - Premium Quest Modals)
+ * Features: Rich Quest Instructions, Reordered Hub, v44.0 Immutable Base
  */
 
 const Village = {
@@ -46,12 +46,42 @@ const Village = {
     ],
     currentRankIndex: 0,
 
+    // ⚔️ Quest Content Data
+    quests: {
+        sync: { title: "클럽 동기화", icon: "⚡", guide: "클럽 출석 점수를 반영합니다.\n출석점수 15포인트, 운동량에 따라 최대 20포인트!", reward: "+20 EXP 하사", link: "#" },
+        visit: { title: "방문 인증", icon: "📸", guide: "클럽에 출석하셨나요? 방문인증을 남겨보세요.\n아카이브에 사진 등록 시 15포인트 추가!", reward: "+15 EXP 하사", link: "miracle.html?cat=visit" },
+        water: { title: "워터 헌터", icon: "💧", guide: "수분 섭취량에 따라 점수 차등 지급!\n섭취량만큼 게이지를 조정하고 인증 시 15포인트 추가!", reward: "+15 EXP 하사", link: "miracle.html?cat=water" },
+        bonus: { title: "보너스 퀘스트", icon: "✨", guide: "돌발 미션을 수행하시겠어요?\n아카이브로 이동해 인증을 남기실 수 있습니다.\n이동하시겠어요?", reward: "+20 EXP 하사", link: "miracle.html?cat=bonus" }
+    },
+
     init() {
-        console.log("v44.8 Global Header & 3-Tier Ticker Initialized.");
+        console.log("v44.91 Premium Quest Logic Initialized.");
         this.renderAll();
         this.updateEvolution();
         this.startTicker();
         this.bindEvents();
+    },
+
+    // ✨ Premium Modal Handling
+    openQuestModal(key) {
+        const q = this.quests[key];
+        if (!q) return;
+        document.getElementById('modal-habit-icon').innerText = q.icon;
+        document.getElementById('modal-habit-title').innerText = q.title;
+        document.getElementById('modal-habit-guide').innerText = q.guide;
+        document.getElementById('modal-reward-val').innerText = q.reward;
+        
+        const confirmBtn = document.getElementById('modal-confirm-btn');
+        confirmBtn.onclick = () => {
+            if (q.link !== "#") location.href = q.link;
+            this.closeModal();
+        };
+
+        document.getElementById('habit-modal').style.display = 'flex';
+    },
+
+    closeModal() {
+        document.getElementById('habit-modal').style.display = 'none';
     },
 
     startTicker() {
@@ -159,18 +189,9 @@ const Village = {
 
     triggerSuddenMission() {
         document.getElementById('sudden-mission-bar').style.display = 'block';
-    },
-
-    async syncClubRecord() {
-        setTimeout(() => {
-            alert("🏡 [클럽 동기화 완료!]");
-            this.user.stats.weekly.perf += 50;
-            this.renderAll();
-            this.updateEvolution();
-        }, 1200);
     }
 };
 
 window.onload = () => Village.init();
-window.syncClubRecord = () => Village.syncClubRecord();
-window.triggerSuddenMission = () => Village.triggerSuddenMission();
+window.syncClubRecord = () => Village.openQuestModal('sync');
+window.triggerSuddenMission = () => Village.openQuestModal('bonus');
