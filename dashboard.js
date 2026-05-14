@@ -50,6 +50,7 @@ const Village = {
     quests: {
         sync: { title: "클럽 동기화", icon: "⚡", guide: "클럽 출석 점수를 반영합니다.\n출석점수 15포인트, 운동량에 따라 최대 20포인트!", reward: "+20 EXP 하사", link: "#" },
         visit: { title: "방문 인증", icon: "📸", guide: "클럽에 출석하셨나요? 방문인증을 남겨보세요.\n아카이브에 사진 등록 시 15포인트 추가!", reward: "+15 EXP 하사", link: "miracle.html?cat=visit" },
+        meal: { title: "식단 인증", icon: "🍱", guide: "오늘 어떤 영양으로 몸을 채우셨나요? 식단 사진을 기록소에 남겨보세요.\n꾸준한 식단 기록은 아바타 진화의 가장 강력한 연료입니다!\n(인증 시 15포인트 추가!)", reward: "+15 EXP 하사", link: "miracle.html?cat=meal" },
         water: { title: "워터 헌터", icon: "💧", guide: "수분 섭취량에 따라 점수 차등 지급!\n섭취량만큼 게이지를 조정하고 인증 시 15포인트 추가!", reward: "+15 EXP 하사", link: "miracle.html?cat=water" },
         bonus: { title: "보너스 퀘스트", icon: "✨", guide: "돌발 미션을 수행하시겠어요?\n아카이브로 이동해 인증을 남기실 수 있습니다.\n이동하시겠어요?", reward: "+20 EXP 하사", link: "miracle.html?cat=bonus" }
     },
