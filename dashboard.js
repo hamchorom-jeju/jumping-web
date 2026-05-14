@@ -1,6 +1,6 @@
 /**
- * Nohyung Village Dashboard Logic (v44.98 - Emotional Habit Guides)
- * Features: Softened Habit Descriptions, Removed Rigid Labels, v44.0 Immutable Base
+ * Nohyung Village Dashboard Logic (v44.105 - Grand Consistency Cleanup)
+ * Features: Clean Habit Guides, Fixed Night Cut Buttons, Unified Points, v44.0 Immutable Base
  */
 
 const Village = {
@@ -38,18 +38,18 @@ const Village = {
         ]
     },
 
-    // 📜 Softened Habit Descriptions (v44.98 Refined)
+    // 📜 Pure Guide Texts (v44.105 - No redundant point info in raw strings)
     habitData: {
-        h1: { title: "모닝 티", icon: "🍵", guide: "기상 직후 따뜻한 물이나 차 한 잔은 밤새 잠들었던 장기를 깨우고 신진대사의 점화를 유도합니다. 체온보다 약간 높은 온도의 미온수를 권장하며, 이는 대사 촉진 및 독소 배출의 소중한 첫 단계가 됩니다.", link: "miracle.html?cat=h1" },
-        h2: { title: "모닝 스트레칭", icon: "🧘", guide: "기상 후 5분 내외의 가벼운 전신 스트레칭은 신체의 가동 범위를 확보하고 근육에 산소를 공급합니다. 목, 어깨, 허리 위주의 부드러운 이완으로 활기찬 하루를 시작해 보세요.", link: "miracle.html?cat=h2" },
-        h3: { title: "베지 퍼스트", icon: "🥗", guide: "식사 시 채소를 먼저 섭취하면 인슐린 스파이크(급격한 혈당 상승)를 효과적으로 방지할 수 있습니다. 첫 젓가락은 무조건 채소류부터! 이후 단백질과 탄수화물 순으로 섭취하여 지방 축적을 최소화하세요.", link: "miracle.html?cat=h3" },
-        h4: { title: "슬로우 치잉", icon: "🦷", guide: "한 입당 20회 이상 천천히 씹는 습관은 소화를 돕고 뇌가 포만감을 느낄 시간을 충분히 부여합니다. 식사 시간을 최소 20분 이상 유지하는 것은 과식 방지의 핵심입니다.\n\n🌿 수호 완료 시 2점 지급 (인증 제외 항목)", link: "#", single: true },
-        h5: { title: "7,000보 달성", icon: "👟", guide: "일상 활동량을 정량적으로 확보하여 기초 대사량을 유지하고 혈당 조절에 기여합니다. 스마트폰 기준으로 7,000보를 달성하며 꾸준한 에너지 소모를 실천해 보세요.", link: "miracle.html?cat=h5" },
-        h6: { title: "스테어 마법", icon: "🪜", guide: "3층 이하의 낮은 층수는 계단을 이용함으로써 하체 근력을 강화하고 유산소 효과를 얻습니다. 특히 기록소(아카이브)에 사진 인증을 남기시면 5점의 보너스 점수가 부여됩니다.", link: "miracle.html?cat=h6" },
+        h1: { title: "모닝 티", icon: "🍵", guide: "기상 직후 따뜻한 물이나 차 한 잔은 밤새 잠들었던 장기를 깨우고 신진대사의 점화를 유도합니다. 체온보다 약간 높은 온도의 미온수를 권장하며, 이는 대사 촉진 및 독소 배출의 소중한 첫 단계가 됩니다.", link: "miracle.html?cat=habit&item=h1" },
+        h2: { title: "모닝 스트레칭", icon: "🧘", guide: "기상 후 5분 내외의 가벼운 전신 스트레칭은 신체의 가동 범위를 확보하고 근육에 산소를 공급합니다. 목, 어깨, 허리 위주의 부드러운 이완으로 활기찬 하루를 시작해 보세요.", link: "miracle.html?cat=habit&item=h2" },
+        h3: { title: "베지 퍼스트", icon: "🥗", guide: "식사 시 채소를 먼저 섭취하면 인슐린 스파이크(급격한 혈당 상승)를 효과적으로 방지할 수 있습니다. 첫 젓가락은 무조건 채소류부터! 이후 단백질과 탄수화물 순으로 섭취하여 지방 축적을 최소화하세요.", link: "miracle.html?cat=habit&item=h3" },
+        h4: { title: "슬로우 치잉", icon: "🦷", guide: "한 입당 20회 이상 천천히 씹는 습관은 소화를 돕고 뇌가 포만감을 느낄 시간을 충분히 부여합니다. 식사 시간을 최소 20분 이상 유지하는 것은 과식 방지의 핵심입니다.", link: "#", single: true },
+        h5: { title: "7,000보 달성", icon: "👟", guide: "일상 활동량을 정량적으로 확보하여 기초 대사량을 유지하고 혈당 조절에 기여합니다. 스마트폰 기준으로 7,000보를 달성하며 꾸준한 에너지 소모를 실천해 보세요.", link: "miracle.html?cat=habit&item=h5" },
+        h6: { title: "스테어 마법", icon: "🪜", guide: "3층 이하의 낮은 층수는 계단을 이용함으로써 하체 근력을 강화하고 유산소 효과를 얻습니다. 특히 기록소(아카이브)에 사진 인증을 남기시면 강력한 보너스 점수가 부여됩니다.", link: "miracle.html?cat=habit&item=h6" },
         h7: { title: "나이트 컷", icon: "🌙", guide: "밤 20시 이후의 금식은 신체가 소화가 아닌 '지방 연소와 세포 재생'에 집중하게 만듭니다. 지금 이 시간부터 아무것도 먹지 않겠다고 [모험가의 오아시스]에 다짐의 선언을 남겨보세요!\n\n\"저 지금부터는 아무것도 안 먹어요.. 약속합니다!!\" 라는 한마디가 강력한 수호의 시작입니다.", link: "oasis.html" },
-        h8: { title: "굿 슬립", icon: "💤", guide: "세포가 재생되고 성장 호르몬이 활발히 분비되는 자정(24:00) 전 취침으로 신체 회복을 최적화하세요. 충분한 수면은 식욕 억제 호르몬인 렙틴의 분비를 도와 다이어트를 수월하게 만듭니다.\n\n🌿 수호 완료 시 2점 지급 (인증 제외 항목)", link: "#", single: true },
-        h9: { title: "셀프 칭찬", icon: "👏", guide: "오늘 하루도 노력한 나자신을 위해 따뜻한 한마디를 해주며 셀프 허그를 해주세요.\n\"오늘도 수고했어 영희야!\"\n모험가의 오아시스 게시판에 셀프칭찬글도 남겨보세요.\n\n🌿 수호 완료 시 2점 지급\n👏 셀프칭찬 등록 시 5점 추가", link: "oasis.html" },
-        plus: { title: "미라클 플러스", icon: "✨", guide: "새벽 기상, 독서, 환경 수호 등 여러분의 인생을 풍요롭게 만드는 사소하지만 위대한 승리들을 기록해 보세요.\n\n📸 아카이브에 인증을 하시면 5점이 추가됩니다.", link: "miracle.html?cat=plus", single: true }
+        h8: { title: "굿 슬립", icon: "💤", guide: "세포가 재생되고 성장 호르몬이 활발히 분비되는 자정(24:00) 전 취침으로 신체 회복을 최적화하세요. 충분한 수면은 식욕 억제 호르몬인 렙틴의 분비를 도와 다이어트를 수월하게 만듭니다.", link: "#", single: true },
+        h9: { title: "셀프 칭찬", icon: "👏", guide: "오늘 하루도 노력한 나자신을 위해 따뜻한 한마디를 해주며 셀프 허그를 해주세요.\n\"오늘도 수고했어 영희야!\"\n모험가의 오아시스 게시판에 셀프칭찬글도 남겨보세요.", link: "oasis.html" },
+        plus: { title: "미라클 플러스", icon: "✨", guide: "새벽 기상, 독서, 환경 수호 등 여러분의 인생을 풍요롭게 만드는 사소하지만 위대한 승리들을 기록해 보세요.", link: "miracle.html?cat=plus", single: true }
     },
 
     rankings: [
@@ -68,31 +68,30 @@ const Village = {
     },
 
     init() {
-        console.log("v44.98 Emotional Habit Guides Initialized.");
+        console.log("v44.105 Grand Consistency Cleanup Initialized.");
         this.renderAll();
         this.updateEvolution();
         this.startTicker();
         this.bindEvents();
     },
 
-    // ✨ Unified Premium Modal (Refined)
+    // ✨ Unified Premium Modal (Grand Cleaned v44.105)
     openModal(key, type = 'quest') {
         const data = (type === 'quest') ? this.quests[key] : this.habitData[key];
         const habit = (type === 'habit') ? this.user.habits.find(h => h.id === key) : null;
-        
         if (!data) return;
         
         document.getElementById('modal-habit-icon').innerText = data.icon;
-        document.getElementById('modal-habit-title').innerText = data.title;
+        document.getElementById('modal-habit-title').innerText = data.title || data.meaning;
         
-        // Build Guide Text (Emotional & Smooth)
         let guideText = data.guide;
         if (type === 'habit') {
-            const isBoardHabit = (key === 'h7' || key === 'h9');
             if (data.single) {
                 guideText += `\n\n🌿 수호 완료 시 ${habit.base}점 지급`;
-            } else if (isBoardHabit) {
-                guideText += `\n\n🌿 수호 완료 시 ${habit.base}점 지급\n🌵 오아시스 등록 시 5점 추가`;
+            } else if (key === 'h7') {
+                guideText += `\n\n🌿 수호 완료 시 ${habit.base}점 지급\n🌵 다짐의 선언 게시글 등록 시 5점 추가`;
+            } else if (key === 'h9') {
+                guideText += `\n\n🌿 수호 완료 시 ${habit.base}점 지급\n👏 셀프칭찬 등록 시 5점 추가`;
             } else if (key === 'plus') {
                 guideText += `\n\n📸 아카이브 인증 시 5점 추가`;
             } else {
@@ -106,27 +105,25 @@ const Village = {
         
         if ((type === 'quest' && data.single) || (type === 'habit' && data.single)) {
             cancelBtn.style.display = 'none';
-            confirmBtn.innerText = (key === 'plus') ? "인증하러 가기" : ((type === 'habit') ? "수호 완료" : data.btn);
+            confirmBtn.innerText = (key === 'plus') ? "인증하러 가기" : "수호 완료";
             confirmBtn.style.flex = "1";
         } else {
             cancelBtn.style.display = 'block';
             const isBoardHabit = (key === 'h7' || key === 'h9');
-            cancelBtn.innerText = (type === 'habit') ? (isBoardHabit ? "나중에" : "체크만 하기") : "나중에";
-            confirmBtn.innerText = (type === 'habit') ? (isBoardHabit ? "게시판 이동" : "인증하러 가기") : data.btn;
+            cancelBtn.innerText = "체크만 하기";
+            confirmBtn.innerText = isBoardHabit ? "게시판 이동" : "인증하러 가기";
             confirmBtn.style.flex = "1.5";
         }
         
         cancelBtn.onclick = () => {
-            if (type === 'habit' && habit && key !== 'h7' && key !== 'h9') this.applyHabitCheck(key, false);
+            if (type === 'habit' && habit) this.applyHabitCheck(key, false);
             this.closeModal();
         };
 
         confirmBtn.onclick = () => {
             if (data.link !== "#") {
                 if (type === 'habit' && habit) this.applyHabitCheck(key, true);
-                const finalLink = (type === 'habit' && key !== 'h7' && key !== 'h9' && key !== 'plus') 
-                    ? `miracle.html?cat=habit&item=${key}` : data.link;
-                location.href = finalLink;
+                location.href = data.link;
             } else if (key === 'sync') {
                 this.syncClubRecordActual();
             } else if (type === 'habit' && data.single) {
@@ -150,10 +147,7 @@ const Village = {
         }
     },
 
-    closeModal() {
-        document.getElementById('habit-modal').style.display = 'none';
-    },
-
+    closeModal() { document.getElementById('habit-modal').style.display = 'none'; },
     openQuestModal(key) { this.openModal(key, 'quest'); },
 
     syncClubRecordActual() {
@@ -253,9 +247,7 @@ const Village = {
         }
     },
 
-    triggerSuddenMission() {
-        document.getElementById('sudden-mission-bar').style.display = 'block';
-    }
+    triggerSuddenMission() { document.getElementById('sudden-mission-bar').style.display = 'block'; }
 };
 
 window.onload = () => Village.init();
