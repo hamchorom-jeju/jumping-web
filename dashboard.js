@@ -1,10 +1,10 @@
 /**
- * Nohyung Village Dashboard Logic (v44.0 - Perspective Gauges)
- * Features: Weekly/Monthly Toggle, Evolution Progress Bar, Context-Aware Stats
+ * Nohyung Village Dashboard Logic (v44.1 - Portal & Separated Banners)
+ * Features: Global Header, Multi-Tier Ranking Ticker (Weekly/Monthly/Total), Sudden Bar
  */
 
 const Village = {
-    perspective: 'weekly', // 'weekly' or 'monthly'
+    perspective: 'weekly',
     user: {
         name: "모험가",
         tier: "꿈나무 요정",
@@ -14,51 +14,66 @@ const Village = {
             weekly: { health: 450, perf: 680, def: 320 },
             monthly: { health: 1200, perf: 2400, def: 950 }
         },
-        // Maximum Potentials (Goal Posts)
         max: {
             weekly: { health: 600, perf: 1000, def: 700 },
             monthly: { health: 2400, perf: 4000, def: 2800 }
         },
-        // Tier Thresholds for Evolution
         tiers: [
-            { name: "씨앗", min: 0 },
-            { name: "새싹", min: 1001 },
-            { name: "나무", min: 3001 },
-            { name: "꽃", min: 8001 },
-            { name: "꿈나무 요정", min: 15001 },
-            { name: "전설의 점퍼", min: 30001 },
-            { name: "지니 수호신", min: 60001 }
+            { name: "씨앗", min: 0 }, { name: "새싹", min: 1001 }, { name: "나무", min: 3001 },
+            { name: "꽃", min: 8001 }, { name: "꿈나무 요정", min: 15001 },
+            { name: "전설의 점퍼", min: 30001 }, { name: "지니 수호신", min: 60001 }
         ],
         water: 1.2,
         habits: [
-            { id: 'h1', title: '모닝 티', done: false, guide: '기상 후 따뜻한 물!' },
-            { id: 'h2', title: '베지 퍼스트', done: false, guide: '채소 먼저 먹기!' },
+            { id: 'h1', title: '모닝 티', done: false, guide: '따뜻한 물 한잔!' },
+            { id: 'h2', title: '베지 퍼스트', done: false, guide: '채소 먼저!' },
             { id: 'h3', title: '슬로우 치잉', done: false, guide: '꼭꼭 씹기!' },
             { id: 'h4', title: '일일 7,000보', done: false, guide: '꾸준한 걷기!' },
-            { id: 'h5', title: '계단 마법', done: false, guide: '계단 이용하기!' },
+            { id: 'h5', title: '계단 마법', done: false, guide: '계단 이용!' },
             { id: 'h6', title: '나이트 컷', done: false, guide: '20시 이후 금식!' },
             { id: 'h7', title: '굿 슬립', done: false, guide: '자정 전 취침!' },
-            { id: 'h8', title: '셀프 칭찬', done: false, guide: '나를 아껴주기!' },
+            { id: 'h8', title: '셀프 칭찬', done: false, guide: '나를 아끼기!' },
             { id: 'h9', title: '스트레칭', done: false, guide: '몸 풀어주기!' },
-            { id: 'plus', title: '✨ 미라클 플러스', done: false, guide: '인생의 승리 기록!' }
+            { id: 'plus', title: '✨ 미라클 플러스', done: false, guide: '인생의 승리!' }
         ]
     },
 
+    // 📜 Multi-Tier Ranking Ticker
+    rankings: [
+        { type: "금주 랭킹", content: "체력왕: 홍길동 | 수행왕: 김개똥 | 수호왕: 이성실" },
+        { type: "월간 랭킹", content: "다이어트킹: 박지니 | 미션킹: 최열정" },
+        { type: "토탈 랭킹", content: "1위: 전설모험가 (120k) | 2위: 꾸준지존 (115k)" }
+    ],
+    currentRankIndex: 0,
+
     init() {
-        console.log("Welcome to Nohyung Village v44.0 (Interactive Perspective)!");
+        console.log("Welcome to Nohyung Village v44.1 Portal Engine!");
         this.renderAll();
         this.updateEvolution();
+        this.startTicker();
         this.bindEvents();
     },
 
+    startTicker() {
+        const ticker = document.getElementById('ranking-ticker');
+        setInterval(() => {
+            this.currentRankIndex = (this.currentRankIndex + 1) % this.rankings.length;
+            const r = this.rankings[this.currentRankIndex];
+            ticker.style.opacity = 0;
+            setTimeout(() => {
+                ticker.innerHTML = `<span style="font-size:0.6rem; color:var(--text-dim); display:block; margin-bottom:2px;">[${r.type}]</span>${r.content}`;
+                ticker.style.opacity = 1;
+                ticker.style.transition = 'opacity 0.5s';
+            }, 500);
+        }, 5000);
+    },
+
     renderAll() {
-        // Basic Info
         document.getElementById('user-name').innerText = this.user.name;
         document.getElementById('total-score').innerText = this.user.totalScore.toLocaleString();
         document.getElementById('current-rank').innerText = this.user.rank;
         document.getElementById('water-val').innerText = `${this.user.water}L / 2.0L`;
 
-        // Ability Gauges based on Perspective
         const view = this.perspective;
         const currentData = this.user.stats[view];
         const maxData = this.user.max[view];
@@ -74,48 +89,29 @@ const Village = {
         document.getElementById(`${id}-val`).innerText = val.toLocaleString();
         const percent = Math.min((val / max) * 100, 100);
         document.getElementById(`${id}-bar`).style.width = `${percent}%`;
-        document.getElementById(`${id}-label`).innerText = `${this.perspective === 'weekly' ? '주간' : '월간'} 목표 대비: ${Math.round(percent)}%`;
     },
 
-    // ✨ Evolution Logic (Tier Progress)
     updateEvolution() {
         const score = this.user.totalScore;
-        let currentTierIndex = 0;
+        let ci = 0;
         for (let i = 0; i < this.user.tiers.length; i++) {
-            if (score >= this.user.tiers[i].min) {
-                currentTierIndex = i;
-            }
+            if (score >= this.user.tiers[i].min) ci = i;
         }
-
-        const nextTier = this.user.tiers[currentTierIndex + 1];
-        if (nextTier) {
-            const currentTierMin = this.user.tiers[currentTierIndex].min;
-            const progress = ((score - currentTierMin) / (nextTier.min - currentTierMin)) * 100;
-            const finalPercent = Math.min(Math.max(progress, 0), 100);
-            
-            document.getElementById('evo-bar').style.width = `${finalPercent}%`;
-            document.getElementById('evo-percent').innerText = `${Math.round(finalPercent)}%`;
-        } else {
-            document.getElementById('evo-bar').style.width = '100%';
-            document.getElementById('evo-percent').innerText = 'MAX';
+        const next = this.user.tiers[ci + 1];
+        if (next) {
+            const min = this.user.tiers[ci].min;
+            const progress = ((score - min) / (next.min - min)) * 100;
+            document.getElementById('evo-bar').style.width = `${progress}%`;
+            document.getElementById('evo-percent').innerText = `${Math.round(progress)}%`;
         }
     },
 
     setPerspective(view) {
         this.perspective = view;
-        
-        // Toggle Button Styles
-        const btnWeekly = document.getElementById('btn-weekly');
-        const btnMonthly = document.getElementById('btn-monthly');
-        
-        if (view === 'weekly') {
-            btnWeekly.style.background = '#fff'; btnWeekly.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
-            btnMonthly.style.background = 'transparent'; btnMonthly.style.boxShadow = 'none';
-        } else {
-            btnMonthly.style.background = '#fff'; btnMonthly.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
-            btnWeekly.style.background = 'transparent'; btnWeekly.style.boxShadow = 'none';
-        }
-        
+        const bW = document.getElementById('btn-weekly');
+        const bM = document.getElementById('btn-monthly');
+        bW.style.background = (view === 'weekly') ? '#fff' : 'transparent';
+        bM.style.background = (view === 'monthly') ? '#fff' : 'transparent';
         this.renderAll();
     },
 
@@ -135,46 +131,41 @@ const Village = {
     checkHabit(id) {
         const habit = this.user.habits.find(h => h.id === id);
         if (habit && !habit.done) {
-            const confirmMove = confirm(`🏡 [수호 완료!]\n\n'${habit.title}' 실천 완료!\n\n인증 기록소로 이동하시겠습니까?`);
+            const ok = confirm(`🏡 [수호 완료!] 기록소로 이동하시겠습니까?`);
             habit.done = true;
             this.user.totalScore += 10;
             this.user.stats.weekly.def += 10;
-            this.user.stats.monthly.def += 10;
             this.renderAll();
             this.updateEvolution();
-            if (confirmMove) {
-                location.href = `miracle.html?cat=${(id === 'plus') ? 'plus' : 'habit'}&item=${id}`;
-            }
+            if (ok) location.href = `miracle.html?cat=${(id === 'plus' ? 'plus' : 'habit')}&item=${id}`;
         }
     },
 
     bindEvents() {
-        const waterSlider = document.getElementById('water-range');
-        if (waterSlider) {
-            waterSlider.addEventListener('input', (e) => {
+        const slider = document.getElementById('water-range');
+        if (slider) {
+            slider.addEventListener('input', (e) => {
                 const val = (e.target.value / 10).toFixed(1);
                 document.getElementById('water-val').innerText = `${val}L / 2.0L`;
-                this.user.water = parseFloat(val);
             });
         }
     },
 
     triggerSuddenMission() {
-        alert("⚡ [돌발 미션!]\n마을 공지 아래에 새로운 긴급 미션이 하사되었습니다!");
+        document.getElementById('sudden-mission-bar').style.display = 'block';
+        alert("⚡ [돌발 미션 선포!] 배너 아래를 확인하세요!");
     },
 
     async syncClubRecord() {
         setTimeout(() => {
             alert("🏡 [클럽 동기화 완료!]");
             this.user.stats.weekly.perf += 50;
-            this.user.totalScore += 50;
             this.renderAll();
             this.updateEvolution();
-        }, 1200);
+        }, 1000);
     }
 };
 
-// Start Village
 window.onload = () => Village.init();
 window.syncClubRecord = () => Village.syncClubRecord();
 window.triggerSuddenMission = () => Village.triggerSuddenMission();
