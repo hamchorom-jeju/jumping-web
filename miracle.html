@@ -313,12 +313,16 @@
       
       const reader = new FileReader();
       reader.onload = e => {
+        let finalType = type === 'quest' ? '퀘스트' : '습관';
+        let score = type === 'quest' ? 15 : 5;
+        if (item === '식단' || item.includes('식단')) {
+          finalType = '식단';
+          score = 10;
+        }
         const payload = {
           name: TARGET_NAME, phone: TARGET_PHONE,
-          type: type === 'quest' ? '퀘스트' : '습관',
-          item: item, comment: comment,
-          image: e.target.result, 
-          score: type === 'quest' ? 15 : 5
+          type: finalType, item: item, comment: comment,
+          image: e.target.result, score: score
         };
         
         google.script.run
@@ -326,7 +330,7 @@
             btn.disabled = false;
             btn.innerText = type === 'quest' ? "퀘스트 기록 완료" : "습관 기록 완료";
             if (res && res.success) {
-              alert("기록이 마을 아카이브에 영구 보존되었습니다! ✨");
+              alert(`인증 성공! [${finalType}] +${score}점이 적립되었습니다. ✨`);
               document.getElementById(type + '-comment').value = "";
               document.getElementById(type + '-preview-box').style.display = 'none';
               const placeholder = document.getElementById(type + '-upload-placeholder');
