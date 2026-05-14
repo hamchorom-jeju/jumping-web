@@ -3,112 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GENIE WORLD - Nohyung Village v42.1</title>
-    <!-- Warm Game Village v42.1 CSS -->
+    <title>GENIE WORLD - Nohyung Village v43.0</title>
+    <!-- Silver-Friendly v43.0 CSS -->
     <link rel="stylesheet" href="index.css">
     <!-- Icon Library -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-    <div class="village-container">
+    <!-- 📢 TOP NEWS SYSTEM -->
+    <header class="v-top-news">
+        <div class="v-notice-fixed">📢 [마을 공지] 33 챌린지 시즌 4주차 결산 (목) | 20시 이후 금식 엄수!</div>
+        <div class="v-pillar-ticker" id="ranking-ticker">
+            <!-- Rotating Hall of Fame Content -->
+            금주 체력왕: 홍길동 님 ✨
+        </div>
+        <div class="v-sudden-bar" id="sudden-mission-bar">
+            ⚡ [보너스 퀘스트 선포!] 지금 바로 플랭크 인증 시 방어력 +20!
+        </div>
+    </header>
+
+    <div class="v-container">
         
-        <!-- 🏛️ VILLAGE SQUARE TOP (Notice Wall & Ranking Pillar) -->
-        <section class="village-square-top">
-            <!-- Village Wall (Notice Board) -->
-            <div class="village-wall">
-                <div class="notice-content">
-                    • 33 챌린지 시즌 4주차 결산 (목)<br>
-                    • 이장님 가이드: 수분은 보약입니다.<br>
-                    • 마을 수칙: 20시 이후 금식 엄수!
-                </div>
+        <!-- 📋 모험가 상태창 (v43.0 Left/Right Split) -->
+        <section class="status-window-v43">
+            <!-- Left: Profile & Ranking -->
+            <div class="profile-card">
+                <div class="avatar-v43">🧚‍♂️</div>
+                <h2 style="font-size: 1rem; font-weight: 900; color: var(--v-wood);"><span id="user-name">모험가</span> 님</h2>
+                <span style="font-size: 0.75rem; font-weight: 800; color: var(--perf); display: block; margin-bottom: 10px;">꿈나무 요정</span>
+                
+                <span class="total-score-label">TOTAL SCORE</span>
+                <span class="total-score-val" id="total-score">84,200</span>
+                
+                <div class="rank-badge">랭킹 <span id="current-rank">12</span>위</div>
             </div>
 
-            <!-- Pillar of Records (Hall of Fame) -->
-            <div class="pillar-of-records">
-                <div class="pillar-title">🏆 명예의 전당</div>
-                <div class="ranking-ticker" id="ranking-text">
-                    [지난주 킹]<br>
-                    강열정 님
+            <!-- Right: Ability Gauges -->
+            <div class="gauge-section">
+                <!-- Health Gauge -->
+                <div class="gauge-item">
+                    <div class="gauge-header">
+                        <span style="color: var(--health);">❤️ 체력 (Health)</span>
+                        <span id="health-val">15,400</span>
+                    </div>
+                    <div class="gauge-bar-bg">
+                        <div class="gauge-fill" id="health-bar" style="width: 75%; background: var(--health);"></div>
+                    </div>
+                    <div class="gauge-sub-info">
+                        <span>주간: <span id="health-weekly">450</span></span>
+                        <span>월간: <span id="health-monthly">1,200</span></span>
+                    </div>
+                </div>
+
+                <!-- Performance Gauge -->
+                <div class="gauge-item">
+                    <div class="gauge-header">
+                        <span style="color: var(--perf);">🗡️ 수행력 (Perf.)</span>
+                        <span id="perf-val">24,500</span>
+                    </div>
+                    <div class="gauge-bar-bg">
+                        <div class="gauge-fill" id="perf-bar" style="width: 65%; background: var(--perf);"></div>
+                    </div>
+                    <div class="gauge-sub-info">
+                        <span>주간: <span id="perf-weekly">680</span></span>
+                        <span>월간: <span id="perf-monthly">2,400</span></span>
+                    </div>
+                </div>
+
+                <!-- Defense Gauge -->
+                <div class="gauge-item">
+                    <div class="gauge-header">
+                        <span style="color: var(--def);">🛡️ 방어력 (Def.)</span>
+                        <span id="def-val">18,200</span>
+                    </div>
+                    <div class="gauge-bar-bg">
+                        <div class="gauge-fill" id="def-bar" style="width: 55%; background: var(--def);"></div>
+                    </div>
+                    <div class="gauge-sub-info">
+                        <span>주간: <span id="def-weekly">320</span></span>
+                        <span>월간: <span id="def-monthly">950</span></span>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- 📋 모험가 상태창 (User Status Window) -->
-        <section class="status-window">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
-                <div style="width: 60px; height: 60px; background: #fff; border-radius: 50%; border: 2px solid var(--performance); display: flex; align-items: center; justify-content: center; font-size: 1.8rem;">🧚‍♂️</div>
-                <div>
-                    <h2 style="font-size: 1rem; font-weight: 900;"><span id="user-name">모험가</span> 님의 능력치</h2>
-                    <span style="font-size: 0.7rem; color: var(--text-dim); font-weight: 800;">TIER: <span id="tier-name" style="color: var(--performance);">꿈나무 요정</span></span>
-                </div>
-            </div>
-
-            <!-- Stat Grid -->
-            <div class="stat-grid">
-                <div class="stat-item" style="border-top: 3px solid var(--health);">
-                    <span class="stat-label">❤️ 체력 (Health)</span>
-                    <span class="stat-val" id="health-total">15,400</span>
-                    <div class="stat-sub">주간: <span id="health-weekly">450</span></div>
-                </div>
-                <div class="stat-item" style="border-top: 3px solid var(--performance);">
-                    <span class="stat-label">🗡️ 수행력 (Perf.)</span>
-                    <span class="stat-val" id="perf-total">24,500</span>
-                    <div class="stat-sub">주간: <span id="perf-weekly">680</span></div>
-                </div>
-                <div class="stat-item" style="border-top: 3px solid var(--defense);">
-                    <span class="stat-label">🛡️ 방어력 (Def.)</span>
-                    <span class="stat-val" id="def-total">18,200</span>
-                    <div class="stat-sub">주간: <span id="def-weekly">320</span></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ⚔️ 퀘스트 수행지 (Quest Center) -->
-        <section class="quest-section">
-            <h3 style="font-size: 0.9rem; font-weight: 900; color: var(--village-wood); margin-bottom: 10px;">⚔️ 활성화된 퀘스트</h3>
+        <!-- ⚔️ 퀘스트 허브 (Action Grid) -->
+        <section class="v-quest-hub">
+            <h3 style="font-size: 1rem; font-weight: 900; color: var(--v-wood); margin-bottom: 15px;">⚔️ 퀘스트 활성화 (Quest)</h3>
             
-            <!-- Water Slider -->
-            <div style="background: rgba(255,255,255,0.4); padding: 12px; border-radius: 15px; margin-bottom: 10px;">
-                <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.75rem; margin-bottom: 5px;">
+            <div class="v-btn-grid">
+                <div class="v-action-btn" onclick="syncClubRecord()" style="border-color: var(--perf);">⚡ 클럽 동기화</div>
+                <div class="v-action-btn" onclick="location.href='miracle.html?cat=visit'">📸 방문 인증</div>
+                <div class="v-action-btn" onclick="location.href='miracle.html?cat=meal'">🍱 식단 인증</div>
+                <div class="v-action-btn" onclick="triggerSuddenMission()" style="background: var(--v-paper);">✨ 보너스 퀘스트</div>
+            </div>
+
+            <!-- Water Hunter Slider -->
+            <div style="background: #fff; padding: 15px; border-radius: 20px; border: 1px solid var(--v-border);">
+                <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.85rem; margin-bottom: 10px;">
                     <span>💧 워터 헌터 (수분 보충)</span>
                     <span id="water-val">1.2L / 2.0L</span>
                 </div>
                 <input type="range" style="width: 100%;" id="water-range" min="0" max="20" value="12">
             </div>
+        </section>
 
-            <!-- Action Grid -->
-            <div class="quest-btn-grid">
-                <div class="village-btn" onclick="location.href='miracle.html?cat=meal'">🍱 식단 인증</div>
-                <div class="village-btn" onclick="syncClubRecord()">⚡ 클럽 동기화</div>
-                <div class="village-btn" onclick="location.href='miracle.html?cat=visit'">📸 방문 인증</div>
-                <div class="village-btn" onclick="triggerSuddenMission()">✨ 돌발 퀘스트</div>
+        <!-- 🛡️ 습관 수호 & 미라클 플러스 -->
+        <section class="habit-plus-section">
+            <h3 style="font-size: 1rem; font-weight: 900; color: var(--v-wood); margin-bottom: 15px;"><i class="fa-solid fa-shield-halved"></i> 습관 수호 (Habit)</h3>
+            
+            <div id="habit-list-container">
+                <!-- Habits with pop-up logic will be rendered here -->
+            </div>
+
+            <!-- Miracle Plus (Bonus) -->
+            <div class="miracle-plus-box">
+                <h4 class="plus-title">✨ 미라클 플러스 (인생의 성취)</h4>
+                <div class="plus-guide">
+                    <strong>의의</strong>: 사소하지만 인생을 풍요롭게 만드는 사소한 승리들을 인증해주세요.<br>
+                    <strong>가이드</strong>: 새벽기상, 지혜의 탐구(독서), 환경수호, 기타 사소한 성취 등<br>
+                    <button class="v-action-btn" style="width: 100%; margin-top: 10px; padding: 10px;" onclick="location.href='miracle.html?cat=plus'">보너스 인증하기</button>
+                </div>
             </div>
         </section>
 
-        <!-- 📋 습관 퀘스트 -->
-        <section class="quest-section">
-            <h3 style="font-size: 0.9rem; font-weight: 900; color: var(--village-wood); margin-bottom: 10px;">🛡️ 습관 수호 (Habit)</h3>
-            <div id="habit-list-container"></div>
-        </section>
-
     </div>
 
-    <!-- ⚡ SUDDEN MISSION ALERT -->
-    <div id="sudden-alert">
-        <h2 style="color: var(--health); font-weight: 900; margin-bottom: 15px;">⚡ [돌발 계시] ⚡</h2>
-        <p id="sudden-title" style="font-weight: 800; margin-bottom: 10px;"></p>
-        <p id="sudden-desc" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;"></p>
-        <button onclick="hideSuddenMission()" style="background: var(--health); color: #fff; border: none; padding: 10px 25px; border-radius: 10px; font-weight: 800; cursor: pointer;">퀘스트 수락!</button>
-    </div>
-
-    <!-- 📱 VILLAGE LANDMARKS -->
-    <nav class="landmark-nav">
-        <a href="index.html" class="landmark-item active"><i class="fa-solid fa-city"></i><span>광장</span></a>
-        <a href="miracle.html" class="landmark-item"><i class="fa-solid fa-shrine"></i><span>기록소</span></a>
-        <a href="community.html" class="landmark-item"><i class="fa-solid fa-tent"></i><span>여행자 숙소</span></a>
-        <a href="library.html" class="landmark-item"><i class="fa-solid fa-book-atlas"></i><span>지식 창고</span></a>
-        <a href="gate.html" class="landmark-item"><i class="fa-solid fa-torii-gate"></i><span>지니 게이트</span></a>
+    <!-- 📱 VILLAGE NAV -->
+    <nav class="v-nav">
+        <a href="index.html" class="v-nav-item active"><i class="fa-solid fa-city"></i><span>광장</span></a>
+        <a href="miracle.html" class="v-nav-item"><i class="fa-solid fa-shrine"></i><span>기록소</span></a>
+        <a href="community.html" class="v-nav-item"><i class="fa-solid fa-tent"></i><span>여행자 숙소</span></a>
+        <a href="library.html" class="v-nav-item"><i class="fa-solid fa-book-atlas"></i><span>지식 창고</span></a>
+        <a href="gate.html" class="v-nav-item"><i class="fa-solid fa-torii-gate"></i><span>지니 게이트</span></a>
     </nav>
 
     <script src="dashboard.js"></script>

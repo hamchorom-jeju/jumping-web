@@ -1,18 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap');
 
 :root {
-    --village-sun: #fffdf5;
-    --village-wood: #5d4037;
-    --village-stone: #bdc3c7;
-    --village-paper: #fef9e7;
-    --village-border: #d2b48c;
+    --v-bg: #fffdf5;
+    --v-wood: #5d4037;
+    --v-paper: #fef9e7;
+    --v-border: #d2b48c;
     
-    --gold: #f1c40f;
     --health: #e74c3c;
-    --performance: #f1c40f;
-    --defense: #3498db;
+    --perf: #f1c40f;
+    --def: #3498db;
+    --gold: #f1c40f;
     
-    --glass-warm: rgba(255, 255, 255, 0.75);
     --text-main: #2b1d0e;
     --text-dim: #5d4037;
 }
@@ -25,169 +23,221 @@
 }
 
 body {
-    background: var(--village-sun);
-    background-image: url('https://www.transparenttextures.com/patterns/paper.png');
+    background: var(--v-bg);
     color: var(--text-main);
     min-height: 100vh;
-    padding-bottom: 100px;
+    padding-bottom: 120px;
 }
 
-.village-container {
+.v-container {
     max-width: 500px;
     margin: 0 auto;
     padding: 15px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 15px;
 }
 
-/* --- 🏛️ VILLAGE SQUARE TOP (Wall & Pillar) --- */
-.village-square-top {
-    display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-/* 📜 Village Wall (Notice) */
-.village-wall {
-    background: var(--village-paper);
-    border: 3px solid var(--village-border);
-    border-radius: 15px;
-    padding: 12px;
-    position: relative;
-    box-shadow: 3px 3px 10px rgba(0,0,0,0.05);
-    min-height: 120px;
-}
-
-.village-wall::before {
-    content: "📌 공지사항";
-    position: absolute;
-    top: -10px;
-    left: 10px;
-    background: var(--village-wood);
+/* --- 📢 TOP NEWS SYSTEM --- */
+.v-top-news {
+    background: var(--v-wood);
     color: #fff;
-    padding: 2px 8px;
-    font-size: 0.65rem;
-    font-weight: 800;
-    border-radius: 5px;
-}
-
-.notice-content {
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    line-height: 1.4;
-    margin-top: 5px;
-}
-
-/* 🏛️ Pillar of Records (Ranking) */
-.pillar-of-records {
-    background: linear-gradient(135deg, var(--village-wood), #3e2723);
     border-radius: 15px;
-    padding: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.v-notice-fixed {
+    background: #4e342e;
+    padding: 8px 15px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.v-pillar-ticker {
+    padding: 10px 15px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 900;
     color: var(--gold);
     text-align: center;
-    border: 2px solid var(--gold);
-    box-shadow: 0 0 15px rgba(241, 196, 15, 0.2);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
 }
 
-.pillar-title { font-size: 0.6rem; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; }
-.ranking-ticker { font-size: 0.75rem; font-weight: 800; line-height: 1.3; }
-
-/* --- ⚡ SUDDEN MISSION ALERT --- */
-#sudden-alert {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    width: 280px;
-    background: #fff;
-    border: 4px solid var(--health);
-    border-radius: 25px;
-    padding: 25px;
-    z-index: 5000;
-    text-align: center;
-    box-shadow: 0 30px 100px rgba(0,0,0,0.4);
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+.v-sudden-bar {
+    background: var(--health);
+    padding: 6px 15px;
+    font-size: 0.7rem;
+    font-weight: 900;
+    display: none; /* Show when active */
+    animation: flash 1.5s infinite;
 }
 
-#sudden-alert.active { transform: translate(-50%, -50%) scale(1); }
+@keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
 
-/* --- 📋 STATUS WINDOW (User Data) --- */
-.status-window {
-    background: var(--village-paper);
-    border: 2px solid var(--village-border);
+/* --- 📋 STATUS WINDOW v43.0 (Left/Right) --- */
+.status-window-v43 {
+    background: var(--v-paper);
+    border: 3px solid var(--v-border);
     border-radius: 30px;
     padding: 20px;
-}
-
-.stat-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-top: 15px;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 15px;
+    align-items: center;
 }
 
-.stat-item {
+/* Left: Profile Card */
+.profile-card {
     text-align: center;
-    background: rgba(255,255,255,0.6);
-    padding: 10px 4px;
-    border-radius: 15px;
-    border: 1px solid var(--village-border);
+    border-right: 1px solid var(--v-border);
+    padding-right: 10px;
 }
 
-.stat-label { font-size: 0.6rem; font-weight: 800; display: block; margin-bottom: 3px; }
-.stat-val { font-size: 0.8rem; font-weight: 900; display: block; }
-.stat-sub { font-size: 0.55rem; color: var(--text-dim); }
+.avatar-v43 {
+    width: 70px; height: 70px;
+    margin: 0 auto 10px;
+    background: #fff;
+    border-radius: 50%;
+    border: 3px solid var(--perf);
+    display: flex; align-items: center; justify-content: center; font-size: 2.2rem;
+}
 
-/* --- ⚔️ QUEST CENTER --- */
-.quest-section {
-    background: var(--glass-warm);
+.total-score-label { font-size: 0.65rem; font-weight: 800; color: var(--text-dim); }
+.total-score-val { font-size: 1.6rem; font-weight: 900; display: block; margin: 2px 0; color: var(--v-wood); }
+.rank-badge { 
+    background: var(--v-wood); color: #fff; 
+    padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 900;
+}
+
+/* Right: Ability Gauges */
+.gauge-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.gauge-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.gauge-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    font-weight: 900;
+}
+
+.gauge-bar-bg {
+    background: rgba(0,0,0,0.05);
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.02);
+}
+
+.gauge-fill {
+    height: 100%;
+    transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.gauge-sub-info {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    font-weight: 700;
+    display: flex;
+    gap: 8px;
+}
+
+/* --- ⚔️ QUEST HUB (Action Grid) --- */
+.v-quest-hub {
+    background: rgba(255,255,255,0.7);
     backdrop-filter: blur(10px);
     border-radius: 25px;
-    padding: 18px;
+    padding: 20px;
+    border: 1px solid var(--v-border);
+}
+
+.v-btn-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.v-action-btn {
+    background: #fff;
+    border: 2px solid var(--v-border);
+    padding: 15px 10px;
+    border-radius: 20px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: 900;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.v-action-btn:active { transform: scale(0.95); background: var(--v-paper); }
+
+/* --- 📋 HABIT & PLUS --- */
+.habit-plus-section {
+    background: rgba(255,255,255,0.5);
+    border-radius: 25px;
+    padding: 20px;
     border: 1px solid rgba(93, 64, 55, 0.1);
 }
 
-.quest-btn-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    margin-top: 15px;
+.miracle-plus-box {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px dashed var(--v-border);
 }
 
-.village-btn {
+.plus-title {
+    font-size: 0.9rem;
+    font-weight: 900;
+    color: var(--def);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.plus-guide {
     background: #fff;
-    border: 1px solid var(--village-border);
     padding: 12px;
     border-radius: 15px;
-    text-align: center;
-    cursor: pointer;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    line-height: 1.5;
 }
 
 /* --- 📱 NAV BAR --- */
-.landmark-nav {
+.v-nav {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
+    bottom: 0; left: 0; width: 100%;
     background: #fff;
-    display: flex;
-    justify-content: space-around;
-    padding: 10px 10px 30px;
-    border-top: 2px solid var(--village-paper);
+    display: flex; justify-content: space-around;
+    padding: 12px 10px 35px;
+    border-top: 2px solid var(--v-paper);
     z-index: 2000;
 }
 
-.landmark-item {
+.v-nav-item {
     text-align: center;
     color: var(--text-dim);
     text-decoration: none;
-    font-size: 0.65rem;
-    font-weight: 800;
+    font-size: 0.7rem;
+    font-weight: 900;
 }
-.landmark-item i { font-size: 1.5rem; display: block; margin-bottom: 3px; }
-.landmark-item.active { color: var(--performance); }
+
+.v-nav-item i { font-size: 1.8rem; display: block; margin-bottom: 4px; }
+.v-nav-item.active { color: var(--perf); }
