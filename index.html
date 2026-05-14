@@ -297,8 +297,21 @@
     window.onload = function() {
       if (TARGET_NAME) document.getElementById('user-name').innerText = TARGET_NAME + " 님";
       renderHabits();
-      if (TARGET_PHONE) loadMemberData();
+      if (TARGET_PHONE) {
+        loadMemberData();
+        google.script.run.recordAppAccess({ phone: TARGET_PHONE, name: TARGET_NAME });
+      }
+      loadPillarNotice();
     };
+
+    function loadPillarNotice() {
+      google.script.run.withSuccessHandler(res => {
+        const ticker = document.querySelector('.pillar-ticker');
+        if (ticker && res.content) {
+          ticker.innerText = `🌌 [지니의 계시] ${res.content} | ${res.content} | ${res.content}`;
+        }
+      }).getPillarNotice();
+    }
 
     function renderHabits() {
       const list = document.getElementById('habit-list');

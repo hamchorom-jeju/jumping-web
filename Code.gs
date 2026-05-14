@@ -4367,3 +4367,162 @@ function submit33Action(data) {
     return { success: false, error: e.toString() };
   }
 }
+
+/**
+ * 📜 전령의 기둥 (실시간 공지) 관련 로직
+ */
+function getPillarNotice() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("마을_공지") || ss.insertSheet("마을_공지");
+    if (sheet.getLastRow() < 1) return { content: "오늘도 건강한 하루 되세요! 지니 월드에 오신 것을 환영합니다." };
+    
+    var data = sheet.getDataRange().getValues();
+    // 가장 마지막(최신) 활성화된 공지 가져오기
+    for (var i = data.length - 1; i >= 1; i--) {
+      if (data[i][3] === true || data[i][3] === "TRUE") {
+        return { content: data[i][1], category: data[i][2] };
+      }
+    }
+    return { content: "특별한 계시가 없는 평화로운 날입니다." };
+  } catch(e) { return { content: "전령의 기둥이 흔들리고 있습니다..." }; }
+}
+
+function updatePillarNotice(data) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("마을_공지") || ss.insertSheet("마을_공지");
+    
+    // 기존 공지 비활성화 (선택 사항)
+    var lastRow = sheet.getLastRow();
+    if (lastRow > 1) {
+      // 모든 공지 비활성화 처리 로직 생략 가능 (최신순으로 가져오므로)
+    }
+    
+    sheet.appendRow([new Date(), data.content, data.category || "일반", true]);
+    return { success: true };
+  } catch(e) { return { success: false, error: e.toString() }; }
+}
+
+/**
+ * ✍️ 지혜의 보물고 (집필실) 관련 로직
+ */
+function getWisdomTips() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("지혜의_보물고") || ss.insertSheet("지혜의_보물고");
+    if (sheet.getLastRow() < 1) return [];
+    
+    var data = sheet.getDataRange().getDisplayValues();
+    var tips = [];
+    for (var i = 1; i < data.length; i++) {
+      tips.push({
+        id: i,
+        date: data[i][0],
+        title: data[i][1],
+        content: data[i][2],
+        category: data[i][3],
+        author: data[i][4]
+      });
+    }
+    return tips.reverse(); // 최신순
+  } catch(e) { return []; }
+}
+
+function saveWisdomTip(data) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("지혜의_보물고") || ss.insertSheet("지혜의_보물고");
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(["날짜", "제목", "내용", "카테고리", "작성자", "조회수"]);
+    }
+    sheet.appendRow([new Date(), data.title, data.content, data.category, "길드마스터", 0]);
+    return { success: true };
+  } catch(e) { return { success: false, error: e.toString() }; }
+}
+
+/**
+ * ✨ 이장의 축복 (추가 보상) 관련 로직
+ */
+function getRecentCertifications() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("33챌린지_기록");
+    if (!sheet) return [];
+    
+    var data = sheet.getDataRange().getDisplayValues();
+    var recent = [];
+    // 최근 20건 중 식단/퀘스트만 추출
+    for (var i = data.length - 1; i >= Math.max(1, data.length - 50); i--) {
+      if (data[i][3] === "식단" || data[i][3] === "퀘스트") {
+        recent.push({
+          rowIdx: i + 1,
+          date: data[i][0],
+          name: data[i][1],
+          phone: data[i][2],
+          type: data[i][3],
+          item: data[i][4],
+          content: data[i][5],
+          imageUrl: data[i][7]
+        });
+      }
+    }
+    return recent;
+  } catch(e) { return []; }
+}
+
+function blessAction(data) {
+  try {
+    // 축복 시 추가 점수(+5) 지급 로직
+    var result = submit33Action({
+      phone: data.phone,
+      name: data.name,
+      type: "축복",
+      item: "이장의축복",
+      value: "특별 보너스",
+      score: 5
+    });
+    return result;
+  } catch(e) { return { success: false, error: e.toString() }; }
+}
+
+/**
+ * 📱 앱 접속 기록 및 일일 활성 모험가 집계
+ */
+function recordAppAccess(data) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("앱_접속_로그") || ss.insertSheet("앱_접속_로그");
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(["날짜", "시간", "연락처", "이름"]);
+    }
+    var now = new Date();
+    sheet.appendRow([
+      Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd"),
+      Utilities.formatDate(now, "GMT+9", "HH:mm:ss"),
+      data.phone,
+      data.name
+    ]);
+    return { success: true };
+  } catch(e) { return { success: false }; }
+}
+
+function getDailyActiveAdventurers() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("앱_접속_로그");
+    if (!sheet) return 0;
+    
+    var data = sheet.getDataRange().getValues();
+    var todayStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
+    var activeUsers = new Set();
+    
+    for (var i = 1; i < data.length; i++) {
+      var logDate = (data[i][0] instanceof Date) ? Utilities.formatDate(data[i][0], "GMT+9", "yyyy-MM-dd") : String(data[i][0]);
+      if (logDate === todayStr) {
+        activeUsers.add(data[i][2]); // 연락처(Unique ID) 기준
+      }
+    }
+    return activeUsers.size;
+  } catch(e) { return 0; }
+}
