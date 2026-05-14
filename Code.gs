@@ -172,20 +172,19 @@ function searchMembersByDigits(payload) {
     var matches = [];
     
     for (var i = 1; i < data.length; i++) {
-      var rowStr = data[i].join("|"); // 한 줄을 통째로 문자열로 합침
-      var name = String(data[i][0] || "모험가").trim();
-      var phone = "";
+      var name = String(data[i][1] || "모험가").trim(); // B열: 이름
+      var phoneRaw = String(data[i][2] || "").trim(); // C열: 휴대폰
+      var phoneOnlyDigits = phoneRaw.replace(/[^0-9]/g, "");
       
-      // 전화번호를 찾기 위해 모든 셀을 검사 (숫자만 추출)
-      for (var j = 0; j < data[i].length; j++) {
-        var cellStr = String(data[i][j]).replace(/[^0-9]/g, "");
-        if (cellStr.length >= 4) {
-          phone = cellStr; 
-          if (cellStr.endsWith(digits) || cellStr.indexOf(digits) > -1) {
-            matches.push({ name: name, phone: phone });
-            break;
-          }
-        }
+      // 휴대폰 번호(C열)에서 뒷자리 매칭 확인
+      if (phoneOnlyDigits.endsWith(digits) || phoneOnlyDigits.indexOf(digits) > -1) {
+        // 중복 방지를 위해 전화번호 힌트 포함
+        var phoneHint = phoneRaw.length > 4 ? "****" + phoneRaw.slice(-4) : phoneRaw;
+        matches.push({ 
+          name: name, 
+          phone: phoneOnlyDigits,
+          hint: phoneHint
+        });
       }
     }
     

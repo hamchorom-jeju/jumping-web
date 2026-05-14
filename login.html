@@ -116,7 +116,7 @@
                   btn.style.background = "#fff";
                   btn.style.color = "var(--v-wood)";
                   btn.style.border = "2px solid var(--v-wood)";
-                  btn.innerHTML = `<b>${m.name}</b> 모험가로 입장`;
+                  btn.innerHTML = `<b>${m.name}</b> 모험가로 입장 <i class="fas fa-chevron-right" style="font-size:0.8rem; margin-left:5px;"></i>`;
                   btn.onclick = () => selectMember(m.name, m.phone);
                   listDiv.appendChild(btn);
                 });
