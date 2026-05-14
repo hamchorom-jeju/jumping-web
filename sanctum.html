@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>VILLAGE CHIEF'S SANCTUM - GENIE WORLD</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Pretendard:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sanctum-purple: #4c1d95;
+      --sanctum-gold: #d97706;
+      --sanctum-bg: #0f172a;
+      --sanctum-card: rgba(30, 41, 59, 0.7);
+      --sanctum-border: rgba(217, 119, 6, 0.2);
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', 'Pretendard', sans-serif; }
+
+    body {
+      background: var(--sanctum-bg);
+      background-image: 
+        radial-gradient(circle at 0% 0%, rgba(76, 29, 149, 0.2) 0%, transparent 50%),
+        url('https://www.transparenttextures.com/patterns/dark-leather.png');
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding-bottom: 50px;
+    }
+
+    /* 🏠 헤더 (Sanctum Header) */
+    .header {
+      padding: 30px 20px; text-align: center; border-bottom: 1px solid var(--sanctum-border);
+      background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(20px);
+    }
+    .header h1 { font-size: 1.5rem; font-weight: 900; color: var(--sanctum-gold); letter-spacing: 2px; }
+    .header p { font-size: 0.8rem; color: var(--text-sub); margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
+
+    .container { width: 100%; max-width: 800px; margin: 0 auto; padding: 20px; }
+
+    /* 🔮 수정구 모니터링 (Crystal Ball Monitoring) */
+    .crystal-ball-section {
+      background: radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.15), transparent);
+      border-radius: 40px; padding: 40px 20px; text-align: center; margin-bottom: 40px;
+      border: 1px solid var(--sanctum-border); position: relative;
+    }
+    .crystal-ball-section h2 { font-size: 1.2rem; font-weight: 900; margin-bottom: 20px; color: var(--sanctum-gold); }
+    .village-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    .v-stat-card { background: var(--sanctum-card); padding: 20px 10px; border-radius: 24px; border: 1px solid var(--sanctum-border); }
+    .v-stat-val { font-size: 1.8rem; font-weight: 900; display: block; margin-bottom: 5px; }
+    .v-stat-label { font-size: 0.7rem; color: var(--text-sub); font-weight: 700; }
+
+    /* ⚖️ 심판의 저울 (Scales of Judgment) */
+    .section-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .section-title::before { content: ''; width: 4px; height: 20px; background: var(--sanctum-gold); border-radius: 2px; }
+
+    .judgment-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: 40px; }
+    .judgment-card {
+      background: var(--sanctum-card); border-radius: 24px; padding: 20px;
+      display: flex; align-items: center; gap: 20px; border: 1px solid var(--sanctum-border);
+    }
+    .adventurer-avatar { width: 60px; height: 60px; background: rgba(0,0,0,0.3); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+    .judgment-info { flex: 1; }
+    .judgment-info h3 { font-size: 1rem; font-weight: 800; }
+    .judgment-info p { font-size: 0.75rem; color: var(--text-sub); margin-top: 2px; }
+    .judgment-actions { display: flex; gap: 10px; }
+    .j-btn {
+      width: 45px; height: 45px; border-radius: 12px; border: none; cursor: pointer;
+      font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .j-btn-approve { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .j-btn-reject { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .j-btn:active { transform: scale(0.9); }
+
+    /* 🔮 계시의 창 (Revelations Window) */
+    .revelation-box {
+      background: var(--sanctum-card); border-radius: 30px; padding: 30px;
+      border: 1px solid var(--sanctum-border); margin-bottom: 40px;
+    }
+    .revelation-box textarea {
+      width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--sanctum-border);
+      border-radius: 15px; padding: 20px; color: white; font-size: 0.95rem; min-height: 100px;
+      margin-bottom: 20px; resize: none;
+    }
+    .revelation-box textarea:focus { outline: none; border-color: var(--sanctum-gold); }
+    .rev-btn {
+      width: 100%; background: linear-gradient(90deg, var(--sanctum-purple), var(--sanctum-gold));
+      border: none; border-radius: 15px; padding: 18px; color: white; font-size: 1rem;
+      font-weight: 900; cursor: pointer; box-shadow: 0 10px 25px rgba(217, 119, 6, 0.2);
+    }
+
+    /* 💼 실무 모드 버튼 */
+    .switch-btn {
+      position: fixed; top: 25px; right: 20px; z-index: 1100;
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+      color: white; padding: 8px 15px; border-radius: 12px; font-size: 0.75rem;
+      font-weight: 800; cursor: pointer; backdrop-filter: blur(10px);
+    }
+
+    .empty-msg { text-align: center; padding: 40px; color: var(--text-sub); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+  <button class="switch-btn" onclick="window.location.href='admin.html'">💼 실무 모드 전환</button>
+
+  <header class="header">
+    <h1>마을 이장의 집</h1>
+    <p>Sanctum of the Village Chief</p>
+  </header>
+
+  <div class="container">
+    
+    <!-- 🔮 수정구 모니터링 -->
+    <div class="crystal-ball-section">
+      <h2>🔮 마을 실시간 정세</h2>
+      <div class="village-stats">
+        <div class="v-stat-card">
+          <span class="v-stat-val" id="v-today-active">0</span>
+          <span class="v-stat-label">오늘의 모험가</span>
+        </div>
+        <div class="v-stat-card">
+          <span class="v-stat-val" id="v-today-points">0</span>
+          <span class="v-stat-label">누적 획득 EXP</span>
+        </div>
+        <div class="v-stat-card">
+          <span class="v-stat-val" id="v-pending-count">0</span>
+          <span class="v-stat-label">대기 중인 심판</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🔮 계시의 창 -->
+    <div class="section-title">🔮 계시의 창 (공지 및 푸시)</div>
+    <div class="revelation-box">
+      <textarea id="revelation-text" placeholder="마을 전체에 선포할 계시를 입력하세요... (예: 오늘 쉐이크 인증 시 포인트 2배 하사!)"></textarea>
+      <button class="rev-btn" onclick="sendRevelation()">계시 선포하기</button>
+    </div>
+
+    <!-- ⚖️ 심판의 저울 -->
+    <div class="section-title">⚖️ 심판의 저울 (인증 검토)</div>
+    <div class="judgment-list" id="judgment-list">
+      <div class="empty-msg">심판을 기다리는 모험가가 없습니다.</div>
+    </div>
+
+  </div>
+
+  <script>
+    window.onload = function() {
+      loadSanctumData();
+    };
+
+    function loadSanctumData() {
+      // 실제 구현 시 google.script.run으로 데이터 로드
+      // 임시 샘플 데이터
+      document.getElementById('v-today-active').innerText = "14";
+      document.getElementById('v-today-points').innerText = "1,240";
+      document.getElementById('v-pending-count').innerText = "3";
+
+      renderJudgments([
+        { id: 1, name: "김모험", type: "식단(점심)", avatar: "🌳", desc: "단백질 쉐이크와 샐러드" },
+        { id: 2, name: "이성실", type: "미라클(계단)", avatar: "🌿", desc: "10층 계단 오르기 완료" },
+        { id: 3, name: "박열정", type: "식단(저녁)", avatar: "🌱", desc: "닭가슴살 도시락 인증" }
+      ]);
+    }
+
+    function renderJudgments(data) {
+      const list = document.getElementById('judgment-list');
+      if (data.length === 0) {
+        list.innerHTML = '<div class="empty-msg">심판을 기다리는 모험가가 없습니다.</div>';
+        return;
+      }
+      list.innerHTML = data.map(j => `
+        <div class="judgment-card" id="j-card-${j.id}">
+          <div class="adventurer-avatar">${j.avatar}</div>
+          <div class="judgment-info">
+            <h3>${j.name} <span style="font-size:0.7rem; color:var(--sanctum-gold);">[${j.type}]</span></h3>
+            <p>${j.desc}</p>
+          </div>
+          <div class="judgment-actions">
+            <button class="j-btn j-btn-reject" onclick="judge(${j.id}, 'reject')">✕</button>
+            <button class="j-btn j-btn-approve" onclick="judge(${j.id}, 'approve')">✓</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function judge(id, action) {
+      const card = document.getElementById('j-card-' + id);
+      card.style.opacity = '0.5';
+      card.style.pointerEvents = 'none';
+      
+      const msg = action === 'approve' ? "승인되었습니다. 경험치가 하사됩니다." : "반려되었습니다.";
+      alert(`[심판 결과] ${msg}`);
+      
+      setTimeout(() => {
+        card.remove();
+        const remaining = document.querySelectorAll('.judgment-card').length;
+        document.getElementById('v-pending-count').innerText = remaining;
+        if (remaining === 0) renderJudgments([]);
+      }, 500);
+    }
+
+    function sendRevelation() {
+      const text = document.getElementById('revelation-text').value;
+      if (!text) return alert("선포할 내용을 입력하세요.");
+      
+      alert(`[계시 선포] "${text}" 내용이 마을 전체 전령의 기둥에 표시됩니다.`);
+      document.getElementById('revelation-text').value = "";
+    }
+  </script>
+</body>
+</html>
