@@ -1,6 +1,6 @@
 /**
- * Nohyung Village Dashboard Logic (v44.7 - Surgical Banner Separation)
- * Features: Separated Notice & Ranking Tickers, Immutable Status Window v44.0 Logic
+ * Nohyung Village Dashboard Logic (v44.8 - Multi-Tier Ranking & Global Header)
+ * Features: 3-Tier Ranking Ticker (Weekly/Monthly/Total), App Header Ready
  */
 
 const Village = {
@@ -38,12 +38,34 @@ const Village = {
         ]
     },
 
+    // 🏆 Multi-Tier Ranking Data
+    rankings: [
+        { type: "금주 랭킹", content: "체력왕: 홍길동 | 미션왕: 김개똥 | 수호왕: 이성실" },
+        { type: "월간 랭킹", content: "다이어트킹: 박지니 | 미션 선두: 최열정" },
+        { type: "토탈 랭킹", content: "1위: 전설모험가 | 2위: 꾸준지존 | 3위: 열정맨" }
+    ],
+    currentRankIndex: 0,
+
     init() {
-        console.log("v44.7 Surgical Revert & Banner Separation Initialized.");
+        console.log("v44.8 Global Header & 3-Tier Ticker Initialized.");
         this.renderAll();
         this.updateEvolution();
         this.startTicker();
         this.bindEvents();
+    },
+
+    startTicker() {
+        const ticker = document.getElementById('ranking-ticker');
+        setInterval(() => {
+            this.currentRankIndex = (this.currentRankIndex + 1) % this.rankings.length;
+            const r = this.rankings[this.currentRankIndex];
+            ticker.style.opacity = 0;
+            setTimeout(() => {
+                ticker.innerHTML = `<span style="font-size:0.7rem; opacity:0.7; display:block; margin-bottom:2px;">[${r.type}]</span>${r.content}`;
+                ticker.style.opacity = 1;
+                ticker.style.transition = 'opacity 0.5s';
+            }, 500);
+        }, 5000);
     },
 
     renderAll() {
@@ -123,25 +145,6 @@ const Village = {
             this.updateEvolution();
             if (ok) location.href = `miracle.html?cat=${(id === 'plus' ? 'plus' : 'habit')}&item=${id}`;
         }
-    },
-
-    startTicker() {
-        const ticker = document.getElementById('ranking-ticker');
-        let idx = 0;
-        const ranks = [
-            "금주 체력왕: 홍길동 님 ✨",
-            "금주 수행왕: 김개똥 님 🗡️",
-            "금주 수호왕: 이성실 님 🛡️"
-        ];
-        setInterval(() => {
-            idx = (idx + 1) % ranks.length;
-            ticker.style.opacity = 0;
-            setTimeout(() => {
-                ticker.innerText = ranks[idx];
-                ticker.style.opacity = 1;
-                ticker.style.transition = 'opacity 0.5s';
-            }, 500);
-        }, 5000);
     },
 
     bindEvents() {
