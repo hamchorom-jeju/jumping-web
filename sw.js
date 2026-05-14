@@ -1,14 +1,19 @@
-// Service Worker for Nohyung Jumping PWA
-// This is a minimal service worker to enable "Add to Home Screen" prompts.
+// Service Worker for Nohyung Jumping PWA (v44.117)
+// Strategy: Network First for HTML, Cache First for assets
 
-const CACHE_NAME = 'nohyung-jumping-v1';
+const CACHE_NAME = 'nohyung-jumping-v44';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
+  '/index.css',
+  '/dashboard.js',
+  '/therapy-icon.png',
   '/final-logo.png'
 ];
 
+// 🛠️ Install: Cache essential assets
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Force the waiting service worker to become active
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
@@ -16,10 +21,40 @@ self.addEventListener('install', (event) => {
   );
 });
 
+// 🧹 Activate: Clean up old caches (Crucial for fixing the "Purple Portal" issue)
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('[SW] Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
+});
+
+// 🌐 Fetch: Network-First for better update visibility
 self.addEventListener('fetch', (event) => {
+  // Only handle GET requests
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
+    fetch(event.request)
+      .then((response) => {
+        // If network request succeeds, update the cache
+        const responseClone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseClone);
+        });
+        return response;
+      })
+      .catch(() => {
+        // If network fails, try the cache
+        return caches.match(event.request);
+      })
   );
 });
