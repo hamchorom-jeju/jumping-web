@@ -16,9 +16,13 @@
     .v-tab-btn {
       flex: 1; padding: 12px; border: none; border-radius: 15px;
       font-weight: 900; font-size: 0.9rem; cursor: pointer;
-      transition: all 0.3s; color: var(--text-dim); background: transparent;
+      transition: all 0.3s; color: var(--text-main); background: transparent;
     }
-    .v-tab-btn.active { background: var(--v-wood); color: #fff; box-shadow: 0 4px 10px rgba(93, 64, 55, 0.2); }
+    .v-tab-btn.active { 
+      background: var(--v-wood) !important; 
+      color: #fff !important; 
+      box-shadow: 0 4px 10px rgba(93, 64, 55, 0.3); 
+    }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; animation: slideUp 0.4s ease-out; }
@@ -42,6 +46,28 @@
     .quest-item-info h4 { font-size: 0.95rem; font-weight: 900; color: var(--text-main); }
     .quest-item-info p { font-size: 0.75rem; color: var(--text-dim); font-weight: 700; opacity: 0.8; }
     .quest-pts { font-size: 0.85rem; font-weight: 900; color: var(--emerald); }
+
+    /* 🍱 식단 인증 카드 스타일 (복구) */
+    .meal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .meal-slot {
+      aspect-ratio: 1/1; background: #fff; border-radius: 20px;
+      border: 2px dashed var(--v-border); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+      transition: all 0.2s; position: relative; overflow: hidden;
+    }
+    .meal-slot:active { transform: scale(0.95); }
+    .meal-slot.has-img { border-style: solid; border-color: var(--emerald); }
+    .meal-slot .icon { font-size: 1.5rem; }
+    .meal-slot .label { font-size: 0.7rem; font-weight: 800; color: var(--text-dim); }
+    .meal-preview { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+    /* 🖼️ Premium Frame Effect */
+    .magic-frame {
+      position: absolute; inset: 0; border: 3px solid var(--emerald);
+      box-shadow: inset 0 0 10px rgba(46, 204, 113, 0.2); pointer-events: none;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .meal-slot.has-img .magic-frame { opacity: 1; }
 
     /* 📱 GLOBAL VILLAGE NAV (Standardized v44.116) */
     .v-nav {
@@ -92,8 +118,8 @@
         
         <div onclick="document.getElementById('file-input-quest').click()" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
           <span style="font-size:2.5rem; margin-bottom:10px;">📸</span>
-          <p style="font-size:0.85rem; color:var(--text-dim); font-weight:800;">기적의 순간을 촬영하세요</p>
-          <input type="file" id="file-input-quest" hidden accept="image/*" onchange="previewQuestImage(this)">
+          <p style="font-size:0.85rem; color:var(--text-dim); font-weight:800;">퀘스트 인증 사진 촬영</p>
+          <input type="file" id="file-input-quest" hidden accept="image/*" capture="camera" onchange="previewQuestImage(this)">
         </div>
         
         <div id="quest-preview-container" style="display: none; margin-top: 15px;">
@@ -145,8 +171,8 @@
         
         <div onclick="document.getElementById('file-input-habit').click()" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
           <span style="font-size:2.5rem; margin-bottom:10px;">📜</span>
-          <p style="font-size:0.85rem; color:var(--text-dim); font-weight:800;">실천한 습관을 기록하세요</p>
-          <input type="file" id="file-input-habit" hidden accept="image/*" onchange="previewHabitImage(this)">
+          <p style="font-size:0.85rem; color:var(--text-dim); font-weight:800;">습관 실천 인증 촬영</p>
+          <input type="file" id="file-input-habit" hidden accept="image/*" capture="camera" onchange="previewHabitImage(this)">
         </div>
 
         <select id="habit-select" style="width: 100%; margin-top: 15px; background: #fff; border: 2px solid var(--v-paper); padding: 15px; border-radius: 15px; font-weight: 800; font-size: 0.95rem; color: var(--text-main); outline: none;">
