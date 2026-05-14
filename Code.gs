@@ -4193,7 +4193,7 @@ function setup33ChallengeSheets() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheets = {
     "33챌린지_설정": ["시즌명", "시작일", "종료일", "상태", "참여인원", "설명"],
-    "33챌린지_기록": ["타임스탬프", "회원명", "연락처", "구분", "항목", "내용", "점수", "이미지URL"],
+    "33챌린지_기록": ["타임스탬프", "회원명", "연락처", "구분", "항목", "내용", "점수", "이미지URL", "상태"],
     "33챌린지_인바디": ["날짜", "회원명", "연락처", "체중", "골격근량", "체지방률", "변화점수", "비고"],
     "33챌린지_점수": ["회원명", "연락처", "총경험치", "퀘스트점수", "습관점수", "인바디점수", "현재레벨", "최종업데이트"]
   };
@@ -4309,7 +4309,7 @@ function submit33Action(data) {
     var phoneOnly = String(data.phone).replace(/[^0-9]/g, "");
     
     // 1. 기록 추가 (appendRow)
-    // ["타임스탬프", "회원명", "연락처", "구분", "항목", "내용", "점수", "이미지URL"]
+    // ["타임스탬프", "회원명", "연락처", "구분", "항목", "내용", "점수", "이미지URL", "상태"]
     recordSheet.appendRow([
       timestamp, 
       data.name, 
@@ -4318,7 +4318,8 @@ function submit33Action(data) {
       data.item, 
       data.value || "", 
       data.score || 0, 
-      data.imageUrl || ""
+      data.imageUrl || "",
+      (data.type === "식단" || data.type === "퀘스트") ? "대기" : "승인"
     ]);
     
     // 2. 점수 합산 (Upsert 로직)
@@ -4452,9 +4453,8 @@ function getRecentCertifications() {
     
     var data = sheet.getDataRange().getDisplayValues();
     var recent = [];
-    // 최근 20건 중 식단/퀘스트만 추출
-    for (var i = data.length - 1; i >= Math.max(1, data.length - 50); i--) {
-      if (data[i][3] === "식단" || data[i][3] === "퀘스트") {
+      // 오직 '대기' 상태인 식단/퀘스트만 추출
+      if ((data[i][3] === "식단" || data[i][3] === "퀘스트") && data[i][8] === "대기") {
         recent.push({
           rowIdx: i + 1,
           date: data[i][0],
@@ -4473,7 +4473,14 @@ function getRecentCertifications() {
 
 function blessAction(data) {
   try {
-    // 축복 시 추가 점수(+5) 지급 로직
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("33챌린지_기록");
+    var rowIdx = data.rowIdx;
+    
+    // 1. 해당 행의 상태를 '승인'으로 변경 (9번째 열: I열)
+    sheet.getRange(rowIdx, 9).setValue("승인");
+    
+    // 2. 승인 시 보너스 점수(+5) 하사
     var result = submit33Action({
       phone: data.phone,
       name: data.name,
@@ -4482,6 +4489,10 @@ function blessAction(data) {
       value: "특별 보너스",
       score: 5
     });
+    
+    // 3. (옵션) 인증샷 자체의 기본 점수도 이때 합산하고 싶다면 여기서 추가 로직 구현 가능
+    // 현재 구조는 인증샷 등록 시 0점(대기)이었다가 승인 시 점수가 들어가는 방식이 더 권위적임
+    
     return result;
   } catch(e) { return { success: false, error: e.toString() }; }
 }

@@ -1,0 +1,232 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap');
+
+:root {
+    --status-bg: rgba(255, 255, 255, 0.85);
+    --status-border: rgba(255, 255, 255, 0.5);
+    --status-shadow: rgba(0, 0, 0, 0.05);
+    
+    --primary: #2ecc71; /* Emerald */
+    --accent: #3498db; /* SkyBlue */
+    --gold: #f1c40f;   /* Premium Gold */
+    --text-main: #2c3e50;
+    --text-dim: #7f8c8d;
+    
+    --glow-gold: 0 0 15px rgba(241, 196, 15, 0.4);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background: #f4f7f6;
+    background-image: 
+        radial-gradient(circle at 0% 0%, rgba(46, 204, 113, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, rgba(52, 152, 219, 0.05) 0%, transparent 50%);
+    color: var(--text-main);
+    min-height: 100vh;
+    padding: 20px;
+    padding-bottom: 100px;
+}
+
+.status-window {
+    max-width: 500px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* --- 📋 STATUS HEADER --- */
+.status-header {
+    background: var(--status-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--status-border);
+    border-radius: 30px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 10px 30px var(--status-shadow);
+    position: relative;
+}
+
+.avatar-frame {
+    width: 130px;
+    height: 130px;
+    margin: 0 auto 15px;
+    background: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4.5rem;
+    border: 4px solid var(--gold);
+    box-shadow: var(--glow-gold);
+    animation: pulse 3s infinite ease-in-out;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); box-shadow: var(--glow-gold); }
+    50% { transform: scale(1.03); box-shadow: 0 0 25px rgba(241, 196, 15, 0.6); }
+}
+
+.tier-label {
+    background: var(--gold);
+    color: #fff;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 900;
+    display: inline-block;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.exp-bar-container {
+    background: rgba(0, 0, 0, 0.05);
+    height: 10px;
+    border-radius: 5px;
+    margin-top: 15px;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.02);
+}
+
+.exp-bar-fill {
+    height: 100%;
+    width: 75%;
+    background: linear-gradient(90deg, var(--primary), #58d68d);
+    transition: width 1s ease-out;
+}
+
+/* --- 📊 EVALUATION BOARD --- */
+.eval-board {
+    background: var(--status-bg);
+    border-radius: 25px;
+    padding: 20px;
+    border: 1px solid var(--status-border);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.eval-card {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    padding: 15px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.eval-label { font-size: 0.65rem; font-weight: 800; color: var(--text-dim); margin-bottom: 5px; display: block; }
+.eval-value { font-size: 1.1rem; font-weight: 900; color: var(--text-main); }
+.eval-value .unit { font-size: 0.7rem; color: var(--gold); }
+
+/* --- ⚔️ QUEST HUB --- */
+.quest-hub {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.quest-category-title {
+    font-size: 1rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-main);
+    margin-left: 10px;
+}
+
+.quest-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.quest-card {
+    background: var(--status-bg);
+    border-radius: 24px;
+    padding: 20px;
+    border: 1px solid var(--status-border);
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.quest-card:active { transform: scale(0.95); background: #fff; }
+
+.quest-icon-img {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 10px;
+    object-fit: contain;
+}
+
+.quest-name { font-size: 0.85rem; font-weight: 800; display: block; }
+.quest-reward { font-size: 0.65rem; color: var(--primary); font-weight: 700; margin-top: 4px; display: block; }
+
+/* --- 💧 WATER HUNTER (SLIDER) --- */
+.water-hunter-box {
+    background: var(--status-bg);
+    border-radius: 25px;
+    padding: 20px;
+    border: 1px solid var(--status-border);
+}
+
+.custom-range {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 10px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 5px;
+    outline: none;
+    margin-top: 15px;
+}
+
+.custom-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 24px;
+    height: 24px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+}
+
+/* --- 📱 NAV BAR --- */
+.status-nav {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(30px);
+    border: 1px solid var(--status-border);
+    border-radius: 30px;
+    height: 75px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    z-index: 2000;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-decoration: none;
+    color: var(--text-dim);
+    font-size: 0.65rem;
+    font-weight: 800;
+}
+
+.nav-item.active { color: var(--accent); }
+.nav-item i { font-size: 1.5rem; }

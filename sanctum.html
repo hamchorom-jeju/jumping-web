@@ -296,12 +296,12 @@
             <h3>${j.name} <span style="font-size:0.7rem; color:var(--sanctum-gold);">[${j.type}]</span></h3>
             <p>${j.content || j.item}</p>
           </div>
-          <button class="btn-bless" onclick="bless(this, '${j.phone}', '${j.name}')">축복하기 (+5)</button>
+          <button class="btn-bless" onclick="bless(this, '${j.phone}', '${j.name}', ${j.rowIdx})">축복하기 (+5)</button>
         </div>
       `).join('');
     }
 
-    function bless(btn, phone, name) {
+    function bless(btn, phone, name, rowIdx) {
       if(!confirm(`${name} 모험가에게 이장의 축복(+5 EXP)을 내리시겠습니까?`)) return;
       
       btn.innerText = "축복 중...";
@@ -312,12 +312,20 @@
           btn.innerText = "축복완료 ✨";
           btn.style.background = "rgba(255,255,255,0.1)";
           btn.style.color = "#94a3b8";
+          // 부드럽게 항목 제거 연출
+          setTimeout(() => {
+            btn.closest('.blessing-card').style.opacity = '0';
+            btn.closest('.blessing-card').style.transform = 'translateX(50px)';
+            setTimeout(() => {
+              loadRecentCerts(); // 목록 새로고침
+            }, 300);
+          }, 500);
         } else {
           alert("축복 실패: " + res.error);
           btn.innerText = "축복하기 (+5)";
           btn.disabled = false;
         }
-      }).blessAction({ phone: phone, name: name });
+      }).blessAction({ phone: phone, name: name, rowIdx: rowIdx });
     }
 
     function openEditor(type) {

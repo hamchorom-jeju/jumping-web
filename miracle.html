@@ -201,11 +201,28 @@
           <img id="image-preview" src="" style="width: 100%; border-radius: 15px; border: 2px solid var(--holy-gold);">
         </div>
 
-        <select id="cert-quest-type" style="width: 100%; margin-top: 15px; background: #fff; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 0.9rem;">
-          <option value="일반">📜 일반 퀘스트 인증</option>
-          <option value="식단">🍱 오늘의 식단 (아침/점심/저녁)</option>
-          <option value="미라클">✨ 미라클 모닝/독서</option>
-          <option value="계단">🏃 스테어 마법 (계단)</option>
+        <select id="cert-quest-type" style="width: 100%; margin-top: 15px; background: #fff; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; color: #1e293b;">
+          <optgroup label="⚔️ 일반(기본) 퀘스트">
+            <option value="일반">📜 일반 인증 (기본)</option>
+            <option value="식단">🍱 오늘의 식단 (아침/점심/저녁)</option>
+            <option value="워터헌터">💧 워터 헌터 (수분 보충)</option>
+            <option value="오운완">🔥 오운완 (운동 완료)</option>
+            <option value="미라클">✨ 미라클 모닝/독서</option>
+          </optgroup>
+          <optgroup label="🌱 데일리 습관 퀘스트">
+            <option value="습관_모닝티">🍵 모닝 티 (따뜻한 물)</option>
+            <option value="습관_스트레칭">🧘 모닝 스트레칭</option>
+            <option value="습관_베지퍼스트">🥗 베지 퍼스트 (채소 먼저)</option>
+            <option value="습관_슬로우치잉">🦷 슬로우 치잉 (천천히 씹기)</option>
+            <option value="습관_7000보">🏃 세븐 사우전드 (7,000보)</option>
+            <option value="습관_계단">🪜 스테어 마법 (계단 이용)</option>
+            <option value="습관_나이트컷">📵 나이트 컷 (20시 이후 금식)</option>
+            <option value="습관_굿슬립">💤 굿 슬립 (자정 전 취침)</option>
+            <option value="습관_셀프칭찬">💖 셀프 칭찬 (나를 위한 한마디)</option>
+          </optgroup>
+          <optgroup label="⚡ 실시간 돌발 계시" id="surprise-optgroup">
+            <!-- 서버에서 동적으로 추가됨 -->
+          </optgroup>
         </select>
         
         <button onclick="submitMiracle()" style="width: 100%; margin-top: 15px; background: var(--holy-gold); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 1rem; box-shadow: 0 10px 20px rgba(245, 158, 11, 0.2);">✨ 제단에 바치기 (봉헌)</button>
@@ -251,7 +268,7 @@
         if(events && events.length > 0) {
           const container = document.getElementById('active-quests-container');
           const list = document.getElementById('active-quest-list');
-          const select = document.getElementById('cert-quest-type');
+          const surpriseGroup = document.getElementById('surprise-optgroup');
           
           container.style.display = 'block';
           list.innerHTML = events.map(e => `
@@ -264,7 +281,7 @@
             const opt = document.createElement('option');
             opt.value = e.title;
             opt.innerText = `⚡ [돌발] ${e.title}`;
-            select.appendChild(opt);
+            surpriseGroup.appendChild(opt);
           });
         }
       }).getActiveEvents();
