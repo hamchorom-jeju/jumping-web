@@ -4,6 +4,109 @@
  */
 
 /**
+ * [아카이브] 최신 인증 피드 데이터 가져오기 (최우선 배치 v44.139)
+ */
+function getArchiveFeed() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("아카이브");
+    if (!sheet) return { error: "'아카이브' 시트를 찾을 수 없습니다." };
+    
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return []; 
+    
+    var startRow = Math.max(2, lastRow - 19);
+    var numRows = lastRow - startRow + 1;
+    var data = sheet.getRange(startRow, 1, numRows, 9).getValues();
+    
+    return data.reverse().map(function(row) {
+      return {
+        date: row[0] instanceof Date ? Utilities.formatDate(row[0], "GMT+9", "yyyy-MM-dd") : String(row[0]),
+        time: row[1] instanceof Date ? Utilities.formatDate(row[1], "GMT+9", "HH:mm:ss") : String(row[1]),
+        name: String(row[2] || ""),
+        type: String(row[4] || ""),
+        item: String(row[5] || ""),
+        comment: String(row[6] || ""),
+        photoId: String(row[7] || ""),
+        score: row[8]
+      };
+    });
+  } catch (e) {
+    return { error: "피드 로딩 실패: " + e.toString() };
+  }
+}
+
+/**
+ * [아카이브] 진행 중인 돌발 퀘스트 가져오기
+ */
+function getActiveEvents() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var configSheet = ss.getSheetByName("설정");
+    if (!configSheet) return [];
+    var data = configSheet.getDataRange().getValues();
+    var events = [];
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][0] === "돌발퀘스트" && data[i][2] === "진행중") {
+        events.push({ title: data[i][1] });
+      }
+    }
+    return events;
+  } catch (e) { return []; }
+}
+
+/**
+ * [아카이브] 인증 기록 제출
+ */
+function submitArchive(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("아카이브") || ss.insertSheet("아카이브");
+    
+    if (sheet.getLastRow() === 0) {
+      var arHeaders = ["날짜", "시간", "이름", "전화번호", "유형", "항목", "코멘트", "사진ID", "점수"];
+      sheet.getRange(1, 1, 1, arHeaders.length).setValues([arHeaders]);
+    }
+
+    var now = new Date();
+    var photoId = "";
+    
+    if (payload.image && payload.image.indexOf(",") > -1) {
+      try {
+        var folderName = "GenieWorld_Archive";
+        var folders = DriveApp.getFoldersByName(folderName);
+        var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+        
+        var base64Data = payload.image.split(",")[1];
+        var blob = Utilities.newBlob(Utilities.base64Decode(base64Data), "image/jpeg", (payload.name || "user") + "_" + Date.now());
+        var file = folder.createFile(blob);
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        photoId = file.getId();
+      } catch (err) {
+        console.error("Photo Error: " + err.toString());
+      }
+    }
+    
+    sheet.appendRow([
+      now, 
+      Utilities.formatDate(now, "GMT+9", "HH:mm:ss"),
+      payload.name,
+      payload.phone,
+      payload.type,
+      payload.item,
+      payload.comment || "",
+      photoId,
+      payload.score || 0
+    ]);
+    
+    return { success: true, photoId: photoId };
+  } catch (e) {
+    return { success: false, error: "기록 저장 실패: " + e.toString() };
+  }
+}
+
+
+/**
  * [Vercel 지원] 외부 사이트(Vercel 등)에서 데이터를 주고받기 위한 API 핸들러
  */
 function doPost(e) {
@@ -277,114 +380,11 @@ function forceUpdateAllHeaders() {
   SpreadsheetApp.getUi().alert("✅ [아카이브, 예약DB, 설정, 판매내역]을 포함한 모든 시트 구조가 완벽하게 정돈되었습니다!\n\n이제 ERP와 실시간 소셜 피드를 사용하실 수 있습니다.");
 }
 
-/**
- * [아카이브] 최신 인증 피드 데이터 가져오기
- */
-function getArchiveFeed() {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("아카이브");
-    if (!sheet) return [];
-    
-    var lastRow = sheet.getLastRow();
-    if (lastRow < 2) return []; 
-    
-    var startRow = Math.max(2, lastRow - 19);
-    var numRows = lastRow - startRow + 1;
-    var data = sheet.getRange(startRow, 1, numRows, 9).getValues();
-    
-    return data.reverse().map(function(row) {
-      return {
-        date: row[0] instanceof Date ? Utilities.formatDate(row[0], "GMT+9", "yyyy-MM-dd") : row[0].toString(),
-        time: row[1] instanceof Date ? Utilities.formatDate(row[1], "GMT+9", "HH:mm:ss") : row[1].toString(),
-        name: row[2],
-        type: row[4],
-        item: row[5],
-        comment: row[6],
-        photoId: row[7],
-        score: row[8]
-      };
-    });
-  } catch (e) {
-    console.error("Feed Error: " + e.toString());
-    return [];
-  }
-}
 
 /**
- * [아카이브] 진행 중인 돌발 퀘스트 가져오기
+ * [공용 도구] 폴더 가져오기 또는 생성
  */
-function getActiveEvents() {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var configSheet = ss.getSheetByName("설정");
-    if (!configSheet) return [];
-    
-    var data = configSheet.getDataRange().getValues();
-    var events = [];
-    for (var i = 1; i < data.length; i++) {
-      if (data[i][0] === "돌발퀘스트" && data[i][2] === "진행중") {
-        events.push({ title: data[i][1] });
-      }
-    }
-    return events;
-  } catch (e) {
-    console.error("Event Fetch Error: " + e.toString());
-    return [];
-  }
-}
-
-/**
- * [아카이브] 인증 기록 제출
- */
-function submitArchive(payload) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("아카이브");
-    
-    if (!sheet) {
-      sheet = ss.insertSheet("아카이브");
-      var arHeaders = ["날짜", "시간", "이름", "전화번호", "유형", "항목", "코멘트", "사진ID", "점수"];
-      sheet.getRange(1, 1, 1, arHeaders.length).setValues([arHeaders]);
-    }
-
-    var now = new Date();
-    var photoId = "";
-    
-    if (payload.image && payload.image.indexOf(",") > -1) {
-      try {
-        var folderName = "GenieWorld_Archive";
-        var folders = DriveApp.getFoldersByName(folderName);
-        var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
-        
-        var base64Data = payload.image.split(",")[1];
-        var blob = Utilities.newBlob(Utilities.base64Decode(base64Data), "image/jpeg", payload.name + "_" + Date.now());
-        var file = folder.createFile(blob);
-        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-        photoId = file.getId();
-      } catch (err) {
-        console.error("Photo Save Error: " + err.toString());
-      }
-    }
-    
-    sheet.appendRow([
-      new Date(), 
-      Utilities.formatDate(now, "GMT+9", "HH:mm:ss"),
-      payload.name,
-      payload.phone,
-      payload.type,
-      payload.item,
-      payload.comment || "",
-      photoId,
-      payload.score || 0
-    ]);
-    
-    return { success: true, photoId: photoId };
-  } catch (e) {
-    console.error("Submit Error: " + e.toString());
-    return { success: false, error: e.toString() };
-  }
-}
+function getOrCreateFolder(folderName) {
 
 function getOrCreateFolder(folderName) {
   var folders = DriveApp.getFoldersByName(folderName);
