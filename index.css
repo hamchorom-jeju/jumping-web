@@ -38,50 +38,45 @@ body {
     gap: 15px;
 }
 
-/* --- 📢 TOP NEWS SYSTEM (v44.0 Single Block) --- */
-.v-top-news {
-    background: var(--v-wood);
-    color: #fff;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-
-.v-notice-fixed {
+/* --- 📜 SEPARATED BANNERS (v44.7 Surgical Separation) --- */
+.v-banner-notice {
     background: #4e342e;
-    padding: 8px 15px;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 12px;
     font-size: 0.75rem;
     font-weight: 800;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-left: 5px solid var(--gold);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
-.v-pillar-ticker {
-    padding: 10px 15px;
-    height: 45px;
+.v-banner-ranking {
+    background: var(--v-wood);
+    color: var(--gold);
+    padding: 12px 15px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 900;
+    text-align: center;
+    min-height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.9rem;
-    font-weight: 900;
-    color: var(--gold);
-    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 .v-sudden-bar {
     background: var(--health);
-    padding: 6px 15px;
-    font-size: 0.7rem;
+    color: #fff;
+    padding: 8px 15px;
+    border-radius: 10px;
+    font-size: 0.75rem;
     font-weight: 900;
     display: none;
-    animation: flash 1.5s infinite;
+    text-align: center;
 }
 
-@keyframes flash {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-}
-
-/* --- 📋 STATUS WINDOW v44.0 (Balanced Split) --- */
+/* --- 📋 STATUS WINDOW v44.0 (NEVER TOUCH - IMMUTABLE) --- */
 .status-window-v43 {
     background: var(--v-paper);
     border: 3px solid var(--v-border);

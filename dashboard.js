@@ -1,6 +1,6 @@
 /**
- * Nohyung Village Dashboard Logic (v44.0 LITERAL ROLLBACK)
- * Features: Stable Perspective Toggle, Balanced Stat Window, Original Habits
+ * Nohyung Village Dashboard Logic (v44.7 - Surgical Banner Separation)
+ * Features: Separated Notice & Ranking Tickers, Immutable Status Window v44.0 Logic
  */
 
 const Village = {
@@ -39,7 +39,7 @@ const Village = {
     },
 
     init() {
-        console.log("Restored Nohyung Village v44.0 Stable Engine.");
+        console.log("v44.7 Surgical Revert & Banner Separation Initialized.");
         this.renderAll();
         this.updateEvolution();
         this.startTicker();
@@ -154,7 +154,10 @@ const Village = {
         }
     },
 
-    triggerSuddenMission() { alert("⚡ [돌발 미션 선포!]"); },
+    triggerSuddenMission() {
+        document.getElementById('sudden-mission-bar').style.display = 'block';
+    },
+
     async syncClubRecord() {
         setTimeout(() => {
             alert("🏡 [클럽 동기화 완료!]");
