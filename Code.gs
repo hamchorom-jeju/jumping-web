@@ -188,7 +188,7 @@ function searchMembersByDigits(payload) {
       }
     }
     
-    return { success: true, members: matches.slice(0, 5) };
+    return { success: true, members: matches.slice(0, 20) };
   } catch (e) {
     return { success: false, error: e.toString() };
   }

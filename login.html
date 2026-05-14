@@ -65,14 +65,14 @@
   <div class="login-container">
     <div class="logo-area">🏰</div>
     <h1>지니 월드 입장</h1>
-    <p>전화번호 뒷자리를 입력하고<br>자신의 이름을 선택해 주세요!</p>
+    <p>전화번호 뒷 4자리를 입력하고<br>자신의 이름을 선택해 주세요!</p>
 
     <div class="input-group">
-      <label>전화번호 뒷자리 (또는 전체)</label>
+      <label>전화번호 뒷 4자리</label>
       <input type="tel" id="user-phone" placeholder="뒷자리 4자리를 입력하세요" oninput="searchMembers(this.value)">
     </div>
 
-    <div id="member-selection-list" style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+    <div id="member-selection-list" style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px; max-height: 250px; overflow-y: auto; padding-right: 5px;">
       <!-- 매칭된 회원 버튼이 여기에 생성됨 -->
     </div>
 
