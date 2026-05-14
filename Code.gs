@@ -4526,3 +4526,66 @@ function getDailyActiveAdventurers() {
     return activeUsers.size;
   } catch(e) { return 0; }
 }
+
+/**
+ * ⚡ 돌발 퀘스트 및 이벤트 관리 엔진
+ */
+function getActiveEvents() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("마을_이벤트") || ss.insertSheet("마을_이벤트");
+    if (sheet.getLastRow() < 1) return [];
+    
+    var data = sheet.getDataRange().getValues();
+    var now = new Date();
+    var activeEvents = [];
+    
+    for (var i = 1; i < data.length; i++) {
+      var endTime = new Date(data[i][3]);
+      var status = data[i][4];
+      
+      // 기한이 남아있고 활성 상태인 이벤트만 추출
+      if (endTime > now && status === "ACTIVE") {
+        activeEvents.push({
+          id: i,
+          title: data[i][0],
+          description: data[i][1],
+          multiplier: data[i][2] || 1,
+          endTime: Utilities.formatDate(endTime, "GMT+9", "HH:mm"),
+          type: data[i][5] // 'BOOST' or 'NEW'
+        });
+      }
+    }
+    return activeEvents;
+  } catch(e) { return []; }
+}
+
+function createSurpriseQuest(data) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("마을_이벤트") || ss.insertSheet("마을_이벤트");
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(["제목", "내용", "배율", "마감시간", "상태", "유형"]);
+    }
+    
+    var now = new Date();
+    var endTime = new Date(now.getTime() + (data.durationMinutes * 60000));
+    
+    sheet.appendRow([
+      data.title, 
+      data.description, 
+      data.multiplier || 1, 
+      endTime, 
+      "ACTIVE", 
+      data.type || "NEW"
+    ]);
+    
+    // 전령의 기둥에도 자동 선포
+    updatePillarNotice({
+      content: `⚡ [돌발 계시] ${data.title}! (${data.multiplier}배 보상 / ${data.durationMinutes}분 한정)`,
+      category: "QUEST"
+    });
+    
+    return { success: true, endTime: endTime };
+  } catch(e) { return { success: false, error: e.toString() }; }
+}

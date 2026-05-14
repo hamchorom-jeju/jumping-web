@@ -141,6 +141,20 @@
       </div>
     </div>
 
+    <!-- ⚡ 돌발 퀘스트 지휘소 -->
+    <div class="manager-card">
+      <div class="section-title">⚡ 퀘스트 지휘소 (돌발 임무 선포)</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+        <select id="event-type" class="pillar-input" style="margin-bottom:0;">
+          <option value="BOOST">기존 퀘스트 부스트 (x2)</option>
+          <option value="NEW">새로운 돌발 임무 창조</option>
+        </select>
+        <input type="number" id="event-duration" class="pillar-input" style="margin-bottom:0;" placeholder="유지 시간(분)" value="60">
+      </div>
+      <input type="text" id="event-title" class="pillar-input" placeholder="임무 제목 (예: 쉐이크 인증 2배 이벤트!)">
+      <button class="btn-gold" style="background: linear-gradient(90deg, #7c3aed, #db2777);" onclick="launchQuest()">⚡ 돌발 계시 선포 (Launch Quest)</button>
+    </div>
+
     <!-- 📜 전령의 기둥 관리 -->
     <div class="manager-card">
       <div class="section-title">📜 전령의 기둥 (실시간 공지)</div>
@@ -212,7 +226,6 @@
       loadSanctumData();
       loadRecentCerts();
     };
-
     function loadSanctumData() {
       // 1. 공지 데이터 로드
       google.script.run.withSuccessHandler(res => {
@@ -221,8 +234,36 @@
 
       // 2. 오늘의 모험가(접속 기록 기반) 로드
       google.script.run.withSuccessHandler(count => {
-        document.getElementById('v-today-active').innerText = count || 0;
+        document.getElementById('v-active').innerText = count || 0;
       }).getDailyActiveAdventurers();
+
+      // 3. 진행 중인 이벤트 수 로드
+      google.script.run.withSuccessHandler(events => {
+        document.getElementById('v-active-events').innerText = events.length;
+      }).getActiveEvents();
+      
+      // 4. 대기 중인 축복 수 로드 (실제로는 loadRecentCerts에서 처리하므로 여기선 생략 가능하지만 일관성을 위해)
+    }
+
+    function launchQuest() {
+      const title = document.getElementById('event-title').value;
+      const duration = document.getElementById('event-duration').value;
+      const type = document.getElementById('event-type').value;
+
+      if(!title) return alert("임무 제목을 입력하세요.");
+
+      google.script.run.withSuccessHandler(res => {
+        if(res.success) {
+          alert(`⚡ [${title}] 임무가 선포되었습니다! 마감: ${new Date(res.endTime).toLocaleTimeString()}`);
+          loadSanctumData();
+        }
+      }).createSurpriseQuest({
+        title: title,
+        durationMinutes: parseInt(duration),
+        type: type,
+        multiplier: 2,
+        description: "마을 이장님의 특별 계시입니다."
+      });
     }
 
     function updatePillar() {
