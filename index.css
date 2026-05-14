@@ -13,6 +13,7 @@
     
     --text-main: #2b1d0e;
     --text-dim: #5d4037;
+    --emerald: #2ecc71;
 }
 
 * {
@@ -253,9 +254,9 @@ body {
     white-space: nowrap;
 }
 
-.v-ranking-badge.weekly { background: var(--emerald); }
+.v-ranking-badge.weekly { background: #2ecc71; }
 .v-ranking-badge.monthly { background: #f1c40f; }
-.v-ranking-badge.total { background: var(--v-wood); }
+.v-ranking-badge.total { background: #5d4037; }
 
 .v-ranking-content {
     font-size: 0.85rem;
