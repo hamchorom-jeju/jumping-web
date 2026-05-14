@@ -49,7 +49,7 @@ const Village = {
         h7: { title: "나이트 컷", icon: "🌙", guide: "밤 20시 이후의 금식은 신체가 소화가 아닌 '지방 연소와 세포 재생'에 집중하게 만듭니다. 지금 이 시간부터 아무것도 먹지 않겠다고 [모험가의 오아시스]에 다짐의 선언을 남겨보세요!\n\n\"저 지금부터는 아무것도 안 먹어요.. 약속합니다!!\" 라는 한마디가 강력한 수호의 시작입니다.", link: "oasis.html" },
         h8: { title: "굿 슬립", icon: "💤", guide: "세포가 재생되고 성장 호르몬이 활발히 분비되는 자정(24:00) 전 취침으로 신체 회복을 최적화하세요. 충분한 수면은 식욕 억제 호르몬인 렙틴의 분비를 도와 다이어트를 수월하게 만듭니다.\n\n🌿 수호 완료 시 2점 지급 (인증 제외 항목)", link: "#", single: true },
         h9: { title: "셀프 칭찬", icon: "👏", guide: "오늘 하루도 노력한 나자신을 위해 따뜻한 한마디를 해주며 셀프 허그를 해주세요.\n\"오늘도 수고했어 영희야!\"\n모험가의 오아시스 게시판에 셀프칭찬글도 남겨보세요.\n\n🌿 수호 완료 시 2점 지급\n👏 셀프칭찬 등록 시 5점 추가", link: "oasis.html" },
-        plus: { title: "미라클 플러스", icon: "✨", guide: "새벽 기상, 독서, 환경 수호 등 여러분의 인생을 풍요롭게 만드는 사소하지만 위대한 승리들을 기록해 보세요.\n\n📸 아카이브에 인증을 하시면 5점이 추가됩니다.", link: "miracle.html?cat=plus" }
+        plus: { title: "미라클 플러스", icon: "✨", guide: "새벽 기상, 독서, 환경 수호 등 여러분의 인생을 풍요롭게 만드는 사소하지만 위대한 승리들을 기록해 보세요.\n\n📸 아카이브에 인증을 하시면 5점이 추가됩니다.", link: "miracle.html?cat=plus", single: true }
     },
 
     rankings: [
@@ -88,7 +88,16 @@ const Village = {
         // Build Guide Text (Emotional & Smooth)
         let guideText = data.guide;
         if (type === 'habit') {
-            guideText += `\n\n🌿 수호 완료 시 ${habit.base}점 지급\n📸 아카이브 인증 시 5점 추가`;
+            const isBoardHabit = (key === 'h7' || key === 'h9');
+            if (data.single) {
+                guideText += `\n\n🌿 수호 완료 시 ${habit.base}점 지급`;
+            } else if (isBoardHabit) {
+                guideText += `\n\n🌿 수호 완료 시 ${habit.base}점 지급\n🌵 오아시스 등록 시 5점 추가`;
+            } else if (key === 'plus') {
+                guideText += `\n\n📸 아카이브 인증 시 5점 추가`;
+            } else {
+                guideText += `\n\n🌿 수호 완료 시 ${habit.base}점 지급\n📸 아카이브 인증 시 5점 추가`;
+            }
         }
         document.getElementById('modal-habit-guide').innerText = guideText;
         
@@ -97,7 +106,7 @@ const Village = {
         
         if ((type === 'quest' && data.single) || (type === 'habit' && data.single)) {
             cancelBtn.style.display = 'none';
-            confirmBtn.innerText = (type === 'habit') ? "수호 완료" : data.btn;
+            confirmBtn.innerText = (key === 'plus') ? "인증하러 가기" : ((type === 'habit') ? "수호 완료" : data.btn);
             confirmBtn.style.flex = "1";
         } else {
             cancelBtn.style.display = 'block';
