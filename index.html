@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GENIE WORLD - Nohyung Village v43.0</title>
-    <!-- Silver-Friendly v43.0 CSS -->
+    <title>GENIE WORLD - Nohyung Village v43.1</title>
+    <!-- Silver-Friendly v43.1 CSS -->
     <link rel="stylesheet" href="index.css">
     <!-- Icon Library -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -13,9 +13,8 @@
 
     <!-- 📢 TOP NEWS SYSTEM -->
     <header class="v-top-news">
-        <div class="v-notice-fixed">📢 [마을 공지] 33 챌린지 시즌 4주차 결산 (목) | 20시 이후 금식 엄수!</div>
+        <div class="v-notice-fixed">📢 [마을 공지] 33 챌린지 시즌 4주차 결산 안내 | 20시 이후 금식 엄수!</div>
         <div class="v-pillar-ticker" id="ranking-ticker">
-            <!-- Rotating Hall of Fame Content -->
             금주 체력왕: 홍길동 님 ✨
         </div>
         <div class="v-sudden-bar" id="sudden-mission-bar">
@@ -25,7 +24,7 @@
 
     <div class="v-container">
         
-        <!-- 📋 모험가 상태창 (v43.0 Left/Right Split) -->
+        <!-- 📋 모험가 상태창 (v43.1 Left/Right Split) -->
         <section class="status-window-v43">
             <!-- Left: Profile & Ranking -->
             <div class="profile-card">
@@ -109,22 +108,16 @@
             </div>
         </section>
 
-        <!-- 🛡️ 습관 수호 & 미라클 플러스 -->
+        <!-- 🛡️ 습관 수호 (Habit List) -->
         <section class="habit-plus-section">
             <h3 style="font-size: 1rem; font-weight: 900; color: var(--v-wood); margin-bottom: 15px;"><i class="fa-solid fa-shield-halved"></i> 습관 수호 (Habit)</h3>
             
             <div id="habit-list-container">
-                <!-- Habits with pop-up logic will be rendered here -->
+                <!-- Habits & Miracle Plus will be rendered here dynamically -->
             </div>
-
-            <!-- Miracle Plus (Bonus) -->
-            <div class="miracle-plus-box">
-                <h4 class="plus-title">✨ 미라클 플러스 (인생의 성취)</h4>
-                <div class="plus-guide">
-                    <strong>의의</strong>: 사소하지만 인생을 풍요롭게 만드는 사소한 승리들을 인증해주세요.<br>
-                    <strong>가이드</strong>: 새벽기상, 지혜의 탐구(독서), 환경수호, 기타 사소한 성취 등<br>
-                    <button class="v-action-btn" style="width: 100%; margin-top: 10px; padding: 10px;" onclick="location.href='miracle.html?cat=plus'">보너스 인증하기</button>
-                </div>
+            
+            <div style="font-size: 0.65rem; color: var(--text-dim); margin-top: 15px; text-align: center; font-weight: 700;">
+                * 습관 체크 시 기록소(미라클 아카이브) 인증으로 바로 이동할 수 있습니다.
             </div>
         </section>
 
