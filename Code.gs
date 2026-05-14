@@ -143,10 +143,20 @@ function getUserDashboardData(payload) {
       var arcDataCheck = arcSheet.getDataRange().getDisplayValues(); 
       var alreadyLogged = false;
       for (var j = 1; j < arcDataCheck.length; j++) {
-        var recDateStr = arcDataCheck[j][0]; // "yyyy-MM-dd" 형태
+        // [v44.175] 날짜 형식 정규화 (2026. 5. 15 -> 2026-05-15)
+        var rawDateStr = arcDataCheck[j][0].split(" ")[0].replace(/\./g, "-").replace(/-$/, "");
+        var parts = rawDateStr.split("-").filter(function(p){ return p !== ""; });
+        var normDateStr = "";
+        if (parts.length >= 3) {
+          var y = parts[0];
+          var m = parts[1].length === 1 ? "0" + parts[1] : parts[1];
+          var d = parts[2].length === 1 ? "0" + parts[2] : parts[2];
+          normDateStr = y + "-" + m + "-" + d;
+        }
+
         var recPhone = String(arcDataCheck[j][3]).replace(/[^0-9]/g, "");
         var recType = String(arcDataCheck[j][4]);
-        if (recDateStr === todayStr && recPhone === phone && recType === "로그인") {
+        if (normDateStr === todayStr && recPhone === phone && recType === "로그인") {
           alreadyLogged = true;
           break;
         }
