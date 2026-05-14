@@ -46,7 +46,7 @@ const Village = {
     ],
     currentRankIndex: 0,
 
-    // ⚔️ Quest Content Data (v44.95 Literal Restoration)
+    // ⚔️ Quest Content Data (v44.96 Final Literal Refinement)
     quests: {
         sync: { 
             title: "클럽 동기화", icon: "⚡", 
@@ -55,22 +55,22 @@ const Village = {
         },
         visit: { 
             title: "방문 인증", icon: "📸", 
-            guide: "클럽에 출석하셨나요? 방문인증을 남겨보세요.\n아카이브에 사진 등록시 15포인트 추가!", 
+            guide: "오늘 클럽에 출석하셨나요?\n그렇다면 방문 인증을 남겨보세요\n아카이브에 인증시 15점이 추가됩니다.", 
             btn: "인증하러 가기", link: "miracle.html?cat=visit", single: false 
         },
         meal: { 
             title: "식단 인증", icon: "🍱", 
-            guide: "오늘 어떤 영양으로 몸을 채우셨나요?\n식단 사진을 기록소에 남겨보세요.\n꾸준한 식단 기록은 가장 강력한 변화의 열쇠입니다.", 
+            guide: "꾸준한 식단 기록은 강력한 변화의 열쇠입니다.\n아카이브에 인증시 최대 30점이 지급됩니다.", 
             btn: "인증하러 가기", link: "miracle.html?cat=meal", single: false 
         },
         water: { 
             title: "워터 헌터", icon: "💧", 
-            guide: "수분섭취량에 따라 점수 차등 지급,\n섭취량만큼 게이지를 조정, 인증시 15포인트 추가", 
+            guide: "수분 섭취량 만큼 게이지를 조정해보세요.\n섭취량에 따라 점수를 차등지급합니다. (최대 20점)\n아카이브에 인증시 15점이 추가됩니다.", 
             btn: "인증하러 가기", link: "miracle.html?cat=water", single: false 
         },
         bonus: { 
             title: "보너스 퀘스트", icon: "✨", 
-            guide: "돌발미션을 수행하시겠어요?\n아카이브로 이동해 인증을 남기실 수 있습니다.\n이동하시겠어요?", 
+            guide: "돌발 미션을 수행하시겠어요?\n아카이브로 이동해 인증을 남기실 수 있습니다.\n아카이브 인증시 15점이 추가됩니다.", 
             btn: "이동하기", link: "miracle.html?cat=bonus", single: false 
         }
     },
