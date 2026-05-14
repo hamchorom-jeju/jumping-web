@@ -51,7 +51,6 @@
       align-items: center; justify-content: center; gap: 8px; cursor: pointer;
       position: relative; overflow: hidden;
     }
-    .meal-slot.has-img { border-style: solid; border-color: var(--emerald); }
     .meal-slot .icon { font-size: 1.5rem; }
     .meal-slot .label { font-size: 0.7rem; font-weight: 800; color: var(--text-dim); }
 
@@ -62,7 +61,6 @@
       font-weight: 700; color: var(--text-main); outline: none;
       background: #fff; box-sizing: border-box;
     }
-    .comment-input:focus { border-color: var(--emerald); }
 
     /* 실시간 피드 */
     .feed-section { margin-top: 40px; }
@@ -108,7 +106,6 @@
       <div class="premium-cert-card">
         <div class="section-title">⚔️ 퀘스트 인증하기 (15점)</div>
         
-        <!-- 📸 촬영 구역 (사진 없을 때만 버튼 표시) -->
         <div id="quest-upload-placeholder" onclick="document.getElementById('file-input-quest').click()" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
           <span style="font-size:2.5rem; margin-bottom:10px;">📸</span>
           <p style="font-size:0.85rem; color:var(--text-dim); font-weight:800;">퀘스트 인증 사진 촬영</p>
@@ -128,8 +125,6 @@
           <option value="오운완">🔥 오운완 (운동 완료)</option>
           <option value="수분">💧 수분 섭취 인증</option>
           <option value="돌발퀘스트">⚡ 돌발 퀘스트</option>
-          <option value="---" disabled>──────────────</option>
-          <!-- 하단에 실시간 항목이 추가될 수 있음 -->
         </select>
         <input type="text" id="quest-comment" class="comment-input" placeholder="오늘의 소감을 한마디 남겨주세요!">
         <button id="btn-submit-quest" onclick="submitEntry('quest')" style="width: 100%; margin-top: 15px; background: var(--emerald); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2);">퀘스트 기록 완료</button>
@@ -241,7 +236,6 @@
       const mealCategory = "식단";
       const commentField = document.getElementById('quest-comment');
       const selectField = document.getElementById('quest-select');
-      
       if (!Array.from(selectField.options).some(opt => opt.value === mealCategory)) {
         const opt = document.createElement('option');
         opt.value = mealCategory;
@@ -249,7 +243,6 @@
         opt.hidden = true;
         selectField.appendChild(opt);
       }
-      
       selectField.value = mealCategory;
       commentField.value = `[${mealType}] 인증합니다! `;
       document.getElementById('file-input-quest').click();
@@ -260,17 +253,12 @@
       const feed = document.getElementById('archive-feed');
       if (!loader || !feed) return;
       loader.style.display = 'block';
-      
       google.script.run
         .withSuccessHandler(data => {
           loader.style.display = 'none';
           try {
             if (!data || data.length === 0) {
               feed.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:0.8rem; margin-top:20px;">첫 번째 기적의 주인공이 되어보세요!</p>';
-              return;
-            }
-            if (data.error) {
-              feed.innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:0.8rem;">데이터 오류: ${data.error}</p>`;
               return;
             }
             feed.innerHTML = data.map(item => `
@@ -291,12 +279,12 @@
               </div>
             `).join('');
           } catch (err) {
-            feed.innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:0.8rem;">렌더링 오류가 발생했습니다.</p>`;
+            feed.innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:0.8rem;">렌더링 오류</p>`;
           }
         })
         .withFailureHandler(err => {
           loader.style.display = 'none';
-          feed.innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:0.8rem;">서버 통신 실패: ${err.toString()}</p>`;
+          feed.innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:0.8rem;">서버 통신 실패</p>`;
         })
         .getArchiveFeed();
     }
@@ -307,27 +295,18 @@
       const comment = document.getElementById(type + '-comment').value;
       const fileInput = document.getElementById('file-input-' + type);
       const file = fileInput.files[0];
-      
       if (!file) return alert("인증 사진을 촬영해 주세요!");
-      
       btn.disabled = true;
       btn.innerText = "기록 저장 중...";
-      
       let finalType = type === 'quest' ? '퀘스트' : '습관';
       let score = type === 'quest' ? 15 : 5;
-      if (item === '식단' || item.includes('식단')) {
-        finalType = '식단';
-        score = 10;
-      }
-
+      if (item === '식단' || item.includes('식단')) { finalType = '식단'; score = 10; }
       const reader = new FileReader();
       reader.onload = e => {
         const payload = {
-          name: TARGET_NAME, phone: TARGET_PHONE,
-          type: finalType, item: item, comment: comment,
-          image: e.target.result, score: score
+          name: TARGET_NAME, phone: TARGET_PHONE, type: finalType,
+          item: item, comment: comment, image: e.target.result, score: score
         };
-        
         google.script.run
           .withSuccessHandler(res => {
             btn.disabled = false;
@@ -336,13 +315,10 @@
               alert(`인증 성공! [${finalType}] +${score}점이 적립되었습니다. ✨`);
               document.getElementById(type + '-comment').value = "";
               document.getElementById(type + '-preview-box').style.display = 'none';
-              const placeholder = document.getElementById(type + '-upload-placeholder');
-              if (placeholder) placeholder.style.display = 'flex';
+              document.getElementById(type + '-upload-placeholder').style.display = 'flex';
               fileInput.value = "";
               loadArchiveFeed();
-            } else {
-              alert("저장 실패: " + (res ? res.error : "서버 무응답"));
-            }
+            } else { alert("저장 실패: " + (res ? res.error : "서버 무응답")); }
           })
           .withFailureHandler(err => {
             btn.disabled = false;
@@ -353,26 +329,23 @@
       };
       reader.readAsDataURL(file);
     }
-            // ⚡ 구분선 추가 (이미 없으면)
-            const dividerExists = Array.from(select.options).some(opt => opt.value === "---");
-            if (!dividerExists) {
-              const div = document.createElement('option');
-              div.value = "---";
-              div.innerText = "──────────────";
-              div.disabled = true;
-              select.appendChild(div);
-            }
-            
+
+    function loadActiveEvents() {
+      const select = document.getElementById('quest-select');
+      google.script.run
+        .withSuccessHandler(events => {
+          if(events && events.length > 0) {
+            const divider = document.createElement('option');
+            divider.innerText = "──────────────";
+            divider.disabled = true;
+            select.appendChild(divider);
             events.forEach(e => {
-              const exists = Array.from(select.options).some(opt => opt.value === e.title);
-              if (!exists) {
-                const opt = document.createElement('option');
-                opt.value = e.title;
-                opt.innerText = `⚡ [돌발] ${e.title}`;
-                opt.style.color = "#e67e22";
-                opt.style.fontWeight = "900";
-                select.appendChild(opt);
-              }
+              const opt = document.createElement('option');
+              opt.value = e.title;
+              opt.innerText = `⚡ [돌발] ${e.title}`;
+              opt.style.color = "#e67e22";
+              opt.style.fontWeight = "900";
+              select.appendChild(opt);
             });
           }
         })
