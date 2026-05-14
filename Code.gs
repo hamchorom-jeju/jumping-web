@@ -30,6 +30,7 @@ function doGet(e) {
     else if (page === 'notice') title = "INSIDE (건강 꿀팁 & 공지)";
     else if (page === 'community') title = "CONNECT (칭찬&수다)";
     else if (page === 'renewal') title = "💳 [연장 화면]";
+    else if (page === 'challenge') title = "🏰 NOHYUNG WORLD (33 챌린지)";
     else if (page === 'admin') title = "⚙️ [관리자 화면]";
     else if (page === 'attendance') title = "🏃 [출석 화면]";
     
@@ -4178,3 +4179,190 @@ function checkMemberTicket(name, phone) {
   }
 }
 
+
+// ──────────────────────────────────────────────
+// 33 챌린지 게임 시스템 - 기초 셋업
+// ──────────────────────────────────────────────
+
+/**
+ * 33 챌린지에 필요한 4개 시트를 자동으로 생성하고 헤더를 설정합니다.
+ * 앱스 스크립트 에디터에서 이 함수를 선택하고 [실행]을 눌러주세요.
+ */
+function setup33ChallengeSheets() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheets = {
+    "33챌린지_설정": ["시즌명", "시작일", "종료일", "상태", "참여인원", "설명"],
+    "33챌린지_기록": ["타임스탬프", "회원명", "연락처", "구분", "항목", "내용", "점수", "이미지URL"],
+    "33챌린지_인바디": ["날짜", "회원명", "연락처", "체중", "골격근량", "체지방률", "변화점수", "비고"],
+    "33챌린지_점수": ["회원명", "연락처", "총경험치", "퀘스트점수", "습관점수", "인바디점수", "현재레벨", "최종업데이트"]
+  };
+
+  for (var name in sheets) {
+    var sheet = ss.getSheetByName(name);
+    if (!sheet) {
+      sheet = ss.insertSheet(name);
+      sheet.appendRow(sheets[name]);
+      
+      // 디자인 세팅 (첫 줄 고정 및 강조)
+      sheet.setFrozenRows(1);
+      sheet.getRange("1:1").setBackground("#f3f3f3").setFontWeight("bold").setHorizontalAlignment("center");
+      
+      Logger.log("✅ 시트 생성 완료: " + name);
+    } else {
+      Logger.log("ℹ️ 이미 존재하는 시트입니다: " + name);
+    }
+  }
+  
+  SpreadsheetApp.getUi().alert("33 챌린지 기초 시트 4개가 성공적으로 구축되었습니다!");
+}
+
+/**
+ * 회원의 33 챌린지 현재 상태(레벨, 점수, 오늘 퀘스트 등)를 조회합니다.
+ */
+function get33ChallengeStatus(phone) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var scoreSheet = ss.getSheetByName("33챌린지_점수");
+    var recordSheet = ss.getSheetByName("33챌린지_기록");
+    var settingSheet = ss.getSheetByName("33챌린지_설정");
+    
+    var phoneOnly = String(phone).replace(/[^0-9]/g, "");
+    var now = new Date();
+    var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    
+    // 1. 현재 진행 중인 시즌 정보 가져오기
+    var settings = settingSheet.getDataRange().getDisplayValues();
+    var activeSeason = "33 챌린지"; // 기본값
+    for (var i = 1; i < settings.length; i++) {
+      if (settings[i][3] === "진행") {
+        activeSeason = settings[i][0];
+        break;
+      }
+    }
+    
+    // 2. 회원의 현재 점수 및 레벨 조회
+    var scoreData = scoreSheet.getDataRange().getDisplayValues();
+    var myScore = { level: 1, totalExp: 0, questExp: 0, habitExp: 0, inbodyExp: 0 };
+    var found = false;
+    
+    for (var j = 1; j < scoreData.length; j++) {
+      if (scoreData[j][1].replace(/[^0-9]/g, "") === phoneOnly) {
+        myScore = {
+          level: Number(scoreData[j][6] || 1),
+          totalExp: Number(scoreData[j][2] || 0),
+          questExp: Number(scoreData[j][3] || 0),
+          habitExp: Number(scoreData[j][4] || 0),
+          inbodyExp: Number(scoreData[j][5] || 0)
+        };
+        found = true;
+        break;
+      }
+    }
+    
+    // 3. 오늘의 퀘스트 완료 현황 조회
+    var records = recordSheet.getDataRange().getDisplayValues();
+    var todayQuests = {
+      water: 0,
+      habits: [],
+      photos: []
+    };
+    
+    for (var k = 1; k < records.length; k++) {
+      var rDate = records[k][0].split(" ")[0]; // 타임스탬프에서 날짜만 추출
+      var rPhone = records[k][2].replace(/[^0-9]/g, "");
+      
+      if (rDate === todayStr && rPhone === phoneOnly) {
+        var type = records[k][3]; // 구분 (물/식단/습관/인증)
+        var item = records[k][4]; // 항목명
+        
+        if (type === "물") todayQuests.water = Number(records[k][5]);
+        else if (type === "습관") todayQuests.habits.push(item);
+        else if (type === "식단" || type === "인증") todayQuests.photos.push(item);
+      }
+    }
+    
+    return {
+      success: true,
+      season: activeSeason,
+      status: myScore,
+      today: todayQuests,
+      isRegistered: found
+    };
+    
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * 회원의 활동(물 마시기, 습관 체크 등)을 기록하고 점수를 부여합니다.
+ */
+function submit33Action(data) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var recordSheet = ss.getSheetByName("33챌린지_기록");
+    var scoreSheet = ss.getSheetByName("33챌린지_점수");
+    
+    var now = new Date();
+    var timestamp = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm:ss");
+    var phoneOnly = String(data.phone).replace(/[^0-9]/g, "");
+    
+    // 1. 기록 추가 (appendRow)
+    // ["타임스탬프", "회원명", "연락처", "구분", "항목", "내용", "점수", "이미지URL"]
+    recordSheet.appendRow([
+      timestamp, 
+      data.name, 
+      data.phone, 
+      data.type, 
+      data.item, 
+      data.value || "", 
+      data.score || 0, 
+      data.imageUrl || ""
+    ]);
+    
+    // 2. 점수 합산 (Upsert 로직)
+    var scoreData = scoreSheet.getDataRange().getDisplayValues();
+    var foundIdx = -1;
+    for (var i = 1; i < scoreData.length; i++) {
+      if (scoreData[i][1].replace(/[^0-9]/g, "") === phoneOnly) {
+        foundIdx = i + 1;
+        break;
+      }
+    }
+    
+    var scoreToAdd = Number(data.score || 0);
+    var questAdd = (data.type === "퀘스트" || data.type === "식단") ? scoreToAdd : 0;
+    var habitAdd = (data.type === "습관" || data.type === "물") ? scoreToAdd : 0;
+
+    if (foundIdx > 0) {
+      // 기존 회원 업데이트
+      var currentTotal = Number(scoreSheet.getRange(foundIdx, 3).getValue() || 0);
+      var currentQuest = Number(scoreSheet.getRange(foundIdx, 4).getValue() || 0);
+      var currentHabit = Number(scoreSheet.getRange(foundIdx, 5).getValue() || 0);
+      
+      scoreSheet.getRange(foundIdx, 3).setValue(currentTotal + scoreToAdd);
+      scoreSheet.getRange(foundIdx, 4).setValue(currentQuest + questAdd);
+      scoreSheet.getRange(foundIdx, 5).setValue(currentHabit + habitAdd);
+      scoreSheet.getRange(foundIdx, 8).setValue(timestamp); // 최종업데이트
+      
+      // 레벨 계산 (예: 100점당 1레벨)
+      var newLevel = Math.floor((currentTotal + scoreToAdd) / 100) + 1;
+      scoreSheet.getRange(foundIdx, 7).setValue(newLevel);
+    } else {
+      // 신규 챌린저 등록
+      scoreSheet.appendRow([
+        data.name, 
+        data.phone, 
+        scoreToAdd, 
+        questAdd, 
+        habitAdd, 
+        0, 1, timestamp
+      ]);
+    }
+    
+    return { success: true, totalExp: (currentTotal || 0) + scoreToAdd };
+    
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
