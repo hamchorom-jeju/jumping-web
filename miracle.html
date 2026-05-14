@@ -230,7 +230,6 @@
         reader.onload = e => {
           document.getElementById(type + '-preview-img').src = e.target.result;
           document.getElementById(type + '-preview-box').style.display = 'block';
-          // 📸 촬영 버튼(Placeholder) 숨기기
           const placeholder = document.getElementById(type + '-upload-placeholder');
           if (placeholder) placeholder.style.display = 'none';
         };
@@ -239,12 +238,10 @@
     }
 
     function quickMeal(mealType) {
-      // 식단은 특별 카테고리이므로 직접 지정
       const mealCategory = "식단";
       const commentField = document.getElementById('quest-comment');
       const selectField = document.getElementById('quest-select');
       
-      // ⚡ 선택 항목에 '식단'이 없으면 임시로 추가 (제출을 위해)
       if (!Array.from(selectField.options).some(opt => opt.value === mealCategory)) {
         const opt = document.createElement('option');
         opt.value = mealCategory;
@@ -261,40 +258,45 @@
     function loadArchiveFeed() {
       const loader = document.getElementById('feed-loader');
       const feed = document.getElementById('archive-feed');
+      if (!loader || !feed) return;
       loader.style.display = 'block';
       
       google.script.run
         .withSuccessHandler(data => {
           loader.style.display = 'none';
-          if (data && data.error) {
-             feed.innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:0.8rem;">오류: ${data.error}</p>`;
-             return;
-          }
-          if (!data || data.length === 0) {
-            feed.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:0.8rem; margin-top:20px;">첫 번째 기적의 주인공이 되어보세요!</p>';
-            return;
-          }
-          feed.innerHTML = data.map(item => `
-            <div class="feed-card">
-              <div class="feed-header">
-                <div class="feed-avatar">${item.name ? item.name.charAt(0) : '?'}</div>
-                <div class="feed-user-info">
-                  <div class="feed-user-name">${item.name || '무명 모험가'}</div>
-                  <div class="feed-time">${item.date} ${item.time}</div>
+          try {
+            if (!data || data.length === 0) {
+              feed.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:0.8rem; margin-top:20px;">첫 번째 기적의 주인공이 되어보세요!</p>';
+              return;
+            }
+            if (data.error) {
+              feed.innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:0.8rem;">데이터 오류: ${data.error}</p>`;
+              return;
+            }
+            feed.innerHTML = data.map(item => `
+              <div class="feed-card">
+                <div class="feed-header">
+                  <div class="feed-avatar">${item.name ? item.name.charAt(0) : '?'}</div>
+                  <div class="feed-user-info">
+                    <div class="feed-user-name">${item.name || '무명 모험가'}</div>
+                    <div class="feed-time">${item.date} ${item.time}</div>
+                  </div>
+                  <div class="feed-badge">${item.type}</div>
                 </div>
-                <div class="feed-badge">${item.type}</div>
+                ${item.photoId ? `<div class="feed-img-box"><img src="https://drive.google.com/uc?id=${item.photoId}" class="feed-img" onerror="this.src='https://via.placeholder.com/400x300?text=이미지 로딩 실패'"></div>` : ''}
+                <div class="feed-content">
+                  <span style="font-size:0.75rem; color:var(--emerald); font-weight:900;">💎 ${item.item}</span>
+                  <p class="feed-text">${item.comment || '말없이 실천 중인 멋진 모험가입니다!'}</p>
+                </div>
               </div>
-              ${item.photoId ? `<div class="feed-img-box"><img src="https://drive.google.com/uc?id=${item.photoId}" class="feed-img" onerror="this.src='https://via.placeholder.com/400x300?text=이미지 로딩 실패'"></div>` : ''}
-              <div class="feed-content">
-                <span style="font-size:0.75rem; color:var(--emerald); font-weight:900;">💎 ${item.item}</span>
-                <p class="feed-text">${item.comment || '말없이 실천 중인 멋진 모험가입니다!'}</p>
-              </div>
-            </div>
-          `).join('');
+            `).join('');
+          } catch (err) {
+            feed.innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:0.8rem;">렌더링 오류가 발생했습니다.</p>`;
+          }
         })
         .withFailureHandler(err => {
           loader.style.display = 'none';
-          feed.innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:0.8rem;">통신 오류: ${err.toString()}</p>`;
+          feed.innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:0.8rem;">서버 통신 실패: ${err.toString()}</p>`;
         })
         .getArchiveFeed();
     }
@@ -311,14 +313,15 @@
       btn.disabled = true;
       btn.innerText = "기록 저장 중...";
       
+      let finalType = type === 'quest' ? '퀘스트' : '습관';
+      let score = type === 'quest' ? 15 : 5;
+      if (item === '식단' || item.includes('식단')) {
+        finalType = '식단';
+        score = 10;
+      }
+
       const reader = new FileReader();
       reader.onload = e => {
-        let finalType = type === 'quest' ? '퀘스트' : '습관';
-        let score = type === 'quest' ? 15 : 5;
-        if (item === '식단' || item.includes('식단')) {
-          finalType = '식단';
-          score = 10;
-        }
         const payload = {
           name: TARGET_NAME, phone: TARGET_PHONE,
           type: finalType, item: item, comment: comment,
@@ -344,18 +347,12 @@
           .withFailureHandler(err => {
             btn.disabled = false;
             btn.innerText = "기록 완료";
-            alert("서버 통신 오류: " + err.toString() + "\n\n(구글 로그인이 풀렸거나 드라이브 권한이 필요할 수 있습니다)");
+            alert("서버 통신 오류: " + err.toString());
           })
           .submitArchive(payload);
       };
       reader.readAsDataURL(file);
     }
-
-    function loadActiveEvents() {
-      const select = document.getElementById('quest-select');
-      google.script.run
-        .withSuccessHandler(events => {
-          if(events && events.length > 0) {
             // ⚡ 구분선 추가 (이미 없으면)
             const dividerExists = Array.from(select.options).some(opt => opt.value === "---");
             if (!dividerExists) {
