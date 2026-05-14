@@ -265,16 +265,19 @@ function searchMembersByDigits(payload) {
     var regSheet = ss.getSheetByName("등록현황") || ss.getSheetByName("등록 현황");
     if (!regSheet) return { success: false, error: "'등록현황' 시트를 찾을 수 없습니다." };
     
-    var data = regSheet.getDataRange().getValues();
+    // getDisplayValues()를 사용하여 날짜/숫자 변환 오류 방지 (v44.163 출석 앱 동기화)
+    var data = regSheet.getDataRange().getDisplayValues();
+    var cols = getRegColumnIndices(regSheet);
     var matches = [];
     
     for (var i = 1; i < data.length; i++) {
-      var name = String(data[i][1] || "모험가").trim(); // B열: 이름
-      var phoneRaw = String(data[i][2] || "").trim(); // C열: 휴대폰
+      var name = String(data[i][cols.name] || "모험가").trim(); // 이름
+      var phoneRaw = String(data[i][cols.phone] || "").trim(); // 휴대폰
       var phoneOnlyDigits = phoneRaw.replace(/[^0-9]/g, "");
+      var status = String(data[i][cols.status] || "").trim(); // 상태 (H열 등)
       
-      // 휴대폰 번호(C열)에서 뒷자리 매칭 확인
-      if (phoneOnlyDigits.endsWith(digits) || phoneOnlyDigits.indexOf(digits) > -1) {
+      // [출석 앱 공식] 진행중인 회원 + 뒷 4자리 엄격 매칭
+      if ((status === "진행중" || status === "진행 중") && phoneOnlyDigits.slice(-4) === digits) {
         // 중복 방지를 위해 전화번호 힌트 포함
         var phoneHint = phoneRaw.length > 4 ? "****" + phoneRaw.slice(-4) : phoneRaw;
         matches.push({ 
