@@ -35,122 +35,160 @@ body {
     color: var(--gold);
     padding: 15px 20px;
     text-align: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    border-bottom: 2px solid var(--gold);
+    border-bottom: 3px solid var(--gold);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 .v-global-header h1 {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     font-weight: 900;
     letter-spacing: 1px;
-    text-transform: uppercase;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
 }
 
 .v-container {
     max-width: 500px;
     margin: 0 auto;
-    padding: 15px;
+    padding: 20px 15px;
     display: flex;
     flex-direction: column;
-    gap: 12px; /* Tighter gap for banners */
+    gap: 15px;
 }
 
 /* --- 📜 SEPARATED BANNERS --- */
 .v-banner-notice {
     background: #4e342e;
     color: #fff;
-    padding: 10px 15px;
-    border-radius: 12px;
-    font-size: 0.75rem;
+    padding: 12px 15px;
+    border-radius: 15px;
+    font-size: 0.85rem;
     font-weight: 800;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    border-left: 5px solid var(--gold);
+    border-left: 6px solid var(--gold);
 }
 
 .v-banner-ranking {
     background: #fff;
     border: 2px solid var(--v-wood);
-    border-radius: 12px;
-    padding: 12px;
+    border-radius: 15px;
+    padding: 15px;
     color: var(--v-wood);
     font-weight: 900;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     text-align: center;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-    min-height: 55px;
+    min-height: 65px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
 }
 
-.v-sudden-bar {
-    background: var(--health);
-    color: #fff;
-    padding: 8px 15px;
-    border-radius: 10px;
-    font-size: 0.7rem;
-    font-weight: 900;
-    display: none;
-    animation: pulse-red 2s infinite;
-}
-
-@keyframes pulse-red {
-    0% { transform: scale(1); }
-    50% { transform: scale(0.98); }
-    100% { transform: scale(1); }
-}
-
-/* --- 📋 STATUS WINDOW v44.0 (Split) --- */
+/* --- 📋 STATUS WINDOW v44.2 (Restored Clean Look) --- */
 .status-window-v43 {
     background: var(--v-paper);
     border: 3px solid var(--v-border);
-    border-radius: 30px;
-    padding: 20px;
+    border-radius: 35px;
+    padding: 25px 20px;
     display: grid;
     grid-template-columns: 1fr 1.3fr;
-    gap: 15px;
+    gap: 20px;
+    align-items: center;
+}
+
+.profile-card {
+    text-align: center;
+    border-right: 1.5px solid rgba(93, 64, 55, 0.15);
+    padding-right: 15px;
 }
 
 .avatar-v43 {
-    width: 65px; height: 65px;
-    margin: 0 auto 10px;
+    width: 75px; height: 75px;
+    margin: 0 auto 12px;
     background: #fff;
     border-radius: 50%;
-    border: 3px solid var(--perf);
-    display: flex; align-items: center; justify-content: center; font-size: 2rem;
+    border: 3.5px solid var(--perf);
+    display: flex; align-items: center; justify-content: center; font-size: 2.5rem;
 }
 
-.total-score-val { font-size: 1.4rem; font-weight: 900; color: var(--v-wood); }
+.total-score-val { font-size: 1.8rem; font-weight: 900; color: var(--v-wood); line-height: 1.2; }
 
-.gauge-bar-bg { background: rgba(0,0,0,0.05); height: 10px; border-radius: 5px; overflow: hidden; margin: 4px 0; }
-.gauge-fill { height: 100%; transition: width 0.8s ease-in-out; }
+/* Evolution Bar (Left) */
+.evo-bar-container { margin: 10px 0; }
+.evo-bar-bg { background: rgba(0,0,0,0.05); height: 8px; border-radius: 4px; overflow: hidden; }
+.evo-bar-fill { height: 100%; background: linear-gradient(to right, var(--gold), #e67e22); transition: width 1s; }
+
+/* Right Gauge Section (Restored Cleanliness) */
+.gauge-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Spacious gap */
+}
+
+.gauge-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.gauge-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95rem; /* Larger Font */
+    font-weight: 900;
+}
+
+.gauge-bar-bg {
+    background: rgba(0,0,0,0.08);
+    height: 14px; /* Thicker Bar */
+    border-radius: 7px;
+    overflow: hidden;
+}
+
+.gauge-fill {
+    height: 100%;
+    transition: width 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* --- 🔘 TOGGLE SWITCH --- */
+.perspective-toggle {
+    display: flex;
+    background: rgba(0,0,0,0.06);
+    padding: 4px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+}
+
+.toggle-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 8px;
+    font-size: 0.85rem;
+    font-weight: 900;
+    cursor: pointer;
+    border-radius: 9px;
+    transition: all 0.2s;
+}
+
+.toggle-btn.active {
+    background: #fff;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
 
 /* --- ⚔️ QUEST HUB --- */
 .v-quest-hub {
-    background: rgba(255,255,255,0.7);
-    border-radius: 25px;
-    padding: 15px;
-    border: 1px solid var(--v-border);
-}
-
-.v-btn-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    background: #fff;
+    border-radius: 30px;
+    padding: 25px;
+    border: 3px solid var(--v-border);
 }
 
 .v-action-btn {
-    background: #fff;
+    background: var(--v-paper);
     border: 2px solid var(--v-border);
-    padding: 12px 10px;
-    border-radius: 15px;
-    text-align: center;
+    padding: 15px 10px;
+    border-radius: 20px;
     font-weight: 900;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
+    color: var(--v-wood);
 }
 
 /* --- 📱 NAV --- */
@@ -159,7 +197,7 @@ body {
     bottom: 0; left: 0; width: 100%;
     background: #fff;
     display: flex; justify-content: space-around;
-    padding: 10px 10px 30px;
+    padding: 15px 10px 40px;
     border-top: 2px solid var(--v-paper);
     z-index: 2000;
 }

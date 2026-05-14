@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GENIE WORLD - Nohyung Village v44.1</title>
-    <!-- Portal v44.1 CSS -->
+    <title>GENIE WORLD - Nohyung Village v44.2</title>
+    <!-- v44.2 Clean Portal CSS -->
     <link rel="stylesheet" href="index.css">
     <!-- Icon Library -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -19,84 +19,87 @@
     <div class="v-container">
         
         <!-- 📜 SEPARATED BANNERS -->
-        <!-- 1. Village Notice (Fixed) -->
         <div class="v-banner-notice">
-            📢 [마을 공지] 33 챌린지 시즌 4주차 결산 안내 | 20시 이후 금식!
+            📢 [마을 공지] 33 챌린지 시즌 4주차 결산 안내 | 20시 이후 금식 엄수!
         </div>
 
-        <!-- 2. Hall of Fame (Rotating) -->
         <div class="v-banner-ranking" id="ranking-ticker">
             금주 체력왕: 홍길동 님 ✨
         </div>
 
-        <!-- 3. Sudden Mission (Hidden by default) -->
         <div class="v-sudden-bar" id="sudden-mission-bar">
-            ⚡ [보너스 퀘스트] 지금 바로 플랭크 인증 시 방어력 +20 EXP!
+            ⚡ [돌발 미션] 지금 바로 플랭크 인증 시 방어력 +20 EXP!
         </div>
 
-        <!-- 📋 모험가 상태창 (v44.1 Evolution & Perspective) -->
+        <!-- 📋 모험가 상태창 (v44.2 Restored Clean Look) -->
         <section class="status-window-v43">
             <!-- Left: Evolution Card -->
-            <div class="profile-card" style="text-align: center; border-right: 1px solid var(--v-border); padding-right: 10px;">
+            <div class="profile-card">
                 <div class="avatar-v43">🧚‍♂️</div>
-                <h2 style="font-size: 0.9rem; font-weight: 900; color: var(--v-wood);"><span id="user-name">모험가</span> 님</h2>
-                <span style="font-size: 0.65rem; font-weight: 800; color: var(--perf); display: block; margin-bottom: 5px;">꿈나무 요정</span>
+                <h2 style="font-size: 1.1rem; font-weight: 900; color: var(--v-wood); margin-bottom: 2px;"><span id="user-name">모험가</span> 님</h2>
+                <span style="font-size: 0.8rem; font-weight: 800; color: var(--perf); display: block; margin-bottom: 12px;">꿈나무 요정</span>
                 
-                <span style="font-size: 0.5rem; font-weight: 800; color: var(--text-dim);">TOTAL SCORE</span>
+                <span style="font-size: 0.6rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase;">Total Score</span>
                 <span class="total-score-val" id="total-score">84,200</span>
                 
                 <!-- Evolution Bar -->
-                <div style="margin: 6px 0;">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.5rem; font-weight: 800; color: var(--text-dim); margin-bottom: 2px;">
+                <div class="evo-bar-container">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.65rem; font-weight: 900; color: var(--text-dim); margin-bottom: 4px;">
                         <span>NEXT: 전설</span>
                         <span id="evo-percent">85%</span>
                     </div>
-                    <div class="gauge-bar-bg" style="height: 5px;">
-                        <div class="gauge-fill" id="evo-bar" style="width: 85%; background: linear-gradient(to right, #f1c40f, #e67e22);"></div>
+                    <div class="evo-bar-bg">
+                        <div class="evo-bar-fill" id="evo-bar" style="width: 85%;"></div>
                     </div>
                 </div>
                 
-                <div style="background: var(--v-wood); color: #fff; padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 900; display: inline-block;">랭킹 <span id="current-rank">12</span>위</div>
+                <div style="background: var(--v-wood); color: #fff; padding: 5px 15px; border-radius: 12px; font-size: 0.85rem; font-weight: 900; display: inline-block; margin-top: 5px;">랭킹 <span id="current-rank">12</span>위</div>
             </div>
 
             <!-- Right: Perspective Ability Gauges -->
             <div class="gauge-section">
                 <!-- Toggle Switch -->
-                <div style="display: flex; background: rgba(0,0,0,0.05); padding: 2px; border-radius: 8px; margin-bottom: 8px;">
-                    <button id="btn-weekly" onclick="Village.setPerspective('weekly')" style="flex: 1; border: none; background: #fff; border-radius: 6px; font-size: 0.7rem; font-weight: 900; padding: 5px; cursor: pointer;">주간</button>
-                    <button id="btn-monthly" onclick="Village.setPerspective('monthly')" style="flex: 1; border: none; background: transparent; font-size: 0.7rem; font-weight: 900; padding: 5px; cursor: pointer;">월간</button>
+                <div class="perspective-toggle">
+                    <button id="btn-weekly" class="toggle-btn active" onclick="Village.setPerspective('weekly')">주간</button>
+                    <button id="btn-monthly" class="toggle-btn" onclick="Village.setPerspective('monthly')">월간</button>
                 </div>
 
-                <!-- Gauges -->
-                <div class="gauge-item" style="margin-bottom: 8px;">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 900;">
-                        <span style="color: var(--health);">❤️ 체력</span>
+                <!-- Ability Gauges (Larger & Cleaner) -->
+                <div class="gauge-item">
+                    <div class="gauge-header">
+                        <span style="color: var(--health);"><i class="fa-solid fa-heart"></i> 체력</span>
                         <span id="health-val">15,400</span>
                     </div>
-                    <div class="gauge-bar-bg"><div class="gauge-fill" id="health-bar" style="width: 75%; background: var(--health);"></div></div>
-                </div>
-
-                <div class="gauge-item" style="margin-bottom: 8px;">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 900;">
-                        <span style="color: var(--perf);">🗡️ 수행력</span>
-                        <span id="perf-val">24,500</span>
+                    <div class="gauge-bar-bg">
+                        <div class="gauge-fill" id="health-bar" style="width: 75%; background: var(--health);"></div>
                     </div>
-                    <div class="gauge-bar-bg"><div class="gauge-fill" id="perf-bar" style="width: 65%; background: var(--perf);"></div></div>
                 </div>
 
                 <div class="gauge-item">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 900;">
-                        <span style="color: var(--def);">🛡️ 방어력</span>
+                    <div class="gauge-header">
+                        <span style="color: var(--perf);"><i class="fa-solid fa-sword"></i> 수행력</span>
+                        <span id="perf-val">24,500</span>
+                    </div>
+                    <div class="gauge-bar-bg">
+                        <div class="gauge-fill" id="perf-bar" style="width: 65%; background: var(--perf);"></div>
+                    </div>
+                </div>
+
+                <div class="gauge-item">
+                    <div class="gauge-header">
+                        <span style="color: var(--def);"><i class="fa-solid fa-shield"></i> 방어력</span>
                         <span id="def-val">18,200</span>
                     </div>
-                    <div class="gauge-bar-bg"><div class="gauge-fill" id="def-bar" style="width: 55%; background: var(--def);"></div></div>
+                    <div class="gauge-bar-bg">
+                        <div class="gauge-fill" id="def-bar" style="width: 55%; background: var(--def);"></div>
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- ⚔️ 퀘스트 허브 -->
         <section class="v-quest-hub">
-            <h3 style="font-size: 0.9rem; font-weight: 900; color: var(--v-wood); margin-bottom: 12px;">⚔️ 퀘스트 활성화 (Quest)</h3>
+            <h3 style="font-size: 1.1rem; font-weight: 900; color: var(--v-wood); margin-bottom: 20px;">⚔️ 활성화된 퀘스트</h3>
             <div class="v-btn-grid">
                 <div class="v-action-btn" onclick="syncClubRecord()" style="border-color: var(--perf);">⚡ 클럽 동기화</div>
                 <div class="v-action-btn" onclick="location.href='miracle.html?cat=visit'">📸 방문 인증</div>
@@ -105,8 +108,8 @@
             </div>
 
             <!-- Water Hunter Slider -->
-            <div style="background: #fff; padding: 12px; border-radius: 15px; border: 1px solid var(--v-border); margin-top: 10px;">
-                <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.8rem; margin-bottom: 5px;">
+            <div style="background: #fffdf5; padding: 20px; border-radius: 20px; border: 1px solid var(--v-border); margin-top: 15px;">
+                <div style="display: flex; justify-content: space-between; font-weight: 900; font-size: 0.95rem; margin-bottom: 10px;">
                     <span>💧 워터 헌터 (수분 보충)</span>
                     <span id="water-val">1.2L / 2.0L</span>
                 </div>
@@ -114,9 +117,9 @@
             </div>
         </section>
 
-        <!-- 🛡️ 습관 수호 (Habit List) -->
-        <section style="background: rgba(255,255,255,0.5); border-radius: 25px; padding: 15px; border: 1px solid rgba(0,0,0,0.05);">
-            <h3 style="font-size: 0.9rem; font-weight: 900; color: var(--v-wood); margin-bottom: 12px;"><i class="fa-solid fa-shield-halved"></i> 습관 수호 (Habit)</h3>
+        <!-- 🛡️ 습관 수호 -->
+        <section style="background: rgba(255,255,255,0.7); border-radius: 30px; padding: 25px; border: 1px solid var(--v-border);">
+            <h3 style="font-size: 1.1rem; font-weight: 900; color: var(--v-wood); margin-bottom: 15px;"><i class="fa-solid fa-shield-halved"></i> 습관 수호 (Habit)</h3>
             <div id="habit-list-container"></div>
         </section>
 

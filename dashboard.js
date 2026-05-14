@@ -1,6 +1,6 @@
 /**
- * Nohyung Village Dashboard Logic (v44.1 - Portal & Separated Banners)
- * Features: Global Header, Multi-Tier Ranking Ticker (Weekly/Monthly/Total), Sudden Bar
+ * Nohyung Village Dashboard Logic (v44.2 - Restored Clean Look)
+ * Features: Corrected Toggle Styling, Evolution Progress, Clean Stat Mapping
  */
 
 const Village = {
@@ -38,7 +38,6 @@ const Village = {
         ]
     },
 
-    // 📜 Multi-Tier Ranking Ticker
     rankings: [
         { type: "금주 랭킹", content: "체력왕: 홍길동 | 수행왕: 김개똥 | 수호왕: 이성실" },
         { type: "월간 랭킹", content: "다이어트킹: 박지니 | 미션킹: 최열정" },
@@ -47,7 +46,7 @@ const Village = {
     currentRankIndex: 0,
 
     init() {
-        console.log("Welcome to Nohyung Village v44.1 Portal Engine!");
+        console.log("Welcome to Nohyung Village v44.2 (Clean Perspective)!");
         this.renderAll();
         this.updateEvolution();
         this.startTicker();
@@ -61,7 +60,7 @@ const Village = {
             const r = this.rankings[this.currentRankIndex];
             ticker.style.opacity = 0;
             setTimeout(() => {
-                ticker.innerHTML = `<span style="font-size:0.6rem; color:var(--text-dim); display:block; margin-bottom:2px;">[${r.type}]</span>${r.content}`;
+                ticker.innerHTML = `<span style="font-size:0.65rem; color:var(--text-dim); display:block; margin-bottom:4px;">[${r.type}]</span>${r.content}`;
                 ticker.style.opacity = 1;
                 ticker.style.transition = 'opacity 0.5s';
             }, 500);
@@ -108,10 +107,19 @@ const Village = {
 
     setPerspective(view) {
         this.perspective = view;
-        const bW = document.getElementById('btn-weekly');
-        const bM = document.getElementById('btn-monthly');
-        bW.style.background = (view === 'weekly') ? '#fff' : 'transparent';
-        bM.style.background = (view === 'monthly') ? '#fff' : 'transparent';
+        
+        // Update Active Toggle Styling
+        const btnWeekly = document.getElementById('btn-weekly');
+        const btnMonthly = document.getElementById('btn-monthly');
+        
+        if (view === 'weekly') {
+            btnWeekly.classList.add('active');
+            btnMonthly.classList.remove('active');
+        } else {
+            btnMonthly.classList.add('active');
+            btnWeekly.classList.remove('active');
+        }
+        
         this.renderAll();
     },
 
@@ -119,9 +127,9 @@ const Village = {
         const container = document.getElementById('habit-list-container');
         if (!container) return;
         container.innerHTML = this.user.habits.map(h => `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:${h.id === 'plus' ? '#fff9c4' : '#fff'}; border-radius:15px; margin-bottom:8px; border:2px solid ${h.id === 'plus' ? 'var(--def)' : 'var(--v-border)'};">
-                <span style="font-size:0.9rem; font-weight:800; color:var(--v-wood);">${h.title}</span>
-                <div onclick="Village.checkHabit('${h.id}')" style="width:28px; height:28px; border:2px solid var(--v-border); border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; background:${h.done ? 'var(--def)' : 'transparent'};">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:${h.id === 'plus' ? '#fff9c4' : '#fff'}; border-radius:15px; margin-bottom:10px; border:2px solid ${h.id === 'plus' ? 'var(--def)' : 'var(--v-border)'};">
+                <span style="font-size:1rem; font-weight:900; color:var(--v-wood);">${h.title}</span>
+                <div onclick="Village.checkHabit('${h.id}')" style="width:34px; height:34px; border:2px solid var(--v-border); border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; background:${h.done ? 'var(--def)' : 'transparent'};">
                     ${h.done ? '✅' : ''}
                 </div>
             </div>
