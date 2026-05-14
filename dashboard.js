@@ -87,9 +87,15 @@ const Village = {
                     if (res && res.success) {
                         this.user.name = res.name;
                         this.user.tier = res.tier;
+                        this.user.nextTier = res.nextTier;
+                        this.user.evolution = res.evolution;
                         this.user.totalScore = res.totalScore;
                         this.user.rank = res.rank;
-                        if (res.stats) this.user.stats = res.stats;
+                        if (res.stats) {
+                            this.user.stats = res.stats;
+                            // [v44.167] 서버에서 보내준 항목별 정밀 목표치(3:4:3) 이식
+                            if (res.stats.targets) this.user.max = res.stats.targets.items;
+                        }
                         this.renderAll();
                         this.updateEvolution();
                     }
@@ -181,7 +187,6 @@ const Village = {
         }, 1000);
     },
 
-    // 🌬️ Premium Vertical Sliding Ticker Logic
     startTicker() {
         const container = document.getElementById('ranking-ticker');
         if (!container) return;
@@ -196,7 +201,6 @@ const Village = {
             `;
         };
 
-        // Initial Render
         container.innerHTML = this.rankings.map((_, i) => renderItem(i)).join('');
         const items = container.querySelectorAll('.v-ranking-item');
         
@@ -212,7 +216,6 @@ const Village = {
             });
         };
 
-        // Start cycling
         showItem(0);
         setInterval(() => {
             this.currentRankIndex = (this.currentRankIndex + 1) % this.rankings.length;
@@ -222,12 +225,16 @@ const Village = {
 
     renderAll() {
         document.getElementById('user-name').innerText = this.user.name;
-        document.getElementById('total-score').innerText = this.user.totalScore.toLocaleString();
+        document.getElementById('user-tier').innerText = this.user.tier; // 칭호 업데이트
+        document.getElementById('total-score').innerText = (this.user.totalScore || 0).toLocaleString();
         document.getElementById('current-rank').innerText = this.user.rank;
         document.getElementById('water-val').innerText = `${this.user.water}L / 2.0L`;
+        
         const view = this.perspective;
         const currentData = this.user.stats[view];
         const maxData = this.user.max[view];
+        
+        // [v44.167] 항목별 개별 목표치 적용
         this.updateGauge('health', currentData.health, maxData.health);
         this.updateGauge('perf', currentData.perf, maxData.perf);
         this.updateGauge('def', currentData.def, maxData.def);
@@ -235,25 +242,24 @@ const Village = {
     },
 
     updateGauge(id, val, max) {
-        document.getElementById(`${id}-val`).innerText = val.toLocaleString();
+        // [v44.167] "현재 / 목표" 형식의 정밀 수치 표기
+        const typeNames = { health: '❤️ 체력', perf: '🗡️ 수행력', def: '🛡️ 방어력' };
+        document.getElementById(`${id}-val`).innerText = `${Math.floor(val).toLocaleString()} / ${max.toLocaleString()}`;
+        
         const percent = Math.min((val / max) * 100, 100);
         document.getElementById(`${id}-bar`).style.width = `${percent}%`;
-        document.getElementById(`${id}-label`).innerText = `${this.perspective === 'weekly' ? '주간' : '월간'} 목표 대비: ${Math.round(percent)}%`;
+        document.getElementById(`${id}-label`).innerText = `${this.perspective === 'weekly' ? '주간' : '월간'} ${typeNames[id]} 달성률: ${Math.round(percent)}%`;
     },
 
     updateEvolution() {
-        const score = this.user.totalScore;
-        let ci = 0;
-        for (let i = 0; i < this.user.tiers.length; i++) {
-            if (score >= this.user.tiers[i].min) ci = i;
-        }
-        const next = this.user.tiers[ci + 1];
-        if (next) {
-            const min = this.user.tiers[ci].min;
-            const progress = ((score - min) / (next.min - min)) * 100;
-            document.getElementById('evo-bar').style.width = `${Math.min(progress, 100)}%`;
-            document.getElementById('evo-percent').innerText = `${Math.round(progress)}%`;
-        }
+        // [v44.167] 서버에서 계산된 v39 공식 진화도 적용
+        const evoBar = document.getElementById('evo-bar');
+        const evoLabel = document.getElementById('evo-percent');
+        const nextLabel = document.getElementById('next-tier-label');
+        
+        if (evoBar) evoBar.style.width = `${this.user.evolution || 0}%`;
+        if (evoLabel) evoLabel.innerText = `${this.user.evolution || 0}%`;
+        if (nextLabel) nextLabel.innerText = `Next: ${this.user.nextTier || '새싹 🌿'}`;
     },
 
     setPerspective(view) {

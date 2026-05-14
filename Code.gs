@@ -165,33 +165,38 @@ function getUserDashboardData(payload) {
 
     // 2. 능력치 및 점수 계산 (아카이브 시트)
     var arcSheet = ss.getSheetByName("아카이브");
-    var totalScore = 0;
     var stats = { health: 0, perf: 0, def: 0 };
+    var scores = { lifetime: 0, season: 0, weekly: 0 };
     
     var now = new Date();
-    var startOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1))); // 이번 주 월요일
+    // 주간 기준 (이번 주 월요일 00:00)
+    var startOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1))); 
     startOfWeek.setHours(0, 0, 0, 0);
+    // 시즌 기준 (v39: 4주 주기 - 여기서는 현재 월의 1일로 임시 설정, 추후 시즌제 시트 연동 가능)
+    var startOfSeason = new Date(now.getFullYear(), now.getMonth(), 1);
+    startOfSeason.setHours(0, 0, 0, 0);
 
     if (arcSheet) {
       var arcData = arcSheet.getDataRange().getValues();
       for (var j = 1; j < arcData.length; j++) {
-        var arcPhone = String(arcData[j][3]).replace(/[^0-9]/g, ""); // D열: 휴대폰
-        if (arcPhone.indexOf(phone) > -1 || phone.indexOf(arcPhone) > -1) {
+        var arcPhone = String(arcData[j][3]).replace(/[^0-9]/g, ""); 
+        if (arcPhone === phone) {
           var score = Number(arcData[j][8] || 0);
-          totalScore += score;
-          
-          // 이번 주 기록인 경우 능력치 합산
           var recDate = new Date(arcData[j][0]);
+          
+          // 1) 누적 (Lifetime)
+          scores.lifetime += score;
+          // 2) 시즌 (Season)
+          if (recDate >= startOfSeason) scores.season += score;
+          // 3) 주간 (Weekly)
           if (recDate >= startOfWeek) {
-            var type = String(arcData[j][4] || ""); // E열: 구분
-            if (type.indexOf("퀘스트") > -1) {
-              stats.perf += score;
-            } else if (type.indexOf("습관") > -1) {
-              stats.def += score;
-            } else if (type.indexOf("인바디") > -1 || type.indexOf("건강") > -1) {
-              stats.health += score;
-            } else { 
-              // 출석/로그인 또는 기타: 3:4:3 분배 (v44.161 소수점 유지)
+            scores.weekly += score;
+            // 능력치 분배 (주간 뷰용)
+            var type = String(arcData[j][4] || "");
+            if (type.indexOf("퀘스트") > -1) stats.perf += score;
+            else if (type.indexOf("습관") > -1) stats.def += score;
+            else if (type.indexOf("인바디") > -1 || type.indexOf("건강") > -1) stats.health += score;
+            else { 
               stats.health += (score * 0.3);
               stats.perf += (score * 0.4);
               stats.def += (score * 0.3);
@@ -201,30 +206,91 @@ function getUserDashboardData(payload) {
       }
     }
 
-    // 3. 인바디 전용 점수 합산 (33챌린지_인바디 시트) - v39 규격 적용 (v44.159)
-    // 3. 인바디 점수 합산 (33챌린지_인바디 시트) - v39 규격 적용 (v44.160)
+    // 3. 인바디 점수 합산 (33챌린지_인바디)
     var inbodySheet = ss.getSheetByName("33챌린지_인바디");
     if (inbodySheet) {
       var inbodyData = inbodySheet.getDataRange().getValues();
       for (var k = 1; k < inbodyData.length; k++) {
-        var inbodyPhone = String(inbodyData[k][2]).replace(/[^0-9]/g, ""); // C열: 연락처
-        if (inbodyPhone.indexOf(phone) > -1 || phone.indexOf(inbodyPhone) > -1) {
-          var inbodyScore = Number(inbodyData[k][6] || 0); // G열: 변화점수
-          stats.health += inbodyScore;
-          totalScore += inbodyScore;
+        var inbodyPhone = String(inbodyData[k][2]).replace(/[^0-9]/g, "");
+        if (inbodyPhone === phone) {
+          var inbodyScore = Number(inbodyData[k][6] || 0);
+          var inDate = new Date(inbodyData[k][0]);
+          scores.lifetime += inbodyScore;
+          if (inDate >= startOfSeason) scores.season += inbodyScore;
+          if (inDate >= startOfWeek) {
+            scores.weekly += inbodyScore;
+            stats.health += inbodyScore;
+          }
         }
       }
     }
 
+    // 4. v39 7단계 티어 및 진화 정보 산출
+    var tiers = [
+      { name: "씨앗 🌱", min: 0, max: 1000 },
+      { name: "새싹 🌿", min: 1001, max: 3000 },
+      { name: "나무 🌳", min: 3001, max: 8000 },
+      { name: "꽃 🌸", min: 8001, max: 15000 },
+      { name: "꿈나무 요정 🧚‍♂️", min: 15001, max: 30000 },
+      { name: "전설의 점퍼 👑", min: 3001, max: 60000 },
+      { name: "지니 월드 수호신 🌌", min: 60001, max: 9999999 }
+    ];
+    
+    var currentTier = tiers[0];
+    var nextTier = tiers[1];
+    for (var t = 0; t < tiers.length; t++) {
+      if (scores.lifetime >= tiers[t].min) {
+        currentTier = tiers[t];
+        nextTier = tiers[t+1] || tiers[t];
+      } else break;
+    }
+    
+    // 진화도 계산 (%)
+    var tierRange = nextTier.max - currentTier.min;
+    var progressInTier = scores.lifetime - currentTier.min;
+    var evolutionPercent = Math.min(100, Math.floor((progressInTier / tierRange) * 100));
+
+    // 5. 랭킹 산출 (시즌 점수 기준 - v39)
+    var rank = "-";
+    try {
+      // 모든 모험가의 시즌 점수를 합산하여 순위 매기기
+      var allSeasonScores = {};
+      if (arcSheet) {
+        var allArc = arcSheet.getDataRange().getValues();
+        for (var a = 1; a < allArc.length; a++) {
+          var aDate = new Date(allArc[a][0]);
+          if (aDate >= startOfSeason) {
+            var aPhone = String(allArc[a][3]).replace(/[^0-9]/g, "");
+            var aScore = Number(allArc[a][8] || 0);
+            allSeasonScores[aPhone] = (allSeasonScores[aPhone] || 0) + aScore;
+          }
+        }
+      }
+      var sortedScores = Object.values(allSeasonScores).sort(function(a, b) { return b - a; });
+      var mySeasonScore = scores.season;
+      rank = sortedScores.indexOf(mySeasonScore) + 1;
+    } catch(e) { rank = "-"; }
+
     return {
       success: true,
       name: memberInfo.name,
-      tier: memberInfo.tier,
-      totalScore: totalScore,
-      rank: memberInfo.rank,
+      tier: currentTier.name,
+      nextTier: nextTier.name,
+      evolution: evolutionPercent,
+      totalScore: scores.lifetime, 
+      seasonScore: scores.season,
+      weeklyScore: scores.weekly,
+      rank: rank,
       stats: {
         weekly: stats,
-        monthly: { health: totalScore, perf: totalScore, def: totalScore }
+        monthly: { health: stats.health * 4, perf: stats.perf * 4, def: stats.def * 4 }, // 시즌 누적 추산
+        targets: { 
+          total: { weekly: 1000, monthly: 4000 },
+          items: {
+            weekly: { health: 300, perf: 400, def: 300 }, // v39 3:4:3 비율 적용
+            monthly: { health: 1200, perf: 1600, def: 1200 }
+          }
+        }
       }
     };
   } catch (e) {
