@@ -65,19 +65,16 @@
   <div class="login-container">
     <div class="logo-area">🏰</div>
     <h1>지니 월드 입장</h1>
-    <p>노형 빌리지의 신비로운 모험이<br>다시 시작됩니다!</p>
+    <p>전화번호 뒷자리를 입력하고<br>자신의 이름을 선택해 주세요!</p>
 
     <div class="input-group">
-      <label>모험가 이름</label>
-      <input type="text" id="user-name" placeholder="성함을 입력해 주세요">
+      <label>전화번호 뒷자리 (또는 전체)</label>
+      <input type="tel" id="user-phone" placeholder="뒷자리 4자리를 입력하세요" oninput="searchMembers(this.value)">
     </div>
 
-    <div class="input-group">
-      <label>비밀 번호 (전화번호 뒷자리)</label>
-      <input type="tel" id="user-phone" placeholder="010-0000-0000">
+    <div id="member-selection-list" style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+      <!-- 매칭된 회원 버튼이 여기에 생성됨 -->
     </div>
-
-    <button class="start-btn" onclick="startAdventure()">모험 시작하기</button>
 
     <div class="footer-link">© 2024 Nohyung Village / Antigravity</div>
   </div>
@@ -85,35 +82,53 @@
   <script src="bridge.js"></script>
   <script>
     window.onload = function() {
-      // 이미 로그인 정보가 있으면 바로 입장
       const savedName = localStorage.getItem('v44_user_name');
       const savedPhone = localStorage.getItem('v44_user_phone');
       if (savedName && savedPhone) {
-        navigateTo('index', { name: savedName, phone: savedPhone });
+        // 자동 로그인 방지 (새로 선택하고 싶을 수 있으므로)
+        // navigateTo('index', { name: savedName, phone: savedPhone });
       }
     };
 
-    function startAdventure() {
-      const name = document.getElementById('user-name').value.trim();
-      let phone = document.getElementById('user-phone').value.trim();
-      
-      if (!name || !phone) {
-        alert("이름과 전화번호를 정확히 입력해 주세요!");
+    let searchTimeout;
+    function searchMembers(digits) {
+      if (digits.length < 2) {
+        document.getElementById('member-selection-list').innerHTML = "";
         return;
       }
 
-      // 전화번호 정규화 (숫자만 추출)
-      phone = phone.replace(/[^0-9]/g, "");
-      if (phone.length < 4) {
-        alert("전화번호를 정확히 입력해 주세요!");
-        return;
-      }
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+          google.script.run
+            .withSuccessHandler(res => {
+              const listDiv = document.getElementById('member-selection-list');
+              listDiv.innerHTML = "";
+              
+              if (res && res.success && res.members.length > 0) {
+                res.members.forEach(m => {
+                  const btn = document.createElement('button');
+                  btn.className = 'start-btn';
+                  btn.style.marginTop = "0";
+                  btn.style.background = "#fff";
+                  btn.style.color = "var(--v-wood)";
+                  btn.style.border = "2px solid var(--v-wood)";
+                  btn.innerHTML = `<b>${m.name}</b> 님으로 입장`;
+                  btn.onclick = () => selectMember(m.name, m.phone);
+                  listDiv.appendChild(btn);
+                });
+              } else if (digits.length >= 4) {
+                listDiv.innerHTML = "<p style='font-size:0.8rem; color:red;'>매칭되는 회원이 없습니다.</p>";
+              }
+            })
+            .searchMembersByDigits({ digits: digits });
+        }
+      }, 300);
+    }
 
-      // 로컬 스토리지에 저장 (기억하기)
+    function selectMember(name, phone) {
       localStorage.setItem('v44_user_name', name);
       localStorage.setItem('v44_user_phone', phone);
-
-      // 대시보드로 이동
       navigateTo('index', { name: name, phone: phone });
     }
   </script>
