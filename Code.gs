@@ -69,6 +69,11 @@ function submitArchive(payload) {
       sheet.getRange(1, 1, 1, arHeaders.length).setValues([arHeaders]);
     }
 
+    // [v44.188] 신원 정보 최종 검증
+    if (!payload.name || !payload.phone || payload.name === "무명 모험가") {
+      return { success: false, error: "회원 정보가 누락되었습니다. 다시 로그인해 주세요." };
+    }
+
     var now = new Date();
     var photoId = "";
     
@@ -77,6 +82,7 @@ function submitArchive(payload) {
         var folderName = "GenieWorld_Archive";
         var folders = DriveApp.getFoldersByName(folderName);
         var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+        // [v44.188] 폴더 권한 보강 (모든 사람 보기 가능)
         folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
         
         var base64Data = payload.image.split(",")[1];
@@ -85,22 +91,35 @@ function submitArchive(payload) {
         file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
         photoId = file.getId();
       } catch (err) {
-        console.error("Photo Error: " + err.toString());
+        console.error("Photo Save Error: " + err.toString());
       }
     }
     
+    // [v44.188] 전화번호 정규화 적용
+    var formattedPhone = formatPhoneNumber(payload.phone);
+
     sheet.appendRow([
       now, 
       Utilities.formatDate(now, "GMT+9", "HH:mm:ss"),
       payload.name,
-      payload.phone,
+      "'" + formattedPhone,
       payload.type,
       payload.item,
       payload.comment || "",
-      photoId,
+      photoId, // H열에 사진 ID 기록
       payload.score || 0
     ]);
     
+    // [v44.188] 점수 획득 시 활동기록에도 동시 기록 (데이터 무결성)
+    recordActivityLog({
+      phone: payload.phone,
+      name: payload.name,
+      type: "인증",
+      item: payload.item,
+      content: payload.type + " 사진 인증 완료",
+      score: payload.score || 0
+    });
+
     return { success: true, photoId: photoId };
   } catch (e) {
     return { success: false, error: "기록 저장 실패: " + e.toString() };
@@ -114,7 +133,7 @@ function getUserDashboardData(payload) {
   try {
     var rawPhone = String(payload.phone || "");
     var phone = rawPhone.replace(/[^0-9]/g, ""); // 숫자만 (내부 비교용)
-    var formattedPhone = formatPhone(phone); // 010-0000-0000 (기록용)
+    var formattedPhone = formatPhoneNumber(phone); // 010-0000-0000 (기록용)
     
     if (!phone) return { error: "전화번호가 없습니다." };
     
@@ -233,7 +252,7 @@ function getUserDashboardData(payload) {
           }
         }
       }
-    }
+    });
 
     // 3. 인바디 점수 합산 (33챌린지_인바디)
     var inbodySheet = ss.getSheetByName("33챌린지_인바디");
@@ -5118,6 +5137,42 @@ function syncClubRecord(payload) {
     
     return { success: true, points: totalPoints, timePoints: timePoints };
     
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * 📝 대시보드 활동 기록 영구 저장 (v44.186)
+ * 단순 체크박스 조작이나 시스템 보상을 '활동기록' 시트에 기록합니다.
+ */
+function recordActivityLog(data) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var actSheet = ss.getSheetByName("활동기록") || ss.insertSheet("활동기록");
+    
+    if (actSheet.getLastRow() === 0) {
+      actSheet.appendRow(["날짜", "시간", "이름", "전화번호", "유형", "항목", "내용", "사진ID", "점수"]);
+    }
+    
+    var now = new Date();
+    var phone = String(data.phone || "").replace(/[^0-9]/g, "");
+    var formattedPhone = phone; 
+    if (typeof formatPhoneNumber === 'function') formattedPhone = formatPhoneNumber(phone);
+    
+    actSheet.appendRow([
+      now,
+      Utilities.formatDate(now, "GMT+9", "HH:mm:ss"),
+      data.name || "모험가",
+      "'" + formattedPhone,
+      data.type || "일반",
+      data.item || "미지정 항목",
+      data.content || "대시보드 체크 완료",
+      "", 
+      data.score || 0
+    ]);
+    
+    return { success: true };
   } catch (e) {
     return { success: false, error: e.toString() };
   }

@@ -209,10 +209,33 @@ const Village = {
         if (habit && !habit.done) {
             habit.done = true;
             const points = habit.base + (withAuth ? 5 : 0);
-            this.user.totalScore += points;
-            this.user.stats.weekly.def += points;
-            this.renderAll();
-            this.updateEvolution();
+            
+            // [v44.186] 대시보드 체크 기록을 서버(활동기록 시트)에 영구 저장
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                const params = new URLSearchParams(window.location.search);
+                let phone = (params.get('phone') || '').trim();
+                if (!phone) phone = (localStorage.getItem('v44_user_phone') || '').trim();
+
+                google.script.run
+                    .withSuccessHandler(() => {
+                        console.log(`[v44.186] Habit ${id} recorded successfully.`);
+                        // 실시간 점수 동기화
+                        this.loadRealData();
+                    })
+                    .recordActivityLog({
+                        phone: phone,
+                        name: this.user.name,
+                        type: "습관",
+                        item: habit.title,
+                        score: points
+                    });
+            } else {
+                // 오프라인 모드 대응 (로컬 UI 업데이트)
+                this.user.totalScore += points;
+                this.user.stats.weekly.def += points;
+                this.renderAll();
+                this.updateEvolution();
+            }
         }
     },
 

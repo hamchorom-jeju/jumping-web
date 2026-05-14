@@ -216,13 +216,18 @@
   </nav>
 
   <script>
+    // [v44.188] 1순위: URL 파라미터 확인
     const urlParams = new URLSearchParams(window.location.search);
-    let TARGET_PHONE = '<?= targetPhone ?>';
-    let TARGET_NAME = '<?= targetName ?>';
+    let TARGET_PHONE = (urlParams.get('phone') || '').trim();
+    let TARGET_NAME = (urlParams.get('name') || '').trim();
+    
+    // [v44.188] 2순위: localStorage 세션 복구 (URL에 정보가 없을 때)
+    if (!TARGET_PHONE) TARGET_PHONE = (localStorage.getItem('v44_user_phone') || '').trim();
+    if (!TARGET_NAME) TARGET_NAME = (localStorage.getItem('v44_user_name') || '').trim();
 
-    // Vercel/외부 환경 대응: URL 파라미터에서 직접 추출 (구글 템플릿 태그 무시)
-    if (TARGET_PHONE.indexOf('<?=') > -1) TARGET_PHONE = (urlParams.get('phone') || '').trim();
-    if (TARGET_NAME.indexOf('<?=') > -1) TARGET_NAME = (urlParams.get('name') || '').trim();
+    // Vercel/외부 환경 대응: 구글 템플릿 태그 무시 및 최종 검증
+    if (TARGET_PHONE.indexOf('<?=') > -1) TARGET_PHONE = '';
+    if (TARGET_NAME.indexOf('<?=') > -1) TARGET_NAME = '';
 
     window.onload = function() {
       // [v44.183] 글로벌 인증 결계 가동
