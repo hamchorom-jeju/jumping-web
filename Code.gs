@@ -151,6 +151,35 @@ function getUserDashboardData(payload) {
         monthly: { health: totalScore, perf: totalScore, def: totalScore }
       }
     };
+  }
+}
+
+/**
+ * [입장] 전화번호 뒷자리로 회원 검색 (키오스크 스타일 v44.148)
+ */
+function searchMembersByDigits(payload) {
+  try {
+    var digits = String(payload.digits || "").trim();
+    if (digits.length < 2) return { success: true, members: [] };
+    
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var regSheet = ss.getSheetByName("등록현황");
+    if (!regSheet) return { success: false, error: "'등록현황' 시트가 없습니다." };
+    
+    var data = regSheet.getDataRange().getValues();
+    var matches = [];
+    
+    for (var i = 1; i < data.length; i++) {
+      var name = String(data[i][0] || "").trim();
+      var phone = String(data[i][1] || "").trim().replace(/[^0-9]/g, "");
+      
+      // 뒷자리 4자리 또는 포함 여부 확인
+      if (phone.endsWith(digits) || phone.indexOf(digits) > -1) {
+        matches.push({ name: name, phone: phone });
+      }
+    }
+    
+    return { success: true, members: matches.slice(0, 5) };
   } catch (e) {
     return { success: false, error: e.toString() };
   }
