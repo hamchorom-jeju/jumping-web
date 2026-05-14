@@ -133,34 +133,42 @@ function getUserDashboardData(payload) {
     var arcSheet = ss.getSheetByName("아카이브") || ss.insertSheet("아카이브");
     var now = new Date();
     var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
-    var arcData = arcSheet.getDataRange().getValues();
-    var hasLoggedInToday = false;
+    var isFirstLoginToday = false;
     
-    for (var j = 1; j < arcData.length; j++) {
-      var recDate = Utilities.formatDate(new Date(arcData[j][0]), "GMT+9", "yyyy-MM-dd");
-      var recPhone = String(arcData[j][3]).replace(/[^0-9]/g, "");
-      var recType = String(arcData[j][4]);
-      if (recDate === todayStr && recPhone === phone && recType === "로그인") {
-        hasLoggedInToday = true;
-        break;
+    // [v44.170] 중복 기록 방지를 위한 서버 잠금(Lock) 도입
+    var lock = LockService.getScriptLock();
+    try {
+      lock.waitLock(10000); 
+      var arcDataCheck = arcSheet.getDataRange().getValues();
+      var alreadyLogged = false;
+      for (var j = 1; j < arcDataCheck.length; j++) {
+        var recDate = Utilities.formatDate(new Date(arcDataCheck[j][0]), "GMT+9", "yyyy-MM-dd");
+        var recPhone = String(arcDataCheck[j][3]).replace(/[^0-9]/g, "");
+        var recType = String(arcDataCheck[j][4]);
+        if (recDate === todayStr && recPhone === phone && recType === "로그인") {
+          alreadyLogged = true;
+          break;
+        }
       }
-    }
-    
-    if (!hasLoggedInToday) {
-      // 최초 로그인 시 5점 지급 (v39 규격)
-      arcSheet.appendRow([
-        now,
-        Utilities.formatDate(now, "GMT+9", "HH:mm:ss"),
-        memberInfo.name,
-        phone,
-        "로그인",
-        "일일 출석",
-        "지니 월드 입장 완료",
-        "", // 사진 없음
-        5   // 5점 배점
-      ]);
-      // 데이터 갱신
-      arcData = arcSheet.getDataRange().getValues();
+      
+      if (!alreadyLogged) {
+        arcSheet.appendRow([
+          now,
+          Utilities.formatDate(now, "GMT+9", "HH:mm:ss"),
+          memberInfo.name,
+          phone,
+          "로그인",
+          "일일 출석",
+          "지니 월드 입장 완료",
+          "", 
+          5   
+        ]);
+        isFirstLoginToday = true;
+      }
+    } catch (e) {
+      console.error("Lock error: " + e.toString());
+    } finally {
+      lock.releaseLock();
     }
 
     // 2. 능력치 및 점수 계산 (아카이브 시트)
@@ -281,6 +289,7 @@ function getUserDashboardData(payload) {
       seasonScore: scores.season,
       weeklyScore: scores.weekly,
       rank: rank,
+      isFirstLoginToday: isFirstLoginToday,
       stats: {
         weekly: stats,
         monthly: { health: stats.health * 4, perf: stats.perf * 4, def: stats.def * 4 }, // 시즌 누적 추산

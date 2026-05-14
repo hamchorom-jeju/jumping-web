@@ -110,10 +110,40 @@ const Village = {
                         }
                         this.renderAll();
                         this.updateEvolution();
+
+                        // [v44.170] 오늘 첫 로그인 시 축복 알림 하사
+                        if (res.isFirstLoginToday) {
+                            this.showLoginReward();
+                        }
                     }
                 })
                 .getUserDashboardData({ phone: phone });
         }
+    },
+
+    // [v44.170] 프리미엄 로그인 보상 알림창
+    showLoginReward() {
+        // 기존 모달 시스템 재활용
+        const data = {
+            icon: "✨",
+            title: "지니의 축복 하사",
+            guide: "오늘 첫 번째 모험을 시작하셨군요!\n지니 월드 입장 보너스로 **+5 EXP**가 하사되었습니다.\n\n오늘도 건강하고 위대한 승리를 쟁취하세요!",
+            btn: "영광입니다!"
+        };
+        
+        document.getElementById('modal-habit-icon').innerText = data.icon;
+        document.getElementById('modal-habit-title').innerText = data.title;
+        document.getElementById('modal-habit-guide').innerHTML = data.guide.replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold);">$1</b>');
+        
+        const cancelBtn = document.getElementById('modal-cancel-btn');
+        const confirmBtn = document.getElementById('modal-confirm-btn');
+        
+        cancelBtn.style.display = 'none';
+        confirmBtn.innerText = data.btn;
+        confirmBtn.style.flex = "1";
+        
+        confirmBtn.onclick = () => this.closeModal();
+        document.getElementById('habit-modal').style.display = 'flex';
     },
 
     openModal(key, type = 'quest') {
