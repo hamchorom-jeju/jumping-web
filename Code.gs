@@ -117,15 +117,50 @@ function getUserDashboardData(payload) {
     var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
     var memberInfo = { name: "모험가", tier: "씨앗", rank: "-" };
     if (regSheet) {
-      var regData = regSheet.getDataRange().getValues();
+      var regData = regSheet.getDataRange().getDisplayValues();
+      var regCols = getRegColumnIndices(regSheet);
       for (var i = 1; i < regData.length; i++) {
-        var sheetPhone = String(regData[i][2]).replace(/[^0-9]/g, ""); // C열: 휴대폰
+        var sheetPhone = String(regData[i][regCols.phone]).replace(/[^0-9]/g, ""); 
         if (sheetPhone.indexOf(phone) > -1 || phone.indexOf(sheetPhone) > -1) {
-          memberInfo.name = regData[i][1]; // B열: 이름
-          memberInfo.tier = regData[i][4] || "새싹"; // E열: 권종 또는 티어
+          memberInfo.name = regData[i][regCols.name];
+          memberInfo.tier = regData[i][regCols.membership] || "새싹";
           break;
         }
       }
+    }
+
+    // [v44.165] 일일 출석 점수(5점) 자동 지급 로직
+    var arcSheet = ss.getSheetByName("아카이브") || ss.insertSheet("아카이브");
+    var now = new Date();
+    var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    var arcData = arcSheet.getDataRange().getValues();
+    var hasLoggedInToday = false;
+    
+    for (var j = 1; j < arcData.length; j++) {
+      var recDate = Utilities.formatDate(new Date(arcData[j][0]), "GMT+9", "yyyy-MM-dd");
+      var recPhone = String(arcData[j][3]).replace(/[^0-9]/g, "");
+      var recType = String(arcData[j][4]);
+      if (recDate === todayStr && recPhone === phone && recType === "로그인") {
+        hasLoggedInToday = true;
+        break;
+      }
+    }
+    
+    if (!hasLoggedInToday) {
+      // 최초 로그인 시 5점 지급 (v39 규격)
+      arcSheet.appendRow([
+        now,
+        Utilities.formatDate(now, "GMT+9", "HH:mm:ss"),
+        memberInfo.name,
+        phone,
+        "로그인",
+        "일일 출석",
+        "지니 월드 입장 완료",
+        "", // 사진 없음
+        5   // 5점 배점
+      ]);
+      // 데이터 갱신
+      arcData = arcSheet.getDataRange().getValues();
     }
 
     // 2. 능력치 및 점수 계산 (아카이브 시트)
