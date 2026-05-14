@@ -1,6 +1,6 @@
 /**
- * Nohyung Village Dashboard Logic (v44.107 - Context-Aware Modal & Final Miracle Plus)
- * Features: Correct Quest Labels (나중에), Habit Labels (체크만 하기), Miracle Plus Final Text, v44.0 Immutable Base
+ * Nohyung Village Dashboard Logic (v44.110 - Premium Ranking Ticker)
+ * Features: Badge-based Hall of Fame, Smooth Vertical Animation, v44.0 Immutable Base
  */
 
 const Village = {
@@ -51,10 +51,11 @@ const Village = {
         plus: { title: "미라클 플러스", icon: "✨", guide: "건강 습관 외에 인생을 풍요롭게 만드는 사소하지만 위대한 승리들을 인증해주세요.\n새벽기상, 독서인증, 환경수호 활동(플로깅 등) 등...\n\n📸 아카이브에 등록시 5점이 지급됩니다.\n(일 최대 1건 등록 가능)", link: "miracle.html?cat=plus", single: true }
     },
 
+    // 🏆 Structured Ranking Data (v44.110)
     rankings: [
-        { type: "금주 랭킹", content: "체력왕: 홍길동 | 미션왕: 김개똥 | 수호왕: 이성실" },
-        { type: "월간 랭킹", content: "다이어트킹: 박지니 | 미션 선두: 최열정" },
-        { type: "토탈 랭킹", content: "1위: 전설모험가 | 2위: 꾸준지존 | 3위: 열정맨" }
+        { type: "금주 랭킹", badge: "weekly", content: "<span>👑 체력왕: 홍길동</span><span>🏅 미션왕: 김개똥</span><span>🛡️ 수호왕: 이성실</span>" },
+        { type: "월간 랭킹", badge: "monthly", content: "<span>🔥 다이어트킹: 박지니</span><span>🚀 미션 선두: 최열정</span>" },
+        { type: "토탈 랭킹", badge: "total", content: "<span>🏆 1위: 전설모험가</span><span>🥈 2위: 꾸준지존</span><span>🥉 3위: 열정맨</span>" }
     ],
     currentRankIndex: 0,
 
@@ -67,14 +68,13 @@ const Village = {
     },
 
     init() {
-        console.log("v44.107 Area-Aware Logic Initialized.");
+        console.log("v44.110 Premium Ranking Ticker Initialized.");
         this.renderAll();
         this.updateEvolution();
         this.startTicker();
         this.bindEvents();
     },
 
-    // ✨ Area-Aware Premium Modal (v44.107)
     openModal(key, type = 'quest') {
         const data = (type === 'quest') ? this.quests[key] : this.habitData[key];
         const habit = (type === 'habit') ? this.user.habits.find(h => h.id === key) : null;
@@ -86,7 +86,6 @@ const Village = {
         let guideText = data.guide;
         if (type === 'habit') {
             if (key === 'plus') {
-                // No extra footer needed, raw guide is perfect
             } else if (data.single) {
                 guideText += `\n\n🌿 수호 완료 시 ${habit.base}점 지급`;
             } else if (key === 'h7') {
@@ -98,25 +97,22 @@ const Village = {
             }
         }
         document.getElementById('modal-habit-guide').innerText = guideText;
-        
         const cancelBtn = document.getElementById('modal-cancel-btn');
         const confirmBtn = document.getElementById('modal-confirm-btn');
         
-        // 🚨 BUTTON LOGIC RECOVERY (QUEST vs HABIT)
         if ((type === 'quest' && data.single) || (type === 'habit' && data.single)) {
             cancelBtn.style.display = 'none';
             confirmBtn.innerText = (key === 'plus') ? "인증하러 가기" : (type === 'habit' ? "수호 완료" : data.btn);
             confirmBtn.style.flex = "1";
         } else {
             cancelBtn.style.display = 'block';
-            // Context-Aware Labels
             cancelBtn.innerText = (type === 'habit') ? "체크만 하기" : "나중에";
             confirmBtn.innerText = (type === 'habit') ? ((key === 'h7' || key === 'h9') ? "게시판 이동" : "인증하러 가기") : data.btn;
             confirmBtn.style.flex = "1.5";
         }
         
         cancelBtn.onclick = () => {
-            if (type === 'habit' && habit) this.applyHabitCheck(key, false);
+            if (type === 'habit' && habit && key !== 'h7' && key !== 'h9') this.applyHabitCheck(key, false);
             this.closeModal();
         };
 
@@ -162,17 +158,42 @@ const Village = {
         }, 1000);
     },
 
+    // 🌬️ Premium Vertical Sliding Ticker Logic
     startTicker() {
-        const ticker = document.getElementById('ranking-ticker');
+        const container = document.getElementById('ranking-ticker');
+        if (!container) return;
+
+        const renderItem = (idx) => {
+            const r = this.rankings[idx];
+            return `
+                <div class="v-ranking-item" style="transform: translateY(100%); opacity: 0;">
+                    <div class="v-ranking-badge ${r.badge}">${r.type}</div>
+                    <div class="v-ranking-content">${r.content}</div>
+                </div>
+            `;
+        };
+
+        // Initial Render
+        container.innerHTML = this.rankings.map((_, i) => renderItem(i)).join('');
+        const items = container.querySelectorAll('.v-ranking-item');
+        
+        const showItem = (idx) => {
+            items.forEach((item, i) => {
+                if (i === idx) {
+                    item.style.transform = 'translateY(0)';
+                    item.style.opacity = '1';
+                } else {
+                    item.style.transform = 'translateY(-100%)';
+                    item.style.opacity = '0';
+                }
+            });
+        };
+
+        // Start cycling
+        showItem(0);
         setInterval(() => {
             this.currentRankIndex = (this.currentRankIndex + 1) % this.rankings.length;
-            const r = this.rankings[this.currentRankIndex];
-            ticker.style.opacity = 0;
-            setTimeout(() => {
-                ticker.innerHTML = `<span style="font-size:0.75rem; opacity:0.7; display:block; margin-bottom:4px;">[${r.type}]</span>${r.content}`;
-                ticker.style.opacity = 1;
-                ticker.style.transition = 'opacity 0.5s';
-            }, 500);
+            showItem(this.currentRankIndex);
         }, 5000);
     },
 
