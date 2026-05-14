@@ -297,36 +297,62 @@
       const fileInput = document.getElementById('file-input-' + type);
       const file = fileInput.files[0];
       if (!file) return alert("인증 사진을 촬영해 주세요!");
+      
       btn.disabled = true;
-      btn.innerText = "기록 저장 중...";
+      btn.innerText = "사진 압축 및 전송 중...";
+
       let finalType = type === 'quest' ? '퀘스트' : '습관';
       let score = type === 'quest' ? 15 : 5;
       if (item === '식단' || item.includes('식단')) { finalType = '식단'; score = 10; }
+
+      // 📉 사진 압축 엔진 (최대 800px)
       const reader = new FileReader();
       reader.onload = e => {
-        const payload = {
-          name: TARGET_NAME, phone: TARGET_PHONE, type: finalType,
-          item: item, comment: comment, image: e.target.result, score: score
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const max_size = 800;
+
+          if (width > height) {
+            if (width > max_size) { height *= max_size / width; width = max_size; }
+          } else {
+            if (height > max_size) { width *= max_size / height; height = max_size; }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+          
+          const payload = {
+            name: TARGET_NAME, phone: TARGET_PHONE, type: finalType,
+            item: item, comment: comment, image: compressedBase64, score: score
+          };
+
+          google.script.run
+            .withSuccessHandler(res => {
+              btn.disabled = false;
+              btn.innerText = type === 'quest' ? "퀘스트 기록 완료" : "습관 기록 완료";
+              if (res && res.success) {
+                alert(`✅ 인증 성공!\n[${finalType}] +${score}점이 적립되었습니다.`);
+                document.getElementById(type + '-comment').value = "";
+                document.getElementById(type + '-preview-box').style.display = 'none';
+                document.getElementById(type + '-upload-placeholder').style.display = 'flex';
+                fileInput.value = "";
+                loadArchiveFeed();
+              } else { alert("🚨 저장 실패: " + (res ? res.error : "서버 응답 없음")); }
+            })
+            .withFailureHandler(err => {
+              btn.disabled = false;
+              btn.innerText = "기록 완료";
+              alert("🚨 서버 통신 오류 (용량이 너무 크거나 네트워크 불안정)");
+            })
+            .submitArchive(payload);
         };
-        google.script.run
-          .withSuccessHandler(res => {
-            btn.disabled = false;
-            btn.innerText = type === 'quest' ? "퀘스트 기록 완료" : "습관 기록 완료";
-            if (res && res.success) {
-              alert(`인증 성공! [${finalType}] +${score}점이 적립되었습니다. ✨`);
-              document.getElementById(type + '-comment').value = "";
-              document.getElementById(type + '-preview-box').style.display = 'none';
-              document.getElementById(type + '-upload-placeholder').style.display = 'flex';
-              fileInput.value = "";
-              loadArchiveFeed();
-            } else { alert("저장 실패: " + (res ? res.error : "서버 무응답")); }
-          })
-          .withFailureHandler(err => {
-            btn.disabled = false;
-            btn.innerText = "기록 완료";
-            alert("서버 통신 오류: " + err.toString());
-          })
-          .submitArchive(payload);
+        img.src = e.target.result;
       };
       reader.readAsDataURL(file);
     }
