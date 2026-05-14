@@ -6,19 +6,22 @@
     --v-paper: #fef9e7;
     --v-border: #d2b48c;
     
-    --health: #e74c3c;
-    --perf: #f1c40f;
-    --def: #3498db;
+    --health: #ff4757;
+    --perf: #ffa502;
+    --def: #2f3542;
     --gold: #f1c40f;
+    --emerald: #2ed573;
+    --sky: #70a1ff;
     
-    --text-main: #2b1d0e;
-    --text-dim: #5d4037;
+    --text-main: #2f3542;
+    --text-dim: #747d8c;
+    
+    --glass: rgba(255, 255, 255, 0.85);
+    --shadow: 0 10px 30px rgba(93, 64, 55, 0.15);
 }
 
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+    margin: 0; padding: 0; box-sizing: border-box;
     font-family: 'Outfit', sans-serif;
 }
 
@@ -26,178 +29,207 @@ body {
     background: var(--v-bg);
     color: var(--text-main);
     min-height: 100vh;
-    padding-bottom: 120px;
-}
-
-/* --- 🏛️ GLOBAL APP HEADER --- */
-.v-global-header {
-    background: var(--v-wood);
-    color: var(--gold);
-    padding: 15px 20px;
-    text-align: center;
-    border-bottom: 3px solid var(--gold);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.v-global-header h1 {
-    font-size: 1.2rem;
-    font-weight: 900;
-    letter-spacing: 1px;
+    padding-bottom: 140px;
+    background-image: radial-gradient(circle at top right, #fff9c4, transparent);
 }
 
 .v-container {
-    max-width: 500px;
+    max-width: 480px;
     margin: 0 auto;
-    padding: 20px 15px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 20px;
 }
 
-/* --- 📜 SEPARATED BANNERS --- */
+/* --- 🏛️ PREMIUM GLOBAL HEADER --- */
+.v-global-header {
+    background: var(--v-wood);
+    color: var(--gold);
+    padding: 20px;
+    text-align: center;
+    border-bottom: 4px solid var(--gold);
+    box-shadow: var(--shadow);
+    position: sticky; top: 0; z-index: 1000;
+}
+
+.v-global-header h1 {
+    font-size: 1.25rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+/* --- 📜 PREMIUM BANNERS --- */
 .v-banner-notice {
-    background: #4e342e;
+    background: linear-gradient(135deg, #4e342e, #5d4037);
     color: #fff;
-    padding: 12px 15px;
-    border-radius: 15px;
+    padding: 15px 20px;
+    border-radius: 20px;
     font-size: 0.85rem;
     font-weight: 800;
-    border-left: 6px solid var(--gold);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-left: 8px solid var(--gold);
 }
 
 .v-banner-ranking {
     background: #fff;
-    border: 2px solid var(--v-wood);
-    border-radius: 15px;
-    padding: 15px;
+    border-radius: 20px;
+    padding: 18px;
     color: var(--v-wood);
     font-weight: 900;
-    font-size: 0.95rem;
+    font-size: 1rem;
     text-align: center;
-    min-height: 65px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    box-shadow: var(--shadow);
+    border: 2px solid var(--v-paper);
 }
 
-/* --- 📋 STATUS WINDOW v44.2 (Restored Clean Look) --- */
+/* --- 📋 STATUS WINDOW v44.3 (Premium Restoration) --- */
 .status-window-v43 {
-    background: var(--v-paper);
-    border: 3px solid var(--v-border);
+    background: var(--glass);
+    backdrop-filter: blur(15px);
     border-radius: 35px;
-    padding: 25px 20px;
+    padding: 30px 20px;
     display: grid;
-    grid-template-columns: 1fr 1.3fr;
-    gap: 20px;
-    align-items: center;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 25px;
+    box-shadow: var(--shadow);
+    border: 2px solid #fff;
 }
 
 .profile-card {
     text-align: center;
-    border-right: 1.5px solid rgba(93, 64, 55, 0.15);
-    padding-right: 15px;
+    position: relative;
 }
 
 .avatar-v43 {
-    width: 75px; height: 75px;
-    margin: 0 auto 12px;
+    width: 85px; height: 85px;
+    margin: 0 auto 15px;
     background: #fff;
-    border-radius: 50%;
-    border: 3.5px solid var(--perf);
-    display: flex; align-items: center; justify-content: center; font-size: 2.5rem;
+    border-radius: 30px; /* Modern Rounded Box */
+    border: 4px solid var(--gold);
+    display: flex; align-items: center; justify-content: center; font-size: 2.8rem;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
-.total-score-val { font-size: 1.8rem; font-weight: 900; color: var(--v-wood); line-height: 1.2; }
+.total-score-val { 
+    font-size: 2.2rem; font-weight: 900; color: var(--v-wood); 
+    letter-spacing: -1px; display: block;
+}
 
-/* Evolution Bar (Left) */
-.evo-bar-container { margin: 10px 0; }
-.evo-bar-bg { background: rgba(0,0,0,0.05); height: 8px; border-radius: 4px; overflow: hidden; }
-.evo-bar-fill { height: 100%; background: linear-gradient(to right, var(--gold), #e67e22); transition: width 1s; }
+/* Evolution Bar (Sleek Overlay) */
+.evo-bar-container {
+    background: rgba(0,0,0,0.05);
+    height: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.5);
+}
 
-/* Right Gauge Section (Restored Cleanliness) */
+.evo-bar-fill {
+    height: 100%;
+    background: linear-gradient(to right, var(--emerald), var(--sky));
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(46, 213, 115, 0.4);
+}
+
+/* Right Gauge Section */
 .gauge-section {
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Spacious gap */
+    gap: 18px;
 }
 
 .gauge-item {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 
 .gauge-header {
     display: flex;
     justify-content: space-between;
-    font-size: 0.95rem; /* Larger Font */
+    font-size: 1rem;
     font-weight: 900;
+    color: var(--v-wood);
 }
 
 .gauge-bar-bg {
-    background: rgba(0,0,0,0.08);
-    height: 14px; /* Thicker Bar */
-    border-radius: 7px;
+    background: rgba(0,0,0,0.05);
+    height: 18px;
+    border-radius: 9px;
     overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .gauge-fill {
     height: 100%;
-    transition: width 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* --- 🔘 TOGGLE SWITCH --- */
-.perspective-toggle {
-    display: flex;
-    background: rgba(0,0,0,0.06);
-    padding: 4px;
-    border-radius: 12px;
-    margin-bottom: 10px;
-}
-
-.toggle-btn {
-    flex: 1;
-    border: none;
-    background: transparent;
-    padding: 8px;
-    font-size: 0.85rem;
-    font-weight: 900;
-    cursor: pointer;
     border-radius: 9px;
-    transition: all 0.2s;
+    transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.toggle-btn.active {
-    background: #fff;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-}
-
-/* --- ⚔️ QUEST HUB --- */
+/* --- ⚔️ QUEST HUB (Premium Card) --- */
 .v-quest-hub {
     background: #fff;
-    border-radius: 30px;
-    padding: 25px;
-    border: 3px solid var(--v-border);
+    border-radius: 35px;
+    padding: 30px 20px;
+    box-shadow: var(--shadow);
+}
+
+.v-btn-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
 }
 
 .v-action-btn {
-    background: var(--v-paper);
+    background: linear-gradient(to bottom, #fff, var(--v-paper));
     border: 2px solid var(--v-border);
-    padding: 15px 10px;
-    border-radius: 20px;
+    padding: 18px 10px;
+    border-radius: 25px;
     font-weight: 900;
-    font-size: 0.95rem;
+    font-size: 1rem;
     color: var(--v-wood);
+    box-shadow: 0 5px 0 var(--v-border);
+    transition: all 0.1s;
+    cursor: pointer;
 }
 
-/* --- 📱 NAV --- */
+.v-action-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 var(--v-border);
+}
+
+/* --- 📱 FLOATING NAV BAR (High-End) --- */
 .v-nav {
     position: fixed;
-    bottom: 0; left: 0; width: 100%;
-    background: #fff;
+    bottom: 25px; left: 20px; right: 20px;
+    background: rgba(93, 64, 55, 0.95);
+    backdrop-filter: blur(10px);
     display: flex; justify-content: space-around;
-    padding: 15px 10px 40px;
-    border-top: 2px solid var(--v-paper);
+    padding: 15px 10px;
+    border-radius: 30px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
     z-index: 2000;
+}
+
+.v-nav-item {
+    text-align: center;
+    color: rgba(255,255,255,0.6);
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 800;
+    transition: all 0.3s;
+}
+
+.v-nav-item i {
+    font-size: 1.6rem;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.v-nav-item.active {
+    color: var(--gold);
+    transform: translateY(-5px);
 }

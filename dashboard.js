@@ -1,6 +1,6 @@
 /**
- * Nohyung Village Dashboard Logic (v44.2 - Restored Clean Look)
- * Features: Corrected Toggle Styling, Evolution Progress, Clean Stat Mapping
+ * Nohyung Village Dashboard Logic (v44.3 - Premium Aesthetic Restoration)
+ * Features: High-End Floating Nav, 3D Interactive Buttons, Integrated Evolution Flow
  */
 
 const Village = {
@@ -25,16 +25,16 @@ const Village = {
         ],
         water: 1.2,
         habits: [
-            { id: 'h1', title: '모닝 티', done: false, guide: '따뜻한 물 한잔!' },
-            { id: 'h2', title: '베지 퍼스트', done: false, guide: '채소 먼저!' },
-            { id: 'h3', title: '슬로우 치잉', done: false, guide: '꼭꼭 씹기!' },
-            { id: 'h4', title: '일일 7,000보', done: false, guide: '꾸준한 걷기!' },
-            { id: 'h5', title: '계단 마법', done: false, guide: '계단 이용!' },
-            { id: 'h6', title: '나이트 컷', done: false, guide: '20시 이후 금식!' },
-            { id: 'h7', title: '굿 슬립', done: false, guide: '자정 전 취침!' },
-            { id: 'h8', title: '셀프 칭찬', done: false, guide: '나를 아끼기!' },
-            { id: 'h9', title: '스트레칭', done: false, guide: '몸 풀어주기!' },
-            { id: 'plus', title: '✨ 미라클 플러스', done: false, guide: '인생의 승리!' }
+            { id: 'h1', title: '모닝 티', done: false },
+            { id: 'h2', title: '베지 퍼스트', done: false },
+            { id: 'h3', title: '슬로우 치잉', done: false },
+            { id: 'h4', title: '일일 7,000보', done: false },
+            { id: 'h5', title: '계단 마법', done: false },
+            { id: 'h6', title: '나이트 컷', done: false },
+            { id: 'h7', title: '굿 슬립', done: false },
+            { id: 'h8', title: '셀프 칭찬', done: false },
+            { id: 'h9', title: '스트레칭', done: false },
+            { id: 'plus', title: '✨ 미라클 플러스', done: false }
         ]
     },
 
@@ -46,7 +46,7 @@ const Village = {
     currentRankIndex: 0,
 
     init() {
-        console.log("Welcome to Nohyung Village v44.2 (Clean Perspective)!");
+        console.log("Nohyung Village v44.3: Premium Restoration Initialized.");
         this.renderAll();
         this.updateEvolution();
         this.startTicker();
@@ -60,9 +60,9 @@ const Village = {
             const r = this.rankings[this.currentRankIndex];
             ticker.style.opacity = 0;
             setTimeout(() => {
-                ticker.innerHTML = `<span style="font-size:0.65rem; color:var(--text-dim); display:block; margin-bottom:4px;">[${r.type}]</span>${r.content}`;
+                ticker.innerHTML = `<span style="font-size:0.7rem; color:var(--text-dim); display:block; font-weight:800;">[${r.type}]</span>${r.content}`;
                 ticker.style.opacity = 1;
-                ticker.style.transition = 'opacity 0.5s';
+                ticker.style.transition = 'opacity 0.6s ease';
             }, 500);
         }, 5000);
     },
@@ -107,17 +107,13 @@ const Village = {
 
     setPerspective(view) {
         this.perspective = view;
-        
-        // Update Active Toggle Styling
-        const btnWeekly = document.getElementById('btn-weekly');
-        const btnMonthly = document.getElementById('btn-monthly');
+        const bW = document.getElementById('btn-weekly');
+        const bM = document.getElementById('btn-monthly');
         
         if (view === 'weekly') {
-            btnWeekly.classList.add('active');
-            btnMonthly.classList.remove('active');
+            bW.classList.add('active'); bM.classList.remove('active');
         } else {
-            btnMonthly.classList.add('active');
-            btnWeekly.classList.remove('active');
+            bM.classList.add('active'); bW.classList.remove('active');
         }
         
         this.renderAll();
@@ -127,10 +123,10 @@ const Village = {
         const container = document.getElementById('habit-list-container');
         if (!container) return;
         container.innerHTML = this.user.habits.map(h => `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:${h.id === 'plus' ? '#fff9c4' : '#fff'}; border-radius:15px; margin-bottom:10px; border:2px solid ${h.id === 'plus' ? 'var(--def)' : 'var(--v-border)'};">
-                <span style="font-size:1rem; font-weight:900; color:var(--v-wood);">${h.title}</span>
-                <div onclick="Village.checkHabit('${h.id}')" style="width:34px; height:34px; border:2px solid var(--v-border); border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; background:${h.done ? 'var(--def)' : 'transparent'};">
-                    ${h.done ? '✅' : ''}
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:18px; background:${h.id === 'plus' ? 'rgba(241, 196, 15, 0.1)' : '#f9f9f9'}; border-radius:20px; margin-bottom:12px; border:2px solid ${h.id === 'plus' ? 'var(--gold)' : 'transparent'}; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+                <span style="font-size:1.05rem; font-weight:900; color:var(--text-main);">${h.title}</span>
+                <div onclick="Village.checkHabit('${h.id}')" style="width:36px; height:36px; border:3.5px solid var(--v-border); border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; background:${h.done ? 'var(--emerald)' : 'transparent'}; transition:all 0.2s;">
+                    ${h.done ? '<i class="fa-solid fa-check" style="color:#fff;"></i>' : ''}
                 </div>
             </div>
         `).join('');
@@ -139,10 +135,9 @@ const Village = {
     checkHabit(id) {
         const habit = this.user.habits.find(h => h.id === id);
         if (habit && !habit.done) {
-            const ok = confirm(`🏡 [수호 완료!] 기록소로 이동하시겠습니까?`);
+            const ok = confirm(`🏡 [습관 수호 성공!] 기록소(미라클 아카이브)로 이동하여 인증하시겠습니까?`);
             habit.done = true;
             this.user.totalScore += 10;
-            this.user.stats.weekly.def += 10;
             this.renderAll();
             this.updateEvolution();
             if (ok) location.href = `miracle.html?cat=${(id === 'plus' ? 'plus' : 'habit')}&item=${id}`;
@@ -161,16 +156,16 @@ const Village = {
 
     triggerSuddenMission() {
         document.getElementById('sudden-mission-bar').style.display = 'block';
-        alert("⚡ [돌발 미션 선포!] 배너 아래를 확인하세요!");
+        alert("⚡ [계시: 돌발 미션 선포!]\n이장님의 긴급 퀘스트가 하사되었습니다! 마을 공지를 확인하세요!");
     },
 
     async syncClubRecord() {
         setTimeout(() => {
-            alert("🏡 [클럽 동기화 완료!]");
+            alert("🏡 [클럽 동기화 완료!] 성장의 기록이 마을 역사에 새겨졌습니다.");
             this.user.stats.weekly.perf += 50;
             this.renderAll();
             this.updateEvolution();
-        }, 1000);
+        }, 1200);
     }
 };
 
