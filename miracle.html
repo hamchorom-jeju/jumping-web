@@ -87,13 +87,26 @@
     .v-nav-item img { width: 22px !important; height: 22px !important; object-fit: contain; }
     .v-nav-item.active { color: var(--gold); }
 
+    /* [v44.183] 로그아웃 버튼 스타일 */
+    .v-logout-btn {
+      background: rgba(93, 64, 55, 0.05); border: 1px solid var(--v-border);
+      color: var(--v-wood); width: 40px; height: 40px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .v-logout-btn:active { transform: scale(0.9); background: rgba(93, 64, 55, 0.1); }
+
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
 
   <header class="v-global-header">
-    <h1>모험가의 기록소</h1>
+    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; max-width:500px; margin:0 auto;">
+      <div style="width:40px;"></div>
+      <h1>모험가의 기록소</h1>
+      <button class="v-logout-btn" onclick="Auth.logout()"><i class="fas fa-sign-out-alt"></i></button>
+    </div>
   </header>
 
   <div class="container">
@@ -212,6 +225,9 @@
     if (TARGET_NAME.indexOf('<?=') > -1) TARGET_NAME = (urlParams.get('name') || '').trim();
 
     window.onload = function() {
+      // [v44.183] 글로벌 인증 결계 가동
+      Auth.check();
+      
       const tab = urlParams.get('tab') === 'habit' ? 'habit' : 'quest';
       switchTab(tab);
       loadArchiveFeed();

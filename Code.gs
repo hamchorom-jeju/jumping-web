@@ -27,6 +27,10 @@ function getArchiveFeed() {
         photoId: String(row[7] || ""),
         score: row[8]
       };
+    }).filter(function(item) {
+      // [v44.183] 인바디는 개인 정보 보호를 위해 피드에서 제외 (퀘스트, 습관, 식단만 표시)
+      var visualTypes = ["퀘스트", "습관", "식단"];
+      return visualTypes.indexOf(item.type) > -1;
     });
   } catch (e) {
     return { error: "피드 로딩 실패: " + e.toString() };
@@ -108,7 +112,10 @@ function submitArchive(payload) {
  */
 function getUserDashboardData(payload) {
   try {
-    var phone = String(payload.phone || "").replace(/[^0-9]/g, ""); 
+    var rawPhone = String(payload.phone || "");
+    var phone = rawPhone.replace(/[^0-9]/g, ""); // 숫자만 (내부 비교용)
+    var formattedPhone = formatPhone(phone); // 010-0000-0000 (기록용)
+    
     if (!phone) return { error: "전화번호가 없습니다." };
     
     var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -121,7 +128,7 @@ function getUserDashboardData(payload) {
       var regCols = getRegColumnIndices(regSheet);
       for (var i = 1; i < regData.length; i++) {
         var sheetPhone = String(regData[i][regCols.phone]).replace(/[^0-9]/g, ""); 
-        if (sheetPhone === phone || sheetPhone.indexOf(phone) > -1 || phone.indexOf(sheetPhone) > -1) {
+        if (sheetPhone === phone || (phone.length >= 8 && sheetPhone.endsWith(phone.substring(phone.length - 8)))) {
           memberInfo.name = regData[i][regCols.name];
           memberInfo.tier = regData[i][regCols.membership] || "새싹";
           break;
@@ -129,7 +136,8 @@ function getUserDashboardData(payload) {
       }
     }
 
-    // [v44.165] 일일 출석 점수(5점) 자동 지급 로직
+    // [v44.182] 일일 출석 점수(5점) 자동 지급 로직 (활동기록 시트로 분리)
+    var actSheet = ss.getSheetByName("활동기록") || ss.insertSheet("활동기록");
     var arcSheet = ss.getSheetByName("아카이브") || ss.insertSheet("아카이브");
     var nowRef = new Date(); 
     var todayStr = Utilities.formatDate(nowRef, "GMT+9", "yyyy-MM-dd");
@@ -138,10 +146,13 @@ function getUserDashboardData(payload) {
     var lock = LockService.getScriptLock();
     try {
       lock.waitLock(10000); 
-      var arcDataCheck = arcSheet.getDataRange().getDisplayValues(); 
+      if (actSheet.getLastRow() === 0) {
+        actSheet.appendRow(["날짜", "시간", "이름", "전화번호", "유형", "항목", "내용", "사진ID", "점수"]);
+      }
+      var actDataCheck = actSheet.getDataRange().getDisplayValues(); 
       var alreadyLogged = false;
-      for (var j = 1; j < arcDataCheck.length; j++) {
-        var dateMatch = arcDataCheck[j][0].match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
+      for (var j = 1; j < actDataCheck.length; j++) {
+        var dateMatch = actDataCheck[j][0].match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
         var normDateStr = "";
         if (dateMatch) {
           var y = dateMatch[1];
@@ -149,20 +160,19 @@ function getUserDashboardData(payload) {
           var d = dateMatch[3].length === 1 ? "0" + dateMatch[3] : dateMatch[3];
           normDateStr = y + "-" + m + "-" + d;
         }
-        var recPhone = String(arcDataCheck[j][3]).replace(/[^0-9]/g, "");
-        var recType = String(arcDataCheck[j][4]);
-        if (normDateStr === todayStr && recPhone === phone && recType === "로그인") {
+        var recPhone = String(actDataCheck[j][3]).replace(/[^0-9]/g, "");
+        if (normDateStr === todayStr && (recPhone === phone || (phone.length >= 8 && recPhone.endsWith(phone.substring(phone.length - 8)))) && String(actDataCheck[j][4]) === "로그인") {
           alreadyLogged = true;
           break;
         }
       }
       
       if (!alreadyLogged) {
-        arcSheet.appendRow([
+        actSheet.appendRow([
           nowRef,
           Utilities.formatDate(nowRef, "GMT+9", "HH:mm:ss"),
           memberInfo.name,
-          phone,
+          "'" + formattedPhone, 
           "로그인",
           "일일 출석",
           "지니 월드 입장 완료",
@@ -177,7 +187,7 @@ function getUserDashboardData(payload) {
       lock.releaseLock();
     }
 
-    // 2. 능력치 및 점수 계산 (아카이브 시트)
+    // 2. 능력치 및 점수 계산 (아카이브 및 활동기록 시트 합산)
     var stats = { health: 0, perf: 0, def: 0 };
     var scores = { lifetime: 0, season: 0, weekly: 0 };
     
@@ -186,14 +196,17 @@ function getUserDashboardData(payload) {
     startOfWeek.setHours(0, 0, 0, 0);
     var startOfSeason = new Date(calcNow.getFullYear(), calcNow.getMonth(), 1);
     startOfSeason.setHours(0, 0, 0, 0);
-
-    if (arcSheet) {
-      var arcData = arcSheet.getDataRange().getDisplayValues();
-      for (var j = 1; j < arcData.length; j++) {
-        var arcPhone = String(arcData[j][3]).replace(/[^0-9]/g, ""); 
-        if (arcPhone === phone) {
-          var score = Number(arcData[j][8] || 0);
-          var dMatch = arcData[j][0].match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
+    
+    // [v44.182] 두 시트(아카이브, 활동기록) 모두에서 점수 합산
+    var sheetsToSum = [arcSheet, actSheet];
+    sheetsToSum.forEach(function(sh) {
+      if (!sh) return;
+      var data = sh.getDataRange().getDisplayValues();
+      for (var j = 1; j < data.length; j++) {
+        var recPhone = String(data[j][3]).replace(/[^0-9]/g, ""); 
+        if (recPhone === phone || (phone.length >= 8 && recPhone.endsWith(phone.substring(phone.length - 8)))) {
+          var score = Number(data[j][8] || 0);
+          var dMatch = data[j][0].match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
           var recDate = null;
           if (dMatch) {
             var ry = dMatch[1];
@@ -207,7 +220,7 @@ function getUserDashboardData(payload) {
             if (recDate >= startOfSeason) scores.season += score;
             if (recDate >= startOfWeek) {
               scores.weekly += score;
-              var type = String(arcData[j][4] || "");
+              var type = String(data[j][4] || "");
               if (type.indexOf("퀘스트") > -1) stats.perf += score;
               else if (type.indexOf("습관") > -1) stats.def += score;
               else if (type.indexOf("인바디") > -1 || type.indexOf("건강") > -1) stats.health += score;
@@ -5028,4 +5041,84 @@ function createSurpriseQuest(data) {
     
     return { success: true, endTime: endTime };
   } catch(e) { return { success: false, error: e.toString() }; }
+}
+
+/**
+ * ⚡ 클럽 출석 기록 동기화 (v44.185)
+ * [출석기록] 시트의 K열(운동타임수)을 분석하여 보상을 지급합니다.
+ */
+function syncClubRecord(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var logSheet = ss.getSheetByName("출석기록");
+    var actSheet = ss.getSheetByName("활동기록") || ss.insertSheet("활동기록");
+    
+    if (!logSheet) return { success: false, error: "'출석기록' 시트가 없습니다." };
+    
+    var phone = String(payload.phone).replace(/[^0-9]/g, "");
+    var todayStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
+    
+    // 1. 이미 오늘 동기화했는지 확인
+    var actData = actSheet.getDataRange().getDisplayValues();
+    for (var i = 1; i < actData.length; i++) {
+      var aDateRaw = actData[i][0];
+      var aPhone = String(actData[i][3]).replace(/[^0-9]/g, "");
+      var aType = String(actData[i][4]);
+      
+      // 날짜 비교 (하이픈 처리 등 정규화)
+      var dMatch = aDateRaw.match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
+      var normADate = dMatch ? dMatch[1] + "-" + dMatch[2].padStart(2, '0') + "-" + dMatch[3].padStart(2, '0') : "";
+      
+      if (normADate === todayStr && aPhone === phone && aType === "출석동기화") {
+        return { success: false, error: "이미 오늘자 출석 동기화가 완료되었습니다." };
+      }
+    }
+    
+    // 2. 출석기록 시트에서 오늘 기록 찾기
+    var logData = logSheet.getDataRange().getDisplayValues();
+    var todayRecord = null;
+    for (var j = logData.length - 1; j >= 1; j--) {
+      var lDateMatch = logData[j][0].match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
+      var lDateStr = lDateMatch ? lDateMatch[1] + "-" + lDateMatch[2].padStart(2, '0') + "-" + lDateMatch[3].padStart(2, '0') : "";
+      var lPhone = String(logData[j][3]).replace(/[^0-9]/g, "");
+      
+      if (lDateStr === todayStr && lPhone === phone) {
+        todayRecord = logData[j];
+        break; // 최신 기록 하나만
+      }
+    }
+    
+    if (!todayRecord) return { success: false, error: "오늘 클럽 출석 기록이 확인되지 않습니다. 키오스크 출석을 먼저 해주세요." };
+    
+    // 3. 점수 계산 (v39 공식)
+    var visitPoints = 15;
+    var timeCount = parseFloat(todayRecord[10] || 0); // K열: 운동타임수
+    var timePoints = 0;
+    
+    if (timeCount >= 2.0) timePoints = 20;
+    else if (timeCount >= 1.5) timePoints = 15;
+    else if (timeCount >= 1.0) timePoints = 10;
+    
+    var totalPoints = visitPoints + timePoints;
+    var memberName = todayRecord[2];
+    
+    // 4. 활동기록에 저장
+    var now = new Date();
+    actSheet.appendRow([
+      now,
+      Utilities.formatDate(now, "GMT+9", "HH:mm:ss"),
+      memberName,
+      "'" + payload.phone,
+      "출석동기화",
+      "클럽 방문",
+      "운동 타임: " + timeCount,
+      "",
+      totalPoints
+    ]);
+    
+    return { success: true, points: totalPoints, timePoints: timePoints };
+    
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
 }

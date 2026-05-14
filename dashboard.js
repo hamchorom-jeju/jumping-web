@@ -220,13 +220,23 @@ const Village = {
     openQuestModal(key) { this.openModal(key, 'quest'); },
 
     syncClubRecordActual() {
-        setTimeout(() => {
-            alert("🏡 [클럽 동기화 완료!] 15 EXP가 반영되었습니다.");
-            this.user.stats.weekly.perf += 15;
-            this.user.totalScore += 15;
-            this.renderAll();
-            this.updateEvolution();
-        }, 1000);
+        const params = new URLSearchParams(window.location.search);
+        let phone = (params.get('phone') || '').trim();
+        if (!phone) phone = (localStorage.getItem('v44_user_phone') || '').trim();
+
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run
+                .withSuccessHandler(res => {
+                    if (res && res.success) {
+                        alert(`🏡 [클럽 동기화 완료!]\n총 ${res.points} EXP가 반영되었습니다.\n(방문보너스: 15 + 운동타임: ${res.timePoints})`);
+                        // 실시간 반영을 위해 데이터 재로드
+                        this.loadRealData();
+                    } else {
+                        alert(`❌ 동기화 실패: ${res.error}`);
+                    }
+                })
+                .syncClubRecord({ phone: phone });
+        }
     },
 
     startTicker() {
