@@ -165,19 +165,27 @@ function searchMembersByDigits(payload) {
     if (digits.length < 2) return { success: true, members: [] };
     
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var regSheet = ss.getSheetByName("등록현황");
-    if (!regSheet) return { success: false, error: "'등록현황' 시트가 없습니다." };
+    var regSheet = ss.getSheetByName("등록현황") || ss.getSheetByName("등록 현황");
+    if (!regSheet) return { success: false, error: "'등록현황' 시트를 찾을 수 없습니다." };
     
     var data = regSheet.getDataRange().getValues();
     var matches = [];
     
     for (var i = 1; i < data.length; i++) {
-      var name = String(data[i][0] || "").trim();
-      var phone = String(data[i][1] || "").trim().replace(/[^0-9]/g, "");
+      var rowStr = data[i].join("|"); // 한 줄을 통째로 문자열로 합침
+      var name = String(data[i][0] || "모험가").trim();
+      var phone = "";
       
-      // 뒷자리 4자리 또는 포함 여부 확인
-      if (phone.endsWith(digits) || phone.indexOf(digits) > -1) {
-        matches.push({ name: name, phone: phone });
+      // 전화번호를 찾기 위해 모든 셀을 검사 (숫자만 추출)
+      for (var j = 0; j < data[i].length; j++) {
+        var cellStr = String(data[i][j]).replace(/[^0-9]/g, "");
+        if (cellStr.length >= 4) {
+          phone = cellStr; 
+          if (cellStr.endsWith(digits) || cellStr.indexOf(digits) > -1) {
+            matches.push({ name: name, phone: phone });
+            break;
+          }
+        }
       }
     }
     

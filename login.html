@@ -92,17 +92,20 @@
 
     let searchTimeout;
     function searchMembers(digits) {
+      const listDiv = document.getElementById('member-selection-list');
       if (digits.length < 2) {
-        document.getElementById('member-selection-list').innerHTML = "";
+        listDiv.innerHTML = "";
         return;
       }
+
+      // 검색 중 상태 표시
+      listDiv.innerHTML = "<p style='font-size:0.85rem; color:var(--text-dim); font-weight:800; animation: blink 1s infinite;'>🔍 등록된 모험가 명단을 확인 중입니다...</p>";
 
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(() => {
         if (typeof google !== 'undefined' && google.script && google.script.run) {
           google.script.run
             .withSuccessHandler(res => {
-              const listDiv = document.getElementById('member-selection-list');
               listDiv.innerHTML = "";
               
               if (res && res.success && res.members.length > 0) {
@@ -113,12 +116,12 @@
                   btn.style.background = "#fff";
                   btn.style.color = "var(--v-wood)";
                   btn.style.border = "2px solid var(--v-wood)";
-                  btn.innerHTML = `<b>${m.name}</b> 님으로 입장`;
+                  btn.innerHTML = `<b>${m.name}</b> 모험가로 입장`;
                   btn.onclick = () => selectMember(m.name, m.phone);
                   listDiv.appendChild(btn);
                 });
               } else if (digits.length >= 4) {
-                listDiv.innerHTML = "<p style='font-size:0.8rem; color:red;'>매칭되는 회원이 없습니다.</p>";
+                listDiv.innerHTML = "<p style='font-size:0.85rem; color:#e74c3c; font-weight:800;'>⚠️ 모험가 명단에 등록되지 않은 정보입니다.</p>";
               }
             })
             .searchMembersByDigits({ digits: digits });
