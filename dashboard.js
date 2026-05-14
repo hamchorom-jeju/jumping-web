@@ -123,12 +123,12 @@ const Village = {
 
     // [v44.170] 프리미엄 로그인 보상 알림창
     showLoginReward() {
-        // 기존 모달 시스템 재활용
+        // [v44.172] 담백하고 정중한 환영 메시지로 수정
         const data = {
             icon: "✨",
-            title: "지니의 축복 하사",
-            guide: "오늘 첫 번째 모험을 시작하셨군요!\n지니 월드 입장 보너스로 **+5 EXP**가 하사되었습니다.\n\n오늘도 건강하고 위대한 승리를 쟁취하세요!",
-            btn: "영광입니다!"
+            title: "오늘의 첫 접속 보너스",
+            guide: "오늘도 노형 빌리지를 찾아주셔서 감사합니다!\n첫 접속 보상으로 **+5 EXP**가 적립되었습니다.\n\n오늘도 건강하고 활기찬 하루 되세요!",
+            btn: "반가워요! 🙌"
         };
         
         document.getElementById('modal-habit-icon').innerText = data.icon;
