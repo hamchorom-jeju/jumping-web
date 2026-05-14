@@ -287,17 +287,16 @@ function getArchiveFeed() {
     if (!sheet) return [];
     
     var lastRow = sheet.getLastRow();
-    if (lastRow < 2) return [];
+    if (lastRow < 2) return []; // 헤더만 있는 경우
     
-    var startRow = Math.max(2, lastRow - 19); // 최신 20개
+    var startRow = Math.max(2, lastRow - 19);
     var numRows = lastRow - startRow + 1;
-    var data = sheet.getRange(startRow, 1, numRows, 9).getDisplayValues();
+    var data = sheet.getRange(startRow, 1, numRows, 9).getValues(); // getValues로 변경하여 속도 향상
     
-    // 역순 정렬 (최신이 위로)
     return data.reverse().map(function(row) {
       return {
-        date: row[0],
-        time: row[1],
+        date: row[0] instanceof Date ? Utilities.formatDate(row[0], "GMT+9", "yyyy-MM-dd") : row[0].toString(),
+        time: row[1] instanceof Date ? Utilities.formatDate(row[1], "GMT+9", "HH:mm:ss") : row[1].toString(),
         name: row[2],
         type: row[4],
         item: row[5],
@@ -307,16 +306,19 @@ function getArchiveFeed() {
       };
     });
   } catch (e) {
+    console.error("Feed Fetch Error: " + e.toString());
     return { error: e.toString() };
   }
 }
 
+/**
+ * [아카이브] 인증 기록 제출 (사진 업로드 포함)
+ */
 function submitArchive(payload) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("아카이브");
     
-    // 시트가 없으면 즉시 자동 생성 (Hangs 방지)
     if (!sheet) {
       sheet = ss.insertSheet("아카이브");
       var arHeaders = ["날짜", "시간", "이름", "전화번호", "유형", "항목", "코멘트", "사진ID", "점수"];
@@ -328,8 +330,13 @@ function submitArchive(payload) {
     
     if (payload.image) {
       var folderName = "GenieWorld_Archive";
+      var folder;
       var folders = DriveApp.getFoldersByName(folderName);
-      var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+      if (folders.hasNext()) {
+        folder = folders.next();
+      } else {
+        folder = DriveApp.createFolder(folderName);
+      }
       
       var fileName = payload.name + "_" + payload.item + "_" + Utilities.formatDate(now, "GMT+9", "yyyyMMdd_HHmmss");
       var blob = Utilities.newBlob(Utilities.base64Decode(payload.image.split(",")[1]), "image/jpeg", fileName);
@@ -339,7 +346,7 @@ function submitArchive(payload) {
     }
     
     sheet.appendRow([
-      Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd"),
+      new Date(), // 날짜 자동 기록
       Utilities.formatDate(now, "GMT+9", "HH:mm:ss"),
       payload.name,
       payload.phone,
@@ -352,7 +359,7 @@ function submitArchive(payload) {
     
     return { success: true, photoId: photoId };
   } catch (e) {
-    console.error("Archive Error: " + e.toString());
+    console.error("Archive Save Error: " + e.toString());
     return { success: false, error: e.toString() };
   }
 }

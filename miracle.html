@@ -251,7 +251,11 @@
       google.script.run
         .withSuccessHandler(data => {
           loader.style.display = 'none';
-          if (!data || data.length === 0 || data.error) {
+          if (data && data.error) {
+             feed.innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:0.8rem;">오류: ${data.error}</p>`;
+             return;
+          }
+          if (!data || data.length === 0) {
             feed.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:0.8rem; margin-top:20px;">첫 번째 기적의 주인공이 되어보세요!</p>';
             return;
           }
@@ -275,7 +279,7 @@
         })
         .withFailureHandler(err => {
           loader.style.display = 'none';
-          feed.innerHTML = '<p style="text-align:center; color:#e74c3c; font-size:0.8rem;">피드 로딩 중 오류가 발생했습니다.</p>';
+          feed.innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:0.8rem;">통신 오류: ${err.toString()}</p>`;
         })
         .getArchiveFeed();
     }
@@ -306,23 +310,22 @@
           .withSuccessHandler(res => {
             btn.disabled = false;
             btn.innerText = type === 'quest' ? "퀘스트 기록 완료" : "습관 기록 완료";
-            if (res.success) {
+            if (res && res.success) {
               alert("기록이 마을 아카이브에 영구 보존되었습니다! ✨");
-              // UI 초기화
               document.getElementById(type + '-comment').value = "";
               document.getElementById(type + '-preview-box').style.display = 'none';
               const placeholder = document.getElementById(type + '-upload-placeholder');
               if (placeholder) placeholder.style.display = 'flex';
-              fileInput.value = ""; // 파일 입력 초기화
+              fileInput.value = "";
               loadArchiveFeed();
             } else {
-              alert("저장 실패: " + (res.error || "알 수 없는 오류"));
+              alert("저장 실패: " + (res ? res.error : "서버 무응답"));
             }
           })
           .withFailureHandler(err => {
             btn.disabled = false;
             btn.innerText = "기록 완료";
-            alert("서버 통신 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+            alert("서버 통신 오류: " + err.toString());
           })
           .submitArchive(payload);
       };
@@ -330,16 +333,21 @@
     }
 
     function loadActiveEvents() {
+      const select = document.getElementById('quest-select');
       google.script.run
         .withSuccessHandler(events => {
           if(events && events.length > 0) {
-            const surpriseGroup = document.getElementById('surprise-optgroup');
-            surpriseGroup.innerHTML = ""; // 초기화
             events.forEach(e => {
-              const opt = document.createElement('option');
-              opt.value = e.title;
-              opt.innerText = `⚡ [돌발] ${e.title}`;
-              surpriseGroup.appendChild(opt);
+              // ⚡ 이미 존재하는지 확인 후 추가
+              const exists = Array.from(select.options).some(opt => opt.value === e.title);
+              if (!exists) {
+                const opt = document.createElement('option');
+                opt.value = e.title;
+                opt.innerText = `⚡ [돌발] ${e.title}`;
+                opt.style.color = "#e67e22";
+                opt.style.fontWeight = "900";
+                select.appendChild(opt);
+              }
             });
           }
         })
