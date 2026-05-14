@@ -6,22 +6,19 @@
     --v-paper: #fef9e7;
     --v-border: #d2b48c;
     
-    --health: #ff4757;
-    --perf: #ffa502;
-    --def: #2f3542;
+    --health: #e74c3c;
+    --perf: #f1c40f;
+    --def: #3498db;
     --gold: #f1c40f;
-    --emerald: #2ed573;
-    --sky: #70a1ff;
     
-    --text-main: #2f3542;
-    --text-dim: #747d8c;
-    
-    --glass: rgba(255, 255, 255, 0.85);
-    --shadow: 0 10px 30px rgba(93, 64, 55, 0.15);
+    --text-main: #2b1d0e;
+    --text-dim: #5d4037;
 }
 
 * {
-    margin: 0; padding: 0; box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
     font-family: 'Outfit', sans-serif;
 }
 
@@ -29,207 +26,181 @@ body {
     background: var(--v-bg);
     color: var(--text-main);
     min-height: 100vh;
-    padding-bottom: 140px;
-    background-image: radial-gradient(circle at top right, #fff9c4, transparent);
+    padding-bottom: 120px;
 }
 
 .v-container {
-    max-width: 480px;
+    max-width: 500px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 15px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 15px;
 }
 
-/* --- 🏛️ PREMIUM GLOBAL HEADER --- */
-.v-global-header {
+/* --- 📢 TOP NEWS SYSTEM (v44.0 Single Block) --- */
+.v-top-news {
     background: var(--v-wood);
-    color: var(--gold);
-    padding: 20px;
-    text-align: center;
-    border-bottom: 4px solid var(--gold);
-    box-shadow: var(--shadow);
-    position: sticky; top: 0; z-index: 1000;
-}
-
-.v-global-header h1 {
-    font-size: 1.25rem;
-    font-weight: 900;
-    letter-spacing: 2px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-}
-
-/* --- 📜 PREMIUM BANNERS --- */
-.v-banner-notice {
-    background: linear-gradient(135deg, #4e342e, #5d4037);
     color: #fff;
-    padding: 15px 20px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 800;
+    border-radius: 15px;
+    overflow: hidden;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    border-left: 8px solid var(--gold);
 }
 
-.v-banner-ranking {
-    background: #fff;
-    border-radius: 20px;
-    padding: 18px;
-    color: var(--v-wood);
+.v-notice-fixed {
+    background: #4e342e;
+    padding: 8px 15px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.v-pillar-ticker {
+    padding: 10px 15px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
     font-weight: 900;
-    font-size: 1rem;
+    color: var(--gold);
     text-align: center;
-    box-shadow: var(--shadow);
-    border: 2px solid var(--v-paper);
 }
 
-/* --- 📋 STATUS WINDOW v44.3 (Premium Restoration) --- */
+.v-sudden-bar {
+    background: var(--health);
+    padding: 6px 15px;
+    font-size: 0.7rem;
+    font-weight: 900;
+    display: none;
+    animation: flash 1.5s infinite;
+}
+
+@keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* --- 📋 STATUS WINDOW v44.0 (Balanced Split) --- */
 .status-window-v43 {
-    background: var(--glass);
-    backdrop-filter: blur(15px);
-    border-radius: 35px;
-    padding: 30px 20px;
+    background: var(--v-paper);
+    border: 3px solid var(--v-border);
+    border-radius: 30px;
+    padding: 20px;
     display: grid;
-    grid-template-columns: 1fr 1.2fr;
-    gap: 25px;
-    box-shadow: var(--shadow);
-    border: 2px solid #fff;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 15px;
+    align-items: center;
 }
 
 .profile-card {
     text-align: center;
-    position: relative;
+    border-right: 1px solid var(--v-border);
+    padding-right: 10px;
 }
 
 .avatar-v43 {
-    width: 85px; height: 85px;
-    margin: 0 auto 15px;
+    width: 70px; height: 70px;
+    margin: 0 auto 10px;
     background: #fff;
-    border-radius: 30px; /* Modern Rounded Box */
-    border: 4px solid var(--gold);
-    display: flex; align-items: center; justify-content: center; font-size: 2.8rem;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    border-radius: 50%;
+    border: 3px solid var(--perf);
+    display: flex; align-items: center; justify-content: center; font-size: 2.2rem;
 }
 
-.total-score-val { 
-    font-size: 2.2rem; font-weight: 900; color: var(--v-wood); 
-    letter-spacing: -1px; display: block;
+.total-score-label { font-size: 0.65rem; font-weight: 800; color: var(--text-dim); }
+.total-score-val { font-size: 1.6rem; font-weight: 900; display: block; margin: 2px 0; color: var(--v-wood); }
+.rank-badge { 
+    background: var(--v-wood); color: #fff; 
+    padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 900;
 }
 
-/* Evolution Bar (Sleek Overlay) */
-.evo-bar-container {
-    background: rgba(0,0,0,0.05);
-    height: 10px;
-    border-radius: 5px;
-    margin-top: 10px;
-    overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.5);
-}
-
-.evo-bar-fill {
-    height: 100%;
-    background: linear-gradient(to right, var(--emerald), var(--sky));
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(46, 213, 115, 0.4);
-}
-
-/* Right Gauge Section */
+/* Ability Gauges */
 .gauge-section {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 12px;
 }
 
 .gauge-item {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
 }
 
 .gauge-header {
     display: flex;
     justify-content: space-between;
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: 900;
-    color: var(--v-wood);
 }
 
 .gauge-bar-bg {
     background: rgba(0,0,0,0.05);
-    height: 18px;
-    border-radius: 9px;
+    height: 12px;
+    border-radius: 6px;
     overflow: hidden;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid rgba(0,0,0,0.02);
 }
 
 .gauge-fill {
     height: 100%;
-    border-radius: 9px;
     transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* --- ⚔️ QUEST HUB (Premium Card) --- */
+/* --- ⚔️ QUEST HUB --- */
 .v-quest-hub {
-    background: #fff;
-    border-radius: 35px;
-    padding: 30px 20px;
-    box-shadow: var(--shadow);
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 25px;
+    padding: 20px;
+    border: 1px solid var(--v-border);
 }
 
 .v-btn-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
+    gap: 12px;
 }
 
 .v-action-btn {
-    background: linear-gradient(to bottom, #fff, var(--v-paper));
+    background: #fff;
     border: 2px solid var(--v-border);
-    padding: 18px 10px;
-    border-radius: 25px;
-    font-weight: 900;
-    font-size: 1rem;
-    color: var(--v-wood);
-    box-shadow: 0 5px 0 var(--v-border);
-    transition: all 0.1s;
+    padding: 15px 10px;
+    border-radius: 20px;
+    text-align: center;
     cursor: pointer;
+    font-weight: 900;
+    font-size: 0.9rem;
+    transition: all 0.2s;
 }
 
-.v-action-btn:active {
-    transform: translateY(4px);
-    box-shadow: 0 1px 0 var(--v-border);
+/* --- 📋 HABIT & PLUS --- */
+.habit-plus-section {
+    background: rgba(255,255,255,0.5);
+    border-radius: 25px;
+    padding: 20px;
+    border: 1px solid rgba(93, 64, 55, 0.1);
 }
 
-/* --- 📱 FLOATING NAV BAR (High-End) --- */
+/* --- 📱 NAV BAR (v44.0 Clean) --- */
 .v-nav {
     position: fixed;
-    bottom: 25px; left: 20px; right: 20px;
-    background: rgba(93, 64, 55, 0.95);
-    backdrop-filter: blur(10px);
+    bottom: 0; left: 0; width: 100%;
+    background: #fff;
     display: flex; justify-content: space-around;
-    padding: 15px 10px;
-    border-radius: 30px;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    padding: 12px 10px 35px;
+    border-top: 2px solid var(--v-paper);
     z-index: 2000;
 }
 
 .v-nav-item {
     text-align: center;
-    color: rgba(255,255,255,0.6);
+    color: var(--text-dim);
     text-decoration: none;
-    font-size: 0.75rem;
-    font-weight: 800;
-    transition: all 0.3s;
+    font-size: 0.7rem;
+    font-weight: 900;
 }
 
-.v-nav-item i {
-    font-size: 1.6rem;
-    display: block;
-    margin-bottom: 5px;
-}
-
-.v-nav-item.active {
-    color: var(--gold);
-    transform: translateY(-5px);
-}
+.v-nav-item i { font-size: 1.8rem; display: block; margin-bottom: 4px; }
+.v-nav-item.active { color: var(--perf); }

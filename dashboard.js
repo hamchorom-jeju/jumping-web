@@ -1,6 +1,6 @@
 /**
- * Nohyung Village Dashboard Logic (v44.3 - Premium Aesthetic Restoration)
- * Features: High-End Floating Nav, 3D Interactive Buttons, Integrated Evolution Flow
+ * Nohyung Village Dashboard Logic (v44.0 Stable Rollback)
+ * Features: Weekly/Monthly Toggle, Evolution Progress Bar, Context-Aware Stats
  */
 
 const Village = {
@@ -25,46 +25,25 @@ const Village = {
         ],
         water: 1.2,
         habits: [
-            { id: 'h1', title: '모닝 티', done: false },
-            { id: 'h2', title: '베지 퍼스트', done: false },
-            { id: 'h3', title: '슬로우 치잉', done: false },
-            { id: 'h4', title: '일일 7,000보', done: false },
-            { id: 'h5', title: '계단 마법', done: false },
-            { id: 'h6', title: '나이트 컷', done: false },
-            { id: 'h7', title: '굿 슬립', done: false },
-            { id: 'h8', title: '셀프 칭찬', done: false },
-            { id: 'h9', title: '스트레칭', done: false },
-            { id: 'plus', title: '✨ 미라클 플러스', done: false }
+            { id: 'h1', title: '모닝 티', done: false, guide: '따뜻한 물!' },
+            { id: 'h2', title: '베지 퍼스트', done: false, guide: '채소 먼저!' },
+            { id: 'h3', title: '슬로우 치잉', done: false, guide: '꼭꼭 씹기!' },
+            { id: 'h4', title: '일일 7,000보', done: false, guide: '꾸준한 걷기!' },
+            { id: 'h5', title: '계단 마법', done: false, guide: '계단 이용!' },
+            { id: 'h6', title: '나이트 컷', done: false, guide: '20시 이후 금식!' },
+            { id: 'h7', title: '굿 슬립', done: false, guide: '자정 전 취침!' },
+            { id: 'h8', title: '셀프 칭찬', done: false, guide: '나를 아끼기!' },
+            { id: 'h9', title: '스트레칭', done: false, guide: '몸 풀어주기!' },
+            { id: 'plus', title: '✨ 미라클 플러스', done: false, guide: '인생의 승리 기록!' }
         ]
     },
 
-    rankings: [
-        { type: "금주 랭킹", content: "체력왕: 홍길동 | 수행왕: 김개똥 | 수호왕: 이성실" },
-        { type: "월간 랭킹", content: "다이어트킹: 박지니 | 미션킹: 최열정" },
-        { type: "토탈 랭킹", content: "1위: 전설모험가 (120k) | 2위: 꾸준지존 (115k)" }
-    ],
-    currentRankIndex: 0,
-
     init() {
-        console.log("Nohyung Village v44.3: Premium Restoration Initialized.");
+        console.log("Restored Nohyung Village v44.0 Stable Engine.");
         this.renderAll();
         this.updateEvolution();
         this.startTicker();
         this.bindEvents();
-    },
-
-    startTicker() {
-        const ticker = document.getElementById('ranking-ticker');
-        setInterval(() => {
-            this.currentRankIndex = (this.currentRankIndex + 1) % this.rankings.length;
-            const r = this.rankings[this.currentRankIndex];
-            ticker.style.opacity = 0;
-            setTimeout(() => {
-                ticker.innerHTML = `<span style="font-size:0.7rem; color:var(--text-dim); display:block; font-weight:800;">[${r.type}]</span>${r.content}`;
-                ticker.style.opacity = 1;
-                ticker.style.transition = 'opacity 0.6s ease';
-            }, 500);
-        }, 5000);
     },
 
     renderAll() {
@@ -88,6 +67,7 @@ const Village = {
         document.getElementById(`${id}-val`).innerText = val.toLocaleString();
         const percent = Math.min((val / max) * 100, 100);
         document.getElementById(`${id}-bar`).style.width = `${percent}%`;
+        document.getElementById(`${id}-label`).innerText = `${this.perspective === 'weekly' ? '주간' : '월간'} 목표 대비: ${Math.round(percent)}%`;
     },
 
     updateEvolution() {
@@ -100,22 +80,22 @@ const Village = {
         if (next) {
             const min = this.user.tiers[ci].min;
             const progress = ((score - min) / (next.min - min)) * 100;
-            document.getElementById('evo-bar').style.width = `${progress}%`;
+            document.getElementById('evo-bar').style.width = `${Math.min(progress, 100)}%`;
             document.getElementById('evo-percent').innerText = `${Math.round(progress)}%`;
         }
     },
 
     setPerspective(view) {
         this.perspective = view;
-        const bW = document.getElementById('btn-weekly');
-        const bM = document.getElementById('btn-monthly');
-        
+        const btnW = document.getElementById('btn-weekly');
+        const btnM = document.getElementById('btn-monthly');
         if (view === 'weekly') {
-            bW.classList.add('active'); bM.classList.remove('active');
+            btnW.style.background = '#fff'; btnW.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+            btnM.style.background = 'transparent'; btnM.style.boxShadow = 'none';
         } else {
-            bM.classList.add('active'); bW.classList.remove('active');
+            btnM.style.background = '#fff'; btnM.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+            btnW.style.background = 'transparent'; btnW.style.boxShadow = 'none';
         }
-        
         this.renderAll();
     },
 
@@ -123,10 +103,10 @@ const Village = {
         const container = document.getElementById('habit-list-container');
         if (!container) return;
         container.innerHTML = this.user.habits.map(h => `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:18px; background:${h.id === 'plus' ? 'rgba(241, 196, 15, 0.1)' : '#f9f9f9'}; border-radius:20px; margin-bottom:12px; border:2px solid ${h.id === 'plus' ? 'var(--gold)' : 'transparent'}; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
-                <span style="font-size:1.05rem; font-weight:900; color:var(--text-main);">${h.title}</span>
-                <div onclick="Village.checkHabit('${h.id}')" style="width:36px; height:36px; border:3.5px solid var(--v-border); border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; background:${h.done ? 'var(--emerald)' : 'transparent'}; transition:all 0.2s;">
-                    ${h.done ? '<i class="fa-solid fa-check" style="color:#fff;"></i>' : ''}
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:${h.id === 'plus' ? '#fff9c4' : '#fff'}; border-radius:15px; margin-bottom:8px; border:1px solid var(--v-border);">
+                <span style="font-size:0.9rem; font-weight:800; color:var(--v-wood);">${h.title}</span>
+                <div onclick="Village.checkHabit('${h.id}')" style="width:28px; height:28px; border:2px solid var(--v-border); border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; background:${h.done ? 'var(--def)' : 'transparent'};">
+                    ${h.done ? '✅' : ''}
                 </div>
             </div>
         `).join('');
@@ -135,13 +115,33 @@ const Village = {
     checkHabit(id) {
         const habit = this.user.habits.find(h => h.id === id);
         if (habit && !habit.done) {
-            const ok = confirm(`🏡 [습관 수호 성공!] 기록소(미라클 아카이브)로 이동하여 인증하시겠습니까?`);
+            const ok = confirm(`🏡 [수호 완료!] 기록소로 이동하시겠습니까?`);
             habit.done = true;
             this.user.totalScore += 10;
+            this.user.stats.weekly.def += 10;
             this.renderAll();
             this.updateEvolution();
             if (ok) location.href = `miracle.html?cat=${(id === 'plus' ? 'plus' : 'habit')}&item=${id}`;
         }
+    },
+
+    startTicker() {
+        const ticker = document.getElementById('ranking-ticker');
+        let idx = 0;
+        const ranks = [
+            "금주 체력왕: 홍길동 님 ✨",
+            "금주 수행왕: 김개똥 님 🗡️",
+            "금주 수호왕: 이성실 님 🛡️"
+        ];
+        setInterval(() => {
+            idx = (idx + 1) % ranks.length;
+            ticker.style.opacity = 0;
+            setTimeout(() => {
+                ticker.innerText = ranks[idx];
+                ticker.style.opacity = 1;
+                ticker.style.transition = 'opacity 0.5s';
+            }, 500);
+        }, 5000);
     },
 
     bindEvents() {
@@ -154,14 +154,10 @@ const Village = {
         }
     },
 
-    triggerSuddenMission() {
-        document.getElementById('sudden-mission-bar').style.display = 'block';
-        alert("⚡ [계시: 돌발 미션 선포!]\n이장님의 긴급 퀘스트가 하사되었습니다! 마을 공지를 확인하세요!");
-    },
-
+    triggerSuddenMission() { alert("⚡ [돌발 미션 선포!]"); },
     async syncClubRecord() {
         setTimeout(() => {
-            alert("🏡 [클럽 동기화 완료!] 성장의 기록이 마을 역사에 새겨졌습니다.");
+            alert("🏡 [클럽 동기화 완료!]");
             this.user.stats.weekly.perf += 50;
             this.renderAll();
             this.updateEvolution();
