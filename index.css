@@ -246,29 +246,30 @@ body {
 }
 
 .v-ranking-badge {
-    padding: 4px 12px;
-    border-radius: 10px;
-    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.65rem;
     font-weight: 900;
     color: #fff;
     white-space: nowrap;
 }
 
-.v-ranking-badge.weekly { background: #2ecc71; }
-.v-ranking-badge.monthly { background: #f1c40f; }
-.v-ranking-badge.total { background: #5d4037; }
+.v-ranking-badge.weekly { background: #2ecc71; color: #fff; }
+.v-ranking-badge.monthly { background: #f1c40f; color: #2b1d0e; } /* Dark text for Gold */
+.v-ranking-badge.total { background: #5d4037; color: #fff; }
 
 .v-ranking-content {
-    font-size: 0.85rem;
+    font-size: 0.75rem; /* Smaller font to fit mobile */
     font-weight: 800;
     color: var(--v-wood);
     display: flex;
-    gap: 15px;
+    gap: 8px; /* Tighter gap */
     white-space: nowrap;
+    overflow: hidden;
 }
 
 .v-ranking-content span {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
 }
