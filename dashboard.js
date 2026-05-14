@@ -63,7 +63,7 @@ const Village = {
         visit: { title: "방문 인증", icon: "📸", guide: "오늘 클럽에 출석하셨나요?\n그렇다면 방문 인증을 남겨보세요\n아카이브에 인증시 15점이 추가됩니다.", btn: "인증하러 가기", link: "miracle.html?cat=visit", single: false },
         meal: { title: "식단 인증", icon: "🍱", guide: "꾸준한 식단 기록은 강력한 변화의 열쇠입니다.\n아카이브에 인증시 최대 30점이 지급됩니다.", btn: "인증하러 가기", link: "miracle.html?cat=meal", single: false },
         water: { title: "워터 헌터", icon: "💧", guide: "수분 섭취량 만큼 게이지를 조정해보세요.\n섭취량에 따라 점수를 차등지급합니다. (최대 20점)\n아카이브에 인증시 15점이 추가됩니다.", btn: "인증하러 가기", link: "miracle.html?cat=water", single: false },
-        bonus: { title: "보너스 퀘스트", icon: "✨", guide: "돌발 미션을 수행하시겠어요?\n아카이브로 이동해 인증을 남기실 수 있습니다.\n아카이브 인증시 15점이 추가됩니다.", btn: "이동하기", link: "miracle.html?cat=bonus", single: false }
+        bonus: { title: "보너스 퀘스트", icon: "✨", guide: "돌발 미션을 수행하시겠어요?\n아카이브로 이동해 인증을 남기실 수 있습니다.\n아카이브 인증시 15점이 추가됩니다.", btn: "인증하러 가기", link: "miracle.html?cat=bonus", single: false }
     },
 
     init() {
@@ -116,7 +116,7 @@ const Village = {
         }
         
         cancelBtn.onclick = () => {
-            if (type === 'habit' && habit && key !== 'h7' && key !== 'h9') this.applyHabitCheck(key, false);
+            if (type === 'habit' && habit) this.applyHabitCheck(key, false);
             this.closeModal();
         };
 
