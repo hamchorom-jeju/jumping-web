@@ -106,7 +106,7 @@
     <!-- 퀘스트 탭 -->
     <div id="tab-quest" class="tab-content active">
       <div class="premium-cert-card">
-        <div class="section-title">⚔️ 퀘스트 인증하기</div>
+        <div class="section-title">⚔️ 퀘스트 인증하기 (15점)</div>
         <div onclick="document.getElementById('file-input-quest').click()" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
           <span style="font-size:2.5rem; margin-bottom:10px;">📸</span>
           <p style="font-size:0.85rem; color:var(--text-dim); font-weight:800;">퀘스트 인증 사진 촬영</p>
@@ -115,26 +115,27 @@
         <div id="quest-preview-box" style="display: none; margin-top: 15px;">
           <img id="quest-preview-img" src="" style="width: 100%; border-radius: 20px; border: 2px solid var(--emerald);">
         </div>
-        <select id="quest-select" style="width: 100%; margin-top: 15px; background: #fff; border: 2px solid var(--v-paper); padding: 15px; border-radius: 15px; font-weight: 800; outline: none;">
-          <option value="방문">🏰 방문 인증 (15점)</option>
-          <option value="오운완">🔥 오운완 (운동 완료) (15점)</option>
-          <option value="수분">💧 수분 섭취 인증 (15점)</option>
-          <optgroup label="⚡ 실시간 돌발 계시" id="surprise-optgroup"></optgroup>
+        <select id="quest-select" style="width: 100%; margin-top: 15px; background: #fff; border: 2px solid var(--v-paper); padding: 15px; border-radius: 15px; font-weight: 800; outline: none; color: var(--text-main);">
+          <option value="방문">🏰 방문 인증</option>
+          <option value="오운완">🔥 오운완 (운동 완료)</option>
+          <option value="수분">💧 수분 섭취 인증</option>
+          <option value="식단">🍱 식단 인증 (아침/점심/저녁)</option>
+          <optgroup label="⚡ 실시간 돌발 퀘스트" id="surprise-optgroup"></optgroup>
         </select>
         <input type="text" id="quest-comment" class="comment-input" placeholder="오늘의 소감을 한마디 남겨주세요!">
-        <button id="btn-submit-quest" onclick="submitEntry('quest')" style="width: 100%; margin-top: 15px; background: var(--emerald); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 1.1rem;">퀘스트 기록 완료</button>
+        <button id="btn-submit-quest" onclick="submitEntry('quest')" style="width: 100%; margin-top: 15px; background: var(--emerald); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2);">퀘스트 기록 완료</button>
       </div>
 
       <div class="cert-section">
         <div class="section-title">🍱 오늘의 식단 인증하기</div>
         <div class="meal-grid">
-          <div class="meal-slot" onclick="alert('식단 인증은 퀘스트 항목에서 촬영해 주세요!')">
+          <div class="meal-slot" id="meal-morning" onclick="quickMeal('아침 식단')">
             <span class="icon">🌅</span><span class="label">아침</span>
           </div>
-          <div class="meal-slot" onclick="alert('식단 인증은 퀘스트 항목에서 촬영해 주세요!')">
+          <div class="meal-slot" id="meal-noon" onclick="quickMeal('점심 식단')">
             <span class="icon">☀️</span><span class="label">점심</span>
           </div>
-          <div class="meal-slot" onclick="alert('식단 인증은 퀘스트 항목에서 촬영해 주세요!')">
+          <div class="meal-slot" id="meal-evening" onclick="quickMeal('저녁 식단')">
             <span class="icon">🌙</span><span class="label">저녁</span>
           </div>
         </div>
@@ -153,20 +154,23 @@
         <div id="habit-preview-box" style="display: none; margin-top: 15px;">
           <img id="habit-preview-img" src="" style="width: 100%; border-radius: 20px; border: 2px solid var(--v-wood);">
         </div>
-        <select id="habit-select" style="width: 100%; margin-top: 15px; background: #fff; border: 2px solid var(--v-paper); padding: 15px; border-radius: 15px; font-weight: 800; outline: none;">
+        <select id="habit-select" style="width: 100%; margin-top: 15px; background: #fff; border: 2px solid var(--v-paper); padding: 15px; border-radius: 15px; font-weight: 800; outline: none; color: var(--text-main);">
           <optgroup label="🌱 9대 데일리 습관">
             <option value="모닝티">🍵 모닝 티 (따뜻한 물)</option>
-            <option value="스트레칭">🧘 모닝 스트레칭</option>
-            <option value="7000보">🏃 7,000보 걷기</option>
-            <option value="나이트컷">📵 20시 이후 금식</option>
+            <option value="모닝스트레칭">🧘 모닝 스트레칭</option>
+            <option value="베지퍼스트">🥗 베지 퍼스트 (채소 먼저)</option>
+            <option value="7000보달성">🏃 7,000보 달성</option>
+            <option value="스테어마법">🪜 스테어 마법 (계단 이용)</option>
           </optgroup>
-          <optgroup label="✨ 미라클 플러스">
+          <optgroup label="✨ 미라클 플러스 (하루 1개 제한)">
             <option value="새벽기상">☀️ 새벽 기상</option>
-            <option value="독서">📚 독서 인증</option>
+            <option value="독서인증">📚 독서 인증</option>
+            <option value="환경사랑">🌍 환경 사랑 (플로깅 등)</option>
+            <option value="기타">🏆 기타 사소한 성취</option>
           </optgroup>
         </select>
         <input type="text" id="habit-comment" class="comment-input" placeholder="실천 소감을 남겨주세요!">
-        <button id="btn-submit-habit" onclick="submitEntry('habit')" style="width: 100%; margin-top: 15px; background: var(--v-wood); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 1.1rem;">습관 기록 완료</button>
+        <button id="btn-submit-habit" onclick="submitEntry('habit')" style="width: 100%; margin-top: 15px; background: var(--v-wood); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(93, 64, 55, 0.2);">습관 기록 완료</button>
       </div>
     </div>
 
@@ -194,6 +198,7 @@
       const params = new URLSearchParams(window.location.search);
       switchTab(params.get('tab') === 'habit' ? 'habit' : 'quest');
       loadArchiveFeed();
+      loadActiveEvents();
     };
 
     function switchTab(type) {
@@ -214,34 +219,47 @@
       }
     }
 
+    function quickMeal(mealType) {
+      document.getElementById('quest-select').value = "식단";
+      document.getElementById('quest-comment').value = `[${mealType}] 인증합니다! `;
+      document.getElementById('file-input-quest').click();
+    }
+
     function loadArchiveFeed() {
       const loader = document.getElementById('feed-loader');
       const feed = document.getElementById('archive-feed');
       loader.style.display = 'block';
-      google.script.run.withSuccessHandler(data => {
-        loader.style.display = 'none';
-        if (!data || data.length === 0) {
-          feed.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:0.8rem; margin-top:20px;">첫 번째 기적의 주인공이 되어보세요!</p>';
-          return;
-        }
-        feed.innerHTML = data.map(item => `
-          <div class="feed-card">
-            <div class="feed-header">
-              <div class="feed-avatar">${item.name.charAt(0)}</div>
-              <div class="feed-user-info">
-                <div class="feed-user-name">${item.name}</div>
-                <div class="feed-time">${item.date} ${item.time}</div>
+      
+      google.script.run
+        .withSuccessHandler(data => {
+          loader.style.display = 'none';
+          if (!data || data.length === 0) {
+            feed.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:0.8rem; margin-top:20px;">첫 번째 기적의 주인공이 되어보세요!</p>';
+            return;
+          }
+          feed.innerHTML = data.map(item => `
+            <div class="feed-card">
+              <div class="feed-header">
+                <div class="feed-avatar">${item.name ? item.name.charAt(0) : '?'}</div>
+                <div class="feed-user-info">
+                  <div class="feed-user-name">${item.name || '무명 모험가'}</div>
+                  <div class="feed-time">${item.date} ${item.time}</div>
+                </div>
+                <div class="feed-badge">${item.type}</div>
               </div>
-              <div class="feed-badge">${item.type}</div>
+              ${item.photoId ? `<div class="feed-img-box"><img src="https://drive.google.com/uc?id=${item.photoId}" class="feed-img" onerror="this.src='https://via.placeholder.com/400x300?text=이미지 로딩 실패'"></div>` : ''}
+              <div class="feed-content">
+                <span style="font-size:0.75rem; color:var(--emerald); font-weight:900;">💎 ${item.item}</span>
+                <p class="feed-text">${item.comment || '말없이 실천 중인 멋진 모험가입니다!'}</p>
+              </div>
             </div>
-            ${item.photoId ? `<div class="feed-img-box"><img src="https://drive.google.com/uc?id=${item.photoId}" class="feed-img"></div>` : ''}
-            <div class="feed-content">
-              <span style="font-size:0.75rem; color:var(--emerald); font-weight:900;">💎 ${item.item}</span>
-              <p class="feed-text">${item.comment || '말없이 실천 중인 멋진 모험가입니다!'}</p>
-            </div>
-          </div>
-        `).join('');
-      }).getArchiveFeed();
+          `).join('');
+        })
+        .withFailureHandler(err => {
+          loader.style.display = 'none';
+          feed.innerHTML = '<p style="text-align:center; color:#e74c3c; font-size:0.8rem;">피드 로딩 중 오류가 발생했습니다.</p>';
+        })
+        .getArchiveFeed();
     }
 
     function submitEntry(type) {
@@ -261,21 +279,49 @@
           name: TARGET_NAME, phone: TARGET_PHONE,
           type: type === 'quest' ? '퀘스트' : '습관',
           item: item, comment: comment,
-          image: e.target.result, score: type === 'quest' ? 15 : 5
+          image: e.target.result, 
+          score: type === 'quest' ? 15 : 5
         };
         
-        google.script.run.withSuccessHandler(res => {
-          btn.disabled = false;
-          btn.innerText = "기록 완료";
-          if (res.success) {
-            alert("기록이 마을 아카이브에 보존되었습니다! ✨");
-            document.getElementById(type + '-comment').value = "";
-            document.getElementById(type + '-preview-box').style.display = 'none';
-            loadArchiveFeed();
-          }
-        }).submitArchive(payload);
+        google.script.run
+          .withSuccessHandler(res => {
+            btn.disabled = false;
+            btn.innerText = type === 'quest' ? "퀘스트 기록 완료" : "습관 기록 완료";
+            if (res.success) {
+              alert("기록이 마을 아카이브에 영구 보존되었습니다! ✨");
+              document.getElementById(type + '-comment').value = "";
+              document.getElementById(type + '-preview-box').style.display = 'none';
+              loadArchiveFeed();
+            } else {
+              alert("저장 실패: " + res.error);
+            }
+          })
+          .withFailureHandler(err => {
+            btn.disabled = false;
+            btn.innerText = "기록 완료";
+            alert("서버 통신 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+          })
+          .submitArchive(payload);
       };
       reader.readAsDataURL(file);
+    }
+
+    function loadActiveEvents() {
+      google.script.run
+        .withSuccessHandler(events => {
+          if(events && events.length > 0) {
+            const surpriseGroup = document.getElementById('surprise-optgroup');
+            surpriseGroup.innerHTML = "";
+            events.forEach(e => {
+              const opt = document.createElement('option');
+              opt.value = e.title;
+              opt.innerText = `⚡ [돌발] ${e.title} (15점)`;
+              surpriseGroup.appendChild(opt);
+            });
+          }
+        })
+        .withFailureHandler(() => {})
+        .getActiveEvents();
     }
   </script>
 </body>
