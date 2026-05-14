@@ -114,7 +114,7 @@ function getUserDashboardData(payload) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
     // 1. 회원 정보 (등록현황 시트)
-    var regSheet = ss.getSheetByName("등록현황") || ss.getSheetByName("등록 현황");
+    var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
     var memberInfo = { name: "모험가", tier: "씨앗", rank: "-" };
     if (regSheet) {
       var regData = regSheet.getDataRange().getValues();
@@ -156,10 +156,10 @@ function getUserDashboardData(payload) {
             } else if (type.indexOf("인바디") > -1 || type.indexOf("건강") > -1) {
               stats.health += score;
             } else { 
-              // 출석/로그인 또는 기타: 3:4:3 분배
-              stats.health += Math.floor(score * 0.3);
-              stats.perf += Math.floor(score * 0.4);
-              stats.def += Math.floor(score * 0.3);
+              // 출석/로그인 또는 기타: 3:4:3 분배 (v44.161 소수점 유지)
+              stats.health += (score * 0.3);
+              stats.perf += (score * 0.4);
+              stats.def += (score * 0.3);
             }
           }
         }
