@@ -76,22 +76,27 @@ function submitArchive(payload) {
 
     var now = new Date();
     var photoId = "";
+    var photoError = "";
     
     if (payload.image && payload.image.indexOf(",") > -1) {
       try {
         var folderName = "GenieWorld_Archive";
         var folders = DriveApp.getFoldersByName(folderName);
         var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
-        // [v44.188] 폴더 권한 보강 (모든 사람 보기 가능)
         folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
         
-        var base64Data = payload.image.split(",")[1];
+        // [v44.189] Base64 데이터 정제 (공백 제거)
+        var base64Data = payload.image.split(",")[1].replace(/\s/g, '');
         var blob = Utilities.newBlob(Utilities.base64Decode(base64Data), "image/jpeg", (payload.name || "user") + "_" + Date.now());
         var file = folder.createFile(blob);
+        
+        // [v44.189] 파일 즉시 공유 설정 보강
         file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
         photoId = file.getId();
       } catch (err) {
-        console.error("Photo Save Error: " + err.toString());
+        photoError = "사진 저장 실패: " + err.toString();
+        console.error(photoError);
+        // 사진이 필수인 경우 여기서 중단 가능 (현재는 경고만 포함하여 진행)
       }
     }
     
@@ -106,20 +111,23 @@ function submitArchive(payload) {
       payload.type,
       payload.item,
       payload.comment || "",
-      photoId, // H열에 사진 ID 기록
+      photoId, 
       payload.score || 0
     ]);
     
-    // [v44.188] 점수 획득 시 활동기록에도 동시 기록 (데이터 무결성)
+    // [v44.188] 점수 획득 시 활동기록에도 동시 기록
     recordActivityLog({
       phone: payload.phone,
       name: payload.name,
       type: "인증",
       item: payload.item,
-      content: payload.type + " 사진 인증 완료",
+      content: payload.type + (photoId ? " 사진 인증 성공" : " 인증 완료 (사진 누락)"),
       score: payload.score || 0
     });
 
+    if (photoError && !photoId) {
+      return { success: true, warning: photoError, photoId: "" };
+    }
     return { success: true, photoId: photoId };
   } catch (e) {
     return { success: false, error: "기록 저장 실패: " + e.toString() };

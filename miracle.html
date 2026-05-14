@@ -358,19 +358,22 @@
             item: item, comment: comment, image: compressedBase64, score: score
           };
 
-          google.script.run
-            .withSuccessHandler(res => {
-              btn.disabled = false;
-              btn.innerText = type === 'quest' ? "퀘스트 기록 완료" : "습관 기록 완료";
-              if (res && res.success) {
-                alert(`✅ 인증 성공!\n[${finalType}] +${score}점이 적립되었습니다.`);
-                document.getElementById(type + '-comment').value = "";
-                document.getElementById(type + '-preview-box').style.display = 'none';
-                document.getElementById(type + '-upload-placeholder').style.display = 'flex';
-                fileInput.value = "";
-                loadArchiveFeed();
-              } else { alert("🚨 저장 실패: " + (res ? res.error : "서버 응답 없음")); }
-            })
+             .withSuccessHandler(res => {
+               btn.disabled = false;
+               btn.innerText = type === 'quest' ? "퀘스트 기록 완료" : "습관 기록 완료";
+               if (res && res.success) {
+                 if (res.warning) {
+                   alert(`⚠️ 기록은 되었으나 사진 저장에 실패했습니다.\n${res.warning}`);
+                 } else {
+                   alert(`✅ 인증 성공!\n[${finalType}] +${score}점이 적립되었습니다.`);
+                 }
+                 document.getElementById(type + '-comment').value = "";
+                 document.getElementById(type + '-preview-box').style.display = 'none';
+                 document.getElementById(type + '-upload-placeholder').style.display = 'flex';
+                 fileInput.value = "";
+                 loadArchiveFeed();
+               } else { alert("🚨 저장 실패: " + (res ? res.error : "서버 응답 없음")); }
+             })
             .withFailureHandler(err => {
               btn.disabled = false;
               btn.innerText = "기록 완료";
