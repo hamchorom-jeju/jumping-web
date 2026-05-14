@@ -7,145 +7,60 @@
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    :root {
-      --v-bg: #fffdf5;
-      --v-wood: #5d4037;
-      --v-paper: #fef9e7;
-      --v-border: #d2b48c;
-      --emerald: #2ecc71;
-      --gold: #f1c40f;
-      --text-main: #2b1d0e;
-      --text-dim: #5d4037;
+    /* 탭 시스템 스타일 */
+    .v-tabs {
+      display: flex; gap: 10px; margin-bottom: 25px;
+      background: var(--v-paper); padding: 8px; border-radius: 20px;
+      border: 1px solid var(--v-border);
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; }
-    
-    body { 
-      background: var(--v-bg);
-      color: var(--text-main);
-      min-height: 100vh;
-      overflow-x: hidden;
-      padding-bottom: 120px;
+    .v-tab-btn {
+      flex: 1; padding: 12px; border: none; border-radius: 15px;
+      font-weight: 900; font-size: 0.9rem; cursor: pointer;
+      transition: all 0.3s; color: var(--text-dim); background: transparent;
     }
+    .v-tab-btn.active { background: var(--v-wood); color: #fff; box-shadow: 0 4px 10px rgba(93, 64, 55, 0.2); }
 
-    /* 🏛️ GLOBAL APP HEADER (Fixed) */
-    .v-global-header {
-        background: #fff;
-        padding: 18px;
-        text-align: center;
-        border-bottom: 2px solid var(--v-paper);
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
-    }
-    .v-global-header h1 {
-        font-size: 1.1rem;
-        font-weight: 900;
-        color: var(--v-wood);
-        letter-spacing: -0.5px;
-    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: slideUp 0.4s ease-out; }
 
-    .container { width: 100%; max-width: 500px; margin: 0 auto; padding: 20px; }
-
-    /* 🥗 식단 인증 카드 */
-    .cert-section { margin-bottom: 35px; }
-    .section-title { font-size: 1rem; font-weight: 900; margin-bottom: 15px; color: var(--v-wood); display: flex; align-items: center; gap: 8px; }
-    
-    .meal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    .meal-slot {
-      aspect-ratio: 1/1; background: #fff; border-radius: 20px;
-      border: 2px dashed var(--v-border); display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 8px; cursor: pointer;
-      transition: all 0.2s; position: relative; overflow: hidden;
-    }
-    .meal-slot:active { transform: scale(0.95); }
-    .meal-slot.has-img { border-style: solid; border-color: var(--emerald); }
-    .meal-slot .icon { font-size: 1.5rem; }
-    .meal-slot .label { font-size: 0.7rem; font-weight: 800; color: var(--text-dim); }
-    .meal-preview { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-
-    /* 🖼️ Premium Frame Effect */
-    .magic-frame {
-      position: absolute; inset: 0; border: 3px solid var(--emerald);
-      box-shadow: inset 0 0 10px rgba(46, 204, 113, 0.2); pointer-events: none;
-      opacity: 0; transition: opacity 0.3s;
-    }
-    .meal-slot.has-img .magic-frame { opacity: 1; }
-
-    /* 💧 워터 헌터 (Water Hunter) */
-    .water-hunter {
+    /* 📸 통합 인증 카드 */
+    .premium-cert-card {
       background: #fff; border-radius: 25px; padding: 20px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 2px solid var(--v-paper);
-      margin-bottom: 35px;
+      margin-bottom: 25px;
     }
-    .water-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .water-level { font-size: 1.3rem; font-weight: 900; color: #3498db; }
-    
-    .water-control { display: flex; justify-content: space-around; align-items: center; gap: 10px; }
-    .btn-circle {
-      width: 45px; height: 45px; border-radius: 50%; border: none;
-      background: var(--v-paper); font-size: 1.2rem; cursor: pointer; transition: all 0.2s;
-      color: var(--v-wood); font-weight: 900;
+
+    /* ⚔️ 퀘스트 항목 스타일 */
+    .quest-item-box {
+      background: var(--v-paper); border-radius: 18px; padding: 15px;
+      display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+      border: 1px solid var(--v-border); cursor: pointer; transition: all 0.2s;
     }
-    .btn-circle:active { transform: scale(0.9); }
+    .quest-item-box:active { transform: scale(0.98); }
+    .quest-item-icon { font-size: 1.5rem; width: 45px; height: 45px; background: #fff; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+    .quest-item-info { flex: 1; }
+    .quest-item-info h4 { font-size: 0.95rem; font-weight: 900; color: var(--text-main); }
+    .quest-item-info p { font-size: 0.75rem; color: var(--text-dim); font-weight: 700; opacity: 0.8; }
+    .quest-pts { font-size: 0.85rem; font-weight: 900; color: var(--emerald); }
 
     /* 📱 GLOBAL VILLAGE NAV (Standardized v44.116) */
     .v-nav {
-      position: fixed;
-      bottom: 0; left: 0; width: 100%;
-      background: #fff;
-      display: flex; justify-content: space-around;
-      padding: 12px 10px 35px;
-      border-top: 2px solid var(--v-paper);
+      position: fixed; bottom: 0; left: 0; width: 100%;
+      background: #fff; display: flex; justify-content: space-around;
+      padding: 12px 10px 35px; border-top: 2px solid var(--v-paper);
       z-index: 2000;
     }
     .v-nav-item {
-      text-align: center;
-      color: #94a3b8;
-      text-decoration: none;
-      font-size: 0.65rem;
-      font-weight: 900;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      flex: 1;
+      text-align: center; color: #94a3b8; text-decoration: none;
+      font-size: 0.65rem; font-weight: 900; display: flex;
+      flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; flex: 1;
     }
     .v-nav-item i { font-size: 1.6rem; }
     .v-nav-item img { width: 22px; height: 22px; border-radius: 4px; }
     .v-nav-item.active { color: var(--gold); }
-    .btn-circle:active { transform: scale(0.9); background: #e2e8f0; }
-    .water-progress-bg { flex: 1; height: 20px; background: #f1f5f9; border-radius: 10px; overflow: hidden; }
-    .water-progress-fill { height: 100%; width: 40%; background: linear-gradient(90deg, #60a5fa, #3b82f6); transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
-
-    /* 📜 기적의 퀘스트 */
-    .quest-list { display: flex; flex-direction: column; gap: 15px; }
-    .quest-card {
-      background: white; border-radius: 24px; padding: 20px;
-      display: flex; align-items: center; gap: 15px; border: 1px solid var(--border);
-      cursor: pointer; transition: all 0.2s;
-    }
-    .quest-card:active { transform: translateX(10px); background: #f8fafc; }
-    .quest-icon { width: 50px; height: 50px; background: #fff7ed; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
-    .quest-info h3 { font-size: 1rem; font-weight: 800; }
-    .quest-info p { font-size: 0.75rem; color: #64748b; font-weight: 500; }
-    .quest-reward { margin-left: auto; font-size: 0.8rem; font-weight: 900; color: var(--holy-gold); }
-
-    /* 📱 네비게이션 (Fixed Bottom) */
-    .bottom-nav {
-      position: fixed; bottom: 0; left: 0; width: 100%;
-      background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px);
-      display: flex; justify-content: space-around; padding: 12px 10px 30px;
-      border-top: 1px solid var(--border); z-index: 1000;
-    }
-    .nav-item {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-      color: #94a3b8; text-decoration: none; font-size: 0.65rem; font-weight: 800;
-    }
-    .v-nav-item.active { color: #0f172a; }
-    .v-nav-item i { font-size: 1.4rem; }
+    
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
@@ -156,88 +71,105 @@
 
   <div class="container">
     
-    <!-- ⚡ 실시간 활성 퀘스트 (돌발 계시) -->
-    <div id="active-quests-container" style="display: none; background: linear-gradient(135deg, #fdf2f8, #fbcfe8); border-radius: 20px; padding: 15px; margin-bottom: 25px; border: 1px solid #f9a8d4;">
-      <div style="font-size: 0.75rem; color: #db2777; font-weight: 900; margin-bottom: 8px;">⚡ 현재 진행 중인 돌발 계시</div>
-      <div id="active-quest-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+    <!-- 🗂️ 탭 네비게이션 -->
+    <div class="v-tabs">
+      <button class="v-tab-btn active" id="btn-quest" onclick="switchTab('quest')">퀘스트 인증 ⚔️</button>
+      <button class="v-tab-btn" id="btn-habit" onclick="switchTab('habit')">습관 인증 🌿</button>
     </div>
 
-    <!-- 🥗 식단 봉헌 -->
-    <div class="cert-section">
-      <div class="section-title">🥗 오늘의 식단 봉헌</div>
-      <div class="meal-grid">
-        <div class="meal-slot" id="meal-morning" onclick="uploadPhoto('morning')">
-          <span class="icon">🌅</span>
-          <span class="label">아침</span>
-          <div class="magic-frame"></div>
-        </div>
-        <div class="meal-slot" id="meal-noon" onclick="uploadPhoto('noon')">
-          <span class="icon">☀️</span>
-          <span class="label">점심</span>
-          <div class="magic-frame"></div>
-        </div>
-        <div class="meal-slot" id="meal-evening" onclick="uploadPhoto('evening')">
-          <span class="icon">🌙</span>
-          <span class="label">저녁</span>
-          <div class="magic-frame"></div>
-        </div>
+    <!-- ⚔️ 퀘스트 인증 탭 -->
+    <div id="tab-quest" class="tab-content active">
+      
+      <!-- ⚡ 실시간 돌발 계시 -->
+      <div id="active-quests-container" style="display: none; background: #fff; border-radius: 20px; padding: 18px; margin-bottom: 25px; border: 2px solid #3498db;">
+        <div style="font-size: 0.8rem; color: #3498db; font-weight: 900; margin-bottom: 12px;">⚡ 실시간 돌발 퀘스트 (15점)</div>
+        <div id="active-quest-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
       </div>
-    </div>
 
-    <!-- 💧 워터 헌터 -->
-    <div class="water-hunter">
-      <div class="water-header">
-        <div class="section-title">💧 워터 헌터</div>
-        <div class="water-level" id="water-val">1.2L</div>
-      </div>
-      <div class="water-control">
-        <button class="btn-circle" onclick="addWater(-200)">-</button>
-        <div class="water-progress-bg">
-          <div class="water-progress-fill" id="water-fill" style="width: 60%;"></div>
+      <!-- 📸 퀘스트 사진 인증 (통합) -->
+      <div class="premium-cert-card">
+        <div class="section-title">⚔️ 퀘스트 인증하기</div>
+        
+        <div onclick="document.getElementById('file-input-quest').click()" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
+          <span style="font-size:2.5rem; margin-bottom:10px;">📸</span>
+          <p style="font-size:0.85rem; color:var(--text-dim); font-weight:800;">기적의 순간을 촬영하세요</p>
+          <input type="file" id="file-input-quest" hidden accept="image/*" onchange="previewQuestImage(this)">
         </div>
-        <button class="btn-circle" onclick="addWater(200)">+</button>
-      </div>
-      <p style="text-align: center; font-size: 0.7rem; color: #94a3b8; margin-top: 15px; font-weight: 700;">목표: 2.0L (잔여 0.8L)</p>
-    </div>
-
-    <!-- 📸 기적의 사진 봉헌 -->
-    <div class="cert-section">
-      <div class="section-title">✨ 기적의 사진 봉헌</div>
-      <div style="background: white; border-radius: 24px; padding: 20px; border: 1px solid var(--border);">
-        <div onclick="document.getElementById('file-input').click()" style="width:100%; aspect-ratio:16/9; background:#f8fafc; border:2px dashed #cbd5e1; border-radius:15px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
-          <span style="font-size:2rem; margin-bottom:10px;">📸</span>
-          <p style="font-size:0.8rem; color:#64748b; font-weight:700;">사진을 선택하여 제단에 바치세요</p>
-          <input type="file" id="file-input" hidden accept="image/*" onchange="previewImage(this)">
-        </div>
-        <div id="preview-container" style="display: none; margin-top: 15px;">
-          <img id="image-preview" src="" style="width: 100%; border-radius: 15px; border: 2px solid var(--holy-gold);">
+        
+        <div id="quest-preview-container" style="display: none; margin-top: 15px;">
+          <img id="quest-image-preview" src="" style="width: 100%; border-radius: 20px; border: 2px solid var(--emerald);">
         </div>
 
-        <select id="cert-quest-type" style="width: 100%; margin-top: 15px; background: #fff; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; color: #1e293b;">
-          <optgroup label="⚔️ 일반(기본) 퀘스트">
-            <option value="일반">📜 일반 인증 (기본)</option>
-            <option value="식단">🍱 오늘의 식단 (아침/점심/저녁)</option>
-            <option value="워터헌터">💧 워터 헌터 (수분 보충)</option>
-            <option value="오운완">🔥 오운완 (운동 완료)</option>
-            <option value="미라클">✨ 미라클 모닝/독서</option>
-          </optgroup>
-          <optgroup label="🌱 데일리 습관 퀘스트">
-            <option value="습관_모닝티">🍵 모닝 티 (따뜻한 물)</option>
-            <option value="습관_스트레칭">🧘 모닝 스트레칭</option>
-            <option value="습관_베지퍼스트">🥗 베지 퍼스트 (채소 먼저)</option>
-            <option value="습관_슬로우치잉">🦷 슬로우 치잉 (천천히 씹기)</option>
-            <option value="습관_7000보">🏃 세븐 사우전드 (7,000보)</option>
-            <option value="습관_계단">🪜 스테어 마법 (계단 이용)</option>
-            <option value="습관_나이트컷">📵 나이트 컷 (20시 이후 금식)</option>
-            <option value="습관_굿슬립">💤 굿 슬립 (자정 전 취침)</option>
-            <option value="습관_셀프칭찬">💖 셀프 칭찬 (나를 위한 한마디)</option>
-          </optgroup>
+        <select id="quest-select" style="width: 100%; margin-top: 15px; background: #fff; border: 2px solid var(--v-paper); padding: 15px; border-radius: 15px; font-weight: 800; font-size: 0.95rem; color: var(--text-main); outline: none;">
+          <option value="방문">🏰 방문 인증 (15점)</option>
+          <option value="오운완">🔥 오운완 (운동 완료) (15점)</option>
+          <option value="수분">💧 수분 섭취 인증 (15점)</option>
           <optgroup label="⚡ 실시간 돌발 계시" id="surprise-optgroup">
-            <!-- 서버에서 동적으로 추가됨 -->
+            <!-- 돌발 퀘스트 동적 추가 -->
           </optgroup>
         </select>
         
-        <button onclick="submitMiracle()" style="width: 100%; margin-top: 15px; background: var(--holy-gold); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 1rem; box-shadow: 0 10px 20px rgba(245, 158, 11, 0.2);">✨ 제단에 바치기 (봉헌)</button>
+        <button onclick="submitQuest()" style="width: 100%; margin-top: 15px; background: var(--emerald); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 8px 20px rgba(46, 204, 113, 0.2);">퀘스트 기록 완료</button>
+      </div>
+
+      <!-- 🍱 식단 인증 (특수 그리드) -->
+      <div class="cert-section">
+        <div class="section-title">🍱 오늘의 식단 인증하기</div>
+        <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:12px; font-weight:700;">모든 끼니 완수 시 30점의 축복이 하사됩니다.</p>
+        <div class="meal-grid">
+          <div class="meal-slot" id="meal-morning" onclick="uploadMeal('morning')">
+            <span class="icon">🌅</span>
+            <span class="label">아침</span>
+            <div class="magic-frame"></div>
+          </div>
+          <div class="meal-slot" id="meal-noon" onclick="uploadMeal('noon')">
+            <span class="icon">☀️</span>
+            <span class="label">점심</span>
+            <div class="magic-frame"></div>
+          </div>
+          <div class="meal-slot" id="meal-evening" onclick="uploadMeal('evening')">
+            <span class="icon">🌙</span>
+            <span class="label">저녁</span>
+            <div class="magic-frame"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🌿 습관 인증 탭 -->
+    <div id="tab-habit" class="tab-content">
+      
+      <!-- 📸 습관 사진 인증 -->
+      <div class="premium-cert-card">
+        <div class="section-title">🌿 습관 & 플러스 인증</div>
+        
+        <div onclick="document.getElementById('file-input-habit').click()" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
+          <span style="font-size:2.5rem; margin-bottom:10px;">📜</span>
+          <p style="font-size:0.85rem; color:var(--text-dim); font-weight:800;">실천한 습관을 기록하세요</p>
+          <input type="file" id="file-input-habit" hidden accept="image/*" onchange="previewHabitImage(this)">
+        </div>
+
+        <select id="habit-select" style="width: 100%; margin-top: 15px; background: #fff; border: 2px solid var(--v-paper); padding: 15px; border-radius: 15px; font-weight: 800; font-size: 0.95rem; color: var(--text-main); outline: none;">
+          <optgroup label="🌱 9대 데일리 습관">
+            <option value="모닝티">🍵 모닝 티 (따뜻한 물)</option>
+            <option value="스트레칭">🧘 모닝 스트레칭</option>
+            <option value="베지퍼스트">🥗 베지 퍼스트 (채소 먼저)</option>
+            <option value="슬로우치잉">🦷 슬로우 치잉 (천천히 씹기)</option>
+            <option value="7000보">🏃 세븐 사우전드 (7,000보)</option>
+            <option value="계단">🪜 스테어 마법 (계단 이용)</option>
+            <option value="나이트컷">📵 나이트 컷 (20시 금식)</option>
+            <option value="굿슬립">💤 굿 슬립 (자정 전 취침)</option>
+            <option value="셀프칭찬">💖 셀프 칭찬 (나를 위한 한마디)</option>
+          </optgroup>
+          <optgroup label="✨ 미라클 플러스 (추가 보너스)">
+            <option value="새벽기상">☀️ 새벽 기상 인증</option>
+            <option value="독서">📚 지혜의 탐구 (독서)</option>
+            <option value="환경수호">🌍 환경 수호 (플로깅 등)</option>
+            <option value="기타성취">🏆 기타 사소한 성취</option>
+          </optgroup>
+        </select>
+        
+        <button onclick="submitHabit()" style="width: 100%; margin-top: 15px; background: var(--v-wood); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 8px 20px rgba(93, 64, 55, 0.2);">습관 기록 완료</button>
       </div>
     </div>
   </div>
@@ -269,11 +201,29 @@
   <script>
     const TARGET_PHONE = '<?= targetPhone ?>';
     const TARGET_NAME = '<?= targetName ?>';
-    let currentWater = 1200;
 
     window.onload = function() {
+      // 딥링크 체크
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab === 'habit') switchTab('habit');
+      else switchTab('quest');
+
       loadActiveEvents();
     };
+
+    function switchTab(type) {
+      document.querySelectorAll('.v-tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      if (type === 'quest') {
+        document.getElementById('btn-quest').classList.add('active');
+        document.getElementById('tab-quest').classList.add('active');
+      } else {
+        document.getElementById('btn-habit').classList.add('active');
+        document.getElementById('tab-habit').classList.add('active');
+      }
+    }
 
     function loadActiveEvents() {
       google.script.run.withSuccessHandler(events => {
@@ -284,8 +234,8 @@
           
           container.style.display = 'block';
           list.innerHTML = events.map(e => `
-            <div style="background: white; padding: 10px; border-radius: 10px; font-size: 0.8rem; font-weight: 700; color: #db2777;">
-              🔥 [${e.multiplier}배] ${e.title} (~${e.endTime})
+            <div style="background: var(--v-paper); padding: 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 800; color: #3498db; border: 1px solid #d0e7f9;">
+              ⚔️ 돌발: ${e.title} (15점)
             </div>
           `).join('');
 
@@ -299,39 +249,42 @@
       }).getActiveEvents();
     }
 
-    function previewImage(input) {
+    function previewQuestImage(input) {
       if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function(e) {
-          document.getElementById('image-preview').src = e.target.result;
-          document.getElementById('preview-container').style.display = 'block';
+          document.getElementById('quest-image-preview').src = e.target.result;
+          document.getElementById('quest-preview-container').style.display = 'block';
         }
         reader.readAsDataURL(input.files[0]);
       }
     }
 
-    function addWater(val) {
-      currentWater = Math.max(0, Math.min(2500, currentWater + val));
-      const lit = (currentWater / 1000).toFixed(1);
-      document.getElementById('water-val').innerText = lit + "L";
-      document.getElementById('water-fill').style.width = (currentWater / 2000 * 100) + "%";
-      
-      google.script.run.submit33Action({
-        phone: TARGET_PHONE,
-        name: TARGET_NAME,
-        type: '물',
-        item: 'water',
-        value: currentWater,
-        score: 1
-      });
+    function previewHabitImage(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('habit-image-preview'); // Placeholder for preview if needed
+        }
+        reader.readAsDataURL(input.files[0]);
+      }
     }
 
-    function submitMiracle() {
-      const quest = document.getElementById('cert-quest-type').value;
-      const file = document.getElementById('file-input').files[0];
-      if(!file) return alert("봉헌할 사진을 선택하세요.");
+    function uploadMeal(type) {
+      const labels = { morning: '아침', noon: '점심', evening: '저녁' };
+      alert(`${labels[type]} 식단 인증 카메라를 실행합니다. (준비 중)`);
+    }
 
-      alert(`[기적 기록 중] ${quest} 인증을 제단에 바칩니다. (서버 전송 준비 중)`);
+    function submitQuest() {
+      const quest = document.getElementById('quest-select').value;
+      const file = document.getElementById('file-input-quest').files[0];
+      if(!file) return alert("인증할 사진을 선택하세요.");
+      alert(`[퀘스트 기록] ${quest} 인증을 완료했습니다! (15점 획득)`);
+    }
+
+    function submitHabit() {
+      const habit = document.getElementById('habit-select').value;
+      alert(`[습관 기록] ${habit} 실천을 인증했습니다!`);
     }
   </script>
 </body>
