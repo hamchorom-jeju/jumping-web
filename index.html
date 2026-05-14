@@ -8,6 +8,29 @@
     <link rel="stylesheet" href="index.css">
     <!-- Icon Library -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="bridge.js"></script>
+    <script>
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            let name = params.get('name');
+            let phone = params.get('phone');
+            
+            // 로컬 스토리지 확인
+            if (!name) name = localStorage.getItem('v44_user_name');
+            if (!phone) phone = localStorage.getItem('v44_user_phone');
+            
+            // 둘 다 없으면 로그인 페이지로 강제 이동
+            if (!name || !phone) {
+                window.location.href = 'login.html';
+            } else {
+                // 정보는 있는데 URL에 없으면 URL에 채워줌 (공유용)
+                if (!params.get('name') || !params.get('phone')) {
+                    const newUrl = window.location.pathname + '?name=' + encodeURIComponent(name) + '&phone=' + encodeURIComponent(phone);
+                    window.history.replaceState({}, '', newUrl);
+                }
+            }
+        })();
+    </script>
 </head>
 <body>
 

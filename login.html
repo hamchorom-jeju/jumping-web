@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GATEWAY - GENIE WORLD</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --v-wood: #5d4037;
+      --v-paper: #f9f6f2;
+      --v-border: #e0dacc;
+      --emerald: #2ecc71;
+      --gold: #d4af37;
+      --text-main: #2c3e50;
+      --text-dim: #7f8c8d;
+    }
+    
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { 
+      font-family: 'Pretendard', sans-serif; background-color: var(--v-paper); 
+      color: var(--text-main); margin: 0; padding: 0; 
+      display: flex; align-items: center; justify-content: center; min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .login-container {
+      width: 90%; max-width: 400px; background: #fff; border-radius: 40px;
+      padding: 40px 30px; box-shadow: 0 20px 50px rgba(93, 64, 55, 0.1);
+      border: 1px solid var(--v-border); text-align: center;
+      animation: zoomIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .logo-area { font-size: 4rem; margin-bottom: 20px; animation: bounce 2s infinite; }
+    
+    h1 { font-size: 1.6rem; font-weight: 900; color: var(--v-wood); margin-bottom: 10px; letter-spacing: -1px; }
+    p { font-size: 0.9rem; color: var(--text-dim); font-weight: 700; margin-bottom: 30px; line-height: 1.5; }
+
+    .input-group { margin-bottom: 15px; text-align: left; }
+    .input-group label { display: block; font-size: 0.75rem; font-weight: 800; color: var(--v-wood); margin-bottom: 8px; margin-left: 5px; }
+    input {
+      width: 100%; padding: 18px; border: 2px solid var(--v-paper); border-radius: 20px;
+      font-size: 1rem; font-weight: 800; outline: none; transition: all 0.3s;
+      background: var(--v-paper); color: var(--v-wood);
+    }
+    input:focus { border-color: var(--gold); background: #fff; box-shadow: 0 0 0 5px rgba(212, 175, 55, 0.1); }
+
+    .start-btn {
+      width: 100%; padding: 20px; background: var(--v-wood); color: #fff;
+      border: none; border-radius: 20px; font-size: 1.2rem; font-weight: 900;
+      cursor: pointer; margin-top: 25px; transition: all 0.3s;
+      box-shadow: 0 10px 20px rgba(93, 64, 55, 0.2);
+    }
+    .start-btn:active { transform: scale(0.95); }
+
+    .footer-link { margin-top: 30px; font-size: 0.75rem; color: var(--text-dim); font-weight: 800; }
+
+    @keyframes zoomIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="logo-area">🏰</div>
+    <h1>지니 월드 입장</h1>
+    <p>노형 빌리지의 신비로운 모험이<br>다시 시작됩니다!</p>
+
+    <div class="input-group">
+      <label>모험가 이름</label>
+      <input type="text" id="user-name" placeholder="성함을 입력해 주세요">
+    </div>
+
+    <div class="input-group">
+      <label>비밀 번호 (전화번호 뒷자리)</label>
+      <input type="tel" id="user-phone" placeholder="010-0000-0000">
+    </div>
+
+    <button class="start-btn" onclick="startAdventure()">모험 시작하기</button>
+
+    <div class="footer-link">© 2024 Nohyung Village / Antigravity</div>
+  </div>
+
+  <script src="bridge.js"></script>
+  <script>
+    window.onload = function() {
+      // 이미 로그인 정보가 있으면 바로 입장
+      const savedName = localStorage.getItem('v44_user_name');
+      const savedPhone = localStorage.getItem('v44_user_phone');
+      if (savedName && savedPhone) {
+        navigateTo('index', { name: savedName, phone: savedPhone });
+      }
+    };
+
+    function startAdventure() {
+      const name = document.getElementById('user-name').value.trim();
+      let phone = document.getElementById('user-phone').value.trim();
+      
+      if (!name || !phone) {
+        alert("이름과 전화번호를 정확히 입력해 주세요!");
+        return;
+      }
+
+      // 전화번호 정규화 (숫자만 추출)
+      phone = phone.replace(/[^0-9]/g, "");
+      if (phone.length < 4) {
+        alert("전화번호를 정확히 입력해 주세요!");
+        return;
+      }
+
+      // 로컬 스토리지에 저장 (기억하기)
+      localStorage.setItem('v44_user_name', name);
+      localStorage.setItem('v44_user_phone', phone);
+
+      // 대시보드로 이동
+      navigateTo('index', { name: name, phone: phone });
+    }
+  </script>
+</body>
+</html>
