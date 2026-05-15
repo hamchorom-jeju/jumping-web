@@ -98,8 +98,8 @@ const Auth = {
     if (!name || !phone) {
       console.warn("🛡️ Auth: No session found. Redirecting to login.html...");
       
-      // [v44.220] 경로가 루트(/)인 경우를 대비해 절대 경로에 가깝게 리다이렉트
-      const loginUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/') + 'login.html';
+      // [v44.222] 경로가 루트(/)인 경우를 대비해 절대 경로로 리다이렉트
+      const loginUrl = window.location.origin + '/login.html';
       console.log("🛡️ Auth: Target redirect URL:", loginUrl);
       window.location.replace(loginUrl);
     }
