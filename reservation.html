@@ -203,6 +203,13 @@
     .res-room { font-size: 0.8rem; color: var(--text-dim); text-align: right; }
 
     .back-btn { background: var(--v-paper); border: none; border-radius: 12px; padding: 10px 15px; font-size: 0.85rem; font-weight: 800; color: var(--v-wood); cursor: pointer; }
+    
+    /* Profile Bar Styles */
+    .v-profile-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #fff; border-bottom: 2px solid var(--v-paper); margin-bottom: 20px; }
+    .v-status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; background: var(--v-paper); border: 1px solid var(--v-border); font-size: 0.8rem; font-weight: 800; color: var(--v-wood); }
+    .v-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #e74c3c; transition: background 0.3s; }
+    .v-logout-btn { background: none; border: none; color: #e74c3c; font-size: 1.2rem; cursor: pointer; display: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; transition: background 0.2s; }
+    .v-logout-btn:active { background: #ffebee; }
   </style>
   <script src="bridge.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -210,8 +217,24 @@
 <body>
   <!-- 🏛️ GLOBAL APP HEADER (Fixed) -->
   <header class="v-global-header">
-      <h1>테라피 예약</h1>
+      <div style="display:flex; justify-content:space-between; align-items:center; width:100%; max-width:500px; margin:0 auto;">
+          <div style="width:40px;"></div>
+          <h1>테라피 예약</h1>
+          <button class="v-logout-btn" id="header-logout-btn" onclick="Auth.logout()" title="마을 퇴장">
+              <i class="fas fa-sign-out-alt"></i>
+          </button>
+      </div>
   </header>
+
+  <div class="v-profile-bar">
+      <div class="v-status-badge" id="user-status-badge">
+          <div class="v-status-dot" id="user-status-dot"></div>
+          <span id="user-status-name">정보 로딩 중...</span>
+      </div>
+      <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700;" id="user-status-phone">
+          NO SESSION
+      </div>
+  </div>
 
   <div class="container">
     <div id="notice-banner">
@@ -315,8 +338,28 @@
   <script>
     let resData = {};
 
+    function renderLoginStatus() {
+      const uName = localStorage.getItem('v44_user_name');
+      const uPhone = localStorage.getItem('v44_user_phone');
+      const badge = document.getElementById('user-status-badge');
+      const dot = document.getElementById('user-status-dot');
+      const nameEl = document.getElementById('user-status-name');
+      const phoneEl = document.getElementById('user-status-phone');
+      const logoutBtn = document.getElementById('header-logout-btn');
+
+      if (uName && uPhone) {
+          badge.style.background = "var(--emerald)";
+          badge.style.color = "white";
+          dot.style.background = "#fff";
+          nameEl.innerText = `${uName}(${uPhone.slice(-4)}) 님 접속중!`;
+          phoneEl.innerText = localStorage.getItem('v44_user_tier') || "🌱 모험가";
+          logoutBtn.style.display = "flex";
+      }
+    }
+
     window.onload = function() {
       Auth.check();
+      renderLoginStatus();
       if (typeof google !== 'undefined' && google.script) {
         refreshSummary();
         setInterval(refreshSummary, 60000);

@@ -13,8 +13,24 @@
 </head>
 <body>
     <header class="v-global-header">
-        <h1>지식창고</h1>
+        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; max-width:500px; margin:0 auto;">
+            <div style="width:40px;"></div>
+            <h1>지식창고</h1>
+            <button class="v-logout-btn" id="header-logout-btn" onclick="Auth.logout()" title="마을 퇴장">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
     </header>
+
+    <div class="v-profile-bar">
+        <div class="v-status-badge" id="user-status-badge">
+            <div class="v-status-dot" id="user-status-dot"></div>
+            <span id="user-status-name">정보 로딩 중...</span>
+        </div>
+        <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700;" id="user-status-phone">
+            NO SESSION
+        </div>
+    </div>
     <div class="wisdom-container">
         <div class="wisdom-icon">📚</div>
         <h2 style="font-weight: 900; margin-bottom: 15px;">이장님의 건강 비법서</h2>
@@ -46,8 +62,28 @@
     </nav>
     <script src="bridge.js"></script>
     <script>
+        function renderLoginStatus() {
+            const uName = localStorage.getItem('v44_user_name');
+            const uPhone = localStorage.getItem('v44_user_phone');
+            const badge = document.getElementById('user-status-badge');
+            const dot = document.getElementById('user-status-dot');
+            const nameEl = document.getElementById('user-status-name');
+            const phoneEl = document.getElementById('user-status-phone');
+            const logoutBtn = document.getElementById('header-logout-btn');
+
+            if (uName && uPhone) {
+                badge.style.background = "var(--emerald)";
+                badge.style.color = "white";
+                dot.style.background = "#fff";
+                nameEl.innerText = `${uName}(${uPhone.slice(-4)}) 님 접속중!`;
+                phoneEl.innerText = localStorage.getItem('v44_user_tier') || "🌱 모험가";
+                logoutBtn.style.display = "flex";
+            }
+        }
+
         window.onload = function() {
             Auth.check();
+            renderLoginStatus();
         };
     </script>
 </body>
