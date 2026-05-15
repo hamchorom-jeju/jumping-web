@@ -139,6 +139,27 @@
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+    /* 폴라로이드 갤러리 (12구) */
+    .polaroid-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 10px; margin-top: 15px; }
+    .polaroid-card { background: #fff; padding: 6px 6px 15px 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); position: relative; cursor: pointer; transition: transform 0.2s; }
+    .polaroid-card:hover { transform: scale(1.05) !important; z-index: 10; }
+    .polaroid-img-wrapper { width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #f0f0f0; }
+    .polaroid-img { width: 100%; height: 100%; object-fit: cover; }
+    .polaroid-author { font-family: 'Pretendard', sans-serif; font-weight: 900; font-size: 0.65rem; color: var(--v-wood); text-align: center; margin-top: 8px; }
+    .polaroid-badge { position: absolute; top: -8px; left: -8px; background: var(--v-wood); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 2; }
+    
+    /* 모달 뷰어 & 리액션 */
+    .polaroid-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
+    .polaroid-modal-content { background: #fff; padding: 15px 15px 25px 15px; border-radius: 5px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
+    .modal-close-btn { position: absolute; top: -40px; right: 0; color: white; font-size: 2rem; cursor: pointer; font-weight: 900; background: none; border: none; outline: none; }
+    .modal-img { width: 100%; border-radius: 3px; margin-bottom: 15px; }
+    .modal-text { font-size: 0.95rem; font-weight: 800; color: var(--text-main); margin-bottom: 5px; }
+    .modal-meta { font-size: 0.75rem; color: var(--text-dim); display: flex; justify-content: space-between; font-weight: 700; }
+    .reaction-bar { display: flex; gap: 8px; margin-top: 15px; border-top: 1px dashed var(--v-border); padding-top: 15px; }
+    .reaction-btn { flex: 1; padding: 8px; background: var(--v-paper); border: 1px solid var(--v-border); border-radius: 12px; font-size: 0.8rem; font-weight: 800; color: var(--text-main); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all 0.2s; }
+    .reaction-btn:active { transform: scale(0.95); }
+    .reaction-btn.active { background: var(--emerald); color: white; border-color: var(--emerald); box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3); }
+
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
@@ -262,10 +283,28 @@
 
     <!-- 피드 -->
     <section class="feed-section">
-      <div class="section-title">✨ 지금 마을의 기적들</div>
+      <div class="section-title">✨ 마을의 기적 갤러리</div>
       <div id="feed-loader" class="loader"></div>
       <div id="archive-feed"></div>
     </section>
+  </div>
+
+  <!-- 폴라로이드 상세 모달 -->
+  <div id="polaroid-modal" class="polaroid-modal">
+    <div class="polaroid-modal-content">
+      <button class="modal-close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      <img id="modal-img" src="" class="modal-img">
+      <div class="modal-text" id="modal-text"></div>
+      <div class="modal-meta">
+        <span id="modal-author"></span>
+        <span id="modal-time"></span>
+      </div>
+      <div class="reaction-bar">
+        <button class="reaction-btn" id="btn-react-cool" onclick="toggleReaction('cool')"><span>멋져요 😎</span><span id="cnt-cool">0</span></button>
+        <button class="reaction-btn" id="btn-react-best" onclick="toggleReaction('best')"><span>최고 👍</span><span id="cnt-best">0</span></button>
+        <button class="reaction-btn" id="btn-react-cheer" onclick="toggleReaction('cheer')"><span>화이팅 🔥</span><span id="cnt-cheer">0</span></button>
+      </div>
+    </div>
   </div>
 
   <nav class="v-nav">
@@ -416,31 +455,32 @@
               feed.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:0.8rem; margin-top:20px;">첫 번째 기적의 주인공이 되어보세요!</p>';
               return;
             }
-            feed.innerHTML = data.map(item => {
+            window.archiveData = data; // 모달용 데이터 저장
+            
+            let html = '<div class="polaroid-grid">';
+            data.forEach((item, index) => {
               const photoId = (item.photoId || "").trim();
-              const photoUrl = photoId ? `https://lh3.googleusercontent.com/d/${photoId}` : null;
-              return `
-              <div class="feed-card">
-                <div class="feed-header">
-                  <div class="feed-avatar">${item.name ? item.name.charAt(0) : '?'}</div>
-                  <div class="feed-user-info">
-                    <div class="feed-user-name">${item.name || '무명 모험가'}</div>
-                    <div class="feed-time">${item.date} ${item.time}</div>
+              const photoUrl = photoId ? `https://lh3.googleusercontent.com/d/${photoId}` : 'https://via.placeholder.com/150?text=No+Photo';
+              
+              let icon = "✨";
+              if (item.type.includes("식단")) icon = "🍱";
+              else if (item.type.includes("퀘스트")) icon = "⚔️";
+              else if (item.type.includes("습관")) icon = "🌿";
+              
+              const rotation = Math.floor(Math.random() * 11) - 5; // -5도 ~ 5도 랜덤 회전
+              
+              html += `
+                <div class="polaroid-card" style="transform: rotate(${rotation}deg);" onclick="openModal(${index})">
+                  <div class="polaroid-badge">${icon}</div>
+                  <div class="polaroid-img-wrapper">
+                    <img src="${photoUrl}" class="polaroid-img" loading="lazy" alt="썸네일">
                   </div>
-                  <div class="feed-badge">${item.type}</div>
+                  <div class="polaroid-author">${item.name || '모험가'}</div>
                 </div>
-                ${photoUrl ? `
-                  <div class="feed-img-box" style="background:#eee; min-height:200px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                    <img src="${photoUrl}" class="feed-img" style="display:block; width:100%; height:auto;" alt="인증사진">
-                    <a href="${photoUrl}" target="_blank" style="font-size:0.6rem; color:var(--text-dim); margin-top:5px; text-decoration:none;">[사진 원본 링크]</a>
-                  </div>
-                ` : ''}
-                <div class="feed-content">
-                  <span style="font-size:0.75rem; color:var(--emerald); font-weight:900;">💎 ${item.item}</span>
-                  <p class="feed-text">${item.comment || '말없이 실천 중인 멋진 모험가입니다!'}</p>
-                </div>
-              </div>
-            `}).join('');
+              `;
+            });
+            html += '</div>';
+            feed.innerHTML = html;
           } catch (err) {
             feed.innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:0.8rem;">렌더링 오류</p>`;
           }
@@ -450,6 +490,73 @@
           feed.innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:0.8rem;">서버 통신 실패</p>`;
         })
         .getArchiveFeed();
+    }
+
+    let currentModalIndex = -1;
+
+    function openModal(index) {
+      const item = window.archiveData[index];
+      if (!item) return;
+      currentModalIndex = index;
+      
+      const photoId = (item.photoId || "").trim();
+      const photoUrl = photoId ? `https://lh3.googleusercontent.com/d/${photoId}` : '';
+      
+      document.getElementById('modal-img').src = photoUrl;
+      document.getElementById('modal-text').innerText = `[${item.item}] ${item.comment || '멋진 모험가입니다!'}`;
+      document.getElementById('modal-author').innerText = item.name;
+      document.getElementById('modal-time').innerText = `${item.date} ${item.time}`;
+      
+      const reactions = item.reactions || { cool: [], best: [], cheer: [] };
+      updateReactionBtn('cool', '멋져요 😎', reactions.cool || []);
+      updateReactionBtn('best', '최고 👍', reactions.best || []);
+      updateReactionBtn('cheer', '화이팅 🔥', reactions.cheer || []);
+      
+      document.getElementById('polaroid-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('polaroid-modal').style.display = 'none';
+    }
+
+    function updateReactionBtn(type, label, list) {
+      const btn = document.getElementById(`btn-react-${type}`);
+      const cntLabel = document.getElementById(`cnt-${type}`);
+      const count = list.length;
+      const myPhone = (TARGET_PHONE || '').replace(/[^0-9]/g, "");
+      const iClicked = myPhone && list.includes(myPhone);
+      
+      cntLabel.innerText = count;
+      if (iClicked) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+
+    function toggleReaction(reactionType) {
+      if (!TARGET_PHONE) return alert("로그인이 필요합니다.");
+      const myPhone = TARGET_PHONE.replace(/[^0-9]/g, "");
+      if (!myPhone) return alert("세션 정보가 올바르지 않습니다.");
+      
+      const item = window.archiveData[currentModalIndex];
+      if (!item || !item.rowIdx) return;
+      
+      if (!item.reactions) item.reactions = { cool: [], best: [], cheer: [] };
+      const list = item.reactions[reactionType] || [];
+      const idx = list.indexOf(myPhone);
+      
+      if (idx > -1) list.splice(idx, 1);
+      else list.push(myPhone);
+      
+      item.reactions[reactionType] = list;
+      updateReactionBtn(reactionType, getReactionLabel(reactionType), list);
+      
+      google.script.run.updateReaction(item.rowIdx, reactionType, myPhone);
+    }
+
+    function getReactionLabel(type) {
+      if (type === 'cool') return '멋져요 😎';
+      if (type === 'best') return '최고 👍';
+      if (type === 'cheer') return '화이팅 🔥';
+      return '';
     }
 
     function submitEntry(type) {

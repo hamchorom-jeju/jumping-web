@@ -12,28 +12,78 @@ function getArchiveFeed() {
     var lastRow = sheet.getLastRow();
     if (lastRow < 2) return []; 
     
-    var startRow = Math.max(2, lastRow - 19);
+    var startRow = Math.max(2, lastRow - 30); // 12개 추출을 위해 넉넉히 가져옴
     var numRows = lastRow - startRow + 1;
-    var data = sheet.getRange(startRow, 1, numRows, 9).getDisplayValues();
+    var data = sheet.getRange(startRow, 1, numRows, 10).getDisplayValues(); // 10열(리액션)까지
     
-    return data.reverse().map(function(row) {
-      return {
+    var result = [];
+    var visualTypes = ["퀘스트", "습관", "식단"];
+    
+    // 역순(최신순)으로 탐색하며 최대 12개만 추출
+    for (var i = data.length - 1; i >= 0; i--) {
+      var row = data[i];
+      var type = String(row[4] || "");
+      if (visualTypes.indexOf(type) === -1) continue; // 인바디 등 제외
+      
+      var reactions = { cool: [], best: [], cheer: [] };
+      try {
+        if (row[9]) reactions = JSON.parse(row[9]);
+      } catch(e) {}
+      
+      result.push({
+        rowIdx: startRow + i,
         date: String(row[0] || ""),
         time: String(row[1] || ""),
         name: String(row[2] || ""),
-        type: String(row[4] || ""),
+        type: type,
         item: String(row[5] || ""),
         comment: String(row[6] || ""),
         photoId: String(row[7] || ""),
-        score: row[8]
-      };
-    }).filter(function(item) {
-      // [v44.183] 인바디는 개인 정보 보호를 위해 피드에서 제외 (퀘스트, 습관, 식단만 표시)
-      var visualTypes = ["퀘스트", "습관", "식단"];
-      return visualTypes.indexOf(item.type) > -1;
-    });
+        score: row[8],
+        reactions: reactions
+      });
+      if (result.length >= 12) break; // 최대 12개 제한
+    }
+    return result;
   } catch (e) {
     return { error: "피드 로딩 실패: " + e.toString() };
+  }
+}
+
+/**
+ * [아카이브] 진행 중인 돌발 퀘스트 가져오기
+ */
+/**
+ * [아카이브] 폴라로이드 리액션 업데이트
+ */
+function updateReaction(rowIdx, reactionType, phone) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("아카이브");
+    if (!sheet) return { success: false };
+    
+    var lock = LockService.getScriptLock();
+    lock.waitLock(5000);
+    
+    var reactionJson = String(sheet.getRange(rowIdx, 10).getValue() || "{}");
+    var reactions = { cool: [], best: [], cheer: [] };
+    try { reactions = JSON.parse(reactionJson); } catch(e) {}
+    
+    if (!reactions[reactionType]) reactions[reactionType] = [];
+    
+    var list = reactions[reactionType];
+    var idx = list.indexOf(phone);
+    if (idx > -1) {
+      list.splice(idx, 1);
+    } else {
+      list.push(phone);
+    }
+    
+    sheet.getRange(rowIdx, 10).setValue(JSON.stringify(reactions));
+    lock.releaseLock();
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.toString() };
   }
 }
 
