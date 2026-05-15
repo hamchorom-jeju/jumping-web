@@ -356,21 +356,7 @@
       loadActiveEvents();
     };
 
-    /**
-     * [v44.193] 로딩 표시 제어
-     */
-    function showLoading(msg) {
-      const overlay = document.getElementById('v-loading');
-      const msgEl = document.getElementById('v-loading-msg');
-      if (overlay && msgEl) {
-        msgEl.innerText = msg || "기록을 전송하고 있습니다...";
-        overlay.style.display = 'flex';
-      }
-    }
-    function hideLoading() {
-      const overlay = document.getElementById('v-loading');
-      if (overlay) overlay.style.display = 'none';
-    }
+
 
     /**
      * [v44.190] 로그인 상태를 시각적으로 렌더링합니다.
