@@ -136,13 +136,37 @@ body {
 }
 
 .avatar-v43 {
-    width: 70px; height: 70px;
+    width: 80px; height: 80px;
     margin: 0 auto 10px;
     background: #fff;
     border-radius: 50%;
     border: 3px solid var(--perf);
     display: flex; align-items: center; justify-content: center; font-size: 2.2rem;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
 }
+
+/* [v44.228] Badge Sprite System */
+.v-badge-sprite {
+    width: 100%;
+    height: 100%;
+    background-image: url('badge-collection.png');
+    background-repeat: no-repeat;
+    background-size: 400% 200%; /* 4 columns, 2 rows */
+    transition: background-position 0.5s ease;
+}
+
+/* Position Mapping */
+.v-badge-seed { background-position: 0% 12%; }
+.v-badge-sprout { background-position: 33.3% 12%; }
+.v-badge-tree { background-position: 66.6% 12%; }
+.v-badge-flower { background-position: 100% 12%; }
+
+/* Row 2 (Adjusted for 3 icons) */
+.v-badge-fairy { background-size: 300% 200%; background-position: 0% 90%; }
+.v-badge-legend { background-size: 300% 200%; background-position: 50% 90%; }
+.v-badge-guardian { background-size: 300% 200%; background-position: 100% 90%; }
 
 .total-score-label { font-size: 0.65rem; font-weight: 800; color: var(--text-dim); }
 .total-score-val { font-size: 1.6rem; font-weight: 900; display: block; margin: 2px 0; color: var(--v-wood); }

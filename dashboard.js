@@ -314,14 +314,19 @@ const Village = {
         document.getElementById('current-rank').innerText = this.user.rank;
         document.getElementById('water-val').innerText = `${this.user.water}L / 2.0L`;
 
-        // [v44.226] 티어 이름에서 이모지(아바타) 추출하여 적용
-        const avatarEl = document.getElementById('user-avatar');
-        if (avatarEl && this.user.tier) {
-            // 이모지 정규식 (다양한 이모지 및 조합 대응)
-            const emojiMatch = this.user.tier.match(/([\uD800-\uDBFF][\uDC00-\uDFFF]|[\u2600-\u27BF]|[\u2300-\u23FF]|[\u2B50]|[\u200D])/g);
-            if (emojiMatch) {
-                avatarEl.innerText = emojiMatch.join('');
-            }
+        // [v44.228] 3D 성장배지 스프라이트 업데이트
+        const badgeEl = document.getElementById('user-badge-sprite');
+        if (badgeEl && this.user.tier) {
+            badgeEl.className = 'v-badge-sprite'; // 초기화
+            
+            const tier = this.user.tier;
+            if (tier.includes("씨앗")) badgeEl.classList.add('v-badge-seed');
+            else if (tier.includes("새싹")) badgeEl.classList.add('v-badge-sprout');
+            else if (tier.includes("나무")) badgeEl.classList.add('v-badge-tree');
+            else if (tier.includes("꽃")) badgeEl.classList.add('v-badge-flower');
+            else if (tier.includes("요정")) badgeEl.classList.add('v-badge-fairy');
+            else if (tier.includes("점퍼")) badgeEl.classList.add('v-badge-legend');
+            else if (tier.includes("수호신")) badgeEl.classList.add('v-badge-guardian');
         }
         
         const view = this.perspective;
