@@ -67,6 +67,22 @@ const Village = {
         bonus: { title: "보너스 퀘스트", icon: "✨", guide: "돌발 미션을 수행하시겠어요?\n아카이브로 이동해 인증을 남기실 수 있습니다.\n아카이브 인증시 15점이 추가됩니다.", btn: "인증하러 가기", link: "miracle.html?cat=bonus", single: false }
     },
 
+    /**
+     * [v44.193] 로딩 표시 제어
+     */
+    showLoading(msg) {
+        const overlay = document.getElementById('v-loading');
+        const msgEl = document.getElementById('v-loading-msg');
+        if (overlay && msgEl) {
+            msgEl.innerText = msg || "기록을 동기화 중...";
+            overlay.style.display = 'flex';
+        }
+    },
+    hideLoading() {
+        const overlay = document.getElementById('v-loading');
+        if (overlay) overlay.style.display = 'none';
+    },
+
     init() {
         console.log("v44.146 Real Data Sync Initialized.");
         this.loadRealData();
@@ -83,19 +99,17 @@ const Village = {
         // [v44.169] URL에 정보가 없으면 브라우저 저장소(localStorage)에서 복원 시도
         if (!phone) {
             phone = (localStorage.getItem('v44_user_phone') || '').trim();
-            if (phone) {
-                console.log("v44.169 Session Restored from Storage:", phone);
-            }
         }
         
-        if (!phone) {
-            console.warn("v44.169 No user identity found. Redirecting to login.");
-            return;
-        }
+        if (!phone) return;
+
+        // [v44.193] 로딩 시작
+        this.showLoading("📜 마을 기록을 불러오고 있습니다...");
 
         if (typeof google !== 'undefined' && google.script && google.script.run) {
             google.script.run
                 .withSuccessHandler(res => {
+                    this.hideLoading(); // 로딩 종료
                     if (res && res.success) {
                         this.user.name = res.name;
                         this.user.tier = res.tier;
@@ -105,18 +119,14 @@ const Village = {
                         this.user.rank = res.rank;
                         if (res.stats) {
                             this.user.stats = res.stats;
-                            // [v44.167] 서버에서 보내준 항목별 정밀 목표치(3:4:3) 이식
                             if (res.stats.targets) this.user.max = res.stats.targets.items;
                         }
                         this.renderAll();
                         this.updateEvolution();
-
-                        // [v44.170] 오늘 첫 로그인 시 축복 알림 하사
-                        if (res.isFirstLoginToday) {
-                            this.showLoginReward();
-                        }
+                        if (res.isFirstLoginToday) this.showLoginReward();
                     }
                 })
+                .withFailureHandler(() => this.hideLoading())
                 .getUserDashboardData({ phone: phone });
         }
     },
@@ -210,27 +220,23 @@ const Village = {
             habit.done = true;
             const points = habit.base + (withAuth ? 5 : 0);
             
-            // [v44.186] 대시보드 체크 기록을 서버(활동기록 시트)에 영구 저장
             if (typeof google !== 'undefined' && google.script && google.script.run) {
                 const params = new URLSearchParams(window.location.search);
                 let phone = (params.get('phone') || '').trim();
                 if (!phone) phone = (localStorage.getItem('v44_user_phone') || '').trim();
 
+                this.showLoading("🌿 습관 수호 기록 중...");
                 google.script.run
                     .withSuccessHandler(() => {
+                        this.hideLoading();
                         console.log(`[v44.186] Habit ${id} recorded successfully.`);
-                        // 실시간 점수 동기화
                         this.loadRealData();
                     })
+                    .withFailureHandler(() => this.hideLoading())
                     .recordActivityLog({
-                        phone: phone,
-                        name: this.user.name,
-                        type: "습관",
-                        item: habit.title,
-                        score: points
+                        phone: phone, name: this.user.name, type: "습관", item: habit.title, score: points
                     });
             } else {
-                // 오프라인 모드 대응 (로컬 UI 업데이트)
                 this.user.totalScore += points;
                 this.user.stats.weekly.def += points;
                 this.renderAll();
@@ -248,16 +254,18 @@ const Village = {
         if (!phone) phone = (localStorage.getItem('v44_user_phone') || '').trim();
 
         if (typeof google !== 'undefined' && google.script && google.script.run) {
+            this.showLoading("🏡 클럽 기록을 가져오고 있습니다...");
             google.script.run
                 .withSuccessHandler(res => {
+                    this.hideLoading();
                     if (res && res.success) {
                         alert(`🏡 [클럽 동기화 완료!]\n총 ${res.points} EXP가 반영되었습니다.\n(방문보너스: 15 + 운동타임: ${res.timePoints})`);
-                        // 실시간 반영을 위해 데이터 재로드
                         this.loadRealData();
                     } else {
                         alert(`❌ 동기화 실패: ${res.error}`);
                     }
                 })
+                .withFailureHandler(() => this.hideLoading())
                 .syncClubRecord({ phone: phone });
         }
     },

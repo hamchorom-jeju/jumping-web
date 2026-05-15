@@ -87,14 +87,57 @@
     .v-nav-item img { width: 22px !important; height: 22px !important; object-fit: contain; }
     .v-nav-item.active { color: var(--gold); }
 
-    /* [v44.183] 로그아웃 버튼 스타일 */
+    /* [v44.190] 프로필 바 및 로그아웃 버튼 스타일 */
+    .v-profile-bar {
+      background: var(--v-paper);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--v-border);
+      animation: slideUp 0.5s ease-out;
+    }
+    .v-status-badge {
+      display: flex;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--v-wood);
+    }
+    .v-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--emerald);
+      margin-right: 8px;
+      box-shadow: 0 0 10px var(--emerald);
+    }
+    .v-status-dot.offline {
+      background: var(--text-dim);
+      box-shadow: none;
+    }
     .v-logout-btn {
       background: rgba(93, 64, 55, 0.05); border: 1px solid var(--v-border);
-      color: var(--v-wood); width: 40px; height: 40px; border-radius: 12px;
+      color: var(--v-wood); width: 36px; height: 36px; border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; transition: all 0.2s;
     }
     .v-logout-btn:active { transform: scale(0.9); background: rgba(93, 64, 55, 0.1); }
+
+    /* [v44.193] 로딩 오버레이 스타일 */
+    .v-loading-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(5px);
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 10000; animation: fadeIn 0.3s;
+    }
+    .v-loading-spinner {
+      width: 50px; height: 50px; border: 5px solid var(--v-paper);
+      border-top: 5px solid var(--gold); border-radius: 50%;
+      animation: spin 1s linear infinite; margin-bottom: 15px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   </style>
@@ -104,10 +147,28 @@
   <header class="v-global-header">
     <div style="display:flex; justify-content:space-between; align-items:center; width:100%; max-width:500px; margin:0 auto;">
       <div style="width:40px;"></div>
-      <h1>모험가의 기록소</h1>
-      <button class="v-logout-btn" onclick="Auth.logout()"><i class="fas fa-sign-out-alt"></i></button>
+      <h1 style="font-size:1.2rem; font-weight:900;">⚔️ 모험가의 기록소</h1>
+      <button class="v-logout-btn" id="header-logout-btn" onclick="Auth.logout()" title="마을 퇴장">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
     </div>
   </header>
+
+  <div class="v-profile-bar">
+    <div class="v-status-badge" id="user-status-badge">
+      <div class="v-status-dot" id="user-status-dot"></div>
+      <span id="user-status-name">정보 로딩 중...</span>
+    </div>
+    <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700;" id="user-status-phone">
+      NO SESSION
+    </div>
+  </div>
+
+  <!-- [v44.193] 로딩 오버레이 -->
+  <div id="v-loading" class="v-loading-overlay">
+    <div class="v-loading-spinner"></div>
+    <div id="v-loading-msg" style="font-weight: 800; color: var(--v-wood); font-size: 0.9rem;">마을의 기록을 동기화 중...</div>
+  </div>
 
   <div class="container">
     <div class="v-tabs">
@@ -128,7 +189,7 @@
         <div id="quest-preview-box" style="display: none; margin-top: 5px;">
           <div style="position: relative;">
             <img id="quest-preview-img" src="" style="width: 100%; border-radius: 20px; border: 2px solid var(--emerald); display: block;">
-            <div onclick="document.getElementById('file-input-quest').click()" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 10px; font-size: 0.75rem; font-weight: 800; backdrop-filter: blur(5px);">다시 촬영</div>
+            <div onclick="resetPreview('quest')" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 10px; font-size: 0.75rem; font-weight: 800; backdrop-filter: blur(5px); cursor:pointer;">다시 촬영</div>
           </div>
         </div>
         
@@ -173,7 +234,7 @@
         <div id="habit-preview-box" style="display: none; margin-top: 5px;">
           <div style="position: relative;">
             <img id="habit-preview-img" src="" style="width: 100%; border-radius: 20px; border: 2px solid var(--v-wood); display: block;">
-            <div onclick="document.getElementById('file-input-habit').click()" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 10px; font-size: 0.75rem; font-weight: 800; backdrop-filter: blur(5px);">다시 촬영</div>
+            <div onclick="resetPreview('habit')" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 10px; font-size: 0.75rem; font-weight: 800; backdrop-filter: blur(5px); cursor:pointer;">다시 촬영</div>
           </div>
         </div>
         
@@ -230,14 +291,60 @@
     if (TARGET_NAME.indexOf('<?=') > -1) TARGET_NAME = '';
 
     window.onload = function() {
+      // [v44.193] 최우선 순위: localStorage에서 신원 강제 복구
+      TARGET_PHONE = (localStorage.getItem('v44_user_phone') || '').trim();
+      TARGET_NAME = (localStorage.getItem('v44_user_name') || '').trim();
+
       // [v44.183] 글로벌 인증 결계 가동
       Auth.check();
+      
+      // [v44.190] 로그인 상태 UI 업데이트 (복구된 데이터로)
+      renderLoginStatus();
       
       const tab = urlParams.get('tab') === 'habit' ? 'habit' : 'quest';
       switchTab(tab);
       loadArchiveFeed();
       loadActiveEvents();
     };
+
+    /**
+     * [v44.193] 로딩 표시 제어
+     */
+    function showLoading(msg) {
+      const overlay = document.getElementById('v-loading');
+      const msgEl = document.getElementById('v-loading-msg');
+      if (overlay && msgEl) {
+        msgEl.innerText = msg || "기록을 전송하고 있습니다...";
+        overlay.style.display = 'flex';
+      }
+    }
+    function hideLoading() {
+      const overlay = document.getElementById('v-loading');
+      if (overlay) overlay.style.display = 'none';
+    }
+
+    /**
+     * [v44.190] 로그인 상태를 시각적으로 렌더링합니다.
+     */
+    function renderLoginStatus() {
+      const nameEl = document.getElementById('user-status-name');
+      const phoneEl = document.getElementById('user-status-phone');
+      const dotEl = document.getElementById('user-status-dot');
+      const logoutBtn = document.getElementById('header-logout-btn');
+
+      if (TARGET_NAME && TARGET_PHONE) {
+        nameEl.innerText = `${TARGET_NAME} 모험가님 접속 중`;
+        phoneEl.innerText = TARGET_PHONE;
+        dotEl.classList.remove('offline');
+        logoutBtn.style.display = 'flex';
+      } else {
+        nameEl.innerText = "로그인이 필요합니다";
+        nameEl.style.color = "var(--v-wood)";
+        phoneEl.innerText = "SESSION REQUIRED";
+        dotEl.classList.add('offline');
+        logoutBtn.style.display = 'none'; // 로그인 안된 경우 퇴장 버튼 숨김
+      }
+    }
 
     function switchTab(type) {
       document.querySelectorAll('.v-tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -254,15 +361,36 @@
           document.getElementById(type + '-preview-box').style.display = 'block';
           const placeholder = document.getElementById(type + '-upload-placeholder');
           if (placeholder) placeholder.style.display = 'none';
+          
+          // [v44.194] 식단 인증 시 아래 버튼 섹션 숨김 유지
+          if (type === 'quest' && document.getElementById('quest-select').value === '식단') {
+            const certSec = document.querySelector('.cert-section');
+            if (certSec) certSec.style.display = 'none';
+          }
         };
         reader.readAsDataURL(input.files[0]);
       }
+    }
+
+    function resetPreview(type) {
+      document.getElementById(type + '-preview-box').style.display = 'none';
+      document.getElementById(type + '-upload-placeholder').style.display = 'flex';
+      document.getElementById('file-input-' + type).value = "";
+      
+      // [v44.194] 숨겼던 식단 섹션 다시 표시
+      const certSec = document.querySelector('.cert-section');
+      if (certSec) certSec.style.display = 'block';
     }
 
     function quickMeal(mealType) {
       const mealCategory = "식단";
       const commentField = document.getElementById('quest-comment');
       const selectField = document.getElementById('quest-select');
+      
+      // [v44.194] 식단 섹션 숨김 (집중도 향상)
+      const certSec = document.querySelector('.cert-section');
+      if (certSec) certSec.style.display = 'none';
+
       if (!Array.from(selectField.options).some(opt => opt.value === mealCategory)) {
         const opt = document.createElement('option');
         opt.value = mealCategory;
@@ -288,7 +416,10 @@
               feed.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:0.8rem; margin-top:20px;">첫 번째 기적의 주인공이 되어보세요!</p>';
               return;
             }
-            feed.innerHTML = data.map(item => `
+            feed.innerHTML = data.map(item => {
+              const photoId = (item.photoId || "").trim();
+              const photoUrl = photoId ? `https://lh3.googleusercontent.com/d/${photoId}` : null;
+              return `
               <div class="feed-card">
                 <div class="feed-header">
                   <div class="feed-avatar">${item.name ? item.name.charAt(0) : '?'}</div>
@@ -298,13 +429,18 @@
                   </div>
                   <div class="feed-badge">${item.type}</div>
                 </div>
-                ${item.photoId ? `<div class="feed-img-box"><img src="https://drive.google.com/uc?id=${item.photoId}" class="feed-img" onerror="this.src='https://via.placeholder.com/400x300?text=이미지 로딩 실패'"></div>` : ''}
+                ${photoUrl ? `
+                  <div class="feed-img-box" style="background:#eee; min-height:200px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <img src="${photoUrl}" class="feed-img" style="display:block; width:100%; height:auto;" alt="인증사진">
+                    <a href="${photoUrl}" target="_blank" style="font-size:0.6rem; color:var(--text-dim); margin-top:5px; text-decoration:none;">[사진 원본 링크]</a>
+                  </div>
+                ` : ''}
                 <div class="feed-content">
                   <span style="font-size:0.75rem; color:var(--emerald); font-weight:900;">💎 ${item.item}</span>
                   <p class="feed-text">${item.comment || '말없이 실천 중인 멋진 모험가입니다!'}</p>
                 </div>
               </div>
-            `).join('');
+            `}).join('');
           } catch (err) {
             feed.innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:0.8rem;">렌더링 오류</p>`;
           }
@@ -358,23 +494,54 @@
             item: item, comment: comment, image: compressedBase64, score: score
           };
 
-             .withSuccessHandler(res => {
-               btn.disabled = false;
-               btn.innerText = type === 'quest' ? "퀘스트 기록 완료" : "습관 기록 완료";
-               if (res && res.success) {
-                 if (res.warning) {
-                   alert(`⚠️ 기록은 되었으나 사진 저장에 실패했습니다.\n${res.warning}`);
-                 } else {
-                   alert(`✅ 인증 성공!\n[${finalType}] +${score}점이 적립되었습니다.`);
-                 }
-                 document.getElementById(type + '-comment').value = "";
-                 document.getElementById(type + '-preview-box').style.display = 'none';
-                 document.getElementById(type + '-upload-placeholder').style.display = 'flex';
-                 fileInput.value = "";
-                 loadArchiveFeed();
-               } else { alert("🚨 저장 실패: " + (res ? res.error : "서버 응답 없음")); }
-             })
+          // [v44.196] 전송 전 데이터 무결성 검사
+          console.log("[v44.196] 전송 시도 - 이미지 길이:", compressedBase64 ? compressedBase64.length : 0);
+          if (!compressedBase64 || compressedBase64.length < 100) {
+            hideLoading();
+            btn.disabled = false;
+            return alert("🚨 사진 데이터가 생성되지 않았습니다. 다시 촬영해 주세요.");
+          }
+
+          // [v44.193] 로딩 시작 및 google.script.run 명시
+          showLoading("⚔️ 퀘스트를 전송하고 있습니다...");
+          google.script.run
+            .withSuccessHandler(res => {
+              hideLoading();
+              btn.disabled = false;
+              btn.innerText = type === 'quest' ? "퀘스트 기록 완료" : "습관 기록 완료";
+              if (res && res.success) {
+                const sVer = res.serverVersion || "old";
+                const imgLenInfo = res.receivedImageLen !== undefined ? `\n(수신: ${res.receivedImageLen.toLocaleString()}자)` : "";
+                const debugInfo = res.debugInfo ? ` / 상태: ${res.debugInfo}` : "";
+                const photoIdInfo = res.photoId ? `\n[사진 ID: ${res.photoId.substring(0,10)}...]` : "";
+                
+                if (res.warning) {
+                  // [v44.194] 권한 문제에 대한 상세 가이드 포함
+                  alert(`⚠️ [${sVer}] 기록은 되었으나 사진 저장에 실패했습니다.${imgLenInfo}${debugInfo}\n\n원인: ${res.warning}\n\n💡 해결방법: 구글 스크립트 에디터에서 [배포] -> [새 배포]를 통해 권한 승인을 다시 완료해 주세요! (Vercel 연동 시 필수)`);
+                } else {
+                  alert(`✅ [${sVer}] 인증 성공!${imgLenInfo}${debugInfo}${photoIdInfo}\n[${finalType}] +${score}점이 적립되었습니다.`);
+                }
+                document.getElementById(type + '-comment').value = "";
+                document.getElementById(type + '-preview-box').style.display = 'none';
+                document.getElementById(type + '-upload-placeholder').style.display = 'flex';
+                fileInput.value = "";
+                
+                // [v44.194] 숨겼던 식단 섹션 복구
+                const certSec = document.querySelector('.cert-section');
+                if (certSec) certSec.style.display = 'block';
+
+                loadArchiveFeed();
+              } else { 
+                const errMsg = res ? res.error : "서버 응답 없음";
+                if (errMsg.indexOf("Permission") > -1) {
+                  alert(`🚨 권한 오류 발생!\n\n${errMsg}\n\n💡 해결방법: 구글 스크립트 에디터에서 [새 배포]를 눌러 '액세스 권한' 승인을 다시 확인해 주세요.`);
+                } else {
+                  alert("🚨 저장 실패: " + errMsg);
+                }
+              }
+            })
             .withFailureHandler(err => {
+              hideLoading();
               btn.disabled = false;
               btn.innerText = "기록 완료";
               alert("🚨 서버 통신 오류 (용량이 너무 크거나 네트워크 불안정)");

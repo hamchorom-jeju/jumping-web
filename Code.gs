@@ -14,12 +14,12 @@ function getArchiveFeed() {
     
     var startRow = Math.max(2, lastRow - 19);
     var numRows = lastRow - startRow + 1;
-    var data = sheet.getRange(startRow, 1, numRows, 9).getValues();
+    var data = sheet.getRange(startRow, 1, numRows, 9).getDisplayValues();
     
     return data.reverse().map(function(row) {
       return {
-        date: row[0] instanceof Date ? Utilities.formatDate(row[0], "GMT+9", "yyyy-MM-dd") : String(row[0]),
-        time: row[1] instanceof Date ? Utilities.formatDate(row[1], "GMT+9", "HH:mm:ss") : String(row[1]),
+        date: String(row[0] || ""),
+        time: String(row[1] || ""),
         name: String(row[2] || ""),
         type: String(row[4] || ""),
         item: String(row[5] || ""),
@@ -77,35 +77,50 @@ function submitArchive(payload) {
     var now = new Date();
     var photoId = "";
     var photoError = "";
+
+    // [v44.196] 데이터 수송 정밀 진단 로그
+    if (payload.image) {
+      Logger.log("[v44.196] 사진 데이터 수신됨! 길이: " + payload.image.length);
+    } else {
+      Logger.log("[v44.196] 경보! 사진 데이터가 누락되어 도착함.");
+    }
     
-    if (payload.image && payload.image.indexOf(",") > -1) {
+    // [v44.199] 사진 저장 로직 (더 유연하게 개선)
+    if (payload.image && String(payload.image).length > 100) {
       try {
         var folderName = "GenieWorld_Archive";
         var folders = DriveApp.getFoldersByName(folderName);
         var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
         folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
         
-        // [v44.189] Base64 데이터 정제 (공백 제거)
-        var base64Data = payload.image.split(",")[1].replace(/\s/g, '');
+        var base64Data = payload.image;
+        if (base64Data.indexOf(",") > -1) {
+          base64Data = base64Data.split(",")[1];
+        }
+        base64Data = base64Data.replace(/\s/g, '');
+        
         var blob = Utilities.newBlob(Utilities.base64Decode(base64Data), "image/jpeg", (payload.name || "user") + "_" + Date.now());
         var file = folder.createFile(blob);
-        
-        // [v44.189] 파일 즉시 공유 설정 보강
         file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
         photoId = file.getId();
+        console.log("[v44.199] 사진 저장 성공! ID:", photoId);
       } catch (err) {
-        photoError = "사진 저장 실패: " + err.toString();
-        console.error(photoError);
-        // 사진이 필수인 경우 여기서 중단 가능 (현재는 경고만 포함하여 진행)
+        var errStr = err.toString();
+        photoError = (errStr.indexOf("Permission") > -1) ? "드라이브 권한 승인 필요" : "저장 오류: " + errStr;
+        console.error("Archive Drive Error:", errStr);
       }
     }
     
     // [v44.188] 전화번호 정규화 적용
     var formattedPhone = formatPhoneNumber(payload.phone);
 
+    // [v44.204] 시간 저주 해제: 객체가 아닌 문자열로 직접 기록
+    var dateStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    var timeStr = Utilities.formatDate(now, "GMT+9", "HH:mm:ss");
+
     sheet.appendRow([
-      now, 
-      Utilities.formatDate(now, "GMT+9", "HH:mm:ss"),
+      dateStr, 
+      timeStr,
       payload.name,
       "'" + formattedPhone,
       payload.type,
@@ -115,20 +130,22 @@ function submitArchive(payload) {
       payload.score || 0
     ]);
     
-    // [v44.188] 점수 획득 시 활동기록에도 동시 기록
     recordActivityLog({
-      phone: payload.phone,
-      name: payload.name,
-      type: "인증",
-      item: payload.item,
-      content: payload.type + (photoId ? " 사진 인증 성공" : " 인증 완료 (사진 누락)"),
+      phone: payload.phone, name: payload.name, type: "인증", item: payload.item,
+      content: payload.type + (photoId ? " 사진 인증 성공" : " 인증 완료 (사진 누락: " + (photoError || "데이터 부족") + ")"),
       score: payload.score || 0
     });
 
-    if (photoError && !photoId) {
-      return { success: true, warning: photoError, photoId: "" };
-    }
-    return { success: true, photoId: photoId };
+    var lastRow = sheet.getLastRow();
+
+    return { 
+      success: true, 
+      photoId: photoId, 
+      warning: photoError,
+      receivedImageLen: (payload.image ? String(payload.image).length : 0),
+      debugInfo: (photoId ? "SAVE_OK" : (photoError || "IMG_SKIP")) + " (To: " + ss.getName() + " > " + sheet.getName() + " [Row: " + lastRow + "])",
+      serverVersion: "v44.203"
+    };
   } catch (e) {
     return { success: false, error: "기록 저장 실패: " + e.toString() };
   }
@@ -513,6 +530,12 @@ function handleRequest(e) {
       payload = (typeof contents === 'string') ? JSON.parse(contents) : contents;
     } else {
       payload = e.parameter || {};
+    }
+    
+    // [v44.197] Vercel 수송 데이터 정밀 추적 로그
+    if (action === 'submitArchive') {
+      var imgLen = (payload && payload.image) ? payload.image.length : 0;
+      console.log("[v44.197] 수신 데이터 진단 - Action:", action, "Keys:", Object.keys(payload || {}), "ImageLen:", imgLen);
     }
   } catch(err) {
     payload = e.parameter || {};

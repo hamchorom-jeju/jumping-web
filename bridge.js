@@ -78,12 +78,18 @@ if (typeof google === 'undefined' || !google.script) {
  */
 const Auth = {
   check: function() {
-    const isLoginPage = window.location.pathname.includes('login.html');
-    if (isLoginPage) return;
-
+    const path = window.location.pathname;
+    const isLoginPage = path.includes('login.html');
+    
+    // [v44.207] 인증 결계 제외 목록 (누구나 접근 가능해야 하는 페이지)
+    const publicPages = ['attendance.html', 'registration.html', 'login.html'];
+    const isPublic = publicPages.some(page => path.includes(page));
+    
+    if (isLoginPage || isPublic) return;
+    
     const name = localStorage.getItem('v44_user_name');
     const phone = localStorage.getItem('v44_user_phone');
-
+    
     if (!name || !phone) {
       console.warn("🛡️ Auth: 세션이 만료되었거나 정보가 없습니다. 로그인 페이지로 이동합니다.");
       window.location.href = 'login.html';
@@ -98,8 +104,8 @@ const Auth = {
   }
 };
 
-// 페이지 로드 시 즉시 인증 체크 실행
-Auth.check();
+// [v44.207] 모든 페이지 자동 체크 중단 -> 필요한 페이지(index, miracle 등)에서만 명시적으로 호출하도록 변경
+// Auth.check(); 
 
 /**
  * [공용] 환경에 맞는 페이지 이동 도우미
