@@ -54,6 +54,13 @@
     }
     .start-btn:active { transform: scale(0.95); }
 
+    .v-search-btn {
+      background: var(--gold); color: #fff; border: none; border-radius: 15px;
+      padding: 0 25px; font-weight: 900; font-size: 1rem; cursor: pointer;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .v-search-btn:active { transform: scale(0.9); opacity: 0.8; }
+
     .footer-link { margin-top: 30px; font-size: 0.75rem; color: var(--text-dim); font-weight: 800; }
 
     @keyframes zoomIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
@@ -64,12 +71,15 @@
 
   <div class="login-container">
     <div class="logo-area">🏰</div>
-    <h1>지니 월드 입장</h1>
+    <h1>회원 로그인</h1>
     <p>전화번호 뒷 4자리를 입력하고<br>자신의 이름을 선택해 주세요!</p>
 
     <div class="input-group">
       <label>전화번호 뒷 4자리</label>
-      <input type="tel" id="user-phone" placeholder="뒷자리 4자리를 입력하세요" oninput="searchMembers(this.value)">
+      <div style="display:flex; gap:10px;">
+        <input type="tel" id="user-phone" placeholder="4자리 숫자" maxlength="4" style="flex:1;">
+        <button class="v-search-btn" onclick="startManualSearch()">찾기</button>
+      </div>
     </div>
 
     <div id="member-selection-list" style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px; max-height: 250px; overflow-y: auto; padding-right: 5px;">
@@ -90,49 +100,78 @@
       }
     };
 
+    function startManualSearch() {
+      const digits = document.getElementById('user-phone').value.trim();
+      searchMembers(digits);
+    }
+
     let searchTimeout;
     function searchMembers(digits) {
       const listDiv = document.getElementById('member-selection-list');
       if (digits.length < 2) {
-        listDiv.innerHTML = "";
+        alert("최소 2자리 이상 입력해주세요.");
         return;
       }
 
       // 검색 중 상태 표시
-      listDiv.innerHTML = "<p style='font-size:0.85rem; color:var(--text-dim); font-weight:800; animation: blink 1s infinite;'>🔍 등록된 모험가 명단을 확인 중입니다...</p>";
+      listDiv.innerHTML = `
+        <div style="padding:20px; background:var(--v-paper); border-radius:20px; border:1px solid var(--v-border);">
+          <p style='font-size:0.85rem; color:var(--text-dim); font-weight:800;'>등록된 회원 명단을 확인합니다...</p>
+        </div>
+      `;
 
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
-          google.script.run
-            .withSuccessHandler(res => {
-              listDiv.innerHTML = "";
-              
-              if (res && res.success && res.members.length > 0) {
-                res.members.forEach(m => {
-                  const btn = document.createElement('button');
-                  btn.className = 'start-btn';
-                  btn.style.marginTop = "0";
-                  btn.style.background = "#fff";
-                  btn.style.color = "var(--v-wood)";
-                  btn.style.border = "2px solid var(--v-wood)";
-                  btn.innerHTML = `<b>${m.name}</b> 모험가로 입장 <i class="fas fa-chevron-right" style="font-size:0.8rem; margin-left:5px;"></i>`;
-                  btn.onclick = () => selectMember(m.name, m.phone);
-                  listDiv.appendChild(btn);
-                });
-              } else if (digits.length >= 4) {
-                listDiv.innerHTML = "<p style='font-size:0.85rem; color:#e74c3c; font-weight:800;'>⚠️ 모험가 명단에 등록되지 않은 정보입니다.</p>";
-              }
-            })
-            .searchMembersByDigits({ digits: digits });
-        }
-      }, 300);
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(res => {
+            listDiv.innerHTML = "";
+            
+            if (res && res.success && res.members.length > 0) {
+              res.members.forEach(m => {
+                const btn = document.createElement('button');
+                btn.className = 'start-btn';
+                btn.style.marginTop = "0";
+                btn.style.background = "#fff";
+                btn.style.color = "var(--v-wood)";
+                btn.style.border = "2px solid var(--v-wood)";
+                btn.innerHTML = `<b>${m.name}</b> 님으로 입장 <i class="fas fa-sign-out-alt" style="font-size:0.8rem; margin-left:5px;"></i>`;
+                btn.onclick = () => selectMember(m.name, m.phone);
+                listDiv.appendChild(btn);
+              });
+            } else {
+              listDiv.innerHTML = `
+                <div style="padding:20px; background:#fff5f5; border-radius:20px; border:1px solid #feb2b2;">
+                  <p style='font-size:0.85rem; color:#e74c3c; font-weight:800; margin:0;'>⚠️ 명단에 등록되지 않은 정보입니다.<br><span style="font-size:0.7rem;">번호를 확인해주세요!</span></p>
+                </div>
+              `;
+            }
+          })
+          .withFailureHandler(err => {
+            listDiv.innerHTML = "<p style='color:red;'>서버 통신 오류가 발생했습니다.</p>";
+          })
+          .searchMembersByDigits({ digits: digits });
+      }
     }
 
     function selectMember(name, phone) {
       localStorage.setItem('v44_user_name', name);
       localStorage.setItem('v44_user_phone', phone);
-      navigateTo('index', { name: name, phone: phone });
+      
+      // [v44.217] 로그인 시점에 즉시 등급(Tier) 정보를 가져와서 저장합니다.
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(res => {
+            if (res && res.success) {
+              localStorage.setItem('v44_user_tier', res.tier);
+            }
+            navigateTo('index', { name: name, phone: phone });
+          })
+          .withFailureHandler(() => {
+            navigateTo('index', { name: name, phone: phone });
+          })
+          .getUserDashboardData({ phone: phone });
+      } else {
+        navigateTo('index', { name: name, phone: phone });
+      }
     }
   </script>
 </body>

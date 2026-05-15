@@ -76,8 +76,8 @@
                 badge.style.color = "white";
                 dot.style.background = "#fff";
                 nameEl.innerText = `${uName}(${uPhone.slice(-4)}) 님 접속중!`;
-                phoneEl.innerText = localStorage.getItem('v44_user_tier') || "🌱 모험가";
-                logoutBtn.style.display = "flex";
+                const uTier = localStorage.getItem('v44_user_tier') || "🌱 회원";
+                phoneEl.innerText = uTier;      logoutBtn.style.display = "flex";
             }
         }
 
