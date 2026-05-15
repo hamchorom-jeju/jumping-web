@@ -316,6 +316,7 @@
     let resData = {};
 
     window.onload = function() {
+      Auth.check();
       if (typeof google !== 'undefined' && google.script) {
         refreshSummary();
         setInterval(refreshSummary, 60000);
@@ -374,20 +375,36 @@
       document.getElementById('main-screen').style.display='none'; 
       document.getElementById('step-lookup').style.display='none'; 
       document.getElementById('booking-flow').style.display='block'; 
-      const phoneInput = document.getElementById('phoneInput');
-      phoneInput.focus();
-      phoneInput.oninput = function() {
-        if (this.value.toString().length >= 4) findID(false);
-      };
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      const savedPhone = localStorage.getItem('v44_user_phone');
+      const savedName = localStorage.getItem('v44_user_name');
+      
+      if (savedPhone && savedName) {
+        const m = { name: savedName, phone: savedPhone, displayName: savedName + "(" + savedPhone.slice(-4) + ")" };
+        selectMember(m);
+      } else {
+        const phoneInput = document.getElementById('phoneInput');
+        phoneInput.focus();
+        phoneInput.oninput = function() {
+          if (this.value.toString().length >= 4) findID(false);
+        };
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
     
     function startLookup() { 
       document.getElementById('main-screen').style.display='none'; 
       document.getElementById('booking-flow').style.display='none'; 
       document.getElementById('step-lookup').style.display='block'; 
+      
+      const savedPhone = localStorage.getItem('v44_user_phone');
       const lookupPhone = document.getElementById('lookupPhone');
-      lookupPhone.focus();
+      if (savedPhone) {
+        lookupPhone.value = savedPhone.slice(-4);
+        checkLookupInput();
+      } else {
+        lookupPhone.focus();
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 

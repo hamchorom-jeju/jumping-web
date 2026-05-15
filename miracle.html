@@ -393,12 +393,21 @@
       const phoneEl = document.getElementById('user-status-phone');
       const dotEl = document.getElementById('user-status-dot');
       const logoutBtn = document.getElementById('header-logout-btn');
+      const badge = document.getElementById('user-status-badge');
+      const dot = document.getElementById('user-status-dot');
+      
+      const uName = localStorage.getItem('v44_user_name');
+      const uPhone = localStorage.getItem('v44_user_phone');
 
-      if (TARGET_NAME && TARGET_PHONE) {
-        nameEl.innerText = `${TARGET_NAME} 모험가님 접속 중`;
-        phoneEl.innerText = TARGET_PHONE;
-        dotEl.classList.remove('offline');
-        logoutBtn.style.display = 'flex';
+      if (uName && uPhone) {
+        TARGET_PHONE = uPhone;
+        badge.style.background = "var(--emerald)";
+        badge.style.color = "white";
+        dot.style.background = "#fff";
+        nameEl.innerText = `${uName}(${uPhone.slice(-4)}) 님 접속중!`;
+        const uTier = localStorage.getItem('v44_user_tier') || "🌱 모험가";
+        phoneEl.innerText = uTier;
+        logoutBtn.style.display = "flex"; // 로그인 안된 경우 퇴장 버튼 숨김
       } else {
         nameEl.innerText = "로그인이 필요합니다";
         nameEl.style.color = "var(--v-wood)";

@@ -113,6 +113,7 @@ const Village = {
                     if (res && res.success) {
                         this.user.name = res.name;
                         this.user.tier = res.tier;
+                        localStorage.setItem('v44_user_tier', res.tier);
                         this.user.nextTier = res.nextTier;
                         this.user.evolution = res.evolution;
                         this.user.totalScore = res.totalScore;
