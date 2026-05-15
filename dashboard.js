@@ -19,9 +19,9 @@ const Village = {
             monthly: { health: 2400, perf: 4000, def: 2800 }
         },
         tiers: [
-            { name: "씨앗", min: 0 }, { name: "새싹", min: 1001 }, { name: "나무", min: 3001 },
-            { name: "꽃", min: 8001 }, { name: "꿈나무 요정", min: 15001 },
-            { name: "전설의 점퍼", min: 30001 }, { name: "지니 수호신", min: 60001 }
+            { name: "씨앗 🌱", min: 0 }, { name: "새싹 🌿", min: 1001 }, { name: "나무 🌳", min: 3001 },
+            { name: "꽃 🌸", min: 8001 }, { name: "꿈나무 요정 🧚‍♂️", min: 15001 },
+            { name: "전설의 점퍼 👑", min: 30001 }, { name: "지니 월드 수호신 🌌", min: 60001 }
         ],
         water: 1.2,
         habits: [
@@ -313,6 +313,16 @@ const Village = {
         document.getElementById('total-score').innerText = (this.user.totalScore || 0).toLocaleString();
         document.getElementById('current-rank').innerText = this.user.rank;
         document.getElementById('water-val').innerText = `${this.user.water}L / 2.0L`;
+
+        // [v44.226] 티어 이름에서 이모지(아바타) 추출하여 적용
+        const avatarEl = document.getElementById('user-avatar');
+        if (avatarEl && this.user.tier) {
+            // 이모지 정규식 (다양한 이모지 및 조합 대응)
+            const emojiMatch = this.user.tier.match(/([\uD800-\uDBFF][\uDC00-\uDFFF]|[\u2600-\u27BF]|[\u2300-\u23FF]|[\u2B50]|[\u200D])/g);
+            if (emojiMatch) {
+                avatarEl.innerText = emojiMatch.join('');
+            }
+        }
         
         const view = this.perspective;
         const currentData = this.user.stats[view];
