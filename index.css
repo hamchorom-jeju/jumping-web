@@ -70,6 +70,10 @@ body {
     background: rgba(241, 196, 15, 0.1);
 }
 
+.v-global-header .v-logout-btn {
+    display: flex !important;
+}
+
 .v-container {
     max-width: 500px;
     margin: 0 auto;
