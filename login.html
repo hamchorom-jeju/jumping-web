@@ -65,6 +65,38 @@
 
     @keyframes zoomIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
     @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+    /* [v44.223] Member Button Styling */
+    .member-btn {
+      width: 100%; padding: 20px; 
+      background: #fff; color: var(--v-wood);
+      border: 2px solid var(--v-border); border-radius: 20px;
+      font-size: 1.1rem; font-weight: 800;
+      cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      position: relative; overflow: hidden;
+    }
+    .member-btn:active { transform: scale(0.96); }
+    .member-btn .name-tag { display: flex; align-items: center; gap: 10px; }
+    .member-btn .name-tag b { font-size: 1.2rem; color: var(--v-wood); }
+    .member-btn .arrow-icon { color: var(--gold); font-size: 1.2rem; }
+    
+    .member-btn.loading {
+      background: var(--v-paper) !important;
+      border-color: var(--v-border) !important;
+      color: var(--text-dim) !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+    }
+    .member-btn.loading .arrow-icon {
+      animation: vSpin 1s linear infinite;
+    }
+    .member-btn.loading .arrow-icon::before {
+      content: "\f110"; /* font-awesome spinner icon */
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+    }
   </style>
 </head>
 <body>
@@ -128,12 +160,15 @@
             if (res && res.success && res.members.length > 0) {
               res.members.forEach(m => {
                 const btn = document.createElement('button');
-                btn.className = 'start-btn';
-                btn.style.marginTop = "0";
-                btn.style.background = "#fff";
-                btn.style.color = "var(--v-wood)";
-                btn.style.border = "2px solid var(--v-wood)";
-                btn.innerHTML = `<b>${m.name}</b> 님으로 입장 <i class="fas fa-sign-out-alt" style="font-size:0.8rem; margin-left:5px;"></i>`;
+                btn.className = 'member-btn';
+                btn.id = `btn-member-${m.phone}`;
+                btn.innerHTML = `
+                  <div class="name-tag">
+                    <span style="font-size:1.5rem;">👤</span>
+                    <b>${m.name}</b> 님
+                  </div>
+                  <i class="fas fa-chevron-right arrow-icon"></i>
+                `;
                 btn.onclick = () => selectMember(m.name, m.phone);
                 listDiv.appendChild(btn);
               });
@@ -153,10 +188,15 @@
     }
 
     function selectMember(name, phone) {
+      const btn = document.getElementById(`btn-member-${phone}`);
+      if (btn) {
+        btn.classList.add('loading');
+        btn.querySelector('b').innerText = "연결 중...";
+      }
+
       localStorage.setItem('v44_user_name', name);
       localStorage.setItem('v44_user_phone', phone);
       
-      // [v44.217] 로그인 시점에 즉시 등급(Tier) 정보를 가져와서 저장합니다.
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(res => {
