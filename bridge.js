@@ -217,3 +217,26 @@ function closeAppModal(btn) {
   `;
   document.head.appendChild(style);
 })();
+
+/**
+ * [v44.210] 앱 비정상 종료 방지 (휴대폰 뒤로가기 트랩)
+ */
+window.addEventListener('load', function() {
+  if (window.history && window.history.pushState) {
+    // 페이지 진입 시 가짜 히스토리를 하나 추가합니다.
+    window.history.pushState('app-back-trap', null, null);
+    
+    window.addEventListener('popstate', function(e) {
+      // 사용자가 휴대폰 뒤로가기 버튼을 누르면 이 이벤트가 발생합니다.
+      // 앱이 꺼지는 것을 막기 위해 즉시 가짜 히스토리를 다시 추가합니다.
+      window.history.pushState('app-back-trap', null, null);
+      
+      // 사용자에게 종료(또는 이전 화면 이동) 의사를 묻습니다.
+      showAppConfirm("앱을 종료(또는 이전 화면으로 이동)하시겠습니까?", function() {
+        // 사용자가 '진행하기'를 누르면,
+        // 강제로 히스토리를 2칸 뒤로 되돌려 실제 뒤로가기(또는 앱 종료)를 수행합니다.
+        window.history.go(-2);
+      });
+    });
+  }
+});
