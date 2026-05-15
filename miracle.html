@@ -124,20 +124,7 @@
     }
     .v-logout-btn:active { transform: scale(0.9); background: rgba(93, 64, 55, 0.1); }
 
-    /* [v44.193] 로딩 오버레이 스타일 */
-    .v-loading-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(5px);
-      display: none; flex-direction: column; align-items: center; justify-content: center;
-      z-index: 10000; animation: fadeIn 0.3s;
-    }
-    .v-loading-spinner {
-      width: 50px; height: 50px; border: 5px solid var(--v-paper);
-      border-top: 5px solid var(--gold); border-radius: 50%;
-      animation: spin 1s linear infinite; margin-bottom: 15px;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 
     /* 폴라로이드 갤러리 (12구) */
     .polaroid-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 12px; padding: 15px 10px; margin-top: 15px; }

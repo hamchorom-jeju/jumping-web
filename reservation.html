@@ -215,6 +215,12 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+  <!-- [v44.218] 로딩 오버레이 -->
+  <div id="v-loading" class="v-loading-overlay" style="display: flex;">
+    <div class="v-loading-spinner"></div>
+    <div id="v-loading-msg" style="font-weight: 800; color: var(--v-wood); font-size: 0.9rem;">테라피 예약 정보를 확인 중...</div>
+  </div>
+
   <!-- 🏛️ GLOBAL APP HEADER (Fixed) -->
   <header class="v-global-header">
       <div style="display:flex; justify-content:space-between; align-items:center; width:100%; max-width:500px; margin:0 auto;">
@@ -337,6 +343,7 @@
 
   <script>
     let resData = {};
+    function hideLoading() { document.getElementById('v-loading').style.display = 'none'; }
 
     function renderLoginStatus() {
       const uName = localStorage.getItem('v44_user_name');
@@ -360,6 +367,7 @@
     window.onload = function() {
       Auth.check();
       renderLoginStatus();
+      setTimeout(hideLoading, 500);
       if (typeof google !== 'undefined' && google.script) {
         refreshSummary();
         setInterval(refreshSummary, 60000);

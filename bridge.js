@@ -240,3 +240,19 @@ window.addEventListener('load', function() {
     });
   }
 });
+
+/**
+ * [v44.218] 글로벌 로딩 시스템
+ */
+function showLoading(msg) {
+  const overlay = document.getElementById('v-loading');
+  const msgEl = document.getElementById('v-loading-msg');
+  if (overlay && msgEl) {
+    msgEl.innerText = msg || "기록을 동기화 중...";
+    overlay.style.display = 'flex';
+  }
+}
+function hideLoading() {
+  const overlay = document.getElementById('v-loading');
+  if (overlay) overlay.style.display = 'none';
+}
