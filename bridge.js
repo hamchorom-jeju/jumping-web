@@ -85,21 +85,31 @@ const Auth = {
     const publicPages = ['attendance.html', 'registration.html', 'login.html'];
     const isPublic = publicPages.some(page => path.includes(page));
     
-    if (isLoginPage || isPublic) return;
+    if (isLoginPage || isPublic) {
+      console.log("🛡️ Auth: Public page or Login page. Skipping check.");
+      return;
+    }
     
     const name = localStorage.getItem('v44_user_name');
     const phone = localStorage.getItem('v44_user_phone');
     
+    console.log(`🛡️ Auth: Checking session... Name: ${name}, Phone: ${phone}`);
+    
     if (!name || !phone) {
-      console.warn("🛡️ Auth: 세션이 만료되었거나 정보가 없습니다. 로그인 페이지로 이동합니다.");
-      window.location.href = 'login.html';
+      console.warn("🛡️ Auth: No session found. Redirecting to login.html...");
+      
+      // [v44.220] 경로가 루트(/)인 경우를 대비해 절대 경로에 가깝게 리다이렉트
+      const loginUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/') + 'login.html';
+      console.log("🛡️ Auth: Target redirect URL:", loginUrl);
+      window.location.replace(loginUrl);
     }
   },
   logout: function() {
     if (confirm("🕌 지니 월드에서 퇴장하시겠습니까?")) {
       localStorage.removeItem('v44_user_name');
       localStorage.removeItem('v44_user_phone');
-      window.location.href = 'login.html';
+      localStorage.removeItem('v44_user_tier');
+      window.location.replace('login.html');
     }
   }
 };
