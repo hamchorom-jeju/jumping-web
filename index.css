@@ -51,28 +51,26 @@ body {
 }
 
 .v-logout-btn {
-    background: transparent;
-    border: 1.5px solid var(--gold);
-    color: var(--gold);
-    padding: 5px 12px;
-    border-radius: 10px;
-    font-size: 0.7rem;
-    font-weight: 800;
+    background: rgba(231, 76, 60, 0.1);
+    border: 1.5px solid #e74c3c;
+    color: #e74c3c;
+    padding: 8px 16px;
+    border-radius: 14px;
+    font-size: 0.8rem;
+    font-weight: 900;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     transition: all 0.2s;
 }
 
 .v-logout-btn:active {
     transform: scale(0.95);
-    background: rgba(241, 196, 15, 0.1);
+    background: rgba(231, 76, 60, 0.2);
 }
 
-.v-global-header .v-logout-btn {
-    display: flex !important;
-}
+
 
 .v-container {
     max-width: 500px;
@@ -317,8 +315,8 @@ body {
 .v-profile-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #fff; border-bottom: 2px solid var(--v-paper); margin-bottom: 20px; }
 .v-status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; background: var(--v-paper); border: 1px solid var(--v-border); font-size: 0.8rem; font-weight: 800; color: var(--v-wood); }
 .v-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #e74c3c; transition: background 0.3s; }
-.v-logout-btn { background: none; border: none; color: #e74c3c; font-size: 1.2rem; cursor: pointer; display: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; transition: background 0.2s; }
-.v-logout-btn:active { background: #ffebee; }
+.v-profile-logout-btn { background: none; border: none; color: #e74c3c; font-size: 1.2rem; cursor: pointer; display: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; transition: background 0.2s; }
+.v-profile-logout-btn:active { background: #ffebee; }
 
 /* [v44.193] Global Loading Overlay Styles */
 .v-loading-overlay {
