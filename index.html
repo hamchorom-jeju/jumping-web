@@ -11,6 +11,11 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="/club-logo.png">
     <script src="bridge.js"></script>
+    <script>
+        // [v44.219] 최우선 순위로 로그인 상태를 체크합니다.
+        console.log("🛡️ Auth: Checking session for Dashboard...");
+        Auth.check();
+    </script>
 </head>
 <body style="margin:0; padding:0;">
     <!-- [v44.218] 로딩 오버레이 (최우선 표시) -->
@@ -19,10 +24,7 @@
         <div id="v-loading-msg" style="font-weight: 800; color: var(--v-wood); font-size: 0.9rem;">마을 기록을 불러오고 있습니다...</div>
     </div>
 
-    <script>
-        // [v44.218] 대시보드 진입 시 즉시 인증 확인
-        Auth.check();
-    </script>
+
 
     <!-- 🏛️ GLOBAL APP HEADER (Fixed) -->
     <header class="v-global-header">
