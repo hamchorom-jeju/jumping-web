@@ -50,24 +50,24 @@ body {
     margin: 0;
 }
 
-.v-logout-btn {
-    background: rgba(231, 76, 60, 0.1);
-    border: 1.5px solid #e74c3c;
-    color: #e74c3c;
-    padding: 8px 16px;
-    border-radius: 14px;
-    font-size: 0.8rem;
-    font-weight: 900;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
+.v-header-logout {
+    background: rgba(231, 76, 60, 0.1) !important;
+    border: 1.5px solid #e74c3c !important;
+    color: #e74c3c !important;
+    padding: 8px 16px !important;
+    border-radius: 14px !important;
+    font-size: 0.8rem !important;
+    font-weight: 900 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: all 0.2s !important;
 }
 
-.v-logout-btn:active {
-    transform: scale(0.95);
-    background: rgba(231, 76, 60, 0.2);
+.v-header-logout:active {
+    transform: scale(0.95) !important;
+    background: rgba(231, 76, 60, 0.2) !important;
 }
 
 

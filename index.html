@@ -11,6 +11,25 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="/club-logo.png">
     <script src="bridge.js"></script>
+    <style>
+        /* [v44.226] 로그아웃 버튼 강제 노출 보장 */
+        .v-header-logout {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            background: #e74c3c !important;
+            color: white !important;
+            padding: 8px 15px !important;
+            border-radius: 12px !important;
+            border: none !important;
+            font-weight: 900 !important;
+            font-size: 0.85rem !important;
+            cursor: pointer !important;
+            z-index: 5000 !important;
+            align-items: center !important;
+            gap: 5px !important;
+        }
+    </style>
     <script>
         // [v44.219] 최우선 순위로 로그인 상태를 체크합니다.
         console.log("🛡️ Auth: Checking session for Dashboard...");
@@ -29,7 +48,7 @@
     <!-- 🏛️ GLOBAL APP HEADER (Fixed) -->
     <header class="v-global-header">
         <h1>GENIE WORLD : 노형 빌리지</h1>
-        <button onclick="Auth.logout()" class="v-logout-btn">
+        <button onclick="Auth.logout()" class="v-header-logout" style="display: flex !important;">
             <i class="fas fa-sign-out-alt"></i> 로그아웃
         </button>
     </header>
