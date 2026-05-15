@@ -3,35 +3,34 @@
  * v1.0 - Core Routing & Database Setup
  */
 
-function getArchiveFeed() {
+function getArchiveFeed(page) {
   try {
+    var p = parseInt(page) || 1;
+    var limit = 12;
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("아카이브");
     if (!sheet) return { error: "'아카이브' 시트를 찾을 수 없습니다." };
     
     var lastRow = sheet.getLastRow();
-    if (lastRow < 2) return []; 
+    if (lastRow < 2) return { items: [], totalPages: 1, currentPage: 1 };
     
-    var startRow = Math.max(2, lastRow - 30); // 12개 추출을 위해 넉넉히 가져옴
-    var numRows = lastRow - startRow + 1;
-    var data = sheet.getRange(startRow, 1, numRows, 10).getDisplayValues(); // 10열(리액션)까지
+    var data = sheet.getRange(2, 1, lastRow - 1, 10).getDisplayValues();
     
-    var result = [];
+    var validItems = [];
     var visualTypes = ["퀘스트", "습관", "식단"];
     
-    // 역순(최신순)으로 탐색하며 최대 12개만 추출
-    for (var i = data.length - 1; i >= 0; i--) {
+    for (var i = 0; i < data.length; i++) {
       var row = data[i];
       var type = String(row[4] || "");
-      if (visualTypes.indexOf(type) === -1) continue; // 인바디 등 제외
+      if (visualTypes.indexOf(type) === -1) continue;
       
       var reactions = { cool: [], best: [], cheer: [] };
       try {
         if (row[9]) reactions = JSON.parse(row[9]);
       } catch(e) {}
       
-      result.push({
-        rowIdx: startRow + i,
+      validItems.push({
+        rowIdx: i + 2,
         date: String(row[0] || ""),
         time: String(row[1] || ""),
         name: String(row[2] || ""),
@@ -42,9 +41,21 @@ function getArchiveFeed() {
         score: row[8],
         reactions: reactions
       });
-      if (result.length >= 12) break; // 최대 12개 제한
     }
-    return result;
+    
+    validItems.reverse();
+    
+    var totalPages = Math.ceil(validItems.length / limit) || 1;
+    if (p > totalPages) p = totalPages;
+    
+    var startIndex = (p - 1) * limit;
+    var slicedItems = validItems.slice(startIndex, startIndex + limit);
+    
+    return {
+      items: slicedItems,
+      totalPages: totalPages,
+      currentPage: p
+    };
   } catch (e) {
     return { error: "피드 로딩 실패: " + e.toString() };
   }
