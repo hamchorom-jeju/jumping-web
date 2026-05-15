@@ -1,14 +1,15 @@
 // Service Worker for Nohyung Jumping PWA (v44.117)
 // Strategy: Network First for HTML, Cache First for assets
 
-const CACHE_NAME = 'nohyung-jumping-v44.211';
+const CACHE_NAME = 'nohyung-jumping-v44.212';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/index.css',
   '/dashboard.js',
   '/therapy-icon.png',
-  '/final-logo.png'
+  '/final-logo.png',
+  '/club-logo.png'
 ];
 
 // 🛠️ Install: Cache essential assets
