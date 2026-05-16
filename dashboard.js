@@ -86,26 +86,33 @@ const Village = {
      */
     lastBackTime: 0,
     handleBackButton() {
-        // 1. 열려있는 모달이 있으면 닫기
-        const modal = document.getElementById('habit-modal');
-        if (modal && modal.style.display === 'flex') {
-            this.closeModal();
-            history.pushState(null, null, location.href); // 히스토리 복구
+        // 1. 열려있는 모달이 있는지 확인 (Vanilla JS 및 프리미엄 모달 공통)
+        const premiumModal = document.querySelector('.app-modal-overlay');
+        const habitModal = document.getElementById('habit-modal');
+
+        if (premiumModal) {
+            // 프리미엄 알림/확인창 닫기
+            const btn = premiumModal.querySelector('button');
+            if (btn) btn.click();
+            history.pushState(null, null, location.href); 
             return;
         }
 
-        // 2. 모달이 없으면 '한 번 더 누르면 종료' 안내 (웹이므로 종료 대신 안내만)
+        if (habitModal && habitModal.style.display === 'flex') {
+            // 습관 가이드 모달 닫기
+            this.closeModal();
+            history.pushState(null, null, location.href); 
+            return;
+        }
+
+        // 2. 모달이 없으면 종료 안내 토스트
         const now = Date.now();
         if (now - this.lastBackTime < 2000) {
-            // 실제 앱이라면 여기서 종료하지만, 웹이므로 로그아웃 권장
-            alert("로그아웃 버튼을 이용하시면 안전하게 종료됩니다. 🙌");
+            alert("지니 월드(노형 빌리지)를 이용해주셔서 감사합니다.\n로그아웃 버튼으로 안전하게 퇴장하실 수 있습니다. ✨");
         } else {
             this.lastBackTime = now;
-            // 간단한 토스트 느낌의 알림 (alert 대신 가볍게 가능하지만 일단 alert)
-            console.log("뒤로가기를 한 번 더 누르면 안내가 표시됩니다.");
-            // 임시 토스트 효과
-            this.showToast("뒤로가기를 한 번 더 누르면 종료 안내가 표시됩니다.");
-            history.pushState(null, null, location.href); // 히스토리 복구
+            this.showToast("한 번 더 누르면 종료 안내가 표시됩니다.");
+            history.pushState(null, null, location.href); 
         }
     },
 
@@ -258,32 +265,39 @@ const Village = {
     applyHabitCheck(id, withAuth) {
         const habit = this.user.habits.find(h => h.id === id);
         if (habit && !habit.done) {
+            // [v44.229] 낙관적 업데이트: 로딩바 없이 즉시 화면 업데이트
             habit.done = true;
             const points = habit.base + (withAuth ? 5 : 0);
             
+            // 로컬 수치 즉시 반영 (심리적 만족감)
+            this.user.totalScore += points;
+            this.user.stats.weekly.def += points;
+            this.renderAll();
+            this.updateEvolution();
+
             if (typeof google !== 'undefined' && google.script && google.script.run) {
                 const params = new URLSearchParams(window.location.search);
                 let phone = (params.get('phone') || '').trim();
                 if (!phone) phone = (localStorage.getItem('v44_user_phone') || '').trim();
 
-                this.showLoading("🌿 습관 수호 기록 중...");
+                // 서버에는 조용히 기록 (로딩바 없음)
                 google.script.run
                     .withSuccessHandler(() => {
-                        // [v44.229] loadRealData가 로딩을 새로 띄울 것이므로 여기서 hide하지 않음
-                        console.log(`[v44.186] Habit ${id} recorded successfully.`);
-                        this.loadRealData();
+                        console.log(`[v44.229] Habit ${id} silently recorded.`);
+                        // 여기서 loadRealData를 호출하지 않아 로딩 깜빡임을 방지합니다.
                     })
-                    .withFailureHandler(() => this.hideLoading())
                     .recordActivityLog({
                         phone: phone, name: this.user.name, type: "습관", item: habit.title, score: points
                     });
-            } else {
-                this.user.totalScore += points;
-                this.user.stats.weekly.def += points;
-                this.renderAll();
-                this.updateEvolution();
             }
         }
+    },
+
+    /**
+     * [v44.229] 전체 데이터 동기화 (마스터 플랜 지침: 수동 갱신)
+     */
+    syncData() {
+        this.loadRealData();
     },
 
     closeModal() { document.getElementById('habit-modal').style.display = 'none'; },
