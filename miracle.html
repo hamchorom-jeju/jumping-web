@@ -506,7 +506,10 @@
               else if (item.type.includes("퀘스트")) icon = "⚔️";
               else if (item.type.includes("습관")) icon = "🌿";
               
-              const rotation = Math.floor(Math.random() * 11) - 5; // -5도 ~ 5도 랜덤 회전
+              const rotation = Math.floor(Math.random() * 11) - 5;
+              let displayItem = (item.item || '기록');
+              if (displayItem.length > 6) displayItem = displayItem.substring(0, 5) + '...';
+              displayItem += ' 인증';
               
               html += `
                 <div class="polaroid-card" style="transform: rotate(${rotation}deg);" onclick="openModal(${index})">
@@ -514,7 +517,10 @@
                   <div class="polaroid-img-wrapper">
                     <img src="${photoUrl}" class="polaroid-img" loading="lazy" alt="썸네일">
                   </div>
-                  <div class="polaroid-author">${item.name || '모험가'}</div>
+                  <div class="polaroid-author">
+                    ${item.name || '모험가'}
+                    <div style="font-size:0.6rem; color:var(--gold); font-weight:700; margin-top:2px;">${displayItem}</div>
+                  </div>
                 </div>
               `;
             });
