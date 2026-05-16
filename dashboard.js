@@ -164,9 +164,21 @@ const Village = {
                         this.user.evolution = res.evolution;
                         this.user.totalScore = res.totalScore;
                         this.user.rank = res.rank;
+
+                        // [v45.0] 오늘 완료한 항목 체크박스 복구
+                        if (res.doneList && res.doneList.length > 0) {
+                            console.log("[v45.0] Restoring doneList:", res.doneList);
+                            this.user.habits.forEach(h => {
+                                // 예: doneList에 "모닝 티 완료"가 있으면 h.title "모닝 티"와 매칭
+                                if (res.doneList.some(item => item.indexOf(h.title) > -1)) {
+                                    h.done = true;
+                                }
+                            });
+                        }
+
                         if (res.stats) {
                             this.user.stats = res.stats;
-                            if (res.stats.targets) this.user.max = res.stats.targets.items;
+                            if (res.stats.targets) this.user.max = res.stats.targets;
                         }
                         this.renderAll();
                         this.updateEvolution();
@@ -241,22 +253,22 @@ const Village = {
         
         cancelBtn.onclick = () => {
             // [v44.229] h7(나이트컷), h9(셀프칭찬)도 '체크만 하기' 가능하도록 수정
-            if (type === 'habit' && habit) this.applyHabitCheck(key, false);
-            this.closeModal();
+            if (type === 'habit' && habit) Village.applyHabitCheck(key, false);
+            Village.closeModal();
         };
 
         confirmBtn.onclick = () => {
             if (data.link !== "#") {
-                if (type === 'habit' && habit) this.applyHabitCheck(key, true);
+                if (type === 'habit' && habit) Village.applyHabitCheck(key, true);
                 const finalLink = (type === 'habit' && key !== 'h7' && key !== 'h9' && key !== 'plus') 
                     ? `miracle.html?cat=habit&item=${key}` : data.link;
                 location.href = finalLink;
             } else if (key === 'sync') {
-                this.syncClubRecordActual();
+                Village.syncClubRecordActual();
             } else if (type === 'habit' && data.single) {
-                this.applyHabitCheck(key, false);
+                Village.applyHabitCheck(key, false);
             }
-            this.closeModal();
+            Village.closeModal();
         };
 
         document.getElementById('habit-modal').style.display = 'flex';
@@ -281,13 +293,19 @@ const Village = {
                 if (!phone) phone = (localStorage.getItem('v44_user_phone') || '').trim();
 
                 // 서버에는 조용히 기록 (로딩바 없음)
+                // [v45.0] 인증 여부에 따른 action 추가 (완료 vs 인증)
                 google.script.run
                     .withSuccessHandler(() => {
-                        console.log(`[v44.229] Habit ${id} silently recorded.`);
-                        // 여기서 loadRealData를 호출하지 않아 로딩 깜빡임을 방지합니다.
+                        console.log(`[v45.0] Habit ${id} silently recorded.`);
                     })
                     .recordActivityLog({
-                        phone: phone, name: this.user.name, type: "습관", item: habit.title, score: points
+                        phone: phone, 
+                        name: this.user.name, 
+                        type: "습관", 
+                        item: habit.title, 
+                        score: points,
+                        action: withAuth ? "인증" : "완료",
+                        statType: "def"
                     });
             }
         }
@@ -395,6 +413,9 @@ const Village = {
     },
 
     updateGauge(id, val, max) {
+        if (!max) max = 1000; // Defensive fallback
+        if (typeof max === 'object') max = max[id] || 1000;
+        
         // [v44.167] "현재 / 목표" 형식의 정밀 수치 표기
         const typeNames = { health: '❤️ 체력', perf: '🗡️ 수행력', def: '🛡️ 방어력' };
         document.getElementById(`${id}-val`).innerText = `${Math.floor(val).toLocaleString()} / ${max.toLocaleString()}`;
