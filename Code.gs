@@ -252,7 +252,10 @@ function getUserDashboardData(payload) {
     var summarySheet = ss.getSheetByName("일일_활동_기록") || ss.insertSheet("일일_활동_기록");
     var todayStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
     var doneList = []; 
-    var stats = { health: 0, perf: 0, def: 0 };
+    var stats = { 
+      weekly: { health: 0, perf: 0, def: 0 },
+      monthly: { health: 0, perf: 0, def: 0 }
+    };
     var scores = { lifetime: 0, season: 0, weekly: 0 };
     
     var now = new Date();
@@ -271,15 +274,20 @@ function getUserDashboardData(payload) {
           var recDate = new Date(dMatch[1], parseInt(dMatch[2], 10) - 1, parseInt(dMatch[3], 10));
           var rowTotal = Number(data[j][9] || 0); // J열(10번째): 총점
           scores.lifetime += rowTotal;
-          if (recDate >= startOfSeason) scores.season += rowTotal;
+          
+          // 월간(시즌) 합산
+          if (recDate >= startOfSeason) {
+            scores.season += rowTotal;
+            stats.monthly.perf += (Number(data[j][3]) || 0) + (Number(data[j][4]) || 0) + (Number(data[j][5]) || 0);
+            stats.monthly.def += (Number(data[j][6]) || 0);
+            stats.monthly.health += (Number(data[j][7]) || 0);
+          }
+          // 주간 합산
           if (recDate >= startOfWeek) {
             scores.weekly += rowTotal;
-            
-            // [v45.9] 문자열 파싱 대신 컬럼 직접 합산 (정확도 100%)
-            // 4:센터방문_수행, 5:운동강도_수행, 6:일반수행_합산, 7:일반방어_합산, 8:체력보너스_합산
-            stats.perf += (Number(data[j][3]) || 0) + (Number(data[j][4]) || 0) + (Number(data[j][5]) || 0);
-            stats.def += (Number(data[j][6]) || 0);
-            stats.health += (Number(data[j][7]) || 0);
+            stats.weekly.perf += (Number(data[j][3]) || 0) + (Number(data[j][4]) || 0) + (Number(data[j][5]) || 0);
+            stats.weekly.def += (Number(data[j][6]) || 0);
+            stats.weekly.health += (Number(data[j][7]) || 0);
 
             if (Utilities.formatDate(recDate, "GMT+9", "yyyy-MM-dd") === todayStr) {
               var details = String(data[j][8] || "");
@@ -303,10 +311,13 @@ function getUserDashboardData(payload) {
           var s = Number(inData[k][6] || 0);
           scores.lifetime += s;
           var iDate = new Date(inData[k][0]);
-          if (iDate >= startOfSeason) scores.season += s;
+          if (iDate >= startOfSeason) {
+            scores.season += s;
+            stats.monthly.health += s;
+          }
           if (iDate >= startOfWeek) {
             scores.weekly += s;
-            stats.health += s;
+            stats.weekly.health += s;
           }
         }
       }

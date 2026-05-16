@@ -178,8 +178,12 @@ const Village = {
 
                         if (res.stats) {
                             this.user.stats = res.stats;
-                            if (res.stats.targets) this.user.max = res.stats.targets;
                         }
+                        // [v45.9] 주간/월간 목표치 각각 저장
+                        this.user.max = {
+                            weekly: res.weeklyTargets || { health: 1500, perf: 1000, def: 500 },
+                            monthly: res.monthlyTargets || { health: 6000, perf: 4000, def: 2000 }
+                        };
                         this.renderAll();
                         this.updateEvolution();
                         if (res.isFirstLoginToday) this.showLoginReward();
