@@ -5164,17 +5164,24 @@ function recordActivityLog(payload) {
     var type = payload.type || "일반"; 
     var score = Number(payload.score || 0);
 
-    // [v45.8] 머리말 및 액션 결정
-    var statTag = "[체력]"; 
-    if (type === "퀘스트" || type === "출석" || (type === "인증" && payload.item.indexOf("식단") > -1) || (type === "아카이브" && payload.category === "수행")) {
-      statTag = "[수행]";
-    } else if (type === "습관" || (type === "아카이브" && payload.category === "방어") || payload.item === "셀프 칭찬") {
-      statTag = "[방어]";
-    }
-
+    // [v45.8] 머리말 및 액션 결정 (v45.9 정밀 매핑)
+    var statTag = "[수행]"; // 기본은 수행으로 변경 (체력 보너스 남용 방지)
+    
+    // 1순위: 명시적인 statType 우선
     if (payload.statType === "perf") statTag = "[수행]";
     else if (payload.statType === "def") statTag = "[방어]";
     else if (payload.statType === "health") statTag = "[체력]";
+    else {
+      // 2순위: 타입 및 항목명으로 추론
+      if (type === "습관" || type === "오아시스" || type === "방어" || payload.item === "셀프 칭찬" || payload.item.indexOf("인증") > -1) {
+        // [v45.9] 아카이브/오아시스/보너스는 명시적 타입에 따라 '방어'로 취급
+        statTag = "[방어]";
+      } else if (type === "퀘스트" || type === "식단" || type === "출석" || type === "수행") {
+        statTag = "[수행]";
+      } else if (type === "보너스" || type === "로그인") {
+        statTag = "[체력]";
+      }
+    }
 
     var action = payload.action || (type === "습관" ? "체크" : "인증");
     var detailInfo = statTag + " " + payload.item + " " + action + "(" + score + ")";
@@ -5200,13 +5207,15 @@ function recordActivityLog(payload) {
     // 2. 기록 (열 매핑)
     var colIdx = 6; // 일반수행_합산 기본
     if (type === "로그인") {
+      colIdx = 8; // 체력보너스
       if (targetRowIdx > -1) {
-        var vH = Number(sheet.getRange(targetRowIdx, 8).getValue() || 0); // 체력보너스
-        var vP = Number(sheet.getRange(targetRowIdx, 6).getValue() || 0); // 일반수행
-        var vD = Number(sheet.getRange(targetRowIdx, 7).getValue() || 0); // 일반방어
+        var vH = Number(sheet.getRange(targetRowIdx, 8).getValue() || 0);
+        var vP = Number(sheet.getRange(targetRowIdx, 6).getValue() || 0);
+        var vD = Number(sheet.getRange(targetRowIdx, 7).getValue() || 0);
         sheet.getRange(targetRowIdx, 8).setValue(vH + 1);
         sheet.getRange(targetRowIdx, 6).setValue(vP + 2);
         sheet.getRange(targetRowIdx, 7).setValue(vD + 2);
+        // 로그인 시에는 여기서 업데이트하고 리턴
       } else {
         var loginDetails = "[체력] 로그인 체크(1), [수행] 로그인 체크(2), [방어] 로그인 체크(2)";
         sheet.appendRow([todayStr, "'" + phone, payload.name, 0, 0, 2, 2, 1, loginDetails, 5]);
@@ -5218,6 +5227,8 @@ function recordActivityLog(payload) {
         else if (payload.item === "운동강도") colIdx = 5;
       } else if (statTag === "[방어]") {
         colIdx = 7;
+      } else if (statTag === "[수행]") {
+        colIdx = 6;
       } else if (statTag === "[체력]") {
         colIdx = 8;
       }
