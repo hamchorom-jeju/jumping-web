@@ -259,10 +259,32 @@ function getUserDashboardData(payload) {
     var scores = { lifetime: 0, season: 0, weekly: 0 };
     
     var now = new Date();
-    var startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
+    
+    // [v45.9] 주간: 매주 수요일 기점 (인바디 제출일)
+    var day = now.getDay(); // 0(일)~6(토)
+    var diffToWed = (day < 3) ? (day + 4) : (day - 3); 
+    var startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToWed);
     startOfWeek.setHours(0, 0, 0, 0);
-    var startOfSeason = new Date(now.getFullYear(), now.getMonth(), 1);
-    startOfSeason.setHours(0, 0, 0, 0);
+
+    // [v45.9] 월간(시즌): 매월 4째주 수요일 기점 (33챌린지 사이클)
+    function get4thWednesday(year, month) {
+      var firstDay = new Date(year, month, 1);
+      var firstWed = new Date(year, month, 1 + ((3 - firstDay.getDay() + 7) % 7));
+      return new Date(year, month, firstWed.getDate() + 21);
+    }
+    
+    var currentMonth4thWed = get4thWednesday(now.getFullYear(), now.getMonth());
+    currentMonth4thWed.setHours(0, 0, 0, 0);
+    
+    var startOfSeason;
+    if (now >= currentMonth4thWed) {
+      // 오늘이 이번 달 4째주 수요일 이후라면, 이번 달 수요일이 시작점
+      startOfSeason = currentMonth4thWed;
+    } else {
+      // 아직 이번 달 4째주 수요일 전이라면, 지난 달 4째주 수요일이 시작점
+      startOfSeason = get4thWednesday(now.getFullYear(), now.getMonth() - 1);
+      startOfSeason.setHours(0, 0, 0, 0);
+    }
 
     var data = summarySheet.getDataRange().getDisplayValues();
     for (var j = 1; j < data.length; j++) {
@@ -5209,21 +5231,22 @@ function recordActivityLog(payload) {
     // 2. 기록 (열 매핑)
     var colIdx = 6; // 일반수행_합산 기본
     if (type === "로그인") {
-      colIdx = 8; // 체력보너스
+      colIdx = 8; // 체력보너스 (로그인 점수 분산 기록)
       if (targetRowIdx > -1) {
         var vH = Number(sheet.getRange(targetRowIdx, 8).getValue() || 0);
         var vP = Number(sheet.getRange(targetRowIdx, 6).getValue() || 0);
         var vD = Number(sheet.getRange(targetRowIdx, 7).getValue() || 0);
+        // [v45.9] 마스터 플랜: 체력 1, 수행 2, 방어 2 (총 5점)
         sheet.getRange(targetRowIdx, 8).setValue(vH + 1);
         sheet.getRange(targetRowIdx, 6).setValue(vP + 2);
         sheet.getRange(targetRowIdx, 7).setValue(vD + 2);
-        // 로그인 시에는 여기서 업데이트하고 리턴
       } else {
         var loginDetails = "[체력] 로그인 체크(1), [수행] 로그인 체크(2), [방어] 로그인 체크(2)";
         sheet.appendRow([todayStr, "'" + phone, payload.name, 0, 0, 2, 2, 1, loginDetails, 5]);
         return { success: true };
       }
     } else {
+      // (기존 분기 유지)
       if (type === "출석") {
         if (payload.item === "센터방문") colIdx = 4;
         else if (payload.item === "운동강도") colIdx = 5;
@@ -5243,7 +5266,6 @@ function recordActivityLog(payload) {
         newRow[colIdx-1] = score; 
         sheet.appendRow(newRow);
         targetRowIdx = sheet.getLastRow();
-        completedDetails = "";
       }
     }
 
@@ -5261,5 +5283,65 @@ function recordActivityLog(payload) {
     }
     return { success: true };
   } catch (e) { return { success: false, error: e.toString() }; }
+}
+
+/**
+ * [v45.9] 마스터 플랜 기반 인바디 기록 저장 및 점수 계산
+ */
+function submitInBodyRecord(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("33챌린지_인바디") || ss.insertSheet("33챌린지_인바디");
+    
+    var name = payload.name;
+    var phone = String(payload.phone || "").replace(/[^0-9]/g, "");
+    var weight = Number(payload.weight);
+    var muscle = Number(payload.muscle);
+    var fat = Number(payload.fat);
+    
+    // 이전 기록 찾기 (점수 계산용)
+    var data = sheet.getDataRange().getValues();
+    var prevRecord = null;
+    for (var i = data.length - 1; i >= 1; i--) {
+      if (String(data[i][2]).replace(/[^0-9]/g, "") === phone) {
+        prevRecord = { weight: data[i][3], muscle: data[i][4], fat: data[i][5] };
+        break;
+      }
+    }
+    
+    var score = 0;
+    if (prevRecord) {
+      var wDiff = prevRecord.weight - weight; // 감량 시 양수
+      var mDiff = muscle - prevRecord.muscle; // 증량 시 양수
+      var fDiff = prevRecord.fat - fat;       // 감량 시 양수
+      
+      // [v45.9] 마스터 플랜 배점 (5:3:2 밸런스)
+      // 1. 체중: -100g당 +50
+      if (wDiff !== 0) score += Math.floor(wDiff * 10) * 50; 
+      // 2. 골격근량: +100g당 +200 (유저 요청: 1kg당 2000점)
+      if (mDiff !== 0) score += Math.floor(mDiff * 10) * 200;
+      // 3. 체지방률: -0.1%당 +75 (체중보다 가치 높게 책정)
+      if (fDiff !== 0) score += Math.floor(fDiff * 10) * 75;
+      
+      // 4. 유지 보너스: 전주 대비 ±0.2kg 내 변화 시 +100
+      if (Math.abs(wDiff) <= 0.2) score += 100;
+    }
+    
+    sheet.appendRow([new Date(), name, "'" + phone, weight, muscle, fat, score]);
+    
+    // 활동 로그에도 기록 (체력 스탯)
+    recordActivityLog({
+      phone: phone,
+      name: name,
+      type: "인바디",
+      item: "정기 인바디 측정",
+      score: score,
+      statType: "health"
+    });
+    
+    return { success: true, score: score };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
 }
 
