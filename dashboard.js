@@ -332,10 +332,10 @@ const Village = {
                 .withSuccessHandler(res => {
                     this.hideLoading();
                     if (res && res.success) {
-                        alert(`🏡 [클럽 동기화 완료!]\n총 ${res.points} EXP가 반영되었습니다.\n(방문보너스: 15 + 운동타임: ${res.timePoints})`);
+                        showAppAlert(`🏡 [클럽 동기화 완료!]\n총 ${res.points} EXP가 반영되었습니다.\n(방문보너스: 15 + 운동타임: ${res.timePoints})`, "success");
                         this.loadRealData();
                     } else {
-                        alert(`❌ 동기화 실패: ${res.error}`);
+                        showAppAlert(`❌ 동기화 실패: ${res.error}`, "error");
                     }
                 })
                 .withFailureHandler(() => this.hideLoading())

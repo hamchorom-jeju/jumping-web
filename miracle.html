@@ -605,9 +605,9 @@
     }
 
     function toggleReaction(reactionType) {
-      if (!TARGET_PHONE) return alert("로그인이 필요합니다.");
+      if (!TARGET_PHONE) return showAppAlert("로그인이 필요합니다.", "error");
       const myPhone = TARGET_PHONE.replace(/[^0-9]/g, "");
-      if (!myPhone) return alert("세션 정보가 올바르지 않습니다.");
+      if (!myPhone) return showAppAlert("세션 정보가 올바르지 않습니다.", "error");
       
       const item = window.archiveData[currentModalIndex];
       if (!item || !item.rowIdx) return;
@@ -638,7 +638,7 @@
       const comment = document.getElementById(type + '-comment').value;
       const fileInput = document.getElementById('file-input-' + type);
       const file = fileInput.files[0];
-      if (!file) return alert("인증 사진을 촬영해 주세요!");
+      if (!file) return showAppAlert("인증 사진을 촬영해 주세요!", "error");
       
       btn.disabled = true;
       btn.innerText = "사진 압축 및 전송 중...";
@@ -675,11 +675,10 @@
           };
 
           // [v44.196] 전송 전 데이터 무결성 검사
-          console.log("[v44.196] 전송 시도 - 이미지 길이:", compressedBase64 ? compressedBase64.length : 0);
           if (!compressedBase64 || compressedBase64.length < 100) {
             hideLoading();
             btn.disabled = false;
-            return alert("🚨 사진 데이터가 생성되지 않았습니다. 다시 촬영해 주세요.");
+            return showAppAlert("🚨 사진 데이터가 생성되지 않았습니다. 다시 촬영해 주세요.", "error");
           }
 
           // [v44.193] 로딩 시작 및 google.script.run 명시
@@ -690,23 +689,16 @@
               btn.disabled = false;
               btn.innerText = type === 'quest' ? "퀘스트 기록 완료" : "습관 기록 완료";
               if (res && res.success) {
-                const sVer = res.serverVersion || "old";
-                const imgLenInfo = res.receivedImageLen !== undefined ? `\n(수신: ${res.receivedImageLen.toLocaleString()}자)` : "";
-                const debugInfo = res.debugInfo ? ` / 상태: ${res.debugInfo}` : "";
-                const photoIdInfo = res.photoId ? `\n[사진 ID: ${res.photoId.substring(0,10)}...]` : "";
-                
                 if (res.warning) {
-                  // 사진 저장 실패 시 안내 (권한 문제 등)
-                  alert(`⚠️ 인증 기록은 완료되었으나, 사진 저장에 실패했습니다.\n\n원인: ${res.warning}\n\n💡 해결방법: 관리자에게 문의하거나 구글 권한 승인을 다시 진행해 주세요.`);
+                  showAppAlert(`⚠️ 인증 기록은 완료되었으나, 사진 저장에 실패했습니다.\n\n원인: ${res.warning}`, "error");
                 } else {
-                  alert(`✨ 인증 성공!\n[${finalType}] +${score} EXP가 적립되었습니다. 오늘도 멋진 승리네요! 🏆`);
+                  showAppAlert(`✨ 인증 성공!\n[${finalType}] +${score} EXP가 적립되었습니다. 오늘도 멋진 승리네요! 🏆`, "success");
                 }
                 document.getElementById(type + '-comment').value = "";
                 document.getElementById(type + '-preview-box').style.display = 'none';
                 document.getElementById(type + '-upload-placeholder').style.display = 'flex';
                 fileInput.value = "";
                 
-                // [v44.194] 숨겼던 식단 섹션 복구
                 const certSec = document.querySelector('.cert-section');
                 if (certSec) certSec.style.display = 'block';
 
@@ -714,9 +706,9 @@
               } else { 
                 const errMsg = res ? res.error : "서버 응답 없음";
                 if (errMsg.indexOf("Permission") > -1) {
-                  alert(`🚨 권한 오류가 발생했습니다.\n\n관리자에게 구글 앱스 스크립트 권한 승인을 요청해 주세요.`);
+                  showAppAlert("🚨 권한 오류가 발생했습니다.\n\n관리자에게 구글 앱스 스크립트 권한 승인을 요청해 주세요.", "error");
                 } else {
-                  alert("🚨 저장에 실패했습니다: " + errMsg);
+                  showAppAlert("🚨 저장에 실패했습니다: " + errMsg, "error");
                 }
               }
             })
@@ -724,7 +716,7 @@
               hideLoading();
               btn.disabled = false;
               btn.innerText = "기록 완료";
-              alert("🚨 서버 통신 오류 (용량이 너무 크거나 네트워크 불안정)");
+              showAppAlert("🚨 서버 통신 오류 (용량이 너무 크거나 네트워크 불안정)", "error");
             })
             .submitArchive(payload);
         };
