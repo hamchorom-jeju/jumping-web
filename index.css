@@ -27,7 +27,7 @@ body {
     background: var(--v-bg);
     color: var(--text-main);
     min-height: 100vh;
-    padding-bottom: 100px; /* v44.233: Balanced padding */
+    padding-bottom: 160px !important; /* v44.234: Guaranteed visibility above nav bar */
 }
 
 /* --- 🏛️ GLOBAL APP HEADER (Separated from Container) --- */
