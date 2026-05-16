@@ -27,7 +27,7 @@ body {
     background: var(--v-bg);
     color: var(--text-main);
     min-height: 100vh;
-    padding-bottom: 150px; /* v44.229: Increased for better Miracle Plus visibility */
+    padding-bottom: 200px !important; /* v44.232: Stronger padding for mobile UX */
 }
 
 /* --- 🏛️ GLOBAL APP HEADER (Separated from Container) --- */
@@ -75,10 +75,11 @@ body {
 .v-container {
     max-width: 500px;
     margin: 0 auto;
-    padding: 15px; /* Fixed v44.0 Padding */
+    padding: 15px;
+    padding-bottom: 100px; /* Additional internal padding */
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Fixed v44.0 Gap */
+    gap: 15px;
 }
 
 /* --- 📜 SEPARATED BANNERS --- */
