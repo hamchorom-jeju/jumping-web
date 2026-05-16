@@ -5315,13 +5315,13 @@ function submitInBodyRecord(payload) {
       var mDiff = muscle - prevRecord.muscle; // 증량 시 양수
       var fDiff = prevRecord.fat - fat;       // 감량 시 양수
       
-      // [v45.9] 마스터 플랜 배점 (5:3:2 밸런스)
+      // [v45.9] 마스터 플랜 배점 (수정: 체지방 1%당 1000점)
       // 1. 체중: -100g당 +50
       if (wDiff !== 0) score += Math.floor(wDiff * 10) * 50; 
-      // 2. 골격근량: +100g당 +200 (유저 요청: 1kg당 2000점)
+      // 2. 골격근량: +100g당 +200 (1kg당 2000점)
       if (mDiff !== 0) score += Math.floor(mDiff * 10) * 200;
-      // 3. 체지방률: -0.1%당 +75 (체중보다 가치 높게 책정)
-      if (fDiff !== 0) score += Math.floor(fDiff * 10) * 75;
+      // 3. 체지방률: -0.1%당 +100 (1%당 1000점 - 체중의 2배 가치)
+      if (fDiff !== 0) score += Math.floor(fDiff * 10) * 100;
       
       // 4. 유지 보너스: 전주 대비 ±0.2kg 내 변화 시 +100
       if (Math.abs(wDiff) <= 0.2) score += 100;
