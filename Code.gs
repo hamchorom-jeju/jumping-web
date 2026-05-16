@@ -191,10 +191,19 @@ function submitArchive(payload) {
       payload.score || 0
     ]);
     
+    // [v45.3] 타입별 스탯 분류 자동화: 습관 -> 방어력(def), 퀘스트/식단 -> 수행력(perf)
+    var statType = "perf"; 
+    if (payload.type === "습관") statType = "def";
+
     recordActivityLog({
-      phone: payload.phone, name: payload.name, type: "인증", item: payload.item,
-      content: payload.type + (photoId ? " 사진 인증 성공" : " 인증 완료 (사진 누락: " + (photoError || "데이터 부족") + ")"),
-      score: payload.score || 0
+      phone: payload.phone, 
+      name: payload.name, 
+      type: payload.type, // "퀘스트" or "습관" or "식단"
+      item: payload.item,
+      action: "인증",
+      score: payload.score || 0,
+      statType: statType,
+      photoId: photoId
     });
 
     var lastRow = sheet.getLastRow();
@@ -5162,7 +5171,7 @@ function recordActivityLog(payload) {
     } else if (type === "습관" || (type === "아카이브" && payload.category === "방어") || payload.item === "셀프 칭찬") {
       statTag = "[방어]";
     }
-    
+
     if (payload.statType === "perf") statTag = "[수행]";
     else if (payload.statType === "def") statTag = "[방어]";
     else if (payload.statType === "health") statTag = "[체력]";
