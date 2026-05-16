@@ -285,9 +285,12 @@ function getUserDashboardData(payload) {
           // 주간 합산
           if (recDate >= startOfWeek) {
             scores.weekly += rowTotal;
-            stats.weekly.perf += (Number(data[j][3]) || 0) + (Number(data[j][4]) || 0) + (Number(data[j][5]) || 0);
-            stats.weekly.def += (Number(data[j][6]) || 0);
-            stats.weekly.health += (Number(data[j][7]) || 0);
+            
+            // [v45.9] 문자열 파싱 대신 컬럼 직접 합산 (정확도 100%)
+            // 4:센터방문_수행, 5:운동강도_수행, 6:일반수행_합산, 7:일반방어_합산, 8:체력보너스_합산
+            stats.perf += (Number(data[j][3]) || 0) + (Number(data[j][4]) || 0) + (Number(data[j][5]) || 0);
+            stats.def += (Number(data[j][6]) || 0);
+            stats.health += (Number(data[j][7]) || 0);
 
             if (Utilities.formatDate(recDate, "GMT+9", "yyyy-MM-dd") === todayStr) {
               var details = String(data[j][8] || "");
@@ -341,19 +344,15 @@ function getUserDashboardData(payload) {
 
     return {
       success: true,
-      doneList: doneList, // 오늘 수행한 상세 내역 전송
+      doneList: doneList,
       name: memberInfo.name,
       tier: currentTier.name,
       totalScore: scores.lifetime, 
       seasonScore: scores.season,
       weeklyScore: scores.weekly,
-      stats: { 
-        weekly: stats, 
-        targets: { 
-          weekly: { health: 1000, perf: 1000, def: 1000 },
-          monthly: { health: 4000, perf: 4000, def: 4000 }
-        } 
-      }
+      stats: stats, // { weekly, monthly } 데이터
+      weeklyTargets: { health: 1500, perf: 1000, def: 500 },
+      monthlyTargets: { health: 6000, perf: 4000, def: 2000 }
     };
   } catch (e) { return { success: false, error: e.toString() }; }
 }
