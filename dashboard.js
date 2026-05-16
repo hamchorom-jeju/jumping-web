@@ -261,7 +261,7 @@ const Village = {
             if (data.link !== "#") {
                 if (type === 'habit' && habit && key !== 'plus') Village.applyHabitCheck(key, false);
                 const finalLink = (type === 'habit' && key !== 'h7' && key !== 'h9' && key !== 'plus') 
-                    ? `miracle.html?cat=habit&item=${key}` : data.link;
+                    ? `miracle.html?tab=habit&item=${key}` : data.link.replace('cat=', 'tab=');
                 location.href = finalLink;
             } else if (key === 'sync') {
                 Village.syncClubRecordActual();

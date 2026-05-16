@@ -350,8 +350,28 @@
       // [v44.190] 로그인 상태 UI 업데이트 (복구된 데이터로)
       renderLoginStatus();
       
-      const tab = urlParams.get('tab') === 'habit' ? 'habit' : 'quest';
-      switchTab(tab);
+      // [v45.2] URL 파라미터에 따른 자동 탭 및 항목 선택
+      const cat = urlParams.get('tab') || urlParams.get('cat');
+      const itemKey = urlParams.get('item');
+      
+      if (cat === 'habit') {
+        switchTab('habit');
+        const hMap = { 'h1': '모닝티', 'h2': '모닝스트레칭', 'h3': '베지퍼스트', 'h5': '7000보달성', 'h6': '스테어마법' };
+        if (itemKey && hMap[itemKey]) document.getElementById('habit-select').value = hMap[itemKey];
+      } else {
+        switchTab('quest');
+        if (cat === 'visit') document.getElementById('quest-select').value = '방문';
+        else if (cat === 'water') document.getElementById('quest-select').value = '수분';
+        else if (cat === 'bonus') document.getElementById('quest-select').value = '돌발퀘스트';
+        else if (cat === 'meal') {
+            document.getElementById('quest-select').value = '식단';
+            setTimeout(() => {
+                const mealSec = document.querySelector('.cert-section');
+                if (mealSec) mealSec.scrollIntoView({ behavior: 'smooth' });
+            }, 500);
+        }
+      }
+      
       loadArchiveFeed();
       loadActiveEvents();
     };
