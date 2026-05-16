@@ -690,10 +690,10 @@
                 const photoIdInfo = res.photoId ? `\n[사진 ID: ${res.photoId.substring(0,10)}...]` : "";
                 
                 if (res.warning) {
-                  // [v44.194] 권한 문제에 대한 상세 가이드 포함
-                  alert(`⚠️ [${sVer}] 기록은 되었으나 사진 저장에 실패했습니다.${imgLenInfo}${debugInfo}\n\n원인: ${res.warning}\n\n💡 해결방법: 구글 스크립트 에디터에서 [배포] -> [새 배포]를 통해 권한 승인을 다시 완료해 주세요! (Vercel 연동 시 필수)`);
+                  // 사진 저장 실패 시 안내 (권한 문제 등)
+                  alert(`⚠️ 인증 기록은 완료되었으나, 사진 저장에 실패했습니다.\n\n원인: ${res.warning}\n\n💡 해결방법: 관리자에게 문의하거나 구글 권한 승인을 다시 진행해 주세요.`);
                 } else {
-                  alert(`✅ [${sVer}] 인증 성공!${imgLenInfo}${debugInfo}${photoIdInfo}\n[${finalType}] +${score}점이 적립되었습니다.`);
+                  alert(`✨ 인증 성공!\n[${finalType}] +${score} EXP가 적립되었습니다. 오늘도 멋진 승리네요! 🏆`);
                 }
                 document.getElementById(type + '-comment').value = "";
                 document.getElementById(type + '-preview-box').style.display = 'none';
@@ -708,9 +708,9 @@
               } else { 
                 const errMsg = res ? res.error : "서버 응답 없음";
                 if (errMsg.indexOf("Permission") > -1) {
-                  alert(`🚨 권한 오류 발생!\n\n${errMsg}\n\n💡 해결방법: 구글 스크립트 에디터에서 [새 배포]를 눌러 '액세스 권한' 승인을 다시 확인해 주세요.`);
+                  alert(`🚨 권한 오류가 발생했습니다.\n\n관리자에게 구글 앱스 스크립트 권한 승인을 요청해 주세요.`);
                 } else {
-                  alert("🚨 저장 실패: " + errMsg);
+                  alert("🚨 저장에 실패했습니다: " + errMsg);
                 }
               }
             })
