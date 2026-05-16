@@ -285,12 +285,9 @@ function getUserDashboardData(payload) {
           // 주간 합산
           if (recDate >= startOfWeek) {
             scores.weekly += rowTotal;
-            
-            // [v45.9] 문자열 파싱 대신 컬럼 직접 합산 (정확도 100%)
-            // 4:센터방문_수행, 5:운동강도_수행, 6:일반수행_합산, 7:일반방어_합산, 8:체력보너스_합산
-            stats.perf += (Number(data[j][3]) || 0) + (Number(data[j][4]) || 0) + (Number(data[j][5]) || 0);
-            stats.def += (Number(data[j][6]) || 0);
-            stats.health += (Number(data[j][7]) || 0);
+            stats.weekly.perf += (Number(data[j][3]) || 0) + (Number(data[j][4]) || 0) + (Number(data[j][5]) || 0);
+            stats.weekly.def += (Number(data[j][6]) || 0);
+            stats.weekly.health += (Number(data[j][7]) || 0);
 
             if (Utilities.formatDate(recDate, "GMT+9", "yyyy-MM-dd") === todayStr) {
               var details = String(data[j][8] || "");
