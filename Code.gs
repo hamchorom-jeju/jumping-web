@@ -275,20 +275,15 @@ function getUserDashboardData(payload) {
           if (recDate >= startOfWeek) {
             scores.weekly += rowTotal;
             
-            // I열(9번째): 완료내역 정밀 파싱
-            var details = String(data[j][8] || "");
-            var items = details.split(", ");
-            items.forEach(function(item) {
-              var sMatch = item.match(/\((\d+)\)/);
-              if (sMatch) {
-                var s = Number(sMatch[1]);
-                if (item.indexOf("[체력]") > -1) stats.health += s;
-                else if (item.indexOf("[수행]") > -1) stats.perf += s;
-                else if (item.indexOf("[방어]") > -1) stats.def += s;
-              }
-            });
+            // [v45.9] 문자열 파싱 대신 컬럼 직접 합산 (정확도 100%)
+            // 4:센터방문_수행, 5:운동강도_수행, 6:일반수행_합산, 7:일반방어_합산, 8:체력보너스_합산
+            stats.perf += (Number(data[j][3]) || 0) + (Number(data[j][4]) || 0) + (Number(data[j][5]) || 0);
+            stats.def += (Number(data[j][6]) || 0);
+            stats.health += (Number(data[j][7]) || 0);
 
             if (Utilities.formatDate(recDate, "GMT+9", "yyyy-MM-dd") === todayStr) {
+              var details = String(data[j][8] || "");
+              var items = details.split(", ");
               items.forEach(function(item) { 
                 var cleanItem = item.split("(")[0].replace(/\[.*?\]\s*/, "").trim();
                 if (cleanItem) doneList.push(cleanItem); 
