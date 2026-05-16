@@ -259,7 +259,7 @@ const Village = {
 
         confirmBtn.onclick = () => {
             if (data.link !== "#") {
-                if (type === 'habit' && habit) Village.applyHabitCheck(key, true);
+                if (type === 'habit' && habit && key !== 'plus') Village.applyHabitCheck(key, false);
                 const finalLink = (type === 'habit' && key !== 'h7' && key !== 'h9' && key !== 'plus') 
                     ? `miracle.html?cat=habit&item=${key}` : data.link;
                 location.href = finalLink;
