@@ -67,13 +67,11 @@ const Village = {
         bonus: { title: "보너스 퀘스트", icon: "✨", guide: "돌발 미션을 수행하시겠어요?\n아카이브로 이동해 인증을 남기실 수 있습니다.\n아카이브 인증시 15점이 추가됩니다.", btn: "인증하러 가기", link: "miracle.html?cat=bonus", single: false }
     },
 
-    /**
-     * [v44.193] 로딩 표시 제어
-     */
     showLoading(msg) {
         const overlay = document.getElementById('v-loading');
         const msgEl = document.getElementById('v-loading-msg');
         if (overlay && msgEl) {
+            // [v44.229] If already showing, just update message to prevent flicker
             msgEl.innerText = msg || "기록을 동기화 중...";
             overlay.style.display = 'flex';
         }
@@ -83,8 +81,49 @@ const Village = {
         if (overlay) overlay.style.display = 'none';
     },
 
+    /**
+     * [v44.229] 프리미엄 뒤로가기 핸들러
+     */
+    lastBackTime: 0,
+    handleBackButton() {
+        // 1. 열려있는 모달이 있으면 닫기
+        const modal = document.getElementById('habit-modal');
+        if (modal && modal.style.display === 'flex') {
+            this.closeModal();
+            history.pushState(null, null, location.href); // 히스토리 복구
+            return;
+        }
+
+        // 2. 모달이 없으면 '한 번 더 누르면 종료' 안내 (웹이므로 종료 대신 안내만)
+        const now = Date.now();
+        if (now - this.lastBackTime < 2000) {
+            // 실제 앱이라면 여기서 종료하지만, 웹이므로 로그아웃 권장
+            alert("로그아웃 버튼을 이용하시면 안전하게 종료됩니다. 🙌");
+        } else {
+            this.lastBackTime = now;
+            // 간단한 토스트 느낌의 알림 (alert 대신 가볍게 가능하지만 일단 alert)
+            console.log("뒤로가기를 한 번 더 누르면 안내가 표시됩니다.");
+            // 임시 토스트 효과
+            this.showToast("뒤로가기를 한 번 더 누르면 종료 안내가 표시됩니다.");
+            history.pushState(null, null, location.href); // 히스토리 복구
+        }
+    },
+
+    showToast(msg) {
+        const toast = document.createElement('div');
+        toast.innerText = msg;
+        toast.style = "position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; font-size:0.8rem; font-weight:800;";
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+    },
+
     init() {
-        console.log("v44.146 Real Data Sync Initialized.");
+        console.log("v44.229 Real Data Sync Initialized.");
+        
+        // [v44.229] 뒤로가기 방지용 히스토리 추가
+        history.pushState(null, null, location.href);
+        window.onpopstate = () => this.handleBackButton();
+
         this.loadRealData();
         this.renderAll();
         this.updateEvolution();
@@ -194,7 +233,8 @@ const Village = {
         }
         
         cancelBtn.onclick = () => {
-            if (type === 'habit' && habit && key !== 'h7' && key !== 'h9') this.applyHabitCheck(key, false);
+            // [v44.229] h7(나이트컷), h9(셀프칭찬)도 '체크만 하기' 가능하도록 수정
+            if (type === 'habit' && habit) this.applyHabitCheck(key, false);
             this.closeModal();
         };
 
@@ -229,7 +269,7 @@ const Village = {
                 this.showLoading("🌿 습관 수호 기록 중...");
                 google.script.run
                     .withSuccessHandler(() => {
-                        this.hideLoading();
+                        // [v44.229] loadRealData가 로딩을 새로 띄울 것이므로 여기서 hide하지 않음
                         console.log(`[v44.186] Habit ${id} recorded successfully.`);
                         this.loadRealData();
                     })
