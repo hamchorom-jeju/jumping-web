@@ -963,9 +963,14 @@
         }
         `;
 
+        let response;
+        let success = false;
+        let errMsg = "";
+
+        // 1차 시도: 최신 대세 모델인 gemini-2.5-flash
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-          const response = await fetch(url, {
+          response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -978,12 +983,45 @@
               generationConfig: { responseMimeType: "application/json" }
             })
           });
-
-          if (!response.ok) {
+          if (response.ok) {
+            success = true;
+          } else {
             const errData = await response.json();
-            const errMsg = errData.error ? errData.error.message : JSON.stringify(errData);
-            throw new Error(errMsg);
+            errMsg = errData.error ? errData.error.message : JSON.stringify(errData);
           }
+        } catch (e) {
+          errMsg = e.toString();
+        }
+
+        // 2차 예비 시도: 1차가 마비되었을 경우 자동으로 gemini-1.5-flash 우회 작동!
+        if (!success) {
+          console.warn("Primary model (gemini-2.5-flash) failed or overloaded. Trying fallback model (gemini-1.5-flash)... Details: " + errMsg);
+          try {
+            const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            response = await fetch(fallbackUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{
+                  parts: [
+                    { text: systemPrompt },
+                    { inlineData: { mimeType: aiMimeType, data: aiBase64Image } }
+                  ]
+                }],
+                generationConfig: { responseMimeType: "application/json" }
+              })
+            });
+            if (response.ok) {
+              success = true;
+            } else {
+              const errData = await response.json();
+              const finalErrMsg = errData.error ? errData.error.message : JSON.stringify(errData);
+              throw new Error("모든 AI 모델 마비: " + finalErrMsg);
+            }
+          } catch (fallbackErr) {
+            throw new Error("AI 분석 실패 (백업 모델 포함): " + fallbackErr.message);
+          }
+        }
 
           const result = await response.json();
           
@@ -1254,9 +1292,14 @@
           { "error": "not_inbody" }
         `;
 
+        let response;
+        let success = false;
+        let errMsg = "";
+
+        // 1차 시도: 최신 대세 모델인 gemini-2.5-flash
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-          const response = await fetch(url, {
+          response = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -1273,11 +1316,48 @@
               }
             })
           });
-
-          if (!response.ok) {
+          if (response.ok) {
+            success = true;
+          } else {
             const errData = await response.json();
-            throw new Error(errData.error?.message || "HTTP " + response.status);
+            errMsg = errData.error?.message || "HTTP " + response.status;
           }
+        } catch (e) {
+          errMsg = e.toString();
+        }
+
+        // 2차 예비 시도: 1차가 과부하 등으로 실패 시 자동으로 gemini-1.5-flash 우회 작동!
+        if (!success) {
+          console.warn("Primary InBody model (gemini-2.5-flash) failed or overloaded. Trying fallback model (gemini-1.5-flash)... Details: " + errMsg);
+          try {
+            const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            response = await fetch(fallbackUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    parts: [
+                      { text: promptText },
+                      { inlineData: { mimeType: inbodyMimeType, data: inbodyBase64Image } }
+                    ]
+                  }
+                ],
+                generationConfig: {
+                  responseMimeType: "application/json"
+                }
+              })
+            });
+            if (response.ok) {
+              success = true;
+            } else {
+              const errData = await response.json();
+              throw new Error(errData.error?.message || "HTTP " + response.status);
+            }
+          } catch (fallbackErr) {
+            throw new Error("AI 인바디 분석 실패 (백업 모델 포함): " + fallbackErr.message);
+          }
+        }
 
           const result = await response.json();
           const textResult = result.candidates[0].content.parts[0].text;
