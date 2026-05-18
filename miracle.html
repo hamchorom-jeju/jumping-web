@@ -1138,24 +1138,32 @@
       const newKey = document.getElementById('modal-gemini-key-input').value.trim();
       closeGeminiKeyModal();
       
+      // [보안 백업] 백엔드가 미처 웹앱 배포되기 전이라도, 이장님 브라우저 로컬스토리지에는 즉시 임시 저장하여 바로 스캔이 되도록 선반영!
+      if (newKey) {
+        localStorage.setItem('gemini_api_key', newKey);
+        const keyWarning = document.getElementById('api-key-warning');
+        if (keyWarning) keyWarning.style.display = 'none';
+      } else {
+        localStorage.removeItem('gemini_api_key');
+        const keyWarning = document.getElementById('api-key-warning');
+        if (keyWarning) keyWarning.style.display = 'block';
+      }
+      
       showLoading();
-      google.script.run.withSuccessHandler(res => {
-        hideLoading();
-        if (res && res.success) {
-          if (newKey) {
-            localStorage.setItem('gemini_api_key', newKey);
-            const keyWarning = document.getElementById('api-key-warning');
-            if (keyWarning) keyWarning.style.display = 'none';
+      google.script.run
+        .withSuccessHandler(res => {
+          hideLoading();
+          if (res && res.success) {
+            alert("✅ " + res.message);
           } else {
-            localStorage.removeItem('gemini_api_key');
-            const keyWarning = document.getElementById('api-key-warning');
-            if (keyWarning) keyWarning.style.display = 'block';
+            alert("🚨 API Key가 백엔드 금고에는 저장되지 못했지만, 이장님 브라우저 로컬에는 즉시 임시 등록되었습니다!\n\nAI 스캔 기능은 지금 바로 테스트하실 수 있습니다!\n(상세: " + (res ? res.error : "알 수 없는 오류") + ")");
           }
-          alert("✅ " + res.message);
-        } else {
-          alert("🚨 API Key 저장 실패: " + (res ? res.error : "알 수 없는 오류"));
-        }
-      }).setGeminiApiKey(newKey);
+        })
+        .withFailureHandler(err => {
+          hideLoading();
+          alert("🚨 [안내] 구글 Apps Script 웹앱이 아직 '새 버전'으로 배포(Deploy)되지 않아 백엔드 시트 저장에는 실패했습니다.\n\n대신 이장님 브라우저 로컬에 키를 즉시 임시 등록해 두었으니, AI 식단/인바디 스캔 테스트는 지금 즉시 정상적으로 가능합니다! 👍\n\n(완전한 공동 연동을 원하시면 구글 스크립트 에디터에서 '새 버전 배포'를 꼭 진행해 주세요!)");
+        })
+        .setGeminiApiKey(newKey);
     }
 
     // --- 지니 AI 인바디 스캐너 로직 ---
