@@ -244,13 +244,29 @@ function getUserDashboardData(payload) {
     var phone = rawPhone.replace(/[^0-9]/g, ""); 
     if (!phone) return { error: "전화번호가 없습니다." };
     
+    // [perf] 구글 초고속 캐시 서비스 확인 (0.05초)
+    var cache = CacheService.getUserCache();
+    var cacheKey = "v44_dash_" + phone;
+    var cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      try {
+        var parsed = JSON.parse(cachedData);
+        if (parsed && parsed.success) {
+          Logger.log("⚡ 캐시 데이터 반환 완료 (0.01초): " + phone);
+          return parsed;
+        }
+      } catch (e) {
+        cache.remove(cacheKey);
+      }
+    }
+    
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
     // 1. 회원 정보 (등록현황 시트)
     var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
     var memberInfo = { name: "모험가", tier: "씨앗", rank: "-" };
     if (regSheet) {
-      var regData = regSheet.getDataRange().getValues();
+      var regData = regSheet.getDataRange().getDisplayValues();
       var regCols = getRegColumnIndices(regSheet);
       for (var i = 1; i < regData.length; i++) {
         var sheetPhone = String(regData[i][regCols.phone]).replace(/[^0-9]/g, ""); 
@@ -301,21 +317,14 @@ function getUserDashboardData(payload) {
       startOfSeason.setHours(0, 0, 0, 0);
     }
 
-    var data = summarySheet.getDataRange().getValues();
+    var data = summarySheet.getDataRange().getDisplayValues();
     for (var j = 1; j < data.length; j++) {
       var recPhone = String(data[j][1]).replace(/[^0-9]/g, "");
       if (recPhone === phone) {
-        var recDate = null;
-        if (data[j][0] instanceof Date) {
-          recDate = data[j][0];
-        } else {
-          var recDateStr = String(data[j][0]);
-          var dMatch = recDateStr.match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
-          if (dMatch) {
-            recDate = new Date(dMatch[1], parseInt(dMatch[2], 10) - 1, parseInt(dMatch[3], 10));
-          }
-        }
-        if (recDate) {
+        var recDateStr = String(data[j][0]);
+        var dMatch = recDateStr.match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
+        if (dMatch) {
+          var recDate = new Date(dMatch[1], parseInt(dMatch[2], 10) - 1, parseInt(dMatch[3], 10));
           var rowTotal = Number(data[j][9] || 0); // J열(10번째): 총점
           activityLifetime += rowTotal;
           
@@ -536,7 +545,7 @@ function getUserDashboardData(payload) {
 
     var questStatus = getActiveQuestStatus(phone, ss, logData, memberInfo.name);
 
-    return {
+    var result = {
       success: true,
       doneList: doneList,
       name: memberInfo.name,
@@ -552,7 +561,31 @@ function getUserDashboardData(payload) {
       inactiveDays: inactiveDays,
       inactivityPenalty: inactivityPenalty
     };
+    
+    // [perf] 구글 캐시에 3분(180초) 동안 저장
+    try {
+      cache.put(cacheKey, JSON.stringify(result), 180);
+    } catch (err) {
+      Logger.log("캐시 저장 오류: " + err.toString());
+    }
+    
+    return result;
   } catch (e) { return { success: false, error: e.toString() }; }
+}
+
+/**
+ * [perf] 회원의 대시보드 캐시를 즉시 파괴하는 유틸리티 (실시간 데이터 갱신용)
+ */
+function clearUserDashboardCache(phone) {
+  if (!phone) return;
+  var cleanPhone = String(phone).replace(/[^0-9]/g, "");
+  try {
+    var cache = CacheService.getUserCache();
+    cache.remove("v44_dash_" + cleanPhone);
+    Logger.log("⚡ 대시보드 캐시 강제 삭제 완료: " + cleanPhone);
+  } catch (e) {
+    Logger.log("캐시 삭제 오류: " + e.toString());
+  }
 }
 
 /**
@@ -642,6 +675,10 @@ function submitInBodyRecord(payload) {
         uploadDate              // Column I: 등록일 (Record Date / Submission Date)
       ]);
     }
+    
+    
+    // [perf] 인바디 업로드 완료 시 캐시 즉시 제거
+    clearUserDashboardCache(phone);
     
     return { success: true, score: changeScore };
   } catch (e) { return { success: false, error: e.toString() }; }
@@ -1621,6 +1658,10 @@ function processAttendance(phoneStr, type, isBonus) {
       var pIdx = selectedPasses[0].pass.rowIdx;
       usedExpireDate = regSheet.getRange(pIdx, 7).getDisplayValue();
     }
+
+    
+    // [perf] 출석 완료 시 캐시 즉시 제거
+    clearUserDashboardCache(phoneStr);
 
     return { 
       success: true, 
@@ -5619,6 +5660,7 @@ function recordActivityLog(payload) {
       } else {
         var loginDetails = "[체력] 로그인 체크(1), [수행] 로그인 체크(2), [방어] 로그인 체크(2)";
         sheet.appendRow([todayStr, "'" + phone, payload.name, 0, 0, 2, 2, 1, loginDetails, 5]);
+        clearUserDashboardCache(phone);
         return { success: true };
       }
     } else {
@@ -5657,6 +5699,7 @@ function recordActivityLog(payload) {
       var total = rowVals.reduce((a, b) => Number(a || 0) + Number(b || 0), 0);
       sheet.getRange(targetRowIdx, 10).setValue(total);
     }
+    clearUserDashboardCache(phone);
     return { success: true };
   } catch (e) { return { success: false, error: e.toString() }; }
 }
