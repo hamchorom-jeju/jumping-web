@@ -244,6 +244,7 @@ function getUserDashboardData(payload) {
     var phone = rawPhone.replace(/[^0-9]/g, ""); 
     if (!phone) return { error: "전화번호가 없습니다." };
     
+
     // [perf] 구글 초고속 캐시 서비스 확인 (0.05초)
     var cache = CacheService.getScriptCache();
     var cacheKey = "v44_dash_" + phone;
@@ -253,6 +254,7 @@ function getUserDashboardData(payload) {
         var parsed = JSON.parse(cachedData);
         if (parsed && parsed.success) {
           Logger.log("⚡ 캐시 데이터 반환 완료 (0.01초): " + phone);
+          parsed.cacheHit = true;
           return parsed;
         }
       } catch (e) {
@@ -562,11 +564,15 @@ function getUserDashboardData(payload) {
       inactivityPenalty: inactivityPenalty
     };
     
+    result.cacheHit = false;
+    result.cacheError = null;
+    
     // [perf] 구글 캐시에 3분(180초) 동안 저장
     try {
       cache.put(cacheKey, JSON.stringify(result), 180);
     } catch (err) {
       Logger.log("캐시 저장 오류: " + err.toString());
+      result.cacheError = err.toString();
     }
     
     return result;
