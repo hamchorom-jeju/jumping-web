@@ -351,6 +351,10 @@
               <input type="number" id="inbody-scan-fat" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
             </div>
           </div>
+          <div style="margin-bottom: 10px;">
+            <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563; display: block; margin-bottom: 3px;">측정 날짜 (결과지 검사일시)</label>
+            <input type="date" id="inbody-scan-date" class="comment-input" style="font-weight: 800; background: #fff; width: 100%; box-sizing: border-box; border: 1.5px solid var(--v-border); padding: 8px 12px; border-radius: 10px; font-size: 0.8rem;">
+          </div>
           <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; line-height: 1.3;">
             * AI 판독이 틀렸을 경우 숫자를 수동으로 올바르게 보정하실 수 있습니다.
           </div>
@@ -1195,6 +1199,7 @@
       document.getElementById('file-input-inbody-camera').value = "";
       document.getElementById('file-input-inbody-album').value = "";
       document.getElementById('inbody-scan-result-form').style.display = 'none';
+      document.getElementById('inbody-scan-date').value = "";
       document.getElementById('btn-submit-inbody-scan').style.display = 'none';
       document.getElementById('btn-start-inbody-scan').style.display = 'block';
       document.getElementById('btn-start-inbody-scan').disabled = false;
@@ -1232,14 +1237,17 @@
         const promptText = `
           너는 노형 점핑 클럽의 수석 피트니스 AI 코치인 '지니'다.
           제공된 이미지는 회원이 올린 InBody(인바디) 결과지 또는 인바디 어플 화면 캡처본이다.
-          이미지에서 체중(weight), 골격근량(muscle), 체지방률(fat) 정보를 정확하게 식별하고 추출하라.
+          
+          1. 이미지에서 체중(weight), 골격근량(muscle), 체지방률(fat) 정보를 정확하게 식별하고 추출하라.
+          2. 이미지상에 인쇄되어 있거나 표기된 '검사일시', '측정일시', '검사일', 또는 'Date' 등의 날짜 정보(date)를 찾아 반드시 "YYYY-MM-DD" 포맷의 문자열로 추출하라. 만약 날짜 정보를 찾을 수 없거나 판독할 수 없다면 null로 반환하라.
           
           반드시 다음 JSON 객체 형식만 반환하라. 마크다운(\`\`\`json)이나 백틱, 일반 설명 텍스트는 절대 포함하지 마라.
           
           {
             "weight": 47.7,
             "muscle": 21.0,
-            "fat": 19.9
+            "fat": 19.9,
+            "date": "2026-05-17"
           }
           
           만약 이미지가 인바디와 관련이 없거나 글씨를 도저히 읽을 수 없다면 다음 형식으로만 반환하라:
@@ -1288,12 +1296,23 @@
           document.getElementById('inbody-scan-muscle').value = data.muscle || "";
           document.getElementById('inbody-scan-fat').value = data.fat || "";
           
+          const dateEl = document.getElementById('inbody-scan-date');
+          if (dateEl) {
+            if (data.date && /^\d{4}-\d{2}-\d{2}$/.test(data.date)) {
+              dateEl.value = data.date;
+            } else {
+              const offset = new Date().getTimezoneOffset() * 60000;
+              const todayKst = new Date(Date.now() - offset).toISOString().split('T')[0];
+              dateEl.value = todayKst;
+            }
+          }
+          
           document.getElementById('inbody-scan-result-form').style.display = 'block';
           document.getElementById('btn-submit-inbody-scan').style.display = 'block';
           document.getElementById('btn-start-inbody-scan').style.display = 'none';
 
           inbodyScanResult = data;
-          showAppAlert("✅ 지니 AI가 체중/근량/지방률 분석에 성공했습니다!\n수치가 정확한지 검토 후 등록 버튼을 눌러주세요.", "success");
+          showAppAlert("✅ 지니 AI가 체중/근량/지방률 및 검사일 판독에 성공했습니다!\n수치가 정확한지 검토 후 등록 버튼을 눌러주세요.", "success");
 
         } catch (err) {
           scanLine.style.display = 'none';
@@ -1310,6 +1329,7 @@
       const weightVal = parseFloat(document.getElementById('inbody-scan-weight').value);
       const muscleVal = parseFloat(document.getElementById('inbody-scan-muscle').value);
       const fatVal = parseFloat(document.getElementById('inbody-scan-fat').value);
+      const dateVal = document.getElementById('inbody-scan-date').value;
 
       if (isNaN(weightVal) || isNaN(muscleVal) || isNaN(fatVal)) {
         alert("모든 수치(체중, 골격근량, 체지방률)를 올바르게 입력해 주세요!");
@@ -1347,7 +1367,8 @@
           phone: TARGET_PHONE,
           weight: weightVal,
           muscle: muscleVal,
-          fat: fatVal
+          fat: fatVal,
+          customDate: dateVal
         });
     }
 

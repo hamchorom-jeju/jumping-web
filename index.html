@@ -29,6 +29,11 @@
             align-items: center !important;
             gap: 5px !important;
         }
+        @keyframes pulse-warning {
+            0% { transform: scale(1); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15); }
+            50% { transform: scale(1.02); box-shadow: 0 4px 20px rgba(239, 68, 68, 0.35); }
+            100% { transform: scale(1); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15); }
+        }
     </style>
     <script>
         // [v44.219] 최우선 순위로 로그인 상태를 체크합니다.
@@ -93,6 +98,16 @@
                     <div style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #be123c; background: transparent;"></div>
                 </div>
                 <span id="glycogen-quest-ratio" style="font-size: 0.75rem; font-weight: 900; color: #be123c; margin-left: auto;">0 / 3</span>
+            </div>
+        </div>
+
+        <!-- [v46.35] 연속 미출석 결석 디버프 경고 위젯 -->
+        <div id="inactivity-debuff-widget" style="display:none; background: linear-gradient(135deg, #ffebeb 0%, #fecaca 100%); border: 2px solid #f87171; padding: 15px; border-radius: 18px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15); align-items: center; gap: 12px; animation: pulse-warning 2s infinite ease-in-out;">
+            <span style="font-size: 2.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">🚨</span>
+            <div style="display: flex; flex-direction: column; gap: 3px; text-align: left;">
+                <span style="font-weight: 900; color: #991b1b; font-size: 0.85rem;">⚠️ 웰니스 에너지 방전 경고 (연속 <span id="debuff-days">0</span>일 결석)</span>
+                <span style="font-size: 0.7rem; color: #b91c1c; font-weight: 700; line-height: 1.4;">회원님! 클럽 출석을 안 하신 지 너무 오래되어 에너지가 방전되며 누적 점수 <strong style="font-size: 0.8rem; color:#7f1d1d;">-<span id="debuff-penalty">0</span> EXP</strong>가 일시 차감되었습니다.</span>
+                <span style="font-size: 0.65rem; color: #991b1b; font-weight: 800; background: rgba(153, 27, 27, 0.1); padding: 4px 8px; border-radius: 20px; width: fit-content; margin-top: 2px;">💡 오늘 클럽 출석 즉시 100% 자동 복원(부활)! 🤸‍♂️</span>
             </div>
         </div>
 

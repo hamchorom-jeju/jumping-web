@@ -270,7 +270,9 @@ function getUserDashboardData(payload) {
       weekly: { health: 0, perf: 0, def: 0 },
       monthly: { health: 0, perf: 0, def: 0 }
     };
-    var scores = { lifetime: 0, season: 0, weekly: 0 };
+    var activityLifetime = 0;
+    var activitySeason = 0;
+    var activityWeekly = 0;
     var achievedBonuses = [];
     
     var now = new Date();
@@ -293,10 +295,8 @@ function getUserDashboardData(payload) {
     
     var startOfSeason;
     if (now >= currentMonth4thWed) {
-      // 오늘이 이번 달 4째주 수요일 이후라면, 이번 달 수요일이 시작점
       startOfSeason = currentMonth4thWed;
     } else {
-      // 아직 이번 달 4째주 수요일 전이라면, 지난 달 4째주 수요일이 시작점
       startOfSeason = get4thWednesday(now.getFullYear(), now.getMonth() - 1);
       startOfSeason.setHours(0, 0, 0, 0);
     }
@@ -310,18 +310,18 @@ function getUserDashboardData(payload) {
         if (dMatch) {
           var recDate = new Date(dMatch[1], parseInt(dMatch[2], 10) - 1, parseInt(dMatch[3], 10));
           var rowTotal = Number(data[j][9] || 0); // J열(10번째): 총점
-          scores.lifetime += rowTotal;
+          activityLifetime += rowTotal;
           
           // 월간(시즌) 합산
           if (recDate >= startOfSeason) {
-            scores.season += rowTotal;
+            activitySeason += rowTotal;
             stats.monthly.perf += (Number(data[j][3]) || 0) + (Number(data[j][4]) || 0) + (Number(data[j][5]) || 0);
             stats.monthly.def += (Number(data[j][6]) || 0);
             stats.monthly.health += (Number(data[j][7]) || 0);
           }
           // 주간 합산
           if (recDate >= startOfWeek) {
-            scores.weekly += rowTotal;
+            activityWeekly += rowTotal;
             stats.weekly.perf += (Number(data[j][3]) || 0) + (Number(data[j][4]) || 0) + (Number(data[j][5]) || 0);
             stats.weekly.def += (Number(data[j][6]) || 0);
             stats.weekly.health += (Number(data[j][7]) || 0);
@@ -346,26 +346,167 @@ function getUserDashboardData(payload) {
       }
     }
 
-    // 인바디 점수 (체력 스탯 합산)
+    // [v46.37] 주간 랭킹 발표 및 잠금 기준선 (목요일 12:00) & 측정 마감선 (수요일 24:00) 연산 엔진
+    var currentThursdayNoon = new Date(now.getTime());
+    var dayOfWeek = currentThursdayNoon.getDay(); // 0(일)~6(토)
+    var diffToThu = 4 - dayOfWeek;
+    currentThursdayNoon.setDate(currentThursdayNoon.getDate() + diffToThu);
+    currentThursdayNoon.setHours(12, 0, 0, 0);
+    
+    // 만약 현재가 이번 주 목요일 12:00 이전이라면, 지난주 목요일 12:00을 기준선으로 설정하여 지난주 순위를 고정 표출합니다.
+    var targetThursdayNoon = new Date(currentThursdayNoon.getTime());
+    if (now < currentThursdayNoon) {
+      targetThursdayNoon.setDate(targetThursdayNoon.getDate() - 7);
+    }
+    
+    // 측정일 마감 기준선: 수요일 24:00 (즉 목요일 00:00:00)
+    var measurementDeadline = new Date(targetThursdayNoon.getTime());
+    measurementDeadline.setDate(measurementDeadline.getDate() - 1); // 목요일 -> 수요일
+    measurementDeadline.setHours(24, 0, 0, 0); // 수요일 24:00 (목요일 00:00:00)
+    
+    // 제출(업로드) 마감 기준선: 목요일 12:00
+    var submissionDeadline = targetThursdayNoon;
+    var lastWed = measurementDeadline; // 하위 호환성 유지용 선언
+
+    var firstEverInbody = null;
+    var activeInbodySnapshot = null;
+    var season0WeekInbody = null;
+
     var inbodySheet = ss.getSheetByName("33챌린지_인바디");
     if (inbodySheet) {
       var inData = inbodySheet.getDataRange().getValues();
       for (var k = 1; k < inData.length; k++) {
-        if (String(inData[k][2]).replace(/[^0-9]/g, "") === phone) {
-          var s = Number(inData[k][6] || 0);
-          scores.lifetime += s;
+        var recPhone = String(inData[k][2]).replace(/[^0-9]/g, "");
+        if (recPhone === phone) {
           var iDate = new Date(inData[k][0]);
-          if (iDate >= startOfSeason) {
-            scores.season += s;
-            stats.monthly.health += s;
+          var remarksStr = String(inData[k][7] || "");
+          var record = {
+            date: iDate,
+            weight: Number(inData[k][3] || 0),
+            muscle: Number(inData[k][4] || 0),
+            fat: Number(inData[k][5] || 0),
+            remarks: remarksStr
+          };
+          
+          // [v46.37] 업로드(제출) 시각 추출 (없으면 측정일과 동일하게 매칭)
+          var uploadDate = iDate;
+          var uploadMatch = remarksStr.match(/\[등록일:\s*([\d\-\s:]+)\]/);
+          if (uploadMatch) {
+            uploadDate = new Date(uploadMatch[1]);
           }
-          if (iDate >= startOfWeek) {
-            scores.weekly += s;
-            stats.weekly.health += s;
+          
+          if (!firstEverInbody || iDate < firstEverInbody.date) {
+            firstEverInbody = record;
+          }
+          
+          // 1. 측정일은 수요일 24:00 (목요일 00:00) 이전
+          // 2. 제출일은 목요일 12:00 (정오) 이전인 기록만 이번 랭킹 스냅샷에 포함!
+          if (iDate <= measurementDeadline && uploadDate <= submissionDeadline) {
+            if (!activeInbodySnapshot || iDate > activeInbodySnapshot.date) {
+              activeInbodySnapshot = record;
+            }
+          }
+          if (iDate <= startOfSeason) {
+            if (!season0WeekInbody || iDate > season0WeekInbody.date) {
+              season0WeekInbody = record;
+            }
           }
         }
       }
     }
+
+    if (!season0WeekInbody) {
+      season0WeekInbody = firstEverInbody;
+    }
+
+    // 인바디 개선 점수 연산 헬퍼 호출 (옵션 B: 최초 체지방량 대비 체지방 감소율 1%당 200점)
+    function calculateInbodyScoreHelper(first, current) {
+      if (!first || !current) return 0;
+      var score = 0;
+      var diffW = Number((first.weight - current.weight).toFixed(2));
+      var diffM = Number((current.muscle - first.muscle).toFixed(2));
+      
+      // 1. 체중 감량 점수: 100g당 50점 (1kg당 500점)
+      if (diffW > 0) score += (diffW * 10) * 50;
+      
+      // 2. 근육량 증가 점수: 100g당 200점 (1kg당 2,000점)
+      if (diffM > 0) score += (diffM * 10) * 200;
+      
+      // 3. [옵션 B] 최초 체지방량 대비 체지방 감소율 점수: 감소율 1%당 200점! (고배점)
+      // 최초/현재 체지방량(kg) = 체중(kg) * (체지방률(%) / 100)
+      var firstFatMass = first.weight * (first.fat / 100);
+      var currentFatMass = current.weight * (current.fat / 100);
+      var fatLossRate = 0;
+      
+      if (firstFatMass > 0) {
+        fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
+        if (fatLossRate > 0) {
+          score += Math.round(fatLossRate * 200); // 예: 체지방의 10% 감량 시 2,000점!
+        }
+      }
+      
+      // 4. [신규 v46.36] 명품 유지 히어로 보너스 (Maintenance Hero Bonus)
+      // 이미 충분히 감량하여 명품 건강 상태를 안정적으로 유지 중인 회원 대상 보너스 (+1,500 EXP)
+      // 조건: 최초 대비 체중 8kg 이상 감량 유지 중이거나, 체지방 감소율(옵션 B) 20% 이상을 유지 중일 때!
+      if (diffW >= 8.0 || fatLossRate >= 20.0) {
+        score += 1500;
+      }
+      
+      // 5. 유지 보너스 (+100점)
+      if (Math.abs(diffW) <= 0.2) score += 100;
+      return score;
+    }
+
+    var inbodyLifetimeScore = calculateInbodyScoreHelper(firstEverInbody, activeInbodySnapshot);
+    var inbodyWeeklyScore = inbodyLifetimeScore;
+    var inbodySeasonScore = calculateInbodyScoreHelper(season0WeekInbody, activeInbodySnapshot);
+
+    // [v46.35] 연속 미출석(결석) 페널티 계산 (출석 시 즉시 부활!)
+    var lastAttendanceDate = null;
+    var logSheet = ss.getSheetByName("출석기록");
+    if (logSheet) {
+      var logData = logSheet.getDataRange().getValues();
+      var logCols = getAttendanceColumnIndices(logSheet);
+      for (var l = logData.length - 1; l >= 1; l--) {
+        var sheetPhone = String(logData[l][logCols.phone]).replace(/[^0-9]/g, "");
+        if (sheetPhone === phone) {
+          var dRaw = logData[l][logCols.date];
+          if (dRaw) {
+            var dObj = (dRaw instanceof Date) ? dRaw : new Date(dRaw);
+            if (!isNaN(dObj.getTime())) {
+              lastAttendanceDate = dObj;
+              break;
+            }
+          }
+        }
+      }
+    }
+    
+    var inactiveDays = 0;
+    var inactivityPenalty = 0;
+    if (lastAttendanceDate) {
+      var midnightNow = new Date();
+      midnightNow.setHours(0,0,0,0);
+      var midnightLast = new Date(lastAttendanceDate.getTime());
+      midnightLast.setHours(0,0,0,0);
+      
+      var diffTime = midnightNow.getTime() - midnightLast.getTime();
+      inactiveDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (inactiveDays > 3) {
+        inactivityPenalty = (inactiveDays - 3) * 100;
+        if (inactivityPenalty > 3000) inactivityPenalty = 3000;
+      }
+    }
+
+    // 최종 스코어 보정 및 디버프 차감
+    var scores = {};
+    scores.lifetime = Math.max(0, activityLifetime + inbodyLifetimeScore - inactivityPenalty);
+    scores.weekly = Math.max(0, activityWeekly + inbodyWeeklyScore - inactivityPenalty);
+    scores.season = Math.max(0, activitySeason + inbodySeasonScore - inactivityPenalty);
+
+    stats.weekly.health = inbodyWeeklyScore;
+    stats.monthly.health = inbodySeasonScore;
 
     // 4. 티어 및 랭킹 (기존 로직 유지)
     var tiers = [
@@ -397,7 +538,9 @@ function getUserDashboardData(payload) {
       weeklyTargets: { health: 1500, perf: 1000, def: 500 },
       monthlyTargets: { health: 6000, perf: 4000, def: 2000 },
       quests: questStatus,
-      achievedBonuses: achievedBonuses
+      achievedBonuses: achievedBonuses,
+      inactiveDays: inactiveDays,
+      inactivityPenalty: inactivityPenalty
     };
   } catch (e) { return { success: false, error: e.toString() }; }
 }
@@ -441,7 +584,19 @@ function submitInBodyRecord(payload) {
       if (Math.abs(diffWeight) <= 0.2) changeScore += 100;
     }
     
-    sheet.appendRow([new Date(), name, phone, weight, muscle, fat, changeScore, payload.remarks || ""]);
+    var dateValue = new Date();
+    if (payload.customDate) {
+      var parts = payload.customDate.split('-');
+      if (parts.length === 3) {
+        var now = new Date();
+        dateValue = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), now.getHours(), now.getMinutes(), now.getSeconds());
+      }
+    }
+    
+    var uploadDateStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
+    var finalRemarks = "[등록일: " + uploadDateStr + "] " + (payload.remarks || "");
+    
+    sheet.appendRow([dateValue, name, phone, weight, muscle, fat, changeScore, finalRemarks]);
     return { success: true, score: changeScore };
   } catch (e) { return { success: false, error: e.toString() }; }
 }
@@ -4347,14 +4502,15 @@ function autoRefreshSmsLists() {
       var status = String(data[i][5]).trim();
       
       // 자동 생성 카테고리이면서 아직 발송하지 않은(대기) 건만 상태 변경
-      if ((category === "장기미방문" || category === "복귀권유") && status === "대기") {
+      if ((category === "장기미방문" || category === "복귀권유" || category === "출석디버프") && status === "대기") {
         sheet.getRange(i + 1, 6).setValue("완료(재방문)");
       }
     }
     
-    // 다시 추출 (이미 방문한 사람은 lastAttendanceMap에 의해 제외됨)
+    // 다시 추출
     checkLongTermAbsentees();
     checkInactiveMembers();
+    checkInactivityDebuffAbsentees(); // [v46.35] 연속 미출석 결석 디버프 대기열 추가
     
     Logger.log("SMS 발송 대기 목록 자동 최신화 완료");
   } catch (e) {
@@ -4594,6 +4750,111 @@ function checkInactiveMembers() {
     
   } catch (e) {
     return { error: "복귀 대상 추출 중 오류: " + e.toString() };
+  }
+}
+
+/**
+ * [관리자 전용] 4~6일 연속 결석으로 점수가 차감 중인 회원 추출 및 문자 생성 (v46.35)
+ */
+function checkInactivityDebuffAbsentees() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+    var logSheet = ss.getSheetByName("출석기록");
+    var smsSheet = ss.getSheetByName("문자발송");
+    
+    if (!regSheet || !logSheet || !smsSheet) return { error: "필요한 시트(등록현황/출석기록/문자발송)가 없습니다." };
+    
+    var regData = regSheet.getDataRange().getDisplayValues();
+    var logData = logSheet.getDataRange().getValues();
+    var smsData = smsSheet.getDataRange().getDisplayValues();
+    
+    var regCols = getRegColumnIndices(regSheet);
+    var logCols = getAttendanceColumnIndices(logSheet);
+    
+    var now = new Date();
+    
+    // 1. 마지막 출석일 맵 작성 (폰번호 기준)
+    var lastAttendanceMap = {};
+    for (var i = 1; i < logData.length; i++) {
+      var phone = String(logData[i][logCols.phone] || "").replace(/[^0-9]/g, "");
+      var dRaw = logData[i][logCols.date];
+      if (!phone || !dRaw) continue;
+      
+      var attendanceDate = (dRaw instanceof Date) ? dRaw : new Date(dRaw);
+      if (!lastAttendanceMap[phone] || attendanceDate > lastAttendanceMap[phone]) {
+        lastAttendanceMap[phone] = attendanceDate;
+      }
+    }
+    
+    // 2. 이미 발송 대기 중인 목록 확인 (중복 생성 방지)
+    var existingSmsMap = {};
+    for (var j = 1; j < smsData.length; j++) {
+      var sPhone = String(smsData[j][2] || "").replace(/[^0-9]/g, "");
+      var sCategory = smsData[j][3];
+      var sStatus = smsData[j][5];
+      if (sCategory === "출석디버프" && (sStatus === "대기" || sStatus === "완료")) {
+        existingSmsMap[sPhone] = true;
+      }
+    }
+    
+    // 3. 연속 결석 4~6일인 회원 추출 및 문자 생성
+    var count = 0;
+    var addedNames = [];
+    
+    var midnightNow = new Date();
+    midnightNow.setHours(0,0,0,0);
+    
+    for (var k = 1; k < regData.length; k++) {
+      var status = String(regData[k][regCols.status]).trim();
+      if (status !== "진행중" && status !== "진행 중") continue;
+      
+      var phone = String(regData[k][regCols.phone] || "").replace(/[^0-9]/g, "");
+      var name = regData[k][regCols.name];
+      if (!phone) continue;
+      
+      var lastDate = lastAttendanceMap[phone];
+      if (!lastDate) continue; // 출석 기록이 전혀 없는 신규 회원은 대상 제외
+      
+      var midnightLast = new Date(lastDate.getTime());
+      midnightLast.setHours(0,0,0,0);
+      
+      var diffTime = midnightNow.getTime() - midnightLast.getTime();
+      var inactiveDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      // 4~6일 결석일 때 문자 생성 (디버프 경고 전송 적기)
+      if (inactiveDays >= 4 && inactiveDays <= 6) {
+        if (existingSmsMap[phone]) continue;
+        
+        var cleanName = name.replace(/\d{4}$/, ""); // 이름 뒤 번호 제거
+        var penaltyVal = (inactiveDays - 3) * 100;
+        
+        var msg = "🚨 [노형점핑] " + cleanName + " 회원님! 운동을 쉬신 지 벌써 " + inactiveDays + "일이 지나, 아쉽게도 웰니스 누적 점수가 매일 100 EXP씩 방전(감점)되기 시작했어요! 😭 누적 -" + penaltyVal + " EXP 상태입니다. 하지만 걱정 마세요! 오늘 클럽에 오셔서 신나게 점핑 뛰고 출석체크만 쾅! 하시면 깎였던 모든 점수와 순위가 즉시 100% 마법처럼 전부 복구(부활)됩니다! ✨ 오늘 꼭 오셔서 건강 충전해 가세요! ❤️";
+        
+        var formattedPhone = formatPhoneForSms(regData[k][regCols.phone]);
+        
+        smsSheet.appendRow([
+          Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm"),
+          cleanName,
+          formattedPhone,
+          "출석디버프",
+          msg,
+          "대기"
+        ]);
+        
+        count++;
+        addedNames.push(cleanName);
+      }
+    }
+    
+    return {
+      success: true,
+      count: count,
+      message: count > 0 ? count + "명의 디버프 경고 대상을 추출했습니다." : "새로운 디버프 경고 대상이 없습니다.",
+      addedNames: addedNames
+    };
+  } catch (e) {
+    return { error: "디버프 추출 오류: " + e.toString() };
   }
 }
 

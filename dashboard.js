@@ -189,6 +189,9 @@ const Village = {
                         if (res.quests) {
                             this.renderQuestWidgets(res.quests);
                         }
+                        if (res.inactiveDays !== undefined) {
+                            this.renderInactivityDebuff(res.inactiveDays, res.inactivityPenalty);
+                        }
                         if (res.isFirstLoginToday) this.showLoginReward();
                     }
                 })
@@ -568,6 +571,22 @@ const Village = {
                 }
             } else {
                 shieldWidget.style.display = 'none';
+            }
+        }
+    },
+
+    renderInactivityDebuff(inactiveDays, inactivityPenalty) {
+        const widget = document.getElementById('inactivity-debuff-widget');
+        const daysEl = document.getElementById('debuff-days');
+        const penaltyEl = document.getElementById('debuff-penalty');
+        
+        if (widget && daysEl && penaltyEl) {
+            if (inactivityPenalty > 0) {
+                daysEl.innerText = inactiveDays;
+                penaltyEl.innerText = inactivityPenalty.toLocaleString();
+                widget.style.display = 'flex';
+            } else {
+                widget.style.display = 'none';
             }
         }
     }
