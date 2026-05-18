@@ -440,6 +440,7 @@
 
     let selectedMemberPhone = "";
     let selectedMemberName = "";
+    let selectedMemberObject = null;
 
     function searchUser() {
       if (pin.length !== 4) {
@@ -539,6 +540,7 @@
 
     function selectUser(member) {
       resetButtons(); 
+      selectedMemberObject = member;
       selectedMemberPhone = member.phone;
       selectedMemberName = member.name;
       document.getElementById('userName').innerText = selectedMemberName + " 님";
@@ -659,81 +661,115 @@
       const btn = document.getElementById(btnId);
       if (!btn) return;
 
-      const originalText = btn.innerHTML;
+      // --- [PWA Optimistic UI Update] ---
+      // 구글 백엔드 서버 응답을 기다리지 않고, 0.01초 만에 화면에 "출석 완료"창을 먼저 띄워줍니다!
+      let optSuccessMsg = "";
+      if (type === '점핑') optSuccessMsg = "점핑 출석 완료! 🏃‍♀️<br>신나게 뛰어볼까요?";
+      else if (type === '테라피') optSuccessMsg = "테라피 출석 완료! 🌿<br>편안한 시간 되세요.";
+      else if (type === '복합') optSuccessMsg = "복합 출석 완료! ✨<br>오늘도 고생하셨습니다.";
+      else if (type === '보너스') optSuccessMsg = "보너스 출석 완료! 🎁<br>감사합니다!";
       
-      // 모든 버튼 비활성화 (이중 클릭 방지)
-      const allButtons = document.querySelectorAll('.user-modal-content .btn');
-      allButtons.forEach(b => {
-        b.style.opacity = '0.5';
-        b.style.pointerEvents = 'none';
-      });
+      let optRemain = undefined;
+      let optExpireDate = "-";
+      let optUsedPassName = "";
+      let optIsUnlimited = false;
       
-      btn.innerHTML = `<span style="display:flex; align-items:center; justify-content:center;"><svg class="spinner" viewBox="0 0 50 50" style="width:24px; height:24px; margin-right:10px; animation: rotate 2s linear infinite;"><circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5" stroke-dasharray="90,150" stroke-dashoffset="0" stroke-linecap="round"></circle></svg> 처리 중...</span>`;
-      document.getElementById('userName').innerText = "출석 처리중...";
-      
-      google.script.run.withSuccessHandler(function(res) {
-        resetButtons();
-        if (res.error) {
-          showError(res.error);
-          // '이미 출석' 문구가 포함된 경우만 처음으로 돌아가고, 나머지는 팝업 유지
-          if (res.error.indexOf("이미 출석") !== -1) {
-            closeModal();
-          } else {
-            // 회원권 부족 등의 에러는 팝업을 닫지 않고 이름만 다시 표시 (처리중 지우기)
-            document.getElementById('userName').innerText = selectedMemberName + " 님";
-          }
+      if (selectedMemberObject) {
+        if (isBonus) {
+          const curBonus = Number(selectedMemberObject.bonusCount) || 0;
+          optRemain = Math.max(0, curBonus - 1);
+          optUsedPassName = "보너스권";
         } else {
-          // [perf] 출석체크 성공 시, 로컬 레지스트리의 해당 회원 잔여 횟수를 즉시 차감 갱신하여 연속 조회의 데이터 정합성 보장
-          const cached = localStorage.getItem('v44_attendance_registry');
-          if (cached) {
-            try {
-              const registry = JSON.parse(cached);
-              const cleanPhone = selectedMemberPhone.replace(/[^0-9]/g, "");
-              for (var i = 0; i < registry.length; i++) {
-                if (registry[i].phoneClean === cleanPhone) {
-                  if (type === '보너스') {
-                    var curBonus = Number(registry[i].bonusCount) || 0;
-                    registry[i].bonusCount = String(Math.max(0, curBonus - 1));
-                  } else if (res.updatedRemain !== undefined) {
-                    registry[i].remainCount = String(res.updatedRemain);
-                    if (registry[i].allPasses && registry[i].allPasses.length > 0) {
-                      registry[i].allPasses[0].remainCount = String(res.updatedRemain);
-                    }
-                  }
+          // 일치하는 첫 번째 활성 회원권을 탐색
+          let matchedPass = null;
+          if (selectedMemberObject.allPasses && selectedMemberObject.allPasses.length > 0) {
+            for (let p = 0; p < selectedMemberObject.allPasses.length; p++) {
+              const pass = selectedMemberObject.allPasses[p];
+              if (type === '점핑') {
+                if (pass.membershipType.indexOf("점핑") !== -1 || pass.membershipType.indexOf("월권") !== -1 || pass.membershipType.indexOf("운동만") !== -1) {
+                  matchedPass = pass;
+                  break;
+                }
+              } else if (type === '테라피') {
+                if (pass.membershipType.indexOf("테라피") !== -1 || pass.membershipType.indexOf("패키지") !== -1) {
+                  matchedPass = pass;
+                  break;
+                }
+              } else if (type === '복합') {
+                if (pass.membershipType.indexOf("복합") !== -1 || pass.membershipType.indexOf("패키지") !== -1) {
+                  matchedPass = pass;
                   break;
                 }
               }
-              localStorage.setItem('v44_attendance_registry', JSON.stringify(registry));
-            } catch(e) {
-              console.error("로컬 캐시 즉시 업데이트 에러:", e);
             }
+            // 매칭된 게 없으면 첫 번째 회원권 사용
+            if (!matchedPass) matchedPass = selectedMemberObject.allPasses[0];
           }
           
-          // 백그라운드 사후 실시간 동기화
-          syncRegistry();
-
-          closeModal();
-          let successMsg = "";
-          if(type === '점핑') successMsg = "점핑 출석 완료! 🏃‍♀️<br>신나게 뛰어볼까요?";
-          else if(type === '테라피') successMsg = "테라피 출석 완료! 🌿<br>편안한 시간 되세요.";
-          else if(type === '복합') successMsg = "복합 출석 완료! ✨<br>오늘도 고생하셨습니다.";
-          else if(type === '보너스') successMsg = "보너스 출석 완료! 🎁<br>감사합니다!";
-          
-          if (res.updatedRemain !== undefined) {
-            const countInfo = res.isUnlimited ? "무제한 이용 중" : `잔여: ${res.updatedRemain}회`;
-            const expireInfo = (res.expireDate && res.expireDate !== "-") ? `<div style="font-size: 3.5rem; margin-top: 30px; opacity: 1; font-weight: 800; color: #4a5568;">기한: ~${res.expireDate}</div>` : "";
-            
-            let finalInfo = `<div style="font-size: 5.5rem; letter-spacing:-2px; line-height:1;">${countInfo}</div>` + expireInfo;
-            if (res.usedPassName && res.usedPassName !== "보너스권") {
-              finalInfo = `<div style="font-size: 2rem; color:#8a2be2; margin-bottom:15px; opacity:0.8;">[${res.usedPassName}]</div>` + finalInfo;
+          if (matchedPass) {
+            optUsedPassName = matchedPass.membershipType;
+            optExpireDate = matchedPass.expireDate;
+            const curRemain = Number(matchedPass.remainCount);
+            if (isNaN(curRemain)) {
+              optIsUnlimited = true;
+            } else {
+              optRemain = Math.max(0, curRemain - 1);
             }
-            successMsg += `<div style="margin-top:45px; font-weight:900; color:#1a202c; background:#f0f7ff; padding:50px 20px; border-radius:40px; border:8px solid #8a2be2; box-shadow: 0 20px 45px rgba(138, 43, 226, 0.3);">${finalInfo}</div>`;
           }
-          showAppAlert(successMsg, "success");
         }
+      }
+      
+      // 낙관적으로 미리 로컬 캐시를 업데이트 해둡니다 (0초 만에 잔여 횟수가 연산됨)
+      if (selectedMemberObject) {
+        const cached = localStorage.getItem('v44_attendance_registry');
+        if (cached) {
+          try {
+            const registry = JSON.parse(cached);
+            const cleanPhone = selectedMemberPhone.replace(/[^0-9]/g, "");
+            for (var i = 0; i < registry.length; i++) {
+              if (registry[i].phoneClean === cleanPhone) {
+                if (isBonus && optRemain !== undefined) {
+                  registry[i].bonusCount = String(optRemain);
+                } else if (optRemain !== undefined) {
+                  registry[i].remainCount = String(optRemain);
+                  if (registry[i].allPasses && registry[i].allPasses.length > 0) {
+                    registry[i].allPasses[0].remainCount = String(optRemain);
+                  }
+                }
+                break;
+              }
+            }
+            localStorage.setItem('v44_attendance_registry', JSON.stringify(registry));
+          } catch(e) {}
+        }
+      }
+      
+      // 0.01초 만에 확인 모달을 닫고 성공 화면 즉각 표출!
+      closeModal();
+      
+      if (optRemain !== undefined || optIsUnlimited) {
+        const countInfo = optIsUnlimited ? "무제한 이용 중" : `잔여: ${optRemain}회`;
+        const expireInfo = (optExpireDate && optExpireDate !== "-") ? `<div style="font-size: 3.5rem; margin-top: 30px; opacity: 1; font-weight: 800; color: #4a5568;">기한: ~${optExpireDate}</div>` : "";
+        
+        let finalInfo = `<div style="font-size: 5.5rem; letter-spacing:-2px; line-height:1;">${countInfo}</div>` + expireInfo;
+        if (optUsedPassName && optUsedPassName !== "보너스권") {
+          finalInfo = `<div style="font-size: 2rem; color:#8a2be2; margin-bottom:15px; opacity:0.8;">[${optUsedPassName}]</div>` + finalInfo;
+        }
+        optSuccessMsg += `<div style="margin-top:45px; font-weight:900; color:#1a202c; background:#f0f7ff; padding:50px 20px; border-radius:40px; border:8px solid #8a2be2; box-shadow: 0 20px 45px rgba(138, 43, 226, 0.3);">${finalInfo}</div>`;
+      }
+      
+      showAppAlert(optSuccessMsg, "success");
+      
+      // 뒷단에서 실제 구글 스프레드시트 서버 통신을 실행합니다 (사용자는 이미 가벼운 발걸음으로 입장 중)
+      google.script.run.withSuccessHandler(function(res) {
+        if (res.error) {
+          // 혹시라도 서버단 중복체크 등으로 에러가 오면 상단에 빨간색 에러 알림
+          showError("출석 기록 갱신 실패: " + res.error);
+        }
+        // 최신 회원 명단 백그라운드 사후 실시간 동기화
+        syncRegistry();
       }).withFailureHandler(function(err) {
-        resetButtons();
-        showError("서버 통신 오류가 발생했습니다.");
+        showError("서버 전송 실패: 네트워크 상태를 확인해 주세요.");
       }).processAttendance(selectedMemberPhone, type, isBonus);
     }
   </script>
