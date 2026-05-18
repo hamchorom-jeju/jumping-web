@@ -377,7 +377,8 @@
           <button id="btn-start-ai-scan" onclick="startAiScan()" style="flex:4; background: var(--v-wood); color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 900; font-size: 1rem; box-shadow: 0 4px 15px rgba(93, 64, 55, 0.2); cursor: pointer;">
             지니 AI 식단 스캔 시작 🚀
           </button>
-          <button id="btn-reset-api-key" onclick="resetApiKeyPrompt()" style="flex:2; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; padding: 12px; border-radius: 15px; font-weight: 800; font-size: 0.75rem; cursor: pointer; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 4px;">
+          <!-- [v46.3] 키 재설정 버튼은 관리자(이장님) 세션만 볼 수 있도록 기본 display: none 설정 -->
+          <button id="btn-reset-api-key" onclick="resetApiKeyPrompt()" style="flex:2; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; padding: 12px; border-radius: 15px; font-weight: 800; font-size: 0.75rem; cursor: pointer; white-space: nowrap; display: none; align-items: center; justify-content: center; gap: 4px;">
             🔑 키 재설정
           </button>
         </div>
@@ -566,6 +567,18 @@
         keyInput.value = '';
       } else {
         keyWarning.style.display = 'none';
+      }
+
+      // [v46.3] 관리자(이장님) 세션만 키 재설정 버튼을 활성화하여 노출합니다.
+      const resetBtn = document.getElementById('btn-reset-api-key');
+      if (resetBtn) {
+        const uName = localStorage.getItem('v44_user_name') || '';
+        const uPhone = localStorage.getItem('v44_user_phone') || '';
+        if (uName === '이장님' || uPhone.includes('9999')) {
+          resetBtn.style.display = 'flex';
+        } else {
+          resetBtn.style.display = 'none';
+        }
       }
 
       document.getElementById('ai-meal-modal').style.display = 'flex';
@@ -1048,6 +1061,30 @@
             }
             
             const data = res.items || [];
+            
+            // [v46.4] 피드 데이터 기반 식사 완료 크로스 체크 (레거시 및 특수 형식 식단 기록 구조 완벽 구출)
+            try {
+              const myName = localStorage.getItem('v44_user_name');
+              const kstToday = new Date(new Date().getTime() + (9 * 60 * 60 * 1000)).toISOString().split('T')[0];
+              let detectedMeals = [];
+              
+              data.forEach(feedItem => {
+                if (feedItem.name === myName && feedItem.date === kstToday && feedItem.type.includes("식단")) {
+                  const combinedText = (feedItem.item + " " + (feedItem.comment || "")).toLowerCase();
+                  if (combinedText.includes("아침")) detectedMeals.push("아침 식단");
+                  if (combinedText.includes("점심")) detectedMeals.push("점심 식단");
+                  if (combinedText.includes("저녁")) detectedMeals.push("저녁 식단");
+                  if (combinedText.includes("단식")) detectedMeals.push("저녁 단식");
+                }
+              });
+              
+              if (detectedMeals.length > 0) {
+                updateMealButtonsState(detectedMeals);
+              }
+            } catch (syncErr) {
+              console.warn("🍱 [Meal Sync Recovery Warn]:", syncErr);
+            }
+
             if (data.length === 0) {
               feed.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:0.8rem; margin-top:20px;">기록이 없습니다!</p>';
               return;
