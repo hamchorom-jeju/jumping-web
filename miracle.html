@@ -337,18 +337,7 @@
           </div>
         </div>
         
-        <!-- 저녁 세부 옵션 (저녁 선택 시 노출) -->
-        <div id="evening-detail-options" style="display: none; margin-bottom: 15px; background: var(--v-paper); padding: 12px; border-radius: 15px; border: 1px solid var(--v-border);">
-          <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--v-wood); margin-bottom: 6px;">저녁 식사 종류</label>
-          <div style="display: flex; gap: 10px;">
-            <label style="font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 5px; cursor:pointer;">
-              <input type="radio" name="evening-type" value="normal" checked onchange="toggleEveningFasting(false)"> 일반 식사 / 치팅
-            </label>
-            <label style="font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 5px; cursor:pointer;">
-              <input type="radio" name="evening-type" value="fasting" onchange="toggleEveningFasting(true)"> 🍵 저녁 단식 수호
-            </label>
-          </div>
-        </div>
+        <!-- [v46.6] 저녁 세부 옵션 제거 완료 (AI 자동 판정 시스템 전환으로 불필요한 라디오 선택창 완전 삭제) -->
 
         <div id="ai-upload-placeholder" onclick="document.getElementById('file-input-ai').click()" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; position: relative; overflow: hidden;">
           <span style="font-size:2.5rem; margin-bottom:10px;">📸</span>
@@ -546,11 +535,7 @@
       document.getElementById('file-input-ai').value = '';
       document.getElementById('ai-user-comment').value = '';
       
-      // 저녁 단식 라디오 박스 초기화
-      document.querySelectorAll('input[name="evening-type"]').forEach(radio => {
-        if (radio.value === 'normal') radio.checked = true;
-      });
-      toggleEveningFasting(false);
+      // [v46.6] 라디오 박스 초기화 제거
 
       // 시간 탭 하이라이트
       setMealTime(aiSelectedTime);
@@ -593,22 +578,6 @@
       document.querySelectorAll('#ai-step-upload .v-tab-btn').forEach(btn => btn.classList.remove('active'));
       const activeBtn = document.getElementById('btn-time-' + (time === 'morning' ? 'morning' : time === 'noon' ? 'noon' : 'evening'));
       if (activeBtn) activeBtn.classList.add('active');
-
-      const eveningOpts = document.getElementById('evening-detail-options');
-      if (time === 'evening') {
-        eveningOpts.style.display = 'block';
-      } else {
-        eveningOpts.style.display = 'none';
-      }
-    }
-
-    function toggleEveningFasting(isFasting) {
-      const label = document.querySelector('#ai-upload-placeholder p');
-      if (isFasting) {
-        if (label) label.innerText = "단식 인증 사진 촬영 (미온수 / 차)";
-      } else {
-        if (label) label.innerText = "음식 사진 촬영 또는 선택";
-      }
     }
 
     function previewAiImage(input) {
@@ -767,14 +736,7 @@
       btn.disabled = true;
       btn.innerText = '지니가 항상성 점수를 계산하는 중...';
 
-      // 저녁 단식 체크 여부
-      let isFasting = false;
-      if (aiSelectedTime === 'evening') {
-        const checkedRadio = document.querySelector('input[name="evening-type"]:checked');
-        if (checkedRadio && checkedRadio.value === 'fasting') {
-          isFasting = true;
-        }
-      }
+      // [v46.6] 저녁 단식 라디오 체크 불필요 (AI 자동 식별 판정 전환)
 
       const systemPrompt = `
       너는 노형 점핑 클럽의 33챌린지 수석 영양사 및 피트니스 AI 코치인 '지니'다.
@@ -786,19 +748,20 @@
       
       2. 시간대별 기준 및 등급/피드백 설계:
          - 아침:
-           * 기준: 가벼운 시동 (과일, 요거트, 계란, 미온수/물, 차 등).
-           * 특히 아침에 물 한 잔, 미온수, 차(Tea) 또는 컵/머그컵에 담긴 투명한 액체 사진은 아침 수분 섭취(Hydration) 및 단식 리듬 수호의 '가장 완벽하고 훌륭한 항상성 깨우기'로 판단하여 적극 장려하고 극찬하십시오. (물/음료의 시각적 구별이 어렵더라도 무조건 미온수/물/차로 우대하여 최고 등급으로 평가할 것!)
-           * 아침 식사를 가볍게 먹는 사람(과일, 계란)과 식사 대신 따뜻한 물/차로 하루를 깨우는 사람 모두 항상성 수호에 완벽한 최고의 리듬입니다.
-           * 등급: 가벼운 아침 식사 혹은 물/차만 마신 경우 무조건 Tier S (+10 EXP), 일반 식사는 Tier A (+5 EXP), 과도하게 무겁거나 헤비하면 Tier B (0 EXP).
+           * 기준: 가벼운 시동 (과일, 요거트, 계란, 미온수/물, 차, 단순 토스트/샌드위치, 샐러드, 일반 건강식 등).
+           * 아침 식사의 섭취 유무와 메뉴 종류는 각 회원의 개인 생활패턴과 라이프스타일에 따른 건강한 선택입니다. 영양학적으로 아침 장기에 심각한 해를 끼치거나 과부하를 주는 무거운 메뉴(예: 아침부터 먹는 삼겹살, 라면, 튀김류 등 무겁고 기름진 음식)가 아니라면, 일상적이고 가벼운 모든 아침 시도를 존중하고 격려해야 합니다.
+           * 특히 물 한 잔, 미온수, 차(Tea) 또는 컵에 담긴 투명한 액체 사진을 통한 아침 수분 섭취(Hydration) 및 단식 리듬 역시 항상성을 가동하는 가장 완벽하고 훌륭한 아침 깨우기 행동입니다.
+           * 등급: 건강에 해를 끼치지 않는 가볍고 일상적인 모든 아침 식단, 물/차 수분 섭취, 혹은 아침 단식 상태라면 **무조건 최고의 칭찬과 함께 Tier S (+10 EXP)**를 부여하십시오.
+           * 기름지거나 몸에 무리를 줄 수 있는 해로운 중식/양식/야식형 메뉴인 경우에만 상황에 맞춰 Tier A (+5 EXP) 또는 Tier B (0 EXP)로 완화 조정하십시오.
          - 점심:
            * 기준: 행복한 안심. 폭식만 아니라면 어떤 일반식(한식, 돈까스, 제육 등)이라도 든든하고 행복하게 먹었으면 적극 칭찬! (안심하고 지방을 태우도록 돕는 과정).
            * 등급: 폭식이 아니면 무조건 Tier S (+10 EXP). 
          - 저녁:
-           * 기준: 가벼운 마무리 혹은 단식.
-           * 쉐이크/식사대용/샐러드는 '가벼운 저녁'으로 인정 (Tier S, +10 EXP).
-           * ${isFasting ? '물/차만 마시거나 굶은 것이 확실하게 식별됨. 저녁 단식 수호로 판정!' : '일반식이나 고칼로리/치팅 외식'}
-           * 물/차/단식인 경우: '저녁 단식 수호'로 인정 (Tier S, +15 EXP).
-           * 외식/치팅인 경우: '행복한 외식 저녁'으로 간주 (Tier C, +5 EXP - 솔직하게 기록한 용기를 대찬사!).
+           * 기준: 가벼운 마무리 혹은 단식, 또는 일반 건강식, 혹은 기름진 치팅/외식.
+           * 저녁 단식 (물/차만 섭취) ➡️ Tier S (+15 EXP): 장기의 완벽한 휴식 대찬사! (triggerQuest는 false)
+           * 가벼운 마무리 (쉐이크/식사대용/샐러드는 '가벼운 저녁') ➡️ Tier S (+10 EXP): 훌륭한 소화 휴식 칭찬! (triggerQuest는 false)
+           * 일반 건강식 (밥, 국, 반찬, 생선, 두부 등 한식 중심의 깨끗하고 건강한 일반 가정식 저녁) ➡️ Tier A (+5 EXP): "대사율 유지를 위해 꼭 필요한 깨끗한 에너지 공급입니다!" (돌발 퀘스트 발동 안 함: triggerQuest는 false)
+           * 기름지고 무거운 치팅/외식 (치킨, 피자, 삼겹살, 라면, 중식, 술, 고칼로리 야식류 등) ➡️ Tier C (+5 EXP): "솔직한 기록에 용기 어린 박수를 보냅니다! 하지만 간과 근육에 글리코겐이 가득 차오르고 있어요! 🚨 글리코겐 골든타임 3일(72시간) 법칙 발동! 체지방으로 완전히 굳기 전인 3일 동안 점핑으로 땀 흘려 부셔보세요! 🔥" (돌발 퀘스트 강제 발동: triggerQuest를 true로 지정)
       
       3. 피드백 메시지 톤앤매너:
          - 3인칭의 친근하고 격려하는 말투 (~하셨군요, ~입니다!).
@@ -811,7 +774,7 @@
         "score": number (S는 10 또는 15, A는 5, B는 0, C는 5),
         "feedback": "한글 지니 피드백 텍스트",
         "nutrients": "감지된 핵심 성분 나열",
-        "triggerQuest": true | false (저녁 식사인데 Tier C 외식인 경우만 true, 그 외는 false)
+        "triggerQuest": true | false (저녁 식사인데 기름진 치팅/외식인 경우만 true, 그 외는 false)
       }
       `;
 
