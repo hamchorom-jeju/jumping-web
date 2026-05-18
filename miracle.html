@@ -1087,7 +1087,7 @@
             throw new Error("AI 분석 응답이 올바르지 않습니다.");
           }
         } catch (err) {
-          alert(formatAiFriendlyError(err));
+          showAppAlert(formatAiFriendlyError(err), "error");
         } finally {
           scanLine.style.display = 'none';
           btn.disabled = false;
@@ -1427,7 +1427,7 @@
           scanLine.style.display = 'none';
           btn.innerText = '지니 AI 인바디 스캔 시작 📊';
           btn.disabled = false;
-          alert(formatAiFriendlyError(err));
+          showAppAlert(formatAiFriendlyError(err), "error");
         }
       }).getGeminiApiKey();
     }
@@ -1441,12 +1441,12 @@
       const dateVal = document.getElementById('inbody-scan-date').value;
 
       if (isNaN(weightVal) || isNaN(muscleVal) || isNaN(fatVal)) {
-        alert("모든 수치(체중, 골격근량, 체지방률)를 올바르게 입력해 주세요!");
+        showAppAlert("모든 수치(체중, 골격근량, 체지방률)를 올바르게 입력해 주세요!", "error");
         return;
       }
 
       if (!TARGET_PHONE || !TARGET_NAME) {
-        alert("로그인 세션 정보가 부족합니다. 다시 로그인해 주세요.");
+        showAppAlert("로그인 세션 정보가 부족합니다. 다시 로그인해 주세요.", "error");
         return;
       }
 
@@ -1461,13 +1461,13 @@
             resetInbodyPreview();
             switchTab('quest');
           } else {
-            alert("인바디 시트 저장 실패: " + res.error);
+            showAppAlert("인바디 시트 저장 실패: " + res.error, "error");
             submitBtn.disabled = false;
             submitBtn.innerText = '이 수치로 인바디 최종 등록 🏆';
           }
         })
         .withFailureHandler(err => {
-          alert("서버 연결 실패: " + err.toString());
+          showAppAlert("서버 연결 실패: " + err.toString(), "error");
           submitBtn.disabled = false;
           submitBtn.innerText = '이 수치로 인바디 최종 등록 🏆';
         })
