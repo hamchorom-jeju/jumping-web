@@ -37,6 +37,81 @@ if (typeof google === 'undefined' || !google.script) {
             target.successHandler = null;
             target.failureHandler = null;
 
+            // [v45.10] 만약 로컬 file:// 환경이라면, 실서버 통신 대신 가상 모의(Mock) 데이터 즉시 반환!
+            if (window.location.protocol === 'file:') {
+              console.log(`🎮 [Local Mock Mode] Intercepted: ${prop}`, args);
+              setTimeout(() => {
+                let mockResult = { success: true };
+                
+                if (prop === 'searchMembersByDigits') {
+                  mockResult = {
+                    success: true,
+                    members: [
+                      { name: "홍길동", phone: "010-1234-5678" },
+                      { name: "이장님", phone: "010-9999-9999" }
+                    ]
+                  };
+                } else if (prop === 'getUserDashboardData') {
+                  mockResult = {
+                    success: true,
+                    tier: "🏆 마스터 모험가",
+                    exp: 750,
+                    level: 5,
+                    doneList: ["아침 식단"],
+                    weeklyTargets: {},
+                    monthlyTargets: {}
+                  };
+                } else if (prop === 'getArchiveFeed') {
+                  let stored = sessionStorage.getItem("mock_feed");
+                  if (!stored) {
+                    const defaultMockFeed = [
+                      { name: "이장님", item: "아침 식단", comment: "아침은 역시 사과와 미온수!", type: "식단", photoId: "", date: "2026-05-18", time: "08:30" },
+                      { name: "홍길동", item: "오운완", comment: "오늘도 땀 흘리며 점핑 완주!", type: "퀘스트", photoId: "", date: "2026-05-18", time: "19:45" }
+                    ];
+                    sessionStorage.setItem("mock_feed", JSON.stringify(defaultMockFeed));
+                    stored = JSON.stringify(defaultMockFeed);
+                  }
+                  mockResult = {
+                    success: true,
+                    items: JSON.parse(stored),
+                    totalPages: 1,
+                    currentPage: 1
+                  };
+                } else if (prop === 'getActiveEvents') {
+                  mockResult = [];
+                } else if (prop === 'submitArchive') {
+                  const payload = args[0] || {};
+                  let stored = sessionStorage.getItem("mock_feed");
+                  let feedList = stored ? JSON.parse(stored) : [];
+                  
+                  const now = new Date();
+                  const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+                  const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+                  feedList.unshift({
+                    name: payload.name || "모험가",
+                    item: payload.item || "식단",
+                    comment: payload.comment || "",
+                    type: payload.type || "식단",
+                    photoId: payload.image || "", 
+                    date: dateStr,
+                    time: timeStr
+                  });
+                  
+                  sessionStorage.setItem("mock_feed", JSON.stringify(feedList));
+
+                  mockResult = {
+                    success: true,
+                    photoId: "MOCK_PHOTO_ID_" + Date.now(),
+                    debugInfo: "MOCK_SAVE_OK"
+                  };
+                }
+                
+                if (sHandler) sHandler(mockResult);
+              }, 100);
+              return;
+            }
+
             let payload = {};
             if (args.length === 1) {
               if (typeof args[0] === 'object' && args[0] !== null) {
@@ -48,7 +123,6 @@ if (typeof google === 'undefined' || !google.script) {
             } else if (args.length > 1) {
               payload = { args: args };
             }
-
 
             // Vercel 서버리스 함수(/api/gas)를 통해 통신하여 CORS와 리다이렉트 문제를 해결합니다.
             fetch(`${API_URL}?action=${prop}&t=${Date.now()}`, {
@@ -98,8 +172,16 @@ const Auth = {
     if (!name || !phone) {
       console.warn("🛡️ Auth: No session found. Redirecting to login.html...");
       
-      // [v44.222] 경로가 루트(/)인 경우를 대비해 절대 경로로 리다이렉트
-      const loginUrl = window.location.origin + '/login.html';
+      // [v44.222] 경로가 루트(/)인 경우를 대비해 절대 경로로 리다이렉트하되, 로컬 file:// 환경에서는 폴더 상대 경로 유지
+      let loginUrl;
+      if (window.location.protocol === 'file:') {
+        const pathParts = window.location.pathname.split('/');
+        pathParts[pathParts.length - 1] = 'login.html';
+        loginUrl = window.location.protocol + '//' + pathParts.join('/');
+      } else {
+        loginUrl = window.location.origin + '/login.html';
+      }
+      
       console.log("🛡️ Auth: Target redirect URL:", loginUrl);
       window.location.replace(loginUrl);
     }
@@ -122,7 +204,7 @@ const Auth = {
  */
 function navigateTo(page, params = {}, openInNewTab = false) {
   const query = new URLSearchParams(params).toString();
-  const isVercel = window.location.hostname.includes('vercel.app') || window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1');
+  const isVercel = window.location.hostname.includes('vercel.app') || window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') || window.location.protocol === 'file:';
   
   let url = "";
   if (isVercel) {
