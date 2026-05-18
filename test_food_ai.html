@@ -456,6 +456,9 @@
         selectedTime = time;
         document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
         event.target.classList.add('active');
+        
+        // 시간대를 바꾸면 기존 분석 결과창을 자연스럽게 숨겨 쾌적하게 테스트할 수 있도록 함!
+        resetResultUI();
     }
 
     function triggerFileSelect() {
@@ -479,8 +482,16 @@
 
             // Base64 추출 (data:image/jpeg;base64, 부분 제외)
             base64Image = e.target.result.split(',')[1];
+            
+            // 새 사진을 올리면 기존 분석 결과창을 깔끔하게 지워줌!
+            resetResultUI();
         };
         reader.readAsDataURL(file);
+    }
+
+    function resetResultUI() {
+        document.getElementById('result-panel').style.display = 'none';
+        document.getElementById('quest-panel').style.display = 'none';
     }
 
     async function analyzeMeal() {
