@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>지니 월드: 항상성 AI 식단 & 글리코겐 클리어 놀이터</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+KR:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --gold: #fbcfe8;
+            --glass-grad: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 1.6rem;
+            font-weight: 900;
+            background: linear-gradient(to right, #a5b4fc, #fbcfe8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .section {
+            background: var(--glass-grad);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #a5b4fc;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        input[type="password"], select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input[type="password"]:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(79, 70, 229, 0.2);
+        }
+
+        .time-selector {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .time-btn {
+            flex: 1;
+            padding: 10px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .time-btn.active {
+            background: rgba(79, 70, 229, 0.2);
+            border-color: var(--primary);
+            color: var(--text-main);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--card-border);
+            border-radius: 15px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            background: rgba(0,0,0,0.1);
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.03);
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        #preview-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-action:disabled {
+            background: #374151;
+            box-shadow: none;
+            cursor: not-allowed;
+            color: #9ca3af;
+        }
+
+        /* Result Panel */
+        .result-panel {
+            display: none;
+            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .tier-badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 900;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .tier-S { background: linear-gradient(135deg, #fbcfe8 0%, #ec4899 100%); color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .tier-A { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .tier-B { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .tier-C { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .score-display {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #fbcfe8;
+        }
+
+        .feedback-box {
+            background: rgba(255,255,255,0.02);
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            border-radius: 0 12px 12px 0;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* Glycogen Quest Panel */
+        .quest-box {
+            display: none;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+            animation: pulseGlow 2s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.2); }
+            100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+        }
+
+        .quest-title {
+            color: #f87171;
+            font-weight: 800;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .quest-guide {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+
+        .shield-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+
+        .shield-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            opacity: 0.4;
+            transition: all 0.3s;
+        }
+
+        .shield-item.active {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .shield-icon {
+            font-size: 1.8rem;
+        }
+
+        .shield-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .shield-item.active .shield-label {
+            color: #f87171;
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>지니의 항상성 AI 식단 놀이터</h1>
+        <p>평생 지속 가능한 다이어트의 시작 🌿</p>
+    </div>
+
+    <!-- API Key Section -->
+    <div class="section">
+        <div class="section-title">🔑 API 설정</div>
+        <input type="password" id="api-key" placeholder="Gemini API Key를 입력하세요">
+        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:6px; line-height:1.3;">
+            * 구글 AI Studio에서 무료로 발급받은 API 키를 사용하세요. 키는 서버에 저장되지 않고 브라우저에만 유지되어 안전합니다.
+        </p>
+    </div>
+
+    <!-- Meal Input Section -->
+    <div class="section">
+        <div class="section-title">🕒 식사 시간대</div>
+        <div class="time-selector">
+            <button class="time-btn active" onclick="setTime('breakfast')">🌅 아침</button>
+            <button class="time-btn" onclick="setTime('lunch')">☀️ 점심</button>
+            <button class="time-btn" onclick="setTime('dinner')">🌙 저녁</button>
+        </div>
+    </div>
+
+    <!-- Photo Section -->
+    <div class="section">
+        <div class="section-title">📸 식단 사진</div>
+        <div class="upload-area" onclick="triggerFileSelect()">
+            <div id="upload-prompt">
+                <div class="upload-icon">🥗</div>
+                <div style="font-size:0.9rem; font-weight:700; margin-bottom:4px;">사진 찍기 또는 업로드</div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">클릭하여 음식을 보여주세요</div>
+            </div>
+            <img id="preview-img" alt="미리보기">
+            <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+        </div>
+    </div>
+
+    <!-- Action Button -->
+    <button class="btn-action" id="analyze-btn" onclick="analyzeMeal()">
+        <span class="loading-spinner" id="btn-spinner"></span>
+        <span id="btn-text">지니에게 영양 수호 요청하기 🪄</span>
+    </button>
+
+    <!-- AI Result Panel -->
+    <div class="section result-panel" id="result-panel" style="margin-top:20px;">
+        <div class="result-header">
+            <span class="tier-badge" id="res-tier">Tier S</span>
+            <span class="score-display" id="res-score">+10 EXP</span>
+        </div>
+        <div class="feedback-box" id="res-feedback">
+            지니의 코칭 메시지가 출력되는 곳입니다.
+        </div>
+        <div style="font-size:0.8rem; color:var(--text-muted);">
+            <b>주요 성분 감지:</b> <span id="res-nutrients">닭고기, 양배추, 브로콜리 등</span>
+        </div>
+    </div>
+
+    <!-- Glycogen Quest Simulator -->
+    <div class="quest-box" id="quest-panel">
+        <div class="quest-title">🔥 긴급 미션: 글리코겐 클리어!</div>
+        <div class="quest-guide">
+            외식을 통한 여분의 탄수화물이 포착되었습니다! 72시간 골든타임 이내에 점핑 피트니스로 털어내야 지방으로 쌓이지 않습니다.
+        </div>
+        <div class="shield-container">
+            <div class="shield-item active" id="shield-1">
+                <div class="shield-icon">🛡️</div>
+                <div class="shield-label">1일차 완수</div>
+            </div>
+            <div class="shield-item" id="shield-2">
+                <div class="shield-icon">🛡️</div>
+                <div class="shield-label">2일차 완수</div>
+            </div>
+            <div class="shield-item" id="shield-3">
+                <div class="shield-icon">🛡️</div>
+                <div class="shield-label">3일차 완수</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedTime = 'breakfast';
+    let base64Image = '';
+
+    // 로컬 스토리지에서 API 키 복구
+    document.addEventListener("DOMContentLoaded", () => {
+        const savedKey = localStorage.getItem("gemini_api_key");
+        if (savedKey) {
+            document.getElementById("api-key").value = savedKey;
+        }
+    });
+
+    function setTime(time) {
+        selectedTime = time;
+        document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    function triggerFileSelect() {
+        document.getElementById('file-input').click();
+    }
+
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('upload-prompt').style.display = 'none';
+            const img = document.getElementById('preview-img');
+            img.src = e.target.result;
+            img.style.display = 'block';
+            
+            // Base64 추출 (data:image/jpeg;base64, 부분 제외)
+            base64Image = e.target.result.split(',')[1];
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function analyzeMeal() {
+        const apiKeyInput = document.getElementById('api-key').value.trim();
+        const apiKey = apiKeyInput.replace(/[\s\r\n\t]/g, ''); // 공백/엔터 완벽 제거
+        
+        if (!apiKey) {
+            alert('먼저 Gemini API Key를 입력해주세요!');
+            return;
+        }
+        localStorage.setItem("gemini_api_key", apiKey); 
+
+        if (!base64Image) {
+            alert('음식 사진을 먼저 찍거나 업로드해주세요!');
+            return;
+        }
+
+        // 로딩 활성화
+        const spinner = document.getElementById('btn-spinner');
+        const btnText = document.getElementById('btn-text');
+        const btn = document.getElementById('analyze-btn');
+        
+        spinner.style.display = 'block';
+        btnText.innerText = '지니가 영양소 스캔 중...';
+        btn.disabled = true;
+
+        // 마스터플랜 항상성 철학 프롬프트 구성
+        const systemPrompt = `
+        너는 노형 점핑 클럽의 33챌린지 수석 영양사 및 피트니스 AI 코치인 '지니'다.
+        사용자의 다이어트 목표는 '평생 지속 가능한 항상성 수호'다. 우리는 억지로 굶지 않고 건강한 리듬을 중요시한다.
+        다음 기준에 맞춰 업로드된 사진 속 식단을 정교하게 분석하여 결과를 반드시 아래 명시된 JSON 포맷으로만 답변해라.
+        
+        [식단 평가 기준]
+        1. 시간대: ${selectedTime === 'breakfast' ? '아침' : selectedTime === 'lunch' ? '점심' : '저녁'}
+        
+        2. 시간대별 기준 및 등급/피드백 설계:
+           - 아침:
+             * 기준: 가벼운 시동 (과일, 요거트, 계란, 미온수 등). 가벼우면 최고 등급.
+             * 등급: 가벼우면 Tier S (+10 EXP), 일반적이면 Tier A (+5 EXP), 너무 헤비하면(예: 삽겹살) Tier B (기본 0 EXP).
+           - 점심:
+             * 기준: 행복한 안심. 폭식만 아니라면 어떤 일반식(한식, 돈까스, 피자 등)이라도 든든하고 행복하게 먹었으면 적극 칭찬! (안심하고 지방을 태우도록 돕는 과정).
+             * 등급: 폭식이 아니면 무조건 Tier S (+10 EXP). 
+           - 저녁:
+             * 기준: 가벼운 마무리 혹은 단식.
+             * 쉐이크/식사대용/샐러드는 '가벼운 저녁'으로 인정 (Tier S, +10 EXP).
+             * 물/차만 마시거나 굶은 것이 식별되면 '저녁 단식 수호'로 인정 (Tier S, +15 EXP).
+             * 외식/고칼로리 일반식/치팅인 경우 '행복한 외식 저녁'으로 간주 (Tier C, +5 EXP - 솔직한 기록을 칭찬).
+        
+        3. 피드백 메시지 톤앤매너:
+           - 3인칭의 친근하고 격려하는 말투 (~하셨군요, ~입니다!).
+           - 억압하거나 죄책감을 주는 피드백 절대 금지! 치팅(Tier C)이라도 솔직하게 기록한 용기를 칭찬하고 내일 가볍게 조율하자는 '밀당 버프' 조언.
+           - 특히 점심의 경우, '안심하고 대사율을 떨어뜨리지 않는다'는 항상성 원리를 친절하게 설명.
+        
+        [답변 포맷 JSON 규격 (텍스트나 마크업 섞지 말고 순수 JSON만 반환해라)]
+        {
+          "tier": "S" | "A" | "B" | "C",
+          "score": number (S는 10 또는 15, A는 5, B는 0, C는 5),
+          "feedback": "한글 지니 피드백 텍스트",
+          "nutrients": "감지된 핵심 성분 나열",
+          "triggerQuest": true | false (저녁 식사인데 Tier C 외식인 경우만 true, 그 외는 false)
+        }
+        `;
+
+        try {
+            // [v1 정식 버전 호환성 향상]
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [
+                            { text: systemPrompt },
+                            {
+                                inlineData: {
+                                    mimeType: "image/jpeg",
+                                    data: base64Image
+                                }
+                            }
+                        ]
+                    }],
+                    generationConfig: {
+                        responseMimeType: "application/json"
+                    }
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.candidates && result.candidates[0].content.parts[0].text) {
+                const cleanJsonText = result.candidates[0].content.parts[0].text.trim();
+                const data = JSON.parse(cleanJsonText);
+                
+                // 결과 UI 반영
+                document.getElementById('res-tier').className = `tier-badge tier-${data.tier}`;
+                document.getElementById('res-tier').innerText = `Tier ${data.tier}`;
+                document.getElementById('res-score').innerText = `+${data.score} EXP`;
+                document.getElementById('res-feedback').innerHTML = data.feedback.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#fbcfe8;">$1</strong>');
+                document.getElementById('res-nutrients').innerText = data.nutrients;
+                
+                document.getElementById('result-panel').style.display = 'block';
+
+                // 글리코겐 클리어 퀘스트 시뮬레이션
+                const questPanel = document.getElementById('quest-panel');
+                if (data.triggerQuest) {
+                    questPanel.style.display = 'block';
+                    // 1일차 즉시 활성화 시뮬레이션
+                    document.getElementById('shield-1').classList.add('active');
+                    document.getElementById('shield-2').classList.remove('active');
+                    document.getElementById('shield-3').classList.remove('active');
+                } else {
+                    questPanel.style.display = 'none';
+                }
+            } else {
+                throw new Error("AI 분석 응답이 올바르지 않습니다.");
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert('에러 발생: ' + error.message + '\nAPI 키나 사진 파일 형식을 다시 확인해주세요!');
+        } finally {
+            // 로딩 종료
+            spinner.style.display = 'none';
+            btnText.innerText = '지니에게 영양 수호 요청하기 🪄';
+            btn.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>
