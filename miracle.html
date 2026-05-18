@@ -397,6 +397,31 @@
     </div>
   </div>
 
+  <!-- 🔑 [v46.35] 이장님 전용 구글 Gemini API Key 설정 모달 -->
+  <div id="gemini-key-modal" class="polaroid-modal" style="display: none;">
+    <div class="polaroid-modal-content" style="max-width: 420px; border-radius: 30px; border-top: 8px solid #ef4444; padding: 25px; text-align: left;">
+      <button class="modal-close-btn" onclick="closeGeminiKeyModal()" style="top: 15px; right: 15px; color: var(--v-wood); font-size: 1.5rem; background: none; border: none; outline: none; cursor: pointer;"><i class="fas fa-times"></i></button>
+      
+      <h2 style="font-size: 1.3rem; font-weight: 900; color: var(--v-wood); margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        🔑 Gemini API Key 금고 설정
+      </h2>
+      <p style="font-size: 0.8rem; color: var(--text-dim); font-weight: 700; line-height: 1.4; margin: 0 0 15px 0;">
+        [이장 전용 어드민 메뉴]<br>
+        여기에 구글 Gemini API Key를 입력하시면, 모든 회원들이 공동 금고의 키를 안전하게 나눠 쓰며 지니 AI 항상성 식단 스캔 및 인바디 판독 혜택을 즉시 함께 이용하게 됩니다!
+      </p>
+      
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--v-wood); margin-bottom: 6px;">Gemini API Key (39자리)</label>
+        <input type="password" id="modal-gemini-key-input" placeholder="AIzaSy로 시작하는 구글 API Key 입력" style="width: 100%; padding: 14px; font-size: 0.9rem; font-weight: 800; border-radius: 15px; border: 2px solid var(--v-paper); background: var(--v-paper); outline: none; box-sizing: border-box;">
+      </div>
+      
+      <div style="display: flex; gap: 10px; width: 100%;">
+        <button onclick="closeGeminiKeyModal()" style="flex: 1; padding: 14px; background: #eee; color: #777; border: none; border-radius: 15px; font-weight: 800; font-size: 0.9rem; cursor: pointer;">취소</button>
+        <button onclick="saveGeminiKeyFromModal()" style="flex: 2; padding: 14px; background: #ef4444; color: white; border: none; border-radius: 15px; font-weight: 900; font-size: 0.9rem; cursor: pointer; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);">🔑 키 저장 및 배포</button>
+      </div>
+    </div>
+  </div>
+
   <!-- [v46.0] 항상성 AI 식단 스캐너 모달 -->
   <div id="ai-meal-modal" class="polaroid-modal" style="display: none;">
     <div class="polaroid-modal-content" style="max-width: 450px; border-radius: 30px; border-top: 8px solid var(--emerald); padding: 25px;">
@@ -653,6 +678,12 @@
     window.addEventListener('popstate', function(event) {
       const aiModal = document.getElementById('ai-meal-modal');
       const polaroidModal = document.getElementById('polaroid-modal');
+      const geminiModal = document.getElementById('gemini-key-modal');
+      
+      // Gemini 키 설정 모달 닫기
+      if (geminiModal && geminiModal.style.display === 'flex') {
+        geminiModal.style.display = 'none';
+      }
       
       // AI 모달이 열려있는 상태에서 뒤로가기가 발생했다면 모달만 닫아줌
       if (aiModal && aiModal.style.display === 'flex') {
@@ -1087,31 +1118,44 @@
         const keyFromBackend = (res && res.success) ? res.key : "";
         const currentKey = String(keyFromBackend || localStorage.getItem('gemini_api_key') || '');
         
-        const newKey = prompt("🔑 [이장 전용] 새로운 구글 Gemini API Key를 입력해주세요 (39자리):\n*여기에 입력하신 키는 모든 회원이 공동으로 즉시 사용하게 됩니다.", currentKey);
-        if (newKey !== null) {
-          const trimmed = newKey.trim();
-          showLoading();
-          
-          google.script.run.withSuccessHandler(res => {
-            hideLoading();
-            if (res && res.success) {
-              if (trimmed) {
-                localStorage.setItem('gemini_api_key', trimmed);
-                alert("✅ " + res.message);
-                const keyWarning = document.getElementById('api-key-warning');
-                if (keyWarning) keyWarning.style.display = 'none';
-              } else {
-                localStorage.removeItem('gemini_api_key');
-                alert("🗑️ " + res.message);
-                const keyWarning = document.getElementById('api-key-warning');
-                if (keyWarning) keyWarning.style.display = 'block';
-              }
-            } else {
-              alert("🚨 백엔드 저장 실패: " + (res?.error || "알 수 없는 오류"));
-            }
-          }).setGeminiApiKey(trimmed);
-        }
+        // 2. 브라우저 차단 경고를 예방하기 위해 자체 모달을 띄웁니다.
+        openGeminiKeyModal(currentKey);
       }).getGeminiApiKey();
+    }
+
+    function openGeminiKeyModal(currentKey) {
+      document.getElementById('modal-gemini-key-input').value = currentKey || "";
+      document.getElementById('gemini-key-modal').style.display = 'flex';
+      pushModalState('gemini-key-modal');
+    }
+
+    function closeGeminiKeyModal() {
+      document.getElementById('gemini-key-modal').style.display = 'none';
+      popModalStateIfOpen('gemini-key-modal');
+    }
+
+    function saveGeminiKeyFromModal() {
+      const newKey = document.getElementById('modal-gemini-key-input').value.trim();
+      closeGeminiKeyModal();
+      
+      showLoading();
+      google.script.run.withSuccessHandler(res => {
+        hideLoading();
+        if (res && res.success) {
+          if (newKey) {
+            localStorage.setItem('gemini_api_key', newKey);
+            const keyWarning = document.getElementById('api-key-warning');
+            if (keyWarning) keyWarning.style.display = 'none';
+          } else {
+            localStorage.removeItem('gemini_api_key');
+            const keyWarning = document.getElementById('api-key-warning');
+            if (keyWarning) keyWarning.style.display = 'block';
+          }
+          alert("✅ " + res.message);
+        } else {
+          alert("🚨 API Key 저장 실패: " + (res ? res.error : "알 수 없는 오류"));
+        }
+      }).setGeminiApiKey(newKey);
     }
 
     // --- 지니 AI 인바디 스캐너 로직 ---
