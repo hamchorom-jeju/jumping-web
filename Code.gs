@@ -271,6 +271,7 @@ function getUserDashboardData(payload) {
       monthly: { health: 0, perf: 0, def: 0 }
     };
     var scores = { lifetime: 0, season: 0, weekly: 0 };
+    var achievedBonuses = [];
     
     var now = new Date();
     
@@ -324,6 +325,13 @@ function getUserDashboardData(payload) {
             stats.weekly.perf += (Number(data[j][3]) || 0) + (Number(data[j][4]) || 0) + (Number(data[j][5]) || 0);
             stats.weekly.def += (Number(data[j][6]) || 0);
             stats.weekly.health += (Number(data[j][7]) || 0);
+
+            // [v46.4] 이번 주 획득한 체력보너스 탐색
+            var rowDetails = String(data[j][8] || "");
+            if (rowDetails.indexOf("주간 3회 출석 보너스") > -1) achievedBonuses.push(3);
+            if (rowDetails.indexOf("주간 4회 출석 보너스") > -1) achievedBonuses.push(4);
+            if (rowDetails.indexOf("주간 5회 출석 보너스") > -1) achievedBonuses.push(5);
+            if (rowDetails.indexOf("주간 6회 출석 보너스") > -1) achievedBonuses.push(6);
 
             if (Utilities.formatDate(recDate, "GMT+9", "yyyy-MM-dd") === todayStr) {
               var details = String(data[j][8] || "");
@@ -388,7 +396,8 @@ function getUserDashboardData(payload) {
       stats: stats, // { weekly, monthly } 데이터
       weeklyTargets: { health: 1500, perf: 1000, def: 500 },
       monthlyTargets: { health: 6000, perf: 4000, def: 2000 },
-      quests: questStatus
+      quests: questStatus,
+      achievedBonuses: achievedBonuses
     };
   } catch (e) { return { success: false, error: e.toString() }; }
 }
@@ -2068,6 +2077,49 @@ function processAdminCheckout(data) {
     logSheet.getRange(rowIdx, cols.outTime + 1).setValue(timeStr);
     
     var phoneStr = String(logSheet.getRange(rowIdx, cols.phone + 1).getValue()).replace(/[^0-9]/g, "");
+    var memberName = logSheet.getRange(rowIdx, cols.name + 1).getValue();
+    
+    // [v46.30] 웰니스 통합 점수제 연동: 퇴실 시 출석 기본점수 및 운동 강도점수 자동 하사
+    var timeLogVal = parseInt(data.timeLog) || 0;
+    
+    // (1) 출석 기본점수 (+10 EXP) 기록 -> D열 (센터방문_수행)
+    recordActivityLog({
+      phone: phoneStr,
+      name: memberName,
+      type: "출석",
+      item: "센터방문",
+      action: "퇴실",
+      score: 10,
+      statType: "perf"
+    });
+    
+    // (2) 운동 강도점수 (+20 or +40 EXP) 혹은 테라피 방어력점수(+15 EXP) 기록
+    if (timeLogVal > 0) {
+      var extraWorkoutScore = (timeLogVal === 1 ? 20 : 40);
+      recordActivityLog({
+        phone: phoneStr,
+        name: memberName,
+        type: "출석",
+        item: "운동강도",
+        action: "퇴실",
+        score: extraWorkoutScore,
+        statType: "perf"
+      });
+    } else {
+      // 0인 경우: 원적외선 테라피로 몸과 마음을 이완하여 스트레스 지수 감소 -> 방어력(+15 EXP) 부여
+      recordActivityLog({
+        phone: phoneStr,
+        name: memberName,
+        type: "테라피",
+        item: "스트레스지수감소",
+        action: "완료",
+        score: 15,
+        statType: "def"
+      });
+    }
+
+    // [v46.31] 주간 3회 출석 달성 시 체력 보너스 (+100 EXP) 자동 정산 연동
+    checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName);
 
     // 2. 추가 차감 처리 (체크박스 선택 시)
     if (data.extraDeduct) {
@@ -5346,15 +5398,7 @@ function submitInBodyRecord(payload) {
     
     sheet.appendRow([new Date(), name, "'" + phone, weight, muscle, fat, score]);
     
-    // 활동 로그에도 기록 (체력 스탯)
-    recordActivityLog({
-      phone: phone,
-      name: name,
-      type: "인바디",
-      item: "정기 인바디 측정",
-      score: score,
-      statType: "health"
-    });
+
     
     return { success: true, score: score };
   } catch (e) {
@@ -5595,6 +5639,416 @@ function triggerGlycogenQuest(phone, name) {
     Logger.log("글리코겐 퀘스트 성공적으로 발동됨!");
   } catch(e) {
     Logger.log("triggerGlycogenQuest 에러: " + e.toString());
+  }
+}
+
+/**
+ * ==========================================
+ * [v46.20] 마을 이장의 집 (Chief's Sanctum) 관리 엔진
+ * ==========================================
+ */
+
+/**
+ * 1. 실시간 전령의 기둥(공지) 내용 조회
+ */
+function getPillarNotice() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("설정");
+    if (!sheet) {
+      sheet = ss.insertSheet("설정");
+      sheet.appendRow(["공지사항", "내용", "상태"]);
+      sheet.appendRow(["전령의기둥", "📢 [마을 공지] 20시 이후 금식 엄수! 오늘도 수고하셨습니다. ✨", "진행중"]);
+    }
+    var data = sheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][0] === "전령의기둥") {
+        return { content: data[i][1] };
+      }
+    }
+    return { content: "📢 오늘도 건강한 하루 되세요!" };
+  } catch (e) {
+    return { content: "📢 오늘도 건강한 하루 되세요!" };
+  }
+}
+
+/**
+ * 2. 실시간 전령의 기둥(공지) 내용 업데이트
+ */
+function updatePillarNotice(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("설정");
+    if (!sheet) {
+      sheet = ss.insertSheet("설정");
+      sheet.appendRow(["공지사항", "내용", "상태"]);
+    }
+    var content = payload.content || "";
+    var data = sheet.getDataRange().getValues();
+    var foundIdx = -1;
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][0] === "전령의기둥") {
+        foundIdx = i + 1;
+        break;
+      }
+    }
+    if (foundIdx > -1) {
+      sheet.getRange(foundIdx, 2).setValue(content);
+    } else {
+      sheet.appendRow(["전령의기둥", content, "진행중"]);
+    }
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * 3. 오늘 활동한 고유 모험가(출석 기준) 수 집계
+ */
+function getDailyActiveAdventurers() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("출석기록");
+    if (!sheet) return 0;
+    var data = sheet.getDataRange().getValues();
+    var todayStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
+    var activeUsers = new Set();
+    for (var i = 1; i < data.length; i++) {
+      var dateRaw = data[i][0];
+      var dateStr = (dateRaw instanceof Date) ? Utilities.formatDate(dateRaw, "GMT+9", "yyyy-MM-dd") : String(dateRaw);
+      if (dateStr.indexOf(todayStr) > -1) {
+        activeUsers.add(String(data[i][3])); // D열: 전화번호
+      }
+    }
+    return activeUsers.size;
+  } catch (e) {
+    return 0;
+  }
+}
+
+/**
+ * 4. 오늘 하루 하사된 총 경험치 집계
+ */
+function getDailyAwardedExperience() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("일일_활동_기록");
+    if (!sheet) return 0;
+    var data = sheet.getDataRange().getValues();
+    var todayStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
+    var totalExp = 0;
+    for (var i = 1; i < data.length; i++) {
+      var dateRaw = data[i][0];
+      var dateStr = (dateRaw instanceof Date) ? Utilities.formatDate(dateRaw, "GMT+9", "yyyy-MM-dd") : String(dateRaw);
+      if (dateStr.indexOf(todayStr) > -1) {
+        totalExp += (parseInt(data[i][9]) || 0); // J열: 총점
+      }
+    }
+    return totalExp;
+  } catch (e) {
+    return 0;
+  }
+}
+
+/**
+ * 5. 축복 대기 중인 최근 인증 내역 조회
+ */
+function getRecentCertifications() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("아카이브");
+    if (!sheet) return [];
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return [];
+    
+    // A열부터 K열(11열)까지 데이터 조회
+    var data = sheet.getRange(2, 1, lastRow - 1, 11).getDisplayValues();
+    var results = [];
+    
+    for (var i = 0; i < data.length; i++) {
+      var row = data[i];
+      var type = String(row[4] || "");
+      var blessStatus = String(row[10] || ""); // K열: 축복상태
+      
+      // 시각 유형이고 축복 완료가 아닌 행만 필터링
+      if ((type === "퀘스트" || type === "습관" || type === "식단") && blessStatus !== "축복완료") {
+        results.push({
+          rowIdx: i + 2,
+          date: String(row[0] || ""),
+          time: String(row[1] || ""),
+          name: String(row[2] || ""),
+          phone: String(row[3] || ""),
+          type: type,
+          item: String(row[5] || ""),
+          content: String(row[6] || "")
+        });
+      }
+    }
+    // 최신 글이 위로 오도록 반전
+    results.reverse();
+    return results.slice(0, 20); // 성능 최적화를 위해 상위 20개만 반환
+  } catch (e) {
+    return [];
+  }
+}
+
+/**
+ * 6. 모험가 항목 개별 축복 (보너스 +5 EXP 및 K열 업데이트)
+ */
+function blessAction(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("아카이브");
+    if (!sheet) return { success: false, error: "'아카이브' 시트를 찾을 수 없습니다." };
+    
+    var rowIdx = parseInt(payload.rowIdx);
+    if (isNaN(rowIdx) || rowIdx < 2) return { success: false, error: "유효하지 않은 행 인덱스입니다." };
+    
+    // K열(11열)에 "축복완료" 상태 기록
+    sheet.getRange(rowIdx, 11).setValue("축복완료");
+    
+    // +5 EXP 활동기록으로 즉시 부여 (방어 스탯에 반영)
+    recordActivityLog({
+      phone: payload.phone,
+      name: payload.name,
+      type: "방어",
+      item: "✨ 이장의 축복 보너스",
+      score: 5,
+      action: "축복",
+      statType: "def"
+    });
+    
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * 7. 이장의 즉석 돌발 퀘스트 선포 및 전령의 기둥 연동
+ */
+function createSurpriseQuest(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = checkAndCreateQuestRegistrySheet();
+    
+    var now = new Date();
+    var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    var durationMs = (parseInt(payload.durationMinutes) || 60) * 60 * 1000;
+    var endTime = new Date(now.getTime() + durationMs);
+    var endTimeStr = Utilities.formatDate(endTime, "GMT+9", "yyyy-MM-dd HH:mm:ss");
+    
+    var lastRow = sheet.getLastRow();
+    var nextId = lastRow;
+    
+    // 퀘스트 행 등록
+    sheet.appendRow([
+      nextId,
+      todayStr,
+      "이장",
+      payload.title,
+      payload.description || "마을 이장님의 특별 계시입니다.",
+      endTimeStr,
+      "", // G열: 전화번호 공란 (전체 멤버용 돌발)
+      "진행중" // H열: 상태
+    ]);
+    
+    // 전령의 기둥(실시간 공지)으로 연동 선포
+    updatePillarNotice({ content: "⚡ [돌발 계시] " + payload.title });
+    
+    return { success: true, endTime: endTime.getTime() };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+// [v46.32] 주간 다회 출석 체력 보너스 자동 누적 정산 엔진 (3회: 100, 4회: 200, 5회: 300, 6회: 500 EXP)
+function checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("일일_활동_기록");
+    if (!sheet) return;
+    
+    var now = new Date();
+    // 매주 수요일 기점 (인바디 제출 및 챌린지 주간 사이클)
+    var day = now.getDay(); // 0(일)~6(토)
+    var diffToWed = (day < 3) ? (day + 4) : (day - 3); 
+    var startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToWed);
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    var data = sheet.getDataRange().getValues();
+    var attendDaysThisWeek = 0;
+    
+    // 보너스 수령 여부 플래그
+    var hasBonus3 = false;
+    var hasBonus4 = false;
+    var hasBonus5 = false;
+    var hasBonus6 = false;
+    
+    for (var i = 1; i < data.length; i++) {
+      var rowDate = new Date(data[i][0]);
+      if (rowDate >= startOfWeek) {
+        var rowPhone = String(data[i][1]).replace(/[^0-9]/g, "");
+        if (rowPhone === phoneStr) {
+          // 센터방문 수행 실적이 있는 날 카운트
+          var visitScore = Number(data[i][3]) || 0;
+          if (visitScore > 0) {
+            attendDaysThisWeek++;
+          }
+          // 보너스 항목 수령 여부 확인
+          var details = String(data[i][8] || "");
+          if (details.indexOf("주간 3회 출석 보너스") > -1) hasBonus3 = true;
+          if (details.indexOf("주간 4회 출석 보너스") > -1) hasBonus4 = true;
+          if (details.indexOf("주간 5회 출석 보너스") > -1) hasBonus5 = true;
+          if (details.indexOf("주간 6회 출석 보너스") > -1) hasBonus6 = true;
+        }
+      }
+    }
+    
+    // 3일 출석: +100 EXP 하사 (누적 100)
+    if (attendDaysThisWeek === 3 && !hasBonus3) {
+      recordActivityLog({
+        phone: phoneStr,
+        name: memberName,
+        type: "보너스",
+        item: "주간 3회 출석 보너스",
+        action: "달성",
+        score: 100,
+        statType: "health"
+      });
+      Logger.log("🎉 [" + memberName + "] 주간 3회 출석 달성! 체력 보너스 +100 EXP 하사 완료!");
+      sendWeeklyBonusSms(phoneStr, memberName, 3);
+    }
+    // 4일 출석: +100 EXP 추가 하사 (누적 200)
+    else if (attendDaysThisWeek === 4 && !hasBonus4) {
+      recordActivityLog({
+        phone: phoneStr,
+        name: memberName,
+        type: "보너스",
+        item: "주간 4회 출석 보너스",
+        action: "달성",
+        score: 100,
+        statType: "health"
+      });
+      Logger.log("🎉 [" + memberName + "] 주간 4회 출석 달성! 체력 보너스 +100 EXP 추가 하사 완료!");
+      sendWeeklyBonusSms(phoneStr, memberName, 4);
+    }
+    // 5일 출석: +100 EXP 추가 하사 (누적 300)
+    else if (attendDaysThisWeek === 5 && !hasBonus5) {
+      recordActivityLog({
+        phone: phoneStr,
+        name: memberName,
+        type: "보너스",
+        item: "주간 5회 출석 보너스",
+        action: "달성",
+        score: 100,
+        statType: "health"
+      });
+      Logger.log("🎉 [" + memberName + "] 주간 5회 출석 달성! 체력 보너스 +100 EXP 추가 하사 완료!");
+      sendWeeklyBonusSms(phoneStr, memberName, 5);
+    }
+    // 6일 출석: +100 EXP 추가 하사 (누적 400 EXP!)
+    else if (attendDaysThisWeek >= 6 && !hasBonus6) {
+      recordActivityLog({
+        phone: phoneStr,
+        name: memberName,
+        type: "보너스",
+        item: "주간 6회 출석 보너스",
+        action: "달성",
+        score: 100,
+        statType: "health"
+      });
+      Logger.log("🎉 [" + memberName + "] 주간 6회 출석 달성! 체력 보너스 +100 EXP 추가 하사 완료!");
+      sendWeeklyBonusSms(phoneStr, memberName, 6);
+    }
+  } catch (e) {
+    Logger.log("🚨 주간 출석 보너스 정산 오류: " + e.toString());
+  }
+}
+
+/**
+ * [v46.4] 체력 보너스 달성 시 문자 발송 대기록 적재
+ */
+function sendWeeklyBonusSms(phoneStr, memberName, count) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var smsSheet = ss.getSheetByName("문자발송");
+    if (!smsSheet) return;
+    
+    // 전화번호 형식 보정 (010-XXXX-XXXX)
+    var formattedPhone = phoneStr;
+    var digits = phoneStr.replace(/[^0-9]/g, "");
+    if (digits.length === 11) {
+      formattedPhone = digits.slice(0, 3) + "-" + digits.slice(3, 7) + "-" + digits.slice(7);
+    }
+    
+    var now = new Date();
+    var logTimeStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm:ss");
+    var smsContent = "🎉 [" + memberName + "]님 축하합니다!\n금주 " + count + "회째 출석으로 '체력보너스'를 달성하셨습니다! 🔥\n추가 보너스 +100 EXP가 지급되었습니다. 오늘도 건강하게 점핑!";
+    
+    smsSheet.appendRow([
+      logTimeStr,       // 기록시간
+      memberName,       // 이름
+      formattedPhone,   // 전화번호
+      "체력보너스달성", // 안내분류
+      smsContent,       // 생성된문자내용
+      "대기"            // 상태
+    ]);
+    Logger.log("📢 [" + memberName + "] 체력보너스 문자발송 대기열 추가 완료: " + count + "회");
+  } catch(e) {
+    Logger.log("🚨 체력보너스 문자 발송 대기열 추가 실패: " + e.toString());
+  }
+
+// [v46.35] 구글의 소스코드 노출 자동차단을 예방하는 안전한 백엔드 API 키 저장/배포 시스템
+function getGeminiApiKey() {
+  try {
+    // 1단계: 보안을 위해 Script Properties에서 꺼내옵니다.
+    var key = PropertiesService.getScriptProperties().getProperty("GEMINI_API_KEY");
+    if (key && key.trim()) return key.trim();
+    
+    // 2단계: 백업용으로 "환경설정" 시트에서 읽어옵니다. (Properties가 초기화되었을 경우 대비)
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("환경설정");
+    if (sheet) {
+      var val = sheet.getRange("B2").getValue();
+      if (val && String(val).trim()) {
+        // 복구용으로 PropertiesService에도 함께 갱신해 줍니다.
+        PropertiesService.getScriptProperties().setProperty("GEMINI_API_KEY", String(val).trim());
+        return String(val).trim();
+      }
+    }
+  } catch (e) {
+    Logger.log("🚨 getGeminiApiKey 오류: " + e.toString());
+  }
+  return ""; 
+}
+
+function setGeminiApiKey(newKey) {
+  try {
+    var trimmed = String(newKey || "").trim();
+    if (!trimmed) {
+      PropertiesService.getScriptProperties().deleteProperty("GEMINI_API_KEY");
+      return { success: true, message: "API 키가 안전하게 제거되었습니다." };
+    }
+    
+    // 1단계: Properties에 안전하게 암호화 저장
+    PropertiesService.getScriptProperties().setProperty("GEMINI_API_KEY", trimmed);
+    
+    // 2단계: 이장님 확인용으로 "환경설정" 시트 생성 및 쓰기
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("환경설정");
+    if (!sheet) {
+      sheet = ss.insertSheet("환경설정");
+      sheet.getRange("A1").setValue("설명");
+      sheet.getRange("A2").setValue("Gemini AI API Key (소스코드 유출 방지용 금고)");
+      sheet.getRange("B1").setValue("API_KEY");
+    }
+    sheet.getRange("B2").setValue(trimmed);
+    
+    return { success: true, message: "구글 스프레드시트 금고에 API Key가 안전하게 저장되었습니다!" };
+  } catch (e) {
+    return { success: false, error: e.toString() };
   }
 }
 

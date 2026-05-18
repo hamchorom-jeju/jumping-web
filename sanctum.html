@@ -229,20 +229,21 @@
     function loadSanctumData() {
       // 1. 공지 데이터 로드
       google.script.run.withSuccessHandler(res => {
-        document.getElementById('pillar-text').value = res.content || "";
+        const el = document.getElementById('pillar-text');
+        if (el) el.value = res.content || "";
       }).getPillarNotice();
 
       // 2. 오늘의 모험가(접속 기록 기반) 로드
       google.script.run.withSuccessHandler(count => {
-        document.getElementById('v-active').innerText = count || 0;
+        const el = document.getElementById('v-active');
+        if (el) el.innerText = count || 0;
       }).getDailyActiveAdventurers();
 
-      // 3. 진행 중인 이벤트 수 로드
-      google.script.run.withSuccessHandler(events => {
-        document.getElementById('v-active-events').innerText = events.length;
-      }).getActiveEvents();
-      
-      // 4. 대기 중인 축복 수 로드 (실제로는 loadRecentCerts에서 처리하므로 여기선 생략 가능하지만 일관성을 위해)
+      // 3. 오늘 하루 하사된 총 경험치 로드
+      google.script.run.withSuccessHandler(exp => {
+        const el = document.getElementById('v-exp');
+        if (el) el.innerText = exp ? exp.toLocaleString() : "0";
+      }).getDailyAwardedExperience();
     }
 
     function launchQuest() {

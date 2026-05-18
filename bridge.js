@@ -79,6 +79,12 @@ if (typeof google === 'undefined' || !google.script) {
                   };
                 } else if (prop === 'getActiveEvents') {
                   mockResult = [];
+                } else if (prop === 'getGeminiApiKey') {
+                  mockResult = localStorage.getItem("mock_gemini_api_key") || "";
+                } else if (prop === 'setGeminiApiKey') {
+                  const newKey = args[0] || "";
+                  localStorage.setItem("mock_gemini_api_key", newKey);
+                  mockResult = { success: true, message: "[로컬 모크] 구글 스프레드시트 금고에 API Key가 안전하게 저장되었습니다!" };
                 } else if (prop === 'submitArchive') {
                   const payload = args[0] || {};
                   let stored = sessionStorage.getItem("mock_feed");

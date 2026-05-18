@@ -204,6 +204,7 @@
     <div class="v-tabs">
       <button class="v-tab-btn active" id="btn-quest" onclick="switchTab('quest')">퀘스트 인증 ⚔️</button>
       <button class="v-tab-btn" id="btn-habit" onclick="switchTab('habit')">습관 인증 🌿</button>
+      <button class="v-tab-btn" id="btn-inbody" onclick="switchTab('inbody')">인바디 AI 스캔 📊</button>
     </div>
 
     <!-- 퀘스트 탭 -->
@@ -222,11 +223,9 @@
           </div>
         </div>
         
-        <div id="quest-preview-box" style="display: none; margin-top: 5px;">
-          <div style="position: relative;">
-            <img id="quest-preview-img" src="" style="width: 100%; border-radius: 20px; border: 2px solid var(--emerald); display: block;">
-            <div onclick="resetPreview('quest')" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 10px; font-size: 0.75rem; font-weight: 800; backdrop-filter: blur(5px); cursor:pointer;">다시 촬영</div>
-          </div>
+        <div id="quest-preview-box" style="display: none; margin-top: 5px; position: relative; width: 100%; height: 320px; border-radius: 20px; overflow: hidden; border: 2px solid var(--emerald); background: #111827; align-items: center; justify-content: center;">
+          <img id="quest-preview-img" src="" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+          <div onclick="resetPreview('quest')" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; backdrop-filter: blur(5px); cursor:pointer; z-index: 10;">다시 선택</div>
         </div>
         
         <input type="file" id="file-input-quest-camera" hidden accept="image/*" capture="camera" onchange="previewImage('quest', this)">
@@ -274,11 +273,9 @@
           </div>
         </div>
         
-        <div id="habit-preview-box" style="display: none; margin-top: 5px;">
-          <div style="position: relative;">
-            <img id="habit-preview-img" src="" style="width: 100%; border-radius: 20px; border: 2px solid var(--v-wood); display: block;">
-            <div onclick="resetPreview('habit')" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 10px; font-size: 0.75rem; font-weight: 800; backdrop-filter: blur(5px); cursor:pointer;">다시 촬영</div>
-          </div>
+        <div id="habit-preview-box" style="display: none; margin-top: 5px; position: relative; width: 100%; height: 320px; border-radius: 20px; overflow: hidden; border: 2px solid var(--v-wood); background: #111827; align-items: center; justify-content: center;">
+          <img id="habit-preview-img" src="" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+          <div onclick="resetPreview('habit')" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; backdrop-filter: blur(5px); cursor:pointer; z-index: 10;">다시 선택</div>
         </div>
         
         <input type="file" id="file-input-habit-camera" hidden accept="image/*" capture="camera" onchange="previewImage('habit', this)">
@@ -301,6 +298,75 @@
         </select>
         <input type="text" id="habit-comment" class="comment-input" placeholder="실천 소감을 남겨주세요!">
         <button id="btn-submit-habit" onclick="submitEntry('habit')" style="width: 100%; margin-top: 15px; background: var(--v-wood); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(93, 64, 55, 0.2);">습관 기록 완료</button>
+      </div>
+    </div>
+
+    <!-- 인바디 AI 스캔 탭 -->
+    <div id="tab-inbody" class="tab-content">
+      <div class="premium-cert-card" style="border-top: 5px solid #6366f1;">
+        <div class="section-title" style="color: #4f46e5;">📊 지니 AI 인바디 스캐너</div>
+        <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: -10px; margin-bottom: 15px; font-weight: 700; line-height: 1.4;">
+          인바디 어플 화면이나 결과지 사진을 올리면 지니 AI가 수치를 자동 분석하여 챌린지 기록으로 등록해 드립니다!
+        </p>
+
+        <div id="inbody-upload-placeholder" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:row; gap: 15px; align-items:center; justify-content:center; padding: 15px;">
+          <div onclick="document.getElementById('file-input-inbody-camera').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+            <span style="font-size:2.2rem; margin-bottom:6px;">📸</span>
+            <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">실시간 촬영</p>
+          </div>
+          <div onclick="document.getElementById('file-input-inbody-album').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+            <span style="font-size:2.2rem; margin-bottom:6px;">🖼️</span>
+            <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">앨범에서 선택</p>
+          </div>
+        </div>
+
+        <div id="inbody-preview-box" style="display: none; margin-top: 5px; position: relative; width: 100%; height: 400px; border-radius: 20px; overflow: hidden; border: 2px solid #6366f1; background: #111827; align-items: center; justify-content: center;">
+          <img id="inbody-preview-img" src="" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+          <div onclick="resetInbodyPreview()" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; backdrop-filter: blur(5px); cursor:pointer; z-index: 10;">다시 선택</div>
+          <!-- 스캔 라인 애니메이션 -->
+          <div id="inbody-scan-line" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(to bottom, rgba(99, 102, 241, 0), rgba(99, 102, 241, 1), rgba(99, 102, 241, 0)); box-shadow: 0 0 10px rgba(99, 102, 241, 0.8); animation: scanAnimation 2s linear infinite; z-index: 5;"></div>
+        </div>
+
+        <input type="file" id="file-input-inbody-camera" hidden accept="image/*" capture="camera" onchange="previewInbodyImage(this)">
+        <input type="file" id="file-input-inbody-album" hidden accept="image/*" onchange="previewInbodyImage(this)">
+
+
+
+        <!-- AI 분석된 수치 입력 폼 (스캔 완료 후 표시) -->
+        <div id="inbody-scan-result-form" style="display: none; margin-top: 15px; background: #f3f4f6; padding: 15px; border-radius: 20px; border: 1px solid #e5e7eb;">
+          <div style="font-size: 0.85rem; font-weight: 900; color: #4f46e5; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+            ✨ 지니 AI 분석 완료 (직접 수정 가능)
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+            <div>
+              <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">체중(kg)</label>
+              <input type="number" id="inbody-scan-weight" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
+            </div>
+            <div>
+              <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">골격근량(kg)</label>
+              <input type="number" id="inbody-scan-muscle" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
+            </div>
+            <div>
+              <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">체지방률(%)</label>
+              <input type="number" id="inbody-scan-fat" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
+            </div>
+          </div>
+          <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; line-height: 1.3;">
+            * AI 판독이 틀렸을 경우 숫자를 수동으로 올바르게 보정하실 수 있습니다.
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:15px; width: 100%;">
+          <button id="btn-start-inbody-scan" onclick="startInbodyScan()" style="flex:4; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 900; font-size: 1rem; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2); cursor: pointer;">
+            지니 AI 인바디 스캔 시작 📊
+          </button>
+          <button id="btn-reset-inbody-api-key" onclick="resetApiKeyPrompt()" style="flex:2; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; padding: 12px; border-radius: 15px; font-weight: 800; font-size: 0.75rem; cursor: pointer; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 4px;">
+            🔑 키 설정
+          </button>
+          <button id="btn-submit-inbody-scan" onclick="submitInbodyScanData()" style="display: none; flex:4; background: var(--emerald); color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 900; font-size: 1rem; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2); cursor: pointer;">
+            이 수치로 인바디 최종 등록 🏆
+          </button>
+        </div>
       </div>
     </div>
 
@@ -364,11 +430,11 @@
           </div>
         </div>
         
-        <div id="ai-preview-box" style="display: none; position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 20px; overflow: hidden; border: 2px solid var(--emerald);">
-          <img id="ai-preview-img" src="" style="width: 100%; height: 100%; object-fit: cover;">
-          <div onclick="resetAiPreview()" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; backdrop-filter: blur(5px); cursor:pointer;">다시 촬영</div>
+        <div id="ai-preview-box" style="display: none; position: relative; width: 100%; height: 320px; border-radius: 20px; overflow: hidden; border: 2px solid var(--emerald); background: #111827; align-items: center; justify-content: center;">
+          <img id="ai-preview-img" src="" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+          <div onclick="resetAiPreview()" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; backdrop-filter: blur(5px); cursor:pointer; z-index: 10;">다시 선택</div>
           <!-- 스캔 라인 애니메이션 -->
-          <div id="ai-scan-line" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(to bottom, rgba(46, 204, 113, 0), rgba(46, 204, 113, 1), rgba(46, 204, 113, 0)); box-shadow: 0 0 10px rgba(46, 204, 113, 0.8); animation: scanAnimation 2s linear infinite;"></div>
+          <div id="ai-scan-line" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(to bottom, rgba(46, 204, 113, 0), rgba(46, 204, 113, 1), rgba(46, 204, 113, 0)); box-shadow: 0 0 10px rgba(46, 204, 113, 0.8); animation: scanAnimation 2s linear infinite; z-index: 5;"></div>
         </div>
         
         <input type="file" id="file-input-ai-camera" hidden accept="image/*" capture="camera" onchange="previewAiImage(this)">
@@ -386,9 +452,9 @@
           <button id="btn-start-ai-scan" onclick="startAiScan()" style="flex:4; background: var(--v-wood); color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 900; font-size: 1rem; box-shadow: 0 4px 15px rgba(93, 64, 55, 0.2); cursor: pointer;">
             지니 AI 식단 스캔 시작 🚀
           </button>
-          <!-- [v46.3] 키 재설정 버튼은 관리자(이장님) 세션만 볼 수 있도록 기본 display: none 설정 -->
-          <button id="btn-reset-api-key" onclick="resetApiKeyPrompt()" style="flex:2; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; padding: 12px; border-radius: 15px; font-weight: 800; font-size: 0.75rem; cursor: pointer; white-space: nowrap; display: none; align-items: center; justify-content: center; gap: 4px;">
-            🔑 키 재설정
+          <!-- [v46.34] 키 설정 버튼은 언제든 재주입 가능하도록 상시 노출 -->
+          <button id="btn-reset-api-key" onclick="resetApiKeyPrompt()" style="flex:2; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; padding: 12px; border-radius: 15px; font-weight: 800; font-size: 0.75rem; cursor: pointer; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 4px;">
+            🔑 키 설정
           </button>
         </div>
       </div>
@@ -465,6 +531,8 @@
       // [v44.190] 로그인 상태 UI 업데이트 (복구된 데이터로)
       renderLoginStatus();
       
+
+      
       // [v45.2] URL 파라미터에 따른 자동 탭 및 항목 선택
       const cat = urlParams.get('tab') || urlParams.get('cat');
       const itemKey = urlParams.get('item');
@@ -494,8 +562,25 @@
       if (TARGET_PHONE) {
         google.script.run
           .withSuccessHandler(res => {
-            if (res && res.success && res.doneList) {
-              updateMealButtonsState(res.doneList);
+            if (res && res.success) {
+              if (res.doneList) updateMealButtonsState(res.doneList);
+              
+              // [v46.4] 체력 보너스 획득 실시간 실감 팝업 띄우기 (localStorage 기반 1회 노출 차단)
+              if (res.achievedBonuses && res.achievedBonuses.length > 0) {
+                res.achievedBonuses.forEach(count => {
+                  const storageKey = `seen_weekly_bonus_${TARGET_PHONE}_${count}`;
+                  if (!localStorage.getItem(storageKey)) {
+                    setTimeout(() => {
+                      showAppAlert(
+                        `🎉 축하합니다, ${res.name || '모험가'}님!\n이번 주 ${count}회째 출석 마일스톤을 멋지게 달성하셨습니다! 🏆\n\n'체력보너스' 스탯이 활성화되어 추가 보너스 +100 EXP가 전격 적립되었습니다! 🔥\n오늘도 건강하게 점핑하며 목표를 향해 달려보세요! 🤸‍♂️✨`,
+                        "success",
+                        "🏆 체력 보너스 획득! 🏆"
+                      );
+                      localStorage.setItem(storageKey, 'true');
+                    }, 800); // UI 렌더링 완료 후 자연스럽게 뜨도록 딜레이 부여
+                  }
+                });
+              }
             }
           })
           .getUserDashboardData({ phone: TARGET_PHONE });
@@ -527,12 +612,24 @@
         const uTier = localStorage.getItem('v44_user_tier') || "🌱 회원";
         phoneEl.innerText = uTier;
         logoutBtn.style.display = "flex"; // 로그인 안된 경우 퇴장 버튼 숨김
+        
+        // [v46.35] 관리자(이장님) 세션만 키 설정 버튼들을 노출
+        const isChief = (uName === '이장님' || uPhone.includes('9999'));
+        const resetBtn = document.getElementById('btn-reset-api-key');
+        const resetInbodyBtn = document.getElementById('btn-reset-inbody-api-key');
+        if (resetBtn) resetBtn.style.display = isChief ? 'flex' : 'none';
+        if (resetInbodyBtn) resetInbodyBtn.style.display = isChief ? 'flex' : 'none';
       } else {
         nameEl.innerText = "로그인이 필요합니다";
         nameEl.style.color = "var(--v-wood)";
         phoneEl.innerText = "SESSION REQUIRED";
         dotEl.classList.add('offline');
         logoutBtn.style.display = 'none'; // 로그인 안된 경우 퇴장 버튼 숨김
+        
+        const resetBtn = document.getElementById('btn-reset-api-key');
+        const resetInbodyBtn = document.getElementById('btn-reset-inbody-api-key');
+        if (resetBtn) resetBtn.style.display = 'none';
+        if (resetInbodyBtn) resetInbodyBtn.style.display = 'none';
       }
     }
 
@@ -616,17 +713,7 @@
         keyWarning.style.display = 'none';
       }
 
-      // [v46.3] 관리자(이장님) 세션만 키 재설정 버튼을 활성화하여 노출합니다.
-      const resetBtn = document.getElementById('btn-reset-api-key');
-      if (resetBtn) {
-        const uName = localStorage.getItem('v44_user_name') || '';
-        const uPhone = localStorage.getItem('v44_user_phone') || '';
-        if (uName === '이장님' || uPhone.includes('9999')) {
-          resetBtn.style.display = 'flex';
-        } else {
-          resetBtn.style.display = 'none';
-        }
-      }
+      // [v46.35] 키 설정 버튼 노출 여부는 renderLoginStatus에서 일괄 제어됩니다.
 
       document.getElementById('ai-meal-modal').style.display = 'flex';
       pushModalState('ai-meal-modal');
@@ -662,7 +749,7 @@
         const reader = new FileReader();
         reader.onload = e => {
           document.getElementById('ai-preview-img').src = e.target.result;
-          document.getElementById('ai-preview-box').style.display = 'block';
+          document.getElementById('ai-preview-box').style.display = 'flex';
           document.getElementById('ai-upload-placeholder').style.display = 'none';
           
           // base64 원본 추출
@@ -775,31 +862,6 @@
     }
 
     async function startAiScan() {
-      const savedKey = localStorage.getItem('gemini_api_key') || '';
-      let apiKey = savedKey.trim();
-
-      // [v46.2] 기본 마스터 API 키 자동 장착 (사용자가 개별 키를 설정하지 않은 경우 자동 사용)
-      if (!apiKey) {
-        apiKey = "AIzaSyDhdr8c-4GSEFOwM3lZd0IEu-037mo_VSQ";
-      }
-
-      const keyWarning = document.getElementById('api-key-warning');
-      if (keyWarning.style.display !== 'none' && !apiKey) {
-        const inputKey = document.getElementById('gemini-key-input').value.trim();
-        if (!inputKey) {
-          alert('첫 실행을 위해 구글 Gemini API Key를 꼭 입력해주세요!');
-          return;
-        }
-        localStorage.setItem("gemini_api_key", inputKey);
-        apiKey = inputKey;
-        keyWarning.style.display = 'none';
-      }
-
-      if (!apiKey) {
-        alert('Gemini API Key가 설정되지 않았습니다.');
-        return;
-      }
-
       if (!aiBase64Image) {
         alert('분석할 음식 사진을 촬영하거나 선택해주세요!');
         return;
@@ -810,114 +872,123 @@
       
       scanLine.style.display = 'block';
       btn.disabled = true;
-      btn.innerText = '지니가 항상성 점수를 계산하는 중...';
+      btn.innerText = '🔑 보안 키 확인 중...';
 
-      // [v46.6] 저녁 단식 라디오 체크 불필요 (AI 자동 식별 판정 전환)
+      google.script.run.withSuccessHandler(async (backendKey) => {
+        let apiKey = (backendKey || localStorage.getItem('gemini_api_key') || '').trim();
 
-      const systemPrompt = `
-      너는 노형 점핑 클럽의 33챌린지 수석 영양사 및 피트니스 AI 코치인 '지니'다.
-      사용자의 다이어트 목표는 '평생 지속 가능한 항상성 수호'다. 우리는 억지로 굶지 않고 건강한 리듬을 중요시한다.
-      다음 기준에 맞춰 업로드된 사진 속 식단을 정교하게 분석하여 결과를 반드시 아래 명시된 JSON 포맷으로만 답변해라.
-      
-      [식단 평가 기준]
-      1. 시간대: ${aiSelectedTime === 'morning' ? '아침' : aiSelectedTime === 'noon' ? '점심' : '저녁'}
-      
-      2. 시간대별 기준 및 등급/피드백 설계:
-         - 아침:
-           * 기준: 가벼운 시동 (과일, 요거트, 계란, 미온수/물, 차, 단순 토스트/샌드위치, 샐러드, 일반 건강식 등).
-           * 아침 식사의 섭취 유무와 메뉴 종류는 각 회원의 개인 생활패턴과 라이프스타일에 따른 건강한 선택입니다. 영양학적으로 아침 장기에 심각한 해를 끼치거나 과부하를 주는 무거운 메뉴(예: 아침부터 먹는 삼겹살, 라면, 튀김류 등 무겁고 기름진 음식)가 아니라면, 일상적이고 가벼운 모든 아침 시도를 존중하고 격려해야 합니다.
-           * 특히 물 한 잔, 미온수, 차(Tea) 또는 컵에 담긴 투명한 액체 사진을 통한 아침 수분 섭취(Hydration) 및 단식 리듬 역시 항상성을 가동하는 가장 완벽하고 훌륭한 아침 깨우기 행동입니다.
-           * 등급: 건강에 해를 끼치지 않는 가볍고 일상적인 모든 아침 식단, 물/차 수분 섭취, 혹은 아침 단식 상태라면 **무조건 최고의 칭찬과 함께 Tier S (+10 EXP)**를 부여하십시오.
-           * 기름지거나 몸에 무리를 줄 수 있는 해로운 중식/양식/야식형 메뉴인 경우에만 상황에 맞춰 Tier A (+5 EXP) 또는 Tier B (0 EXP)로 완화 조정하십시오.
-         - 점심:
-           * 기준: 행복한 안심. 폭식만 아니라면 어떤 일반식(한식, 돈까스, 제육 등)이라도 든든하고 행복하게 먹었으면 적극 칭찬! (안심하고 지방을 태우도록 돕는 과정).
-           * 등급: 폭식이 아니면 무조건 Tier S (+10 EXP). 
-         - 저녁:
-           * 기준: 가벼운 마무리 혹은 단식, 또는 일반 건강식, 혹은 기름진 치팅/외식.
-           * 저녁 단식 (물/차만 섭취) ➡️ Tier S (+15 EXP): 장기의 완벽한 휴식 대찬사! (triggerQuest는 false)
-           * 가벼운 마무리 (쉐이크/식사대용/샐러드는 '가벼운 저녁') ➡️ Tier S (+10 EXP): 훌륭한 소화 휴식 칭찬! (triggerQuest는 false)
-           * 일반 건강식 (밥, 국, 반찬, 생선, 두부 등 한식 중심의 깨끗하고 건강한 일반 가정식 저녁) ➡️ Tier A (+5 EXP): "대사율 유지를 위해 꼭 필요한 깨끗한 에너지 공급입니다!" (돌발 퀘스트 발동 안 함: triggerQuest는 false)
-           * 기름지고 무거운 치팅/외식 (치킨, 피자, 삼겹살, 라면, 중식, 술, 고칼로리 야식류 등) ➡️ Tier C (+5 EXP): "솔직한 기록에 용기 어린 박수를 보냅니다! 하지만 간과 근육에 글리코겐이 가득 차오르고 있어요! 🚨 글리코겐 골든타임 3일(72시간) 법칙 발동! 체지방으로 완전히 굳기 전인 3일 동안 점핑으로 땀 흘려 부셔보세요! 🔥" (돌발 퀘스트 강제 발동: triggerQuest를 true로 지정)
-      
-      3. 피드백 메시지 톤앤매너:
-         - 3인칭의 친근하고 격려하는 말투 (~하셨군요, ~입니다!).
-         - 죄책감을 주는 피드백 절대 금지! 치팅(Tier C)이라도 솔직하게 기록한 용기를 칭찬하고 내일 가볍게 조율하자는 '밀당 버프' 조언.
-         - 특히 점심의 경우, '안심하고 항상성 대사율을 떨어뜨리지 않는다'는 원리를 친절하게 설명.
-      
-      [답변 포맷 JSON 규격 (텍스트나 마크업 섞지 말고 순수 JSON만 반환해라)]
-      {
-        "tier": "S" | "A" | "B" | "C",
-        "score": number (S는 10 또는 15, A는 5, B는 0, C는 5),
-        "feedback": "한글 지니 피드백 텍스트",
-        "nutrients": "감지된 핵심 성분 나열",
-        "triggerQuest": true | false (저녁 식사인데 기름진 치팅/외식인 경우만 true, 그 외는 false)
-      }
-      `;
-
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [
-                { text: systemPrompt },
-                { inlineData: { mimeType: aiMimeType, data: aiBase64Image } }
-              ]
-            }],
-            generationConfig: { responseMimeType: "application/json" }
-          })
-        });
-
-        if (!response.ok) {
-          const errData = await response.json();
-          const errMsg = errData.error ? errData.error.message : JSON.stringify(errData);
-          throw new Error(errMsg);
+        // 기본 마스터 API 키 자동 장착 (사용자가 개별 키를 설정하지 않은 경우 자동 사용)
+        if (!apiKey) {
+          apiKey = "AIzaSyDhdr8c-4GSEFOwM3lZd0IEu-037mo_VSQ";
         }
 
-        const result = await response.json();
+        btn.innerText = '지니가 항상성 점수를 계산하는 중...';
+
+        const systemPrompt = `
+        너는 노형 점핑 클럽의 33챌린지 수석 영양사 및 피트니스 AI 코치인 '지니'다.
+        사용자의 다이어트 목표는 '평생 지속 가능한 항상성 수호'다. 우리는 억지로 굶지 않고 건강한 리듬을 중요시한다.
+        다음 기준에 맞춰 업로드된 사진 속 식단을 정교하게 분석하여 결과를 반드시 아래 명시된 JSON 포맷으로만 답변해라.
         
-        if (result.candidates && result.candidates[0].content.parts[0].text) {
-          const cleanJsonText = result.candidates[0].content.parts[0].text.trim();
-          const data = JSON.parse(cleanJsonText);
-          aiLastResult = data;
+        [식단 평가 기준]
+        1. 시간대: ${aiSelectedTime === 'morning' ? '아침' : aiSelectedTime === 'noon' ? '점심' : '저녁'}
+        
+        2. 시간대별 기준 및 등급/피드백 설계:
+           - 아침:
+             * 기준: 가벼운 시동 (과일, 요거트, 계란, 미온수/물, 차, 단순 토스트/샌드위치, 샐러드, 일반 건강식 등).
+             * 아침 식사의 섭취 유무와 메뉴 종류는 각 회원의 개인 생활패턴과 라이프스타일에 따른 건강한 선택입니다. 영양학적으로 아침 장기에 심각한 해를 끼치거나 과부하를 주는 무거운 메뉴(예: 아침부터 먹는 삼겹살, 라면, 튀김류 등 무겁고 기름진 음식)가 아니라면, 일상적이고 가벼운 모든 아침 시도를 존중하고 격려해야 합니다.
+             * 특히 물 한 잔, 미온수, 차(Tea) 또는 컵에 담긴 투명한 액체 사진을 통한 아침 수분 섭취(Hydration) 및 단식 리듬 역시 항상성을 가동하는 가장 완벽하고 훌륭한 아침 깨우기 행동입니다.
+             * 등급: 건강에 해를 끼치지 않는 가볍고 일상적인 모든 아침 식단, 물/차 수분 섭취, 혹은 아침 단식 상태라면 **무조건 최고의 칭찬과 함께 Tier S (+10 EXP)**를 부여하십시오.
+             * 기름지거나 몸에 무리를 줄 수 있는 해로운 중식/양식/야식형 메뉴인 경우에만 상황에 맞춰 Tier A (+5 EXP) 또는 Tier B (0 EXP)로 완화 조정하십시오.
+           - 점심:
+             * 기준: 행복한 안심. 폭식만 아니라면 어떤 일반식(한식, 돈까스, 제육 등)이라도 든든하고 행복하게 먹었으면 적극 칭찬! (안심하고 지방을 태우도록 돕는 과정).
+             * 등급: 폭식이 아니면 무조건 Tier S (+10 EXP). 
+           - 저녁:
+             * 기준: 가벼운 마무리 혹은 단식, 또는 일반 건강식, 혹은 기름진 치팅/외식.
+             * 저녁 단식 (물/차만 섭취) ➡️ Tier S (+15 EXP): 장기의 완벽한 휴식 대찬사! (triggerQuest는 false)
+             * 가벼운 마무리 (쉐이크/식사대용/샐러드는 '가벼운 저녁') ➡️ Tier S (+10 EXP): 훌륭한 소화 휴식 칭찬! (triggerQuest는 false)
+             * 일반 건강식 (밥, 국, 반찬, 생선, 두부 등 한식 중심의 깨끗하고 건강한 일반 가정식 저녁) ➡️ Tier A (+5 EXP): "대사율 유지를 위해 꼭 필요한 깨끗한 에너지 공급입니다!" (돌발 퀘스트 발동 안 함: triggerQuest는 false)
+             * 기름지고 무거운 치팅/외식 (치킨, 피자, 삼겹살, 라면, 중식, 술, 고칼로리 야식류 등) ➡️ Tier C (+5 EXP): "솔직한 기록에 용기 어린 박수를 보냅니다! 하지만 간과 근육에 글리코겐이 가득 차오르고 있어요! 🚨 글리코겐 골든타임 3일(72시간) 법칙 발동! 체지방으로 완전히 굳기 전인 3일 동안 점핑으로 땀 흘려 부셔보세요! 🔥" (돌발 퀘스트 강제 발동: triggerQuest를 true로 지정)
+        
+        3. 피드백 메시지 톤앤매너:
+           - 3인칭의 친근하고 격려하는 말투 (~하셨군요, ~입니다!).
+           - 죄책감을 주는 피드백 절대 금지! 치팅(Tier C)이라도 솔직하게 기록한 용기를 칭찬하고 내일 가볍게 조율하자는 '밀당 버프' 조언.
+           - 특히 점심의 경우, '안심하고 항상성 대사율을 떨어뜨리지 않는다'는 원리를 친절하게 설명.
+        
+        [답변 포맷 JSON 규격 (텍스트나 마크업 섞지 말고 순수 JSON만 반환해라)]
+        {
+          "tier": "S" | "A" | "B" | "C",
+          "score": number (S는 10 또는 15, A는 5, B는 0, C는 5),
+          "feedback": "한글 지니 피드백 텍스트",
+          "nutrients": "감지된 핵심 성분 나열",
+          "triggerQuest": true | false (저녁 식사인데 기름진 치팅/외식인 경우만 true, 그 외는 false)
+        }
+        `;
 
-          // 결과 렌더링
-          const tierEl = document.getElementById('ai-result-tier');
-          tierEl.innerText = `Tier ${data.tier}`;
-          tierEl.className = 'feed-badge';
-          
-          if (data.tier === 'S') tierEl.style.background = 'var(--emerald)';
-          else if (data.tier === 'A') tierEl.style.background = 'var(--gold)';
-          else if (data.tier === 'B') tierEl.style.background = '#94a3b8';
-          else if (data.tier === 'C') tierEl.style.background = '#e67e22';
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { text: systemPrompt },
+                  { inlineData: { mimeType: aiMimeType, data: aiBase64Image } }
+                ]
+              }],
+              generationConfig: { responseMimeType: "application/json" }
+            })
+          });
 
-          document.getElementById('ai-result-score').innerText = `+${data.score} EXP`;
-          document.getElementById('ai-result-feedback').innerHTML = data.feedback.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--v-wood);">$1</strong>');
-          document.getElementById('ai-result-nutrients').innerText = data.nutrients;
-
-          // 글리코겐 클리어 경보
-          const glycogenAlert = document.getElementById('ai-glycogen-alert');
-          if (data.triggerQuest) {
-            glycogenAlert.style.display = 'block';
-          } else {
-            glycogenAlert.style.display = 'none';
+          if (!response.ok) {
+            const errData = await response.json();
+            const errMsg = errData.error ? errData.error.message : JSON.stringify(errData);
+            throw new Error(errMsg);
           }
 
-          // 스탭 전환
-          document.getElementById('ai-step-upload').style.display = 'none';
-          document.getElementById('ai-step-result').style.display = 'block';
-        } else {
-          throw new Error("AI 분석 응답이 올바르지 않습니다.");
+          const result = await response.json();
+          
+          if (result.candidates && result.candidates[0].content.parts[0].text) {
+            const cleanJsonText = result.candidates[0].content.parts[0].text.trim();
+            const data = JSON.parse(cleanJsonText);
+            aiLastResult = data;
+
+            // 결과 렌더링
+            const tierEl = document.getElementById('ai-result-tier');
+            tierEl.innerText = `Tier ${data.tier}`;
+            tierEl.className = 'feed-badge';
+            
+            if (data.tier === 'S') tierEl.style.background = 'var(--emerald)';
+            else if (data.tier === 'A') tierEl.style.background = 'var(--gold)';
+            else if (data.tier === 'B') tierEl.style.background = '#94a3b8';
+            else if (data.tier === 'C') tierEl.style.background = '#e67e22';
+
+            document.getElementById('ai-result-score').innerText = `+${data.score} EXP`;
+            document.getElementById('ai-result-feedback').innerHTML = data.feedback.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--v-wood);">$1</strong>');
+            document.getElementById('ai-result-nutrients').innerText = data.nutrients;
+
+            // 글리코겐 클리어 경보
+            const glycogenAlert = document.getElementById('ai-glycogen-alert');
+            if (data.triggerQuest) {
+              glycogenAlert.style.display = 'block';
+            } else {
+              glycogenAlert.style.display = 'none';
+            }
+
+            // 스탭 전환
+            document.getElementById('ai-step-upload').style.display = 'none';
+            document.getElementById('ai-step-result').style.display = 'block';
+          } else {
+            throw new Error("AI 분석 응답이 올바르지 않습니다.");
+          }
+        } catch (err) {
+          alert("🚨 AI 식단 분석 오류: " + err.toString());
+        } finally {
+          scanLine.style.display = 'none';
+          btn.disabled = false;
+          btn.innerText = '지니 AI 식단 스캔 시작 🚀';
         }
-      } catch (err) {
-        alert("🚨 AI 식단 분석 오류: " + err.toString());
-      } finally {
-        scanLine.style.display = 'none';
-        btn.disabled = false;
-        btn.innerText = '지니 AI 식단 스캔 시작 🚀';
-      }
+      }).getGeminiApiKey();
     }
 
     function submitAiArchive() {
@@ -1005,22 +1076,217 @@
     }
 
     function resetApiKeyPrompt() {
-      const currentKey = localStorage.getItem('gemini_api_key') || '';
-      const newKey = prompt("🔑 새로운 구글 Gemini API Key를 입력해주세요 (39자리):", currentKey);
-      if (newKey !== null) {
-        const trimmed = newKey.trim();
-        if (trimmed) {
-          localStorage.setItem('gemini_api_key', trimmed);
-          alert("✅ Gemini API Key가 새롭게 저장되었습니다! 이제 식단 스캔을 다시 시작해 보세요.");
-          const keyWarning = document.getElementById('api-key-warning');
-          if (keyWarning) keyWarning.style.display = 'none';
-        } else {
-          localStorage.removeItem('gemini_api_key');
-          alert("🗑️ Gemini API Key가 로컬 저장소에서 제거되었습니다.");
-          const keyWarning = document.getElementById('api-key-warning');
-          if (keyWarning) keyWarning.style.display = 'block';
+      // 1. 안전하게 로딩 마스크 띄우며 백엔드 시트 금고 조회
+      showLoading();
+      google.script.run.withSuccessHandler(backendKey => {
+        hideLoading();
+        const currentKey = backendKey || localStorage.getItem('gemini_api_key') || '';
+        
+        const newKey = prompt("🔑 [이장 전용] 새로운 구글 Gemini API Key를 입력해주세요 (39자리):\n*여기에 입력하신 키는 모든 회원이 공동으로 즉시 사용하게 됩니다.", currentKey);
+        if (newKey !== null) {
+          const trimmed = newKey.trim();
+          showLoading();
+          
+          google.script.run.withSuccessHandler(res => {
+            hideLoading();
+            if (res && res.success) {
+              if (trimmed) {
+                localStorage.setItem('gemini_api_key', trimmed);
+                alert("✅ " + res.message);
+                const keyWarning = document.getElementById('api-key-warning');
+                if (keyWarning) keyWarning.style.display = 'none';
+              } else {
+                localStorage.removeItem('gemini_api_key');
+                alert("🗑️ " + res.message);
+                const keyWarning = document.getElementById('api-key-warning');
+                if (keyWarning) keyWarning.style.display = 'block';
+              }
+            } else {
+              alert("🚨 백엔드 저장 실패: " + (res?.error || "알 수 없는 오류"));
+            }
+          }).setGeminiApiKey(trimmed);
         }
+      }).getGeminiApiKey();
+    }
+
+    // --- 지니 AI 인바디 스캐너 로직 ---
+    let inbodyBase64Image = '';
+    let inbodyMimeType = 'image/jpeg';
+    let inbodyScanResult = null;
+
+
+
+    function previewInbodyImage(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        inbodyMimeType = file.type || "image/jpeg";
+        
+        const reader = new FileReader();
+        reader.onload = e => {
+          document.getElementById('inbody-preview-img').src = e.target.result;
+          document.getElementById('inbody-preview-box').style.display = 'flex';
+          document.getElementById('inbody-upload-placeholder').style.display = 'none';
+          inbodyBase64Image = e.target.result.split(',')[1];
+        };
+        reader.readAsDataURL(file);
       }
+    }
+
+    function resetInbodyPreview() {
+      document.getElementById('inbody-preview-box').style.display = 'none';
+      document.getElementById('inbody-upload-placeholder').style.display = 'flex';
+      document.getElementById('file-input-inbody-camera').value = "";
+      document.getElementById('file-input-inbody-album').value = "";
+      document.getElementById('inbody-scan-result-form').style.display = 'none';
+      document.getElementById('btn-submit-inbody-scan').style.display = 'none';
+      document.getElementById('btn-start-inbody-scan').style.display = 'block';
+      document.getElementById('btn-start-inbody-scan').disabled = false;
+      document.getElementById('btn-start-inbody-scan').innerText = '지니 AI 인바디 스캔 시작 📊';
+      inbodyBase64Image = '';
+      inbodyScanResult = null;
+    }
+
+    async function startInbodyScan() {
+      if (!inbodyBase64Image) {
+        alert("먼저 인바디 캡처 이미지나 사진을 촬영/선택해 주세요!");
+        return;
+      }
+
+      const scanLine = document.getElementById('inbody-scan-line');
+      const btn = document.getElementById('btn-start-inbody-scan');
+      
+      scanLine.style.display = 'block';
+      btn.innerText = '🔑 보안 키 확인 중...';
+      btn.disabled = true;
+
+      google.script.run.withSuccessHandler(async (backendKey) => {
+        let apiKey = (backendKey || localStorage.getItem('gemini_api_key') || '').trim();
+        if (!apiKey) {
+          apiKey = "AIzaSyDhdr8c-4GSEFOwM3lZd0IEu-037mo_VSQ"; // 기본 마스터 키
+        }
+
+        btn.innerText = '🤖 지니 AI가 판독 중...';
+
+        const promptText = `
+          너는 노형 점핑 클럽의 수석 피트니스 AI 코치인 '지니'다.
+          제공된 이미지는 회원이 올린 InBody(인바디) 결과지 또는 인바디 어플 화면 캡처본이다.
+          이미지에서 체중(weight), 골격근량(muscle), 체지방률(fat) 정보를 정확하게 식별하고 추출하라.
+          
+          반드시 다음 JSON 객체 형식만 반환하라. 마크다운(\`\`\`json)이나 백틱, 일반 설명 텍스트는 절대 포함하지 마라.
+          
+          {
+            "weight": 47.7,
+            "muscle": 21.0,
+            "fat": 19.9
+          }
+          
+          만약 이미지가 인바디와 관련이 없거나 글씨를 도저히 읽을 수 없다면 다음 형식으로만 반환하라:
+          { "error": "not_inbody" }
+        `;
+
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+          const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    { text: promptText },
+                    { inlineData: { mimeType: inbodyMimeType, data: inbodyBase64Image } }
+                  ]
+                }
+              ],
+              generationConfig: {
+                responseMimeType: "application/json"
+              }
+            })
+          });
+
+          if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error?.message || "HTTP " + response.status);
+          }
+
+          const result = await response.json();
+          const textResult = result.candidates[0].content.parts[0].text;
+          const data = JSON.parse(textResult);
+
+          scanLine.style.display = 'none';
+          btn.innerText = '📊 인바디 스캔 완료';
+
+          if (data.error === "not_inbody") {
+            alert("🚨 지니 AI 판독 오류: 인바디 관련 수치 캡처 화면을 찾을 수 없습니다. 올바른 이미지를 다시 선택해 주세요.");
+            resetInbodyPreview();
+            return;
+          }
+
+          document.getElementById('inbody-scan-weight').value = data.weight || "";
+          document.getElementById('inbody-scan-muscle').value = data.muscle || "";
+          document.getElementById('inbody-scan-fat').value = data.fat || "";
+          
+          document.getElementById('inbody-scan-result-form').style.display = 'block';
+          document.getElementById('btn-submit-inbody-scan').style.display = 'block';
+          document.getElementById('btn-start-inbody-scan').style.display = 'none';
+
+          inbodyScanResult = data;
+          showAppAlert("✅ 지니 AI가 체중/근량/지방률 분석에 성공했습니다!\n수치가 정확한지 검토 후 등록 버튼을 눌러주세요.", "success");
+
+        } catch (err) {
+          scanLine.style.display = 'none';
+          btn.innerText = '지니 AI 인바디 스캔 시작 📊';
+          btn.disabled = false;
+          alert("🚨 AI 스캔 중 오류가 발생했습니다: " + err.toString());
+        }
+      }).getGeminiApiKey();
+    }
+
+    function submitInbodyScanData() {
+      if (!inbodyScanResult) return;
+      
+      const weightVal = parseFloat(document.getElementById('inbody-scan-weight').value);
+      const muscleVal = parseFloat(document.getElementById('inbody-scan-muscle').value);
+      const fatVal = parseFloat(document.getElementById('inbody-scan-fat').value);
+
+      if (isNaN(weightVal) || isNaN(muscleVal) || isNaN(fatVal)) {
+        alert("모든 수치(체중, 골격근량, 체지방률)를 올바르게 입력해 주세요!");
+        return;
+      }
+
+      if (!TARGET_PHONE || !TARGET_NAME) {
+        alert("로그인 세션 정보가 부족합니다. 다시 로그인해 주세요.");
+        return;
+      }
+
+      const submitBtn = document.getElementById('btn-submit-inbody-scan');
+      submitBtn.disabled = true;
+      submitBtn.innerText = '💾 인바디 등록 중...';
+
+      google.script.run
+        .withSuccessHandler(res => {
+          if (res.success) {
+            showAppAlert(`🎉 인바디 최종 등록 성공!\n웰니스 통합 감량 성적이 반영되어 +${res.score} EXP가 적립되었습니다!`, "success");
+            resetInbodyPreview();
+            switchTab('quest');
+          } else {
+            alert("인바디 시트 저장 실패: " + res.error);
+            submitBtn.disabled = false;
+            submitBtn.innerText = '이 수치로 인바디 최종 등록 🏆';
+          }
+        })
+        .withFailureHandler(err => {
+          alert("서버 연결 실패: " + err.toString());
+          submitBtn.disabled = false;
+          submitBtn.innerText = '이 수치로 인바디 최종 등록 🏆';
+        })
+        .submitInBodyRecord({
+          name: TARGET_NAME,
+          phone: TARGET_PHONE,
+          weight: weightVal,
+          muscle: muscleVal,
+          fat: fatVal
+        });
     }
 
     function switchTab(type) {
@@ -1047,7 +1313,7 @@
         const reader = new FileReader();
         reader.onload = e => {
           document.getElementById(type + '-preview-img').src = e.target.result;
-          document.getElementById(type + '-preview-box').style.display = 'block';
+          document.getElementById(type + '-preview-box').style.display = 'flex';
           const placeholder = document.getElementById(type + '-upload-placeholder');
           if (placeholder) placeholder.style.display = 'none';
           
