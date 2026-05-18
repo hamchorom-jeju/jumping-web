@@ -5618,7 +5618,7 @@ function recordActivityLog(payload) {
 /**
  * [v45.9] 마스터 플랜 기반 인바디 기록 저장 및 점수 계산
  */
-function submitInBodyRecord(payload) {
+function DEPRECATED_submitInBodyRecord(payload) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("33챌린지_인바디") || ss.insertSheet("33챌린지_인바디");
