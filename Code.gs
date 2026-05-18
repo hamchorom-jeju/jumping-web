@@ -104,17 +104,26 @@ function updateReaction(rowIdx, reactionType, phone) {
 function getActiveEvents() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var configSheet = ss.getSheetByName("설정");
-    if (!configSheet) return [];
-    var data = configSheet.getDataRange().getValues();
+    var sheet = checkAndCreateQuestRegistrySheet();
+    var data = sheet.getDataRange().getDisplayValues();
+    
+    var now = new Date();
+    var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
     var events = [];
+    
     for (var i = 1; i < data.length; i++) {
-      if (data[i][0] === "돌발퀘스트" && data[i][2] === "진행중") {
-        events.push({ title: data[i][1] });
+      var type = data[i][2]; // C열: 유형 ("이장" or "글리코겐")
+      var dateStr = data[i][1]; // B열: 시행일 (yyyy-MM-dd)
+      var title = data[i][3]; // D열: 퀘스트명
+      
+      if (type === "이장" && dateStr === todayStr) {
+        events.push({ title: title });
       }
     }
     return events;
-  } catch (e) { return []; }
+  } catch (e) { 
+    return []; 
+  }
 }
 
 /**
@@ -205,6 +214,11 @@ function submitArchive(payload) {
       statType: statType,
       photoId: photoId
     });
+
+    // [v46.10] 글리코겐 클리어 퀘스트 발동 조건 감시 (식단이고 Tier C인 경우)
+    if (payload.type === "식단" && payload.item.indexOf("Tier C") > -1) {
+      triggerGlycogenQuest(formattedPhone, payload.name);
+    }
 
     var lastRow = sheet.getLastRow();
 
@@ -361,6 +375,8 @@ function getUserDashboardData(payload) {
       else break;
     }
 
+    var questStatus = getActiveQuestStatus(phone);
+
     return {
       success: true,
       doneList: doneList,
@@ -371,7 +387,8 @@ function getUserDashboardData(payload) {
       weeklyScore: scores.weekly,
       stats: stats, // { weekly, monthly } 데이터
       weeklyTargets: { health: 1500, perf: 1000, def: 500 },
-      monthlyTargets: { health: 6000, perf: 4000, def: 2000 }
+      monthlyTargets: { health: 6000, perf: 4000, def: 2000 },
+      quests: questStatus
     };
   } catch (e) { return { success: false, error: e.toString() }; }
 }
@@ -5342,6 +5359,242 @@ function submitInBodyRecord(payload) {
     return { success: true, score: score };
   } catch (e) {
     return { success: false, error: e.toString() };
+  }
+}
+
+// ==========================================
+// [v46.20] 돌발퀘스트 & 글리코겐 방패 시스템 마스터 엔진
+// ==========================================
+
+function checkAndCreateQuestRegistrySheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("돌발퀘스트_목록");
+  if (!sheet) {
+    sheet = ss.insertSheet("돌발퀘스트_목록");
+    var headers = ["ID", "시행일", "유형", "퀘스트명", "설명", "만료일", "전화번호", "상태"];
+    sheet.appendRow(headers);
+    sheet.setFrozenRows(1);
+    sheet.getRange("1:1").setBackground("#e3faf2").setFontWeight("bold").setHorizontalAlignment("center");
+    Logger.log("✅ '돌발퀘스트_목록' 시트 생성 완료!");
+  }
+  return sheet;
+}
+
+function getActiveQuestStatus(phone) {
+  var result = {
+    todayQuest: null,
+    tomorrowQuest: null,
+    glycogenQuest: null,
+    shield: { active: false, expireStr: "" }
+  };
+  
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = checkAndCreateQuestRegistrySheet();
+    var data = sheet.getDataRange().getDisplayValues();
+    
+    var now = new Date();
+    var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    
+    var tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    var tomorrowStr = Utilities.formatDate(tomorrow, "GMT+9", "yyyy-MM-dd");
+    
+    var cleanPhone = String(phone || "").replace(/[^0-9]/g, "");
+    
+    // 1. Scan for global quests ("이장")
+    for (var i = 1; i < data.length; i++) {
+      var type = data[i][2]; // C열: 유형
+      var dateStr = data[i][1]; // B열: 시행일 (yyyy-MM-dd)
+      var title = data[i][3]; // D열: 퀘스트명
+      var desc = data[i][4]; // E열: 설명
+      
+      if (type === "이장") {
+        if (dateStr === todayStr) {
+          result.todayQuest = { title: title, description: desc };
+        } else if (dateStr === tomorrowStr) {
+          result.tomorrowQuest = { title: title, description: desc };
+        }
+      }
+    }
+    
+    // 2. Scan for individual Glycogen Quests ("글리코겐")
+    var activeGlycogenRowIdx = -1;
+    var latestGlycogenQuest = null;
+    for (var i = 1; i < data.length; i++) {
+      var type = data[i][2]; // C열: 유형
+      var qPhone = String(data[i][6]).replace(/[^0-9]/g, ""); // G열: 전화번호
+      var status = data[i][7]; // H열: 상태 ("진행중", "성공", "실패")
+      
+      if (type === "글리코겐" && qPhone === cleanPhone) {
+        var triggerTimeStr = data[i][5]; // F열: 만료일 (or trigger timestamp)
+        var dateStr = data[i][1]; // B열: 시행일 (시작일)
+        
+        if (status === "진행중") {
+          // Check if expired
+          var limitTime = new Date(data[i][5]); // F열: 만료일
+          if (now > limitTime) {
+            // Expired! Mark as 실패
+            sheet.getRange(i + 1, 8).setValue("실패");
+          } else {
+            activeGlycogenRowIdx = i + 1;
+            latestGlycogenQuest = {
+              rowIdx: i + 1,
+              startStr: dateStr,
+              deadlineStr: triggerTimeStr,
+              deadlineTime: limitTime.getTime()
+            };
+          }
+        }
+      }
+    }
+    
+    // 3. Scan for active Shield Buff ("요요방패")
+    var latestSuccessTime = 0;
+    for (var i = 1; i < data.length; i++) {
+      var type = data[i][2]; // C열: 유형
+      var qPhone = String(data[i][6]).replace(/[^0-9]/g, ""); // G열: 전화번호
+      var status = data[i][7]; // H열: 상태 ("진행중", "성공", "실패")
+      
+      if (type === "글리코겐" && qPhone === cleanPhone && status === "성공") {
+        var shieldLimitTime = new Date(data[i][5]);
+        if (now <= shieldLimitTime) {
+          if (shieldLimitTime.getTime() > latestSuccessTime) {
+            latestSuccessTime = shieldLimitTime.getTime();
+          }
+        }
+      }
+    }
+    
+    if (latestSuccessTime > 0) {
+      result.shield.active = true;
+      result.shield.expireStr = Utilities.formatDate(new Date(latestSuccessTime), "GMT+9", "yyyy-MM-dd HH:mm:ss");
+    }
+    
+    // 4. If Glycogen Quest is active, calculate its progress (number of unique attendances since starting)
+    if (latestGlycogenQuest) {
+      var logSheet = ss.getSheetByName("출석기록");
+      var attendDates = new Set();
+      if (logSheet) {
+        var logData = logSheet.getDataRange().getValues();
+        var triggerDateOnlyStr = latestGlycogenQuest.startStr.split(" ")[0]; // e.g. "2026-05-18"
+        
+        for (var j = 1; j < logData.length; j++) {
+          var logPhone = String(logData[j][3]).replace(/[^0-9]/g, ""); // D열: 전화번호
+          if (logPhone === cleanPhone) {
+            var logDateRaw = logData[j][0]; // A열: 날짜
+            var logDateStr = (logDateRaw instanceof Date) ? Utilities.formatDate(logDateRaw, "GMT+9", "yyyy-MM-dd") : String(logDateRaw);
+            
+            // Count unique dates starting from the trigger date (next day or same day)
+            if (logDateStr >= triggerDateOnlyStr) {
+              attendDates.add(logDateStr);
+            }
+          }
+        }
+      }
+      
+      var attendCount = attendDates.size;
+      if (attendCount >= 3) {
+        // SUCCESS!
+        sheet.getRange(latestGlycogenQuest.rowIdx, 8).setValue("성공");
+        var shieldExpire = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        sheet.getRange(latestGlycogenQuest.rowIdx, 6).setValue(Utilities.formatDate(shieldExpire, "GMT+9", "yyyy-MM-dd HH:mm:ss"));
+        
+        var memberName = "";
+        var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+        if (regSheet) {
+          var regData = regSheet.getDataRange().getDisplayValues();
+          var regCols = getRegColumnIndices(regSheet);
+          for (var r = 1; r < regData.length; r++) {
+            var rPhone = String(regData[r][regCols.phone]).replace(/[^0-9]/g, "");
+            if (rPhone === cleanPhone) {
+              memberName = regData[r][regCols.name];
+              break;
+            }
+          }
+        }
+        if (!memberName) memberName = "모험가";
+        
+        recordActivityLog({
+          phone: cleanPhone,
+          name: memberName,
+          type: "방어",
+          item: "🔥 글리코겐 클리어 완료",
+          score: 100,
+          action: "성공",
+          statType: "def"
+        });
+        
+        var archiveSheet = ss.getSheetByName("아카이브");
+        if (archiveSheet) {
+          var dateStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+          var timeStr = Utilities.formatDate(now, "GMT+9", "HH:mm:ss");
+          var cardComment = `🎉 [글리코겐 클리어 성공] ${memberName}님이 3일 연속 지옥의 출석으로 치팅데이를 완전히 격파하고 '요요 방어 방패'를 획득하셨습니다! 🛡️ (+100 EXP)`;
+          archiveSheet.appendRow([
+            dateStr,
+            timeStr,
+            memberName,
+            "'" + cleanPhone,
+            "퀘스트",
+            "🔥 글리코겐 클리어 성공",
+            cardComment,
+            "SYSTEM_CARD",
+            100
+          ]);
+        }
+        
+        result.glycogenQuest = null;
+        result.shield.active = true;
+        result.shield.expireStr = Utilities.formatDate(shieldExpire, "GMT+9", "yyyy-MM-dd HH:mm:ss");
+      } else {
+        result.glycogenQuest = {
+          progress: attendCount,
+          deadlineStr: latestGlycogenQuest.deadlineStr,
+          startStr: latestGlycogenQuest.startStr
+        };
+      }
+    }
+  } catch (e) {
+    console.error("Error in getActiveQuestStatus:", e.toString());
+  }
+  
+  return result;
+}
+
+function triggerGlycogenQuest(phone, name) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = checkAndCreateQuestRegistrySheet();
+    var cleanPhone = String(phone).replace(/[^0-9]/g, "");
+    
+    var data = sheet.getDataRange().getDisplayValues();
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][2] === "글리코겐" && String(data[i][6]).replace(/[^0-9]/g, "") === cleanPhone && data[i][7] === "진행중") {
+        Logger.log("이미 진행중인 글리코겐 퀘스트가 있습니다.");
+        return;
+      }
+    }
+    
+    var now = new Date();
+    var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    var deadline = new Date(now.getTime() + 72 * 60 * 60 * 1000); // 72 hours
+    var deadlineStr = Utilities.formatDate(deadline, "GMT+9", "yyyy-MM-dd HH:mm:ss");
+    
+    var lastRow = sheet.getLastRow();
+    var nextId = lastRow;
+    
+    sheet.appendRow([
+      nextId,
+      todayStr,
+      "글리코겐",
+      "🔥 글리코겐 클리어 퀘스트",
+      "치팅으로 인한 간과 근육의 글리코겐이 포착되었습니다! 3일 연속 출석하여 방패를 채우세요!",
+      deadlineStr,
+      "'" + cleanPhone,
+      "진행중"
+    ]);
+    Logger.log("글리코겐 퀘스트 성공적으로 발동됨!");
+  } catch(e) {
+    Logger.log("triggerGlycogenQuest 에러: " + e.toString());
   }
 }
 

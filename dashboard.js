@@ -186,6 +186,9 @@ const Village = {
                         };
                         this.renderAll();
                         this.updateEvolution();
+                        if (res.quests) {
+                            this.renderQuestWidgets(res.quests);
+                        }
                         if (res.isFirstLoginToday) this.showLoginReward();
                     }
                 })
@@ -477,7 +480,97 @@ const Village = {
         }
     },
 
-    triggerSuddenMission() { document.getElementById('sudden-mission-bar').style.display = 'block'; }
+    triggerSuddenMission() { document.getElementById('sudden-mission-bar').style.display = 'block'; },
+
+    renderQuestWidgets(quests) {
+        if (!quests) return;
+        
+        // 1. 오늘의 돌발 퀘스트 배너
+        const suddenBar = document.getElementById('sudden-mission-bar');
+        if (suddenBar) {
+            if (quests.todayQuest) {
+                suddenBar.style.display = 'block';
+                suddenBar.innerHTML = `⚡ [오늘의 돌발] <strong>${quests.todayQuest.title}</strong> (인증 시 +15 EXP)`;
+            } else {
+                suddenBar.style.display = 'none';
+            }
+        }
+        
+        // 2. 내일의 돌발 예고 배너
+        const teaserBar = document.getElementById('teaser-mission-bar');
+        if (teaserBar) {
+            if (quests.tomorrowQuest) {
+                teaserBar.style.display = 'block';
+                teaserBar.innerHTML = `🔮 [내일의 돌발 예고] 내일은 '<strong>${quests.tomorrowQuest.title}</strong>' 퀘스트가 열립니다!`;
+            } else {
+                teaserBar.style.display = 'none';
+            }
+        }
+        
+        // 3. 글리코겐 클리어 방패 퀘스트 위젯
+        const glyWidget = document.getElementById('glycogen-quest-widget');
+        if (glyWidget) {
+            if (quests.glycogenQuest) {
+                glyWidget.style.display = 'flex';
+                
+                // 남은 시간 계산 (시간 단위)
+                const deadlineTime = new Date(quests.glycogenQuest.deadlineStr).getTime();
+                const nowTime = Date.now();
+                const diffMs = deadlineTime - nowTime;
+                const hoursLeft = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60)));
+                
+                const deadlineEl = document.getElementById('glycogen-quest-deadline');
+                if (deadlineEl) {
+                    if (hoursLeft > 24) {
+                        const daysLeft = Math.floor(hoursLeft / 24);
+                        deadlineEl.innerText = `마감 D-${daysLeft}일 (${hoursLeft}시간 남음)`;
+                    } else {
+                        deadlineEl.innerText = `마감 임박! ${hoursLeft}시간 남음`;
+                    }
+                }
+                
+                // 출석 둥근 원형 표시
+                const ratioEl = document.getElementById('glycogen-quest-ratio');
+                if (ratioEl) ratioEl.innerText = `${quests.glycogenQuest.progress} / 3`;
+                
+                const circlesContainer = document.getElementById('glycogen-circles');
+                if (circlesContainer) {
+                    let circlesHtml = '';
+                    const progress = quests.glycogenQuest.progress || 0;
+                    for (let i = 0; i < 3; i++) {
+                        if (i < progress) {
+                            circlesHtml += `<div style="width: 16px; height: 16px; border-radius: 50%; background: #be123c; border: 2px solid #be123c;"></div>`;
+                        } else {
+                            circlesHtml += `<div style="width: 16px; height: 16px; border-radius: 50%; background: transparent; border: 2px solid #be123c;"></div>`;
+                        }
+                    }
+                    circlesContainer.innerHTML = circlesHtml;
+                }
+            } else {
+                glyWidget.style.display = 'none';
+            }
+        }
+        
+        // 4. 요요 방패 버프 위젯
+        const shieldWidget = document.getElementById('yoyo-shield-buff-widget');
+        if (shieldWidget) {
+            if (quests.shield && quests.shield.active) {
+                shieldWidget.style.display = 'flex';
+                
+                const expireTime = new Date(quests.shield.expireStr).getTime();
+                const nowTime = Date.now();
+                const diffMs = expireTime - nowTime;
+                const daysLeft = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+                
+                const timeEl = document.getElementById('yoyo-shield-buff-time');
+                if (timeEl) {
+                    timeEl.innerText = `남은 기한: ${daysLeft}일 (D-${daysLeft})`;
+                }
+            } else {
+                shieldWidget.style.display = 'none';
+            }
+        }
+    }
 };
 
 window.onload = () => Village.init();

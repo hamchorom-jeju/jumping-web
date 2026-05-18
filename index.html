@@ -67,8 +67,43 @@
             </div>
         </div>
 
-        <div class="v-sudden-bar" id="sudden-mission-bar">
-            ⚡ [보너스 퀘스트] 지금 바로 인증 시 방어력 +20!
+        <div class="v-sudden-bar" id="sudden-mission-bar" style="display:none; cursor:pointer;" onclick="location.href='miracle.html?tab=quest&cat=bonus'">
+            ⚡ [오늘의 돌발] 오늘의 돌발 퀘스트를 인증하세요!
+        </div>
+
+        <!-- 🔮 [내일의 돌발 예고] 배너 -->
+        <div class="v-teaser-bar" id="teaser-mission-bar" style="display:none; background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%); color: white; padding: 12px 15px; border-radius: 15px; font-weight: 800; font-size: 0.8rem; text-align: center; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(126, 34, 206, 0.15);">
+            🔮 [내일의 돌발 예고] 내일은 미션이 열립니다!
+        </div>
+
+        <!-- 🛡️ [글리코겐 클리어 방패 퀘스트] 위젯 -->
+        <div id="glycogen-quest-widget" style="display:none; background: linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%); border: 1px solid #fda4af; padding: 15px; border-radius: 18px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(251, 113, 133, 0.15); flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 900; color: #be123c; font-size: 0.85rem;">🛡️ 글리코겐 클리어 방패 퀘스트</span>
+                <span id="glycogen-quest-deadline" style="font-size: 0.65rem; color: #e11d48; font-weight: 800; background: rgba(225, 29, 72, 0.1); padding: 3px 8px; border-radius: 20px;">D-3</span>
+            </div>
+            <div style="font-size: 0.75rem; color: #9f1239; font-weight: 700; line-height: 1.4; word-break: keep-all;">
+                치팅 복구 돌입! 3일 동안 연속 출석하여 방패를 완성하세요. 완성 시 <strong style="color: #be123c;">+100 EXP</strong> 및 <strong style="color: #be123c;">요요방어 버프(7일)</strong> 획득!
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+                <span style="font-size: 0.75rem; font-weight: 800; color: #be123c;">출석 진행도:</span>
+                <div style="display: flex; gap: 8px;" id="glycogen-circles">
+                    <div style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #be123c; background: transparent;"></div>
+                    <div style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #be123c; background: transparent;"></div>
+                    <div style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #be123c; background: transparent;"></div>
+                </div>
+                <span id="glycogen-quest-ratio" style="font-size: 0.75rem; font-weight: 900; color: #be123c; margin-left: auto;">0 / 3</span>
+            </div>
+        </div>
+
+        <!-- 🛡️ [요요 방어 방패 버프] 위젯 -->
+        <div id="yoyo-shield-buff-widget" style="display:none; background: linear-gradient(135deg, #dbffe6 0%, #bbf7d0 100%); border: 1px solid #86efac; padding: 15px; border-radius: 18px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15); align-items: center; gap: 12px;">
+            <span style="font-size: 2rem;">🛡️</span>
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+                <span style="font-weight: 900; color: #166534; font-size: 0.85rem;">요요 방어 방패 버프 작동 중!</span>
+                <span style="font-size: 0.7rem; color: #15803d; font-weight: 700;">치팅 데이의 악영향으로부터 회원님의 대사를 강력히 방어하고 있습니다.</span>
+                <span id="yoyo-shield-buff-time" style="font-size: 0.65rem; color: #166534; font-weight: 800; background: rgba(22, 101, 52, 0.1); padding: 3px 8px; border-radius: 20px; width: fit-content; margin-top: 2px;">D-7</span>
+            </div>
         </div>
 
         <!-- 📋 모험가 상태창 (v44.0 IMMUTABLE) -->
