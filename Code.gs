@@ -616,16 +616,11 @@ function submitInBodyRecord(payload) {
     var uploadDate = new Date();
     
     if (existingRowIndex > -1) {
-      // 동일 날짜에 기록이 이미 존재하면 기존 행을 덮어써서 중복 등록 및 점수 파밍을 차단합니다!
-      sheet.getRange(existingRowIndex, 1).setValue(dateValue);
-      sheet.getRange(existingRowIndex, 2).setValue(name);
-      sheet.getRange(existingRowIndex, 3).setValue("'" + phone);
-      sheet.getRange(existingRowIndex, 4).setValue(weight);
-      sheet.getRange(existingRowIndex, 5).setValue(muscle);
-      sheet.getRange(existingRowIndex, 6).setValue(fat);
-      sheet.getRange(existingRowIndex, 7).setValue(changeScore);
-      sheet.getRange(existingRowIndex, 8).setValue(payload.remarks || "");
-      sheet.getRange(existingRowIndex, 9).setValue(uploadDate);
+      // [v46.40] 동일 날짜에 기록이 이미 존재하면 아예 등록을 차단하고 팝업으로 정중하게 안내합니다 (중복 및 무단 수정 방지!)
+      return { 
+        success: false, 
+        error: "선택하신 측정 날짜(" + targetDateStr + ")에 이미 등록된 인바디 기록이 존재합니다!\n\n중복 등록은 불가하오니 날짜를 다시 확인해 주세요. 만약 수치 오입력으로 기존 기록의 수정을 원하시는 경우 센터 이장님께 직접 요청해 주시기 바랍니다! 😊" 
+      };
     } else {
       // 기존 기록이 없으면 신규 행 추가
       sheet.appendRow([
