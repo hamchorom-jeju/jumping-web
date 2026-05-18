@@ -647,6 +647,7 @@
     }
 
     function submitLog(type, isBonus) {
+      const phoneToSend = selectedMemberPhone;
       let btnId = '';
       if (isBonus) {
         btnId = 'btnBonus';
@@ -739,7 +740,7 @@
                 break;
               }
             }
-            localStorage.setItem('v44_attendance_registry', JSON.stringify(registry));
+            localStorage.setItem('v45_attendance_registry', JSON.stringify(registry));
           } catch(e) {}
         }
       }
@@ -770,7 +771,7 @@
         syncRegistry();
       }).withFailureHandler(function(err) {
         showError("서버 전송 실패: 네트워크 상태를 확인해 주세요.");
-      }).processAttendance(selectedMemberPhone, type, isBonus);
+      }).processAttendance(phoneToSend, type, isBonus);
     }
   </script>
   <style>
