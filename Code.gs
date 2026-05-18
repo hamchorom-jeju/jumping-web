@@ -250,7 +250,7 @@ function getUserDashboardData(payload) {
     var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
     var memberInfo = { name: "모험가", tier: "씨앗", rank: "-" };
     if (regSheet) {
-      var regData = regSheet.getDataRange().getDisplayValues();
+      var regData = regSheet.getDataRange().getValues();
       var regCols = getRegColumnIndices(regSheet);
       for (var i = 1; i < regData.length; i++) {
         var sheetPhone = String(regData[i][regCols.phone]).replace(/[^0-9]/g, ""); 
@@ -301,14 +301,21 @@ function getUserDashboardData(payload) {
       startOfSeason.setHours(0, 0, 0, 0);
     }
 
-    var data = summarySheet.getDataRange().getDisplayValues();
+    var data = summarySheet.getDataRange().getValues();
     for (var j = 1; j < data.length; j++) {
       var recPhone = String(data[j][1]).replace(/[^0-9]/g, "");
       if (recPhone === phone) {
-        var recDateStr = String(data[j][0]);
-        var dMatch = recDateStr.match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
-        if (dMatch) {
-          var recDate = new Date(dMatch[1], parseInt(dMatch[2], 10) - 1, parseInt(dMatch[3], 10));
+        var recDate = null;
+        if (data[j][0] instanceof Date) {
+          recDate = data[j][0];
+        } else {
+          var recDateStr = String(data[j][0]);
+          var dMatch = recDateStr.match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
+          if (dMatch) {
+            recDate = new Date(dMatch[1], parseInt(dMatch[2], 10) - 1, parseInt(dMatch[3], 10));
+          }
+        }
+        if (recDate) {
           var rowTotal = Number(data[j][9] || 0); // J열(10번째): 총점
           activityLifetime += rowTotal;
           
@@ -527,7 +534,7 @@ function getUserDashboardData(payload) {
       else break;
     }
 
-    var questStatus = getActiveQuestStatus(phone, ss);
+    var questStatus = getActiveQuestStatus(phone, ss, logData, memberInfo.name);
 
     return {
       success: true,
@@ -5724,8 +5731,8 @@ function checkAndCreateQuestRegistrySheet() {
   return sheet;
 }
 
-// [perf] ss 객체를 외부에서 공유받아 SpreadsheetApp 연결 중복 방지
-function getActiveQuestStatus(phone, ss) {
+// [perf] ss 객체, logData, memberName을 외부에서 공유받아 SpreadsheetApp 및 시트 읽기 중복 방지
+function getActiveQuestStatus(phone, ss, logData, memberName) {
   var result = {
     todayQuest: null,
     tomorrowQuest: null,
@@ -5801,16 +5808,23 @@ function getActiveQuestStatus(phone, ss) {
     
     // 4. If Glycogen Quest is active, calculate its progress (number of unique attendances since starting)
     if (latestGlycogenQuest) {
-      var logSheet = ss.getSheetByName("출석기록");
       var attendDates = new Set();
-      if (logSheet) {
-        var logData = logSheet.getDataRange().getValues();
-        var triggerDateOnlyStr = latestGlycogenQuest.startStr.split(" ")[0]; // e.g. "2026-05-18"
-        
-        for (var j = 1; j < logData.length; j++) {
-          var logPhone = String(logData[j][3]).replace(/[^0-9]/g, ""); // D열: 전화번호
+      var triggerDateOnlyStr = latestGlycogenQuest.startStr.split(" ")[0]; // e.g. "2026-05-18"
+      
+      // logData가 없으면 새로 로드 (독립 호출 호환용)
+      var localLogData = logData;
+      if (!localLogData) {
+        var logSheet = ss.getSheetByName("출석기록");
+        if (logSheet) {
+          localLogData = logSheet.getDataRange().getValues();
+        }
+      }
+      
+      if (localLogData) {
+        for (var j = 1; j < localLogData.length; j++) {
+          var logPhone = String(localLogData[j][3]).replace(/[^0-9]/g, ""); // D열: 전화번호
           if (logPhone === cleanPhone) {
-            var logDateRaw = logData[j][0]; // A열: 날짜
+            var logDateRaw = localLogData[j][0]; // A열: 날짜
             var logDateStr = (logDateRaw instanceof Date) ? Utilities.formatDate(logDateRaw, "GMT+9", "yyyy-MM-dd") : String(logDateRaw);
             
             // Count unique dates starting from the trigger date (next day or same day)
@@ -5828,24 +5842,27 @@ function getActiveQuestStatus(phone, ss) {
         var shieldExpire = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
         sheet.getRange(latestGlycogenQuest.rowIdx, 6).setValue(Utilities.formatDate(shieldExpire, "GMT+9", "yyyy-MM-dd HH:mm:ss"));
         
-        var memberName = "";
-        var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
-        if (regSheet) {
-          var regData = regSheet.getDataRange().getDisplayValues();
-          var regCols = getRegColumnIndices(regSheet);
-          for (var r = 1; r < regData.length; r++) {
-            var rPhone = String(regData[r][regCols.phone]).replace(/[^0-9]/g, "");
-            if (rPhone === cleanPhone) {
-              memberName = regData[r][regCols.name];
-              break;
+        // memberName이 없으면 등록현황에서 로드 (독립 호출 호환용)
+        var mName = memberName;
+        if (!mName) {
+          var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+          if (regSheet) {
+            var regData = regSheet.getDataRange().getDisplayValues();
+            var regCols = getRegColumnIndices(regSheet);
+            for (var r = 1; r < regData.length; r++) {
+              var rPhone = String(regData[r][regCols.phone]).replace(/[^0-9]/g, "");
+              if (rPhone === cleanPhone) {
+                mName = regData[r][regCols.name];
+                break;
+              }
             }
           }
         }
-        if (!memberName) memberName = "모험가";
+        if (!mName) mName = "모험가";
         
         recordActivityLog({
           phone: cleanPhone,
-          name: memberName,
+          name: mName,
           type: "방어",
           item: "🔥 글리코겐 클리어 완료",
           score: 100,
@@ -5857,11 +5874,11 @@ function getActiveQuestStatus(phone, ss) {
         if (archiveSheet) {
           var dateStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
           var timeStr = Utilities.formatDate(now, "GMT+9", "HH:mm:ss");
-          var cardComment = `🎉 [글리코겐 클리어 성공] ${memberName}님이 3일 연속 지옥의 출석으로 치팅데이를 완전히 격파하고 '요요 방어 방패'를 획득하셨습니다! 🛡️ (+100 EXP)`;
+          var cardComment = `🎉 [글리코겐 클리어 성공] ${mName}님이 3일 연속 지옥의 출석으로 치팅데이를 완전히 격파하고 '요요 방어 방패'를 획득하셨습니다! 🛡️ (+100 EXP)`;
           archiveSheet.appendRow([
             dateStr,
             timeStr,
-            memberName,
+            mName,
             "'" + cleanPhone,
             "퀘스트",
             "🔥 글리코겐 클리어 성공",
