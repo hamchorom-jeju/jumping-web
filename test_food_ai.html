@@ -415,6 +415,7 @@
 <script>
     let selectedTime = 'breakfast';
     let base64Image = '';
+    let detectedMimeType = 'image/jpeg'; // 기본값
 
     // 로컬 스토리지에서 API 키 복구
     document.addEventListener("DOMContentLoaded", () => {
@@ -447,7 +448,7 @@
             statusDiv.innerText = "🟢 API 키가 안전하게 등록되어 있습니다. 즉시 테스트 가능합니다!";
         } else {
             statusDiv.style.color = "var(--text-muted)";
-            statusDiv.innerText = "⚪ 등록된 API 키가 없습니다. 키를 입력하고 우측 [저장] 버튼을 누르거나 아래 요청 버튼을 누르세요.";
+            statusDiv.innerText = "⚪ 등록된 API 키가 없습니다. 키를 입력하고 우측 [저장] 버튼을 누르세요.";
         }
     }
 
@@ -472,6 +473,10 @@
             img.src = e.target.result;
             img.style.display = 'block';
             
+            // [v45.9] 파일 업로드 시 mimeType 동적 추출 (png, jpeg, webp 등 대응)
+            const mimeTypeMatch = e.target.result.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,/);
+            detectedMimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/jpeg';
+
             // Base64 추출 (data:image/jpeg;base64, 부분 제외)
             base64Image = e.target.result.split(',')[1];
         };
@@ -553,7 +558,7 @@
                             { text: systemPrompt },
                             {
                                 inlineData: {
-                                    mimeType: "image/jpeg",
+                                    mimeType: detectedMimeType,
                                     data: base64Image
                                 }
                             }
@@ -564,6 +569,13 @@
                     }
                 })
             });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                console.error("API Error Response:", errData);
+                const errMsg = errData.error ? errData.error.message : JSON.stringify(errData);
+                throw new Error("구글 AI 응답 에러: " + errMsg);
+            }
 
             const result = await response.json();
             
