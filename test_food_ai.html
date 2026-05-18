@@ -545,8 +545,8 @@
         `;
 
         try {
-            // [v1 정식 버전 호환성 향상]
-            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            // [v1beta 엔드포인트 복구 - JSON 구조화 출력 지원]
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
