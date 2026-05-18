@@ -1277,7 +1277,7 @@ function setupDatabase() {
  */
 function getCompiledMemberRegistry(ss) {
   var cache = CacheService.getScriptCache();
-  var cacheKey = "v44_member_registry";
+  var cacheKey = "v45_member_registry";
   var cached = cache.get(cacheKey);
   if (cached) {
     try {
@@ -1494,7 +1494,11 @@ function processAttendance(phoneStr, type, isBonus) {
     
     var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
     
-    if (activePasses.length === 0 && bonusCount <= 0) return { error: "이용 가능한 회원권이 없습니다. 다시 확인해주세요..." };
+    if (activePasses.length === 0 && bonusCount <= 0) {
+      return { 
+        error: "이용 가능한 회원권이 없습니다. (입력번호: " + phoneStr + ", cleanPhone: " + cleanPhone + ", 매칭회원 찾았는지: " + (matchedMember ? "찾음, 회원권개수: " + matchedMember.allPasses.length + ", 보너스: " + matchedMember.bonusCount : "못찾음 (전체명단 수: " + registry.length + "명)") + ")"
+      };
+    }
 
     // [perf] 설정 규칙 24시간 캐싱 처리
     var configRules = null;
@@ -1739,7 +1743,7 @@ function processAttendance(phoneStr, type, isBonus) {
     clearUserDashboardCache(phoneStr);
     try {
       var cache = CacheService.getScriptCache();
-      cache.remove("v44_member_registry");
+      cache.remove("v45_member_registry");
     } catch(e) {}
 
     return { 
