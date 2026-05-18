@@ -402,7 +402,7 @@ const Village = {
                 .withSuccessHandler(res => {
                     this.hideLoading();
                     if (res && res.success) {
-                        showAppAlert(`🏡 [클럽 동기화 완료!]\n총 ${res.points} EXP가 반영되었습니다.\n(방문보너스: 15 + 운동타임: ${res.timePoints})`, "success");
+                        showAppAlert(`🏡 [클럽 동기화 완료!]\n총 ${res.points} EXP가 반영되었습니다.\n(방문보너스: 20 + 운동타임: ${res.timePoints})`, "success");
                         this.loadRealData();
                     } else {
                         showAppAlert(`❌ 동기화 실패: ${res.error}`, "error");
@@ -462,13 +462,13 @@ const Village = {
             badgeEl.className = 'v-badge-sprite'; // 초기화
             
             const tier = this.user.tier;
-            if (tier.includes("씨앗")) badgeEl.classList.add('v-badge-seed');
-            else if (tier.includes("새싹")) badgeEl.classList.add('v-badge-sprout');
-            else if (tier.includes("나무")) badgeEl.classList.add('v-badge-tree');
-            else if (tier.includes("꽃")) badgeEl.classList.add('v-badge-flower');
-            else if (tier.includes("요정")) badgeEl.classList.add('v-badge-fairy');
+            if (tier.includes("수호신")) badgeEl.classList.add('v-badge-guardian');
             else if (tier.includes("점퍼")) badgeEl.classList.add('v-badge-legend');
-            else if (tier.includes("수호신")) badgeEl.classList.add('v-badge-guardian');
+            else if (tier.includes("요정")) badgeEl.classList.add('v-badge-fairy');
+            else if (tier.includes("꽃")) badgeEl.classList.add('v-badge-flower');
+            else if (tier.includes("나무")) badgeEl.classList.add('v-badge-tree');
+            else if (tier.includes("새싹")) badgeEl.classList.add('v-badge-sprout');
+            else if (tier.includes("씨앗")) badgeEl.classList.add('v-badge-seed');
         }
         
         const view = this.perspective;
@@ -487,7 +487,7 @@ const Village = {
         if (typeof max === 'object') max = max[id] || 1000;
         
         // [v44.167] "현재 / 목표" 형식의 정밀 수치 표기
-        const typeNames = { health: '❤️ 체력', perf: '🗡️ 수행력', def: '🛡️ 방어력' };
+        const typeNames = { health: '❤️ 체력', perf: '🗡️ 실천력', def: '🔮 회복력' };
         document.getElementById(`${id}-val`).innerText = `${Math.floor(val).toLocaleString()} / ${max.toLocaleString()}`;
         
         const percent = Math.min((val / max) * 100, 100);

@@ -514,6 +514,17 @@
       const statusArea = document.getElementById('userStatus');
       statusArea.innerHTML = ""; // 기존 내용 비우기
       
+      if (member.isExpired) {
+        statusArea.innerHTML = "<div style='padding:25px 15px; color:#ff5252; font-weight:800; text-align:center; font-size: 1.3rem; line-height: 1.6; border: 2px dashed rgba(255, 82, 82, 0.3); border-radius: 16px; background: rgba(255, 82, 82, 0.05);'>⚠️ 이용 가능한 회원권이 마감되었습니다.<br><span style='font-size:1.0rem; color:#aaa; font-weight:500; display:block; margin-top:8px;'>원장님께 재등록/유예를 문의해 주세요! 😊</span></div>";
+        if (document.getElementById('btnJumping')) document.getElementById('btnJumping').style.display = "none";
+        if (document.getElementById('btnTherapy')) document.getElementById('btnTherapy').style.display = "none";
+        if (document.getElementById('btnCombo')) document.getElementById('btnCombo').style.display = "none";
+        if (document.getElementById('btnBonus')) document.getElementById('btnBonus').style.display = "none";
+        if (document.getElementById('btnCancel')) document.getElementById('btnCancel').innerText = "확인 (닫기)";
+        document.getElementById('userModal').classList.add('show');
+        return;
+      }
+      
       // 보유한 모든 회원권 정보를 리스트로 표시
       if (member.allPasses && member.allPasses.length > 0) {
         member.allPasses.forEach(function(pass) {
@@ -590,21 +601,23 @@
       selectedMemberPhone = "";
     }
 
-    // 버튼 상태 초기화 함수
     function resetButtons() {
       const btnJumping = document.getElementById('btnJumping');
       const btnTherapy = document.getElementById('btnTherapy');
       const btnCombo = document.getElementById('btnCombo');
       const btnBonus = document.getElementById('btnBonus');
+      const btnCancel = document.getElementById('btnCancel');
 
-      if (btnJumping) { btnJumping.innerHTML = '점핑 출석'; btnJumping.style.opacity = '1'; btnJumping.style.pointerEvents = 'auto'; }
-      if (btnTherapy) { btnTherapy.innerHTML = '테라피 출석'; btnTherapy.style.opacity = '1'; btnTherapy.style.pointerEvents = 'auto'; }
-      if (btnCombo) { btnCombo.innerHTML = '복합 출석'; btnCombo.style.opacity = '1'; btnCombo.style.pointerEvents = 'auto'; }
+      if (btnJumping) { btnJumping.style.display = 'block'; btnJumping.innerHTML = '점핑 출석'; btnJumping.style.opacity = '1'; btnJumping.style.pointerEvents = 'auto'; }
+      if (btnTherapy) { btnTherapy.style.display = 'block'; btnTherapy.innerHTML = '테라피 출석'; btnTherapy.style.opacity = '1'; btnTherapy.style.pointerEvents = 'auto'; }
+      if (btnCombo) { btnCombo.style.display = 'block'; btnCombo.innerHTML = '복합 출석'; btnCombo.style.opacity = '1'; btnCombo.style.pointerEvents = 'auto'; }
       if (btnBonus) { 
-        btnBonus.innerHTML = '🎁 보너스 출석'; // 기본 텍스트로 일단 복구 (selectUser에서 다시 갱신됨)
+        btnBonus.style.display = 'block';
+        btnBonus.innerHTML = '🎁 보너스 출석'; 
         btnBonus.style.opacity = '1'; 
         btnBonus.style.pointerEvents = 'auto'; 
       }
+      if (btnCancel) { btnCancel.innerText = '아니오, 잘못 눌렀습니다'; }
     }
 
     function closeMultiModal() {

@@ -247,7 +247,7 @@ function getUserDashboardData(payload) {
 
     // [perf] 구글 초고속 캐시 서비스 확인 (0.05초)
     var cache = CacheService.getScriptCache();
-    var cacheKey = "v44_dash_" + phone;
+    var cacheKey = "v47_dash_" + phone;
     var cachedData = cache.get(cacheKey);
     if (cachedData) {
       try {
@@ -333,16 +333,16 @@ function getUserDashboardData(payload) {
           // 월간(시즌) 합산
           if (recDate >= startOfSeason) {
             activitySeason += rowTotal;
-            stats.monthly.perf += (Number(data[j][3]) || 0) + (Number(data[j][4]) || 0) + (Number(data[j][5]) || 0);
+            stats.monthly.perf += (Number(data[j][5]) || 0);
             stats.monthly.def += (Number(data[j][6]) || 0);
-            stats.monthly.health += (Number(data[j][7]) || 0);
+            stats.monthly.health += (Number(data[j][3]) || 0) + (Number(data[j][4]) || 0) + (Number(data[j][7]) || 0);
           }
           // 주간 합산
           if (recDate >= startOfWeek) {
             activityWeekly += rowTotal;
-            stats.weekly.perf += (Number(data[j][3]) || 0) + (Number(data[j][4]) || 0) + (Number(data[j][5]) || 0);
+            stats.weekly.perf += (Number(data[j][5]) || 0);
             stats.weekly.def += (Number(data[j][6]) || 0);
-            stats.weekly.health += (Number(data[j][7]) || 0);
+            stats.weekly.health += (Number(data[j][3]) || 0) + (Number(data[j][4]) || 0) + (Number(data[j][7]) || 0);
 
             // [v46.4] 이번 주 획득한 체력보너스 탐색
             var rowDetails = String(data[j][8] || "");
@@ -389,6 +389,7 @@ function getUserDashboardData(payload) {
     var firstEverInbody = null;
     var activeInbodySnapshot = null;
     var season0WeekInbody = null;
+    var latestInbody = null; // [v46.41] 실시간 개인용 최신 인바디 스냅샷
 
     var inbodySheet = ss.getSheetByName("33챌린지_인바디");
     if (inbodySheet) {
@@ -431,6 +432,10 @@ function getUserDashboardData(payload) {
             if (!season0WeekInbody || iDate > season0WeekInbody.date) {
               season0WeekInbody = record;
             }
+          }
+          // [v46.41] 실시간 갱신을 위해 랭킹 마감 여부 상관없이 무조건 최신 기록으로 할당!
+          if (!latestInbody || iDate > latestInbody.date) {
+            latestInbody = record;
           }
         }
       }
@@ -478,9 +483,45 @@ function getUserDashboardData(payload) {
       return score;
     }
 
-    var inbodyLifetimeScore = calculateInbodyScoreHelper(firstEverInbody, activeInbodySnapshot);
-    var inbodyWeeklyScore = inbodyLifetimeScore;
-    var inbodySeasonScore = calculateInbodyScoreHelper(season0WeekInbody, activeInbodySnapshot);
+    var inbodyLifetimeScore = calculateInbodyScoreHelper(firstEverInbody, latestInbody || activeInbodySnapshot);
+    
+    // [v46.42] 주간 및 시즌(월간) 인바디 점수 정밀 계산 (과거 기록이 주간/월간에 잘못 합산되는 오류 수정)
+    var inbodyWeeklyScore = 0;
+    var inbodySeasonScore = 0;
+    
+    var currentInbody = latestInbody || activeInbodySnapshot;
+    if (currentInbody) {
+      // (1) 주간 인바디 점수: 이번 주(startOfWeek 이후)에 측정된 기록이 있을 때만 반영!
+      if (currentInbody.date >= startOfWeek) {
+        // 이번 주 직전의 최신 기록을 탐색하여 순수 주간 변화를 구하거나, 없으면 최초 기록 대비로 계산합니다.
+        var prevBeforeThisWeek = null;
+        if (inbodySheet && inData) {
+          for (var k = 1; k < inData.length; k++) {
+            var recPhone = String(inData[k][2]).replace(/[^0-9]/g, "");
+            if (recPhone === phone) {
+              var iDate = new Date(inData[k][0]);
+              if (iDate < startOfWeek) {
+                if (!prevBeforeThisWeek || iDate > prevBeforeThisWeek.date) {
+                  prevBeforeThisWeek = {
+                    date: iDate,
+                    weight: Number(inData[k][3] || 0),
+                    muscle: Number(inData[k][4] || 0),
+                    fat: Number(inData[k][5] || 0)
+                  };
+                }
+              }
+            }
+          }
+        }
+        var baseRecord = prevBeforeThisWeek || firstEverInbody;
+        inbodyWeeklyScore = calculateInbodyScoreHelper(baseRecord, currentInbody);
+      }
+      
+      // (2) 시즌(월간) 인바디 점수: 이번 시즌(startOfSeason 이후)에 측정된 기록이 있을 때만 반영!
+      if (currentInbody.date >= startOfSeason) {
+        inbodySeasonScore = calculateInbodyScoreHelper(season0WeekInbody, currentInbody);
+      }
+    }
 
     // [v46.35] 연속 미출석(결석) 페널티 계산 (출석 시 즉시 부활!)
     var lastAttendanceDate = null;
@@ -526,8 +567,8 @@ function getUserDashboardData(payload) {
     scores.weekly = Math.max(0, activityWeekly + inbodyWeeklyScore - inactivityPenalty);
     scores.season = Math.max(0, activitySeason + inbodySeasonScore - inactivityPenalty);
 
-    stats.weekly.health = inbodyWeeklyScore;
-    stats.monthly.health = inbodySeasonScore;
+    stats.weekly.health += inbodyWeeklyScore;
+    stats.monthly.health += inbodySeasonScore;
 
     // 4. 티어 및 랭킹 (기존 로직 유지)
     var tiers = [
@@ -539,10 +580,26 @@ function getUserDashboardData(payload) {
       { name: "전설의 점퍼 👑", min: 30001, max: 60000 },
       { name: "지니 월드 수호신 🌌", min: 60001, max: 9999999 }
     ];
+    var currentTierIndex = 0;
     var currentTier = tiers[0];
     for (var t = 0; t < tiers.length; t++) {
-      if (scores.lifetime >= tiers[t].min) currentTier = tiers[t];
-      else break;
+      if (scores.lifetime >= tiers[t].min) {
+        currentTier = tiers[t];
+        currentTierIndex = t;
+      } else {
+        break;
+      }
+    }
+    
+    var nextTier = "지니 월드 수호신 🌌";
+    var evolution = 100;
+    if (currentTierIndex < tiers.length - 1) {
+      var next = tiers[currentTierIndex + 1];
+      nextTier = next.name;
+      var tierRange = next.min - currentTier.min;
+      var earnedInTier = scores.lifetime - currentTier.min;
+      evolution = Math.min(Math.floor((earnedInTier / tierRange) * 100), 100);
+      if (evolution < 0) evolution = 0;
     }
 
     var questStatus = getActiveQuestStatus(phone, ss, logData, memberInfo.name);
@@ -552,6 +609,8 @@ function getUserDashboardData(payload) {
       doneList: doneList,
       name: memberInfo.name,
       tier: currentTier.name,
+      nextTier: nextTier,
+      evolution: evolution,
       totalScore: scores.lifetime, 
       seasonScore: scores.season,
       weeklyScore: scores.weekly,
@@ -587,7 +646,7 @@ function clearUserDashboardCache(phone) {
   var cleanPhone = String(phone).replace(/[^0-9]/g, "");
   try {
     var cache = CacheService.getScriptCache();
-    cache.remove("v44_dash_" + cleanPhone);
+    cache.remove("v47_dash_" + cleanPhone);
     Logger.log("⚡ 대시보드 캐시 강제 삭제 완료: " + cleanPhone);
   } catch (e) {
     Logger.log("캐시 삭제 오류: " + e.toString());
@@ -1304,7 +1363,7 @@ function getCompiledMemberRegistry(ss) {
     var phoneRaw = data[i][cols.phone];
     var phoneClean = formatPhoneNumber(phoneRaw).replace(/[^0-9]/g, ""); 
     var status = String(data[i][cols.status] || "").trim(); 
-    if (status === "진행중" || status === "진행 중") {
+    if (status === "진행중" || status === "진행 중" || status === "마감") {
       if (!memberMap[phoneClean]) {
         var bonus = "0";
         var mRowIdx = -1;
@@ -1333,7 +1392,8 @@ function getCompiledMemberRegistry(ss) {
         expireDate: data[i][cols.expire],
         remainCount: String(data[i][cols.remain] || "0"),
         rowIdx: i + 1,
-        memo: data[i][10] // K열 비고(이월딱지)
+        memo: data[i][10], // K열 비고(이월딱지)
+        status: status
       });
     }
   }
@@ -1342,6 +1402,8 @@ function getCompiledMemberRegistry(ss) {
   var keys = Object.keys(memberMap);
   for (var j = 0; j < keys.length; j++) {
     var m = memberMap[keys[j]];
+    var allExpired = m.passes.every(function(p) { return p.status === "마감"; });
+    
     registryList.push({
       name: m.name,
       phone: m.phone,
@@ -1351,7 +1413,8 @@ function getCompiledMemberRegistry(ss) {
       bonusCount: m.bonusCount,
       mRowIdx: m.mRowIdx,
       allPasses: m.passes,
-      phoneClean: keys[j]
+      phoneClean: keys[j],
+      isExpired: allExpired
     });
   }
   
@@ -1381,7 +1444,20 @@ function searchMemberByPin(pinStr) {
     }
     
     if (matched.length === 0) {
-      return { error: "이용 가능한 회원권이 없습니다. 다시 확인해주세요..." };
+      // [BUGFIX] 혹시 원장님이 수동으로 시트를 고친 경우, 10분 캐시 때문에 안 나왔을 가능성 대비 캐시 강제 무효화 후 스프레드시트 재로드!
+      var cache = CacheService.getScriptCache();
+      cache.remove("v45_member_registry");
+      registry = getCompiledMemberRegistry(ss);
+      
+      for (var i = 0; i < registry.length; i++) {
+        if (registry[i].phoneClean.slice(-4) === pin) {
+          matched.push(registry[i]);
+        }
+      }
+      
+      if (matched.length === 0) {
+        return { error: "이용 가능한 회원권이 없습니다. 다시 확인해주세요..." };
+      }
     }
     
     // 추가: 테라피 입실 중인지 예약DB 확인 (퇴실 버튼 표시용)
@@ -2407,20 +2483,20 @@ function processAdminCheckout(data) {
     // [v46.30] 웰니스 통합 점수제 연동: 퇴실 시 출석 기본점수 및 운동 강도점수 자동 하사
     var timeLogVal = parseInt(data.timeLog) || 0;
     
-    // (1) 출석 기본점수 (+10 EXP) 기록 -> D열 (센터방문_수행)
+    // (1) 출석 기본점수 (+20 EXP 상향) 기록 -> D열 (센터방문_수행)
     recordActivityLog({
       phone: phoneStr,
       name: memberName,
       type: "출석",
       item: "센터방문",
       action: "퇴실",
-      score: 10,
+      score: 20,
       statType: "perf"
     });
     
-    // (2) 운동 강도점수 (+20 or +40 EXP) 혹은 테라피 방어력점수(+15 EXP) 기록
+    // (2) 운동 강도점수 (+40 or +80 EXP 상향) 혹은 테라피 방어력점수(+30 EXP 상향) 기록
     if (timeLogVal > 0) {
-      var extraWorkoutScore = (timeLogVal === 1 ? 20 : 40);
+      var extraWorkoutScore = (timeLogVal === 1 ? 40 : 80);
       recordActivityLog({
         phone: phoneStr,
         name: memberName,
@@ -2431,14 +2507,14 @@ function processAdminCheckout(data) {
         statType: "perf"
       });
     } else {
-      // 0인 경우: 원적외선 테라피로 몸과 마음을 이완하여 스트레스 지수 감소 -> 방어력(+15 EXP) 부여
+      // 0인 경우: 원적외선 테라피로 몸과 마음을 이완하여 스트레스 지수 감소 -> 방어력(+30 EXP 상향) 부여
       recordActivityLog({
         phone: phoneStr,
         name: memberName,
         type: "테라피",
         item: "스트레스지수감소",
         action: "완료",
-        score: 15,
+        score: 30,
         statType: "def"
       });
     }
@@ -5635,14 +5711,13 @@ function syncClubRecord(payload) {
     
     if (!todayRecord) return { success: false, error: "오늘 클럽 출석 기록이 확인되지 않습니다. 키오스크 출석을 먼저 해주세요." };
     
-    // 3. 점수 계산 (v39 공식)
-    var visitPoints = 15;
+    // 3. 점수 계산 (안 1: 2배 상향 적용)
+    var visitPoints = 20;
     var timeCount = parseFloat(todayRecord[10] || 0); // K열: 운동타임수
     var timePoints = 0;
     
-    if (timeCount >= 2.0) timePoints = 20;
-    else if (timeCount >= 1.5) timePoints = 15;
-    else if (timeCount >= 1.0) timePoints = 10;
+    if (timeCount >= 2.0) timePoints = 80;
+    else if (timeCount >= 1.0) timePoints = 40;
     
     var totalPoints = visitPoints + timePoints;
     var memberName = todayRecord[2];
@@ -5731,18 +5806,13 @@ function recordActivityLog(payload) {
     // 2. 기록 (열 매핑)
     var colIdx = 6; // 일반수행_합산 기본
     if (type === "로그인") {
-      colIdx = 8; // 체력보너스 (로그인 점수 분산 기록)
+      colIdx = 7; // 일반방어 (회복력)
       if (targetRowIdx > -1) {
-        var vH = Number(sheet.getRange(targetRowIdx, 8).getValue() || 0);
-        var vP = Number(sheet.getRange(targetRowIdx, 6).getValue() || 0);
         var vD = Number(sheet.getRange(targetRowIdx, 7).getValue() || 0);
-        // [v45.9] 마스터 플랜: 체력 1, 수행 2, 방어 2 (총 5점)
-        sheet.getRange(targetRowIdx, 8).setValue(vH + 1);
-        sheet.getRange(targetRowIdx, 6).setValue(vP + 2);
-        sheet.getRange(targetRowIdx, 7).setValue(vD + 2);
+        sheet.getRange(targetRowIdx, 7).setValue(vD + 5);
       } else {
-        var loginDetails = "[체력] 로그인 체크(1), [수행] 로그인 체크(2), [방어] 로그인 체크(2)";
-        sheet.appendRow([todayStr, "'" + phone, payload.name, 0, 0, 2, 2, 1, loginDetails, 5]);
+        var loginDetails = "[방어] 로그인 체크(5)";
+        sheet.appendRow([todayStr, "'" + phone, payload.name, 0, 0, 0, 5, 0, loginDetails, 5]);
         clearUserDashboardCache(phone);
         return { success: true };
       }
