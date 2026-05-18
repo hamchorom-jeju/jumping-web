@@ -527,7 +527,7 @@ function getUserDashboardData(payload) {
       else break;
     }
 
-    var questStatus = getActiveQuestStatus(phone);
+    var questStatus = getActiveQuestStatus(phone, ss);
 
     return {
       success: true,
@@ -5724,7 +5724,8 @@ function checkAndCreateQuestRegistrySheet() {
   return sheet;
 }
 
-function getActiveQuestStatus(phone) {
+// [perf] ss 객체를 외부에서 공유받아 SpreadsheetApp 연결 중복 방지
+function getActiveQuestStatus(phone, ss) {
   var result = {
     todayQuest: null,
     tomorrowQuest: null,
@@ -5733,7 +5734,8 @@ function getActiveQuestStatus(phone) {
   };
   
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    // [perf] ss를 인자로 받지 못했을 경우에만 새로 연결 (독립 호출 호환)
+    if (!ss) ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = checkAndCreateQuestRegistrySheet();
     var data = sheet.getDataRange().getDisplayValues();
     
@@ -5745,13 +5747,20 @@ function getActiveQuestStatus(phone) {
     
     var cleanPhone = String(phone || "").replace(/[^0-9]/g, "");
     
-    // 1. Scan for global quests ("이장")
+    // [perf] 3개의 for-loop을 1개로 통합하여 퀘스트 시트 3중 반복 스캔을 제거
+    var activeGlycogenRowIdx = -1;
+    var latestGlycogenQuest = null;
+    var latestSuccessTime = 0;
+
     for (var i = 1; i < data.length; i++) {
-      var type = data[i][2]; // C열: 유형
-      var dateStr = data[i][1]; // B열: 시행일 (yyyy-MM-dd)
-      var title = data[i][3]; // D열: 퀘스트명
-      var desc = data[i][4]; // E열: 설명
-      
+      var type = data[i][2];   // C열: 유형
+      var dateStr = data[i][1]; // B열: 시행일
+      var title = data[i][3];  // D열: 퀘스트명
+      var desc = data[i][4];   // E열: 설명
+      var qPhone = String(data[i][6]).replace(/[^0-9]/g, ""); // G열: 전화번호
+      var status = data[i][7]; // H열: 상태
+
+      // 1. 이장 공지 퀘스트
       if (type === "이장") {
         if (dateStr === todayStr) {
           result.todayQuest = { title: title, description: desc };
@@ -5759,25 +5768,14 @@ function getActiveQuestStatus(phone) {
           result.tomorrowQuest = { title: title, description: desc };
         }
       }
-    }
-    
-    // 2. Scan for individual Glycogen Quests ("글리코겐")
-    var activeGlycogenRowIdx = -1;
-    var latestGlycogenQuest = null;
-    for (var i = 1; i < data.length; i++) {
-      var type = data[i][2]; // C열: 유형
-      var qPhone = String(data[i][6]).replace(/[^0-9]/g, ""); // G열: 전화번호
-      var status = data[i][7]; // H열: 상태 ("진행중", "성공", "실패")
-      
+
+      // 2 & 3. 글리코겐/요요방패 (해당 회원 것만)
       if (type === "글리코겐" && qPhone === cleanPhone) {
-        var triggerTimeStr = data[i][5]; // F열: 만료일 (or trigger timestamp)
-        var dateStr = data[i][1]; // B열: 시행일 (시작일)
-        
+        var triggerTimeStr = data[i][5]; // F열: 만료일
+        var limitTime = new Date(data[i][5]);
+
         if (status === "진행중") {
-          // Check if expired
-          var limitTime = new Date(data[i][5]); // F열: 만료일
           if (now > limitTime) {
-            // Expired! Mark as 실패
             sheet.getRange(i + 1, 8).setValue("실패");
           } else {
             activeGlycogenRowIdx = i + 1;
@@ -5788,27 +5786,14 @@ function getActiveQuestStatus(phone) {
               deadlineTime: limitTime.getTime()
             };
           }
-        }
-      }
-    }
-    
-    // 3. Scan for active Shield Buff ("요요방패")
-    var latestSuccessTime = 0;
-    for (var i = 1; i < data.length; i++) {
-      var type = data[i][2]; // C열: 유형
-      var qPhone = String(data[i][6]).replace(/[^0-9]/g, ""); // G열: 전화번호
-      var status = data[i][7]; // H열: 상태 ("진행중", "성공", "실패")
-      
-      if (type === "글리코겐" && qPhone === cleanPhone && status === "성공") {
-        var shieldLimitTime = new Date(data[i][5]);
-        if (now <= shieldLimitTime) {
-          if (shieldLimitTime.getTime() > latestSuccessTime) {
-            latestSuccessTime = shieldLimitTime.getTime();
+        } else if (status === "성공") {
+          if (now <= limitTime && limitTime.getTime() > latestSuccessTime) {
+            latestSuccessTime = limitTime.getTime();
           }
         }
       }
     }
-    
+
     if (latestSuccessTime > 0) {
       result.shield.active = true;
       result.shield.expireStr = Utilities.formatDate(new Date(latestSuccessTime), "GMT+9", "yyyy-MM-dd HH:mm:ss");

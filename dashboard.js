@@ -131,9 +131,35 @@ const Village = {
         history.pushState(null, null, location.href);
         window.onpopstate = () => this.handleBackButton();
 
+        // [perf] 낙관적 렌더링: localStorage 캐시가 있으면 즉시 화면에 먼저 표시
+        const cached = localStorage.getItem('v44_dashboard_cache');
+        if (cached) {
+            try {
+                const c = JSON.parse(cached);
+                this.user.name = c.name || this.user.name;
+                this.user.tier = c.tier || this.user.tier;
+                this.user.totalScore = c.totalScore || this.user.totalScore;
+                this.user.stats = c.stats || this.user.stats;
+                this.user.max = c.max || this.user.max;
+                if (c.habits) {
+                    c.habits.forEach(h => {
+                        const found = this.user.habits.find(x => x.id === h.id);
+                        if (found) found.done = h.done;
+                    });
+                }
+                this.renderAll();
+                this.updateEvolution();
+                console.log('[perf] 캐시 데이터로 즉시 렌더링 완료. 서버 데이터로 갱신 중...');
+            } catch(e) {
+                console.warn('[perf] 캐시 파싱 실패, 서버 데이터 대기:', e);
+            }
+        } else {
+            // 캐시 없을 때만 로딩 오버레이 표시
+            this.renderAll();
+            this.updateEvolution();
+        }
+
         this.loadRealData();
-        this.renderAll();
-        this.updateEvolution();
         this.startTicker();
         this.bindEvents();
     },
@@ -149,10 +175,11 @@ const Village = {
         
         if (!phone) return;
 
-        // [v44.193] 로딩 시작
-        this.showLoading("📜 마을 기록을 불러오고 있습니다...");
-
         if (typeof google !== 'undefined' && google.script && google.script.run) {
+            const hasCachedData = !!localStorage.getItem('v44_dashboard_cache');
+            // 캐시가 없을 때만 전체 로딩 오버레이를 표시 (캐시가 있으면 백그라운드 갱신)
+            if (!hasCachedData) this.showLoading("📜 마을 기록을 불러오고 있습니다...");
+
             google.script.run
                 .withSuccessHandler(res => {
                     this.hideLoading(); // 로딩 종료
@@ -169,7 +196,6 @@ const Village = {
                         if (res.doneList && res.doneList.length > 0) {
                             console.log("[v45.0] Restoring doneList:", res.doneList);
                             this.user.habits.forEach(h => {
-                                // 예: doneList에 "모닝 티 완료"가 있으면 h.title "모닝 티"와 매칭
                                 if (res.doneList.some(item => item.indexOf(h.title) > -1)) {
                                     h.done = true;
                                 }
@@ -184,6 +210,19 @@ const Village = {
                             weekly: res.weeklyTargets || { health: 1500, perf: 1000, def: 500 },
                             monthly: res.monthlyTargets || { health: 6000, perf: 4000, def: 2000 }
                         };
+
+                        // [perf] 서버 응답을 localStorage에 캐시 저장 (다음 방문 시 즉시 렌더링용)
+                        try {
+                            localStorage.setItem('v44_dashboard_cache', JSON.stringify({
+                                name: res.name,
+                                tier: res.tier,
+                                totalScore: res.totalScore,
+                                stats: res.stats,
+                                max: this.user.max,
+                                habits: this.user.habits.map(h => ({ id: h.id, done: h.done }))
+                            }));
+                        } catch(e) { /* 스토리지 가득 찬 경우 무시 */ }
+
                         this.renderAll();
                         this.updateEvolution();
                         if (res.quests) {
