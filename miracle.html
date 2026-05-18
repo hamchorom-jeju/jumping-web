@@ -709,6 +709,33 @@
       }
     });
 
+    function formatAiFriendlyError(err) {
+      const errStr = String(err.message || err);
+      
+      // 1. 구글 서버 과부하 (High Demand)
+      if (errStr.includes("high demand") || errStr.includes("429") || errStr.includes("ResourceExhausted") || errStr.includes("quota")) {
+        return "🚨 구글 AI 서버 일시적 부하 발생!\n\n현재 구글 AI 본사 서버에 전 세계 사용자가 몰려 일시적으로 응답이 지연되고 있습니다. 대단히 죄송하오니 5초~10초만 기다리신 후 다시 한번 스캔 버튼을 눌러주시면 감사하겠습니다! 😊";
+      }
+      
+      // 2. 네트워크 지연 또는 타임아웃
+      if (errStr.includes("fetch") || errStr.includes("network") || errStr.includes("status 503") || errStr.includes("status 502")) {
+        return "🚨 AI 통신망 연결 일시 지연!\n\n현재 클럽 인터넷 환경 또는 구글 통신망 연결이 고르지 못합니다. 5초 뒤에 다시 시도해 주시기 바랍니다. 🤸‍♂️";
+      }
+      
+      // 3. 사진 파일 용량 초과
+      if (errStr.includes("Request payload size exceeds")) {
+        return "🚨 업로드 사진 용량 초과!\n\n선택하신 사진의 용량이 너무 큽니다. 해상도를 낮추거나 화면을 캡처한 작은 용량의 이미지로 다시 시도해 주세요! 📷";
+      }
+      
+      // 4. API 키 문제
+      if (errStr.includes("API key not valid") || errStr.includes("key is invalid")) {
+        return "🚨 AI 보안 키 오류!\n\n등록된 구글 API 키가 만료되었거나 올바르지 않습니다. 우측 하단의 [설정] 메뉴에서 API 키가 잘 입력되어 있는지 확인해 주세요! 🔑";
+      }
+
+      // 기본 한국어 에러 메시지
+      return "🚨 지니 AI 스캔 일시 오류!\n\n지니가 분석하는 도중 잠시 삐끗했습니다. 5초 후에 스캔 시작 버튼을 한 번 더 눌러주세요! (계속 발생 시 사진을 바꿔보거나 이장님께 알려주세요!)\n\n(참고 에러: " + errStr + ")";
+    }
+
     let aiSelectedTime = 'morning';
     let aiBase64Image = '';
     let aiMimeType = 'image/jpeg';
@@ -1059,7 +1086,7 @@
             throw new Error("AI 분석 응답이 올바르지 않습니다.");
           }
         } catch (err) {
-          alert("🚨 AI 식단 분석 오류: " + err.toString());
+          alert(formatAiFriendlyError(err));
         } finally {
           scanLine.style.display = 'none';
           btn.disabled = false;
@@ -1398,7 +1425,7 @@
           scanLine.style.display = 'none';
           btn.innerText = '지니 AI 인바디 스캔 시작 📊';
           btn.disabled = false;
-          alert("🚨 AI 스캔 중 오류가 발생했습니다: " + err.toString());
+          alert(formatAiFriendlyError(err));
         }
       }).getGeminiApiKey();
     }
