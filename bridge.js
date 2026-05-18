@@ -243,17 +243,17 @@ function showAppAlert(msg, type = "success", customTitle = "") {
   const color = type === "success" ? "#38a169" : (type === "error" ? "#e53e3e" : "#6b46c1");
 
   const isLargeScreen = window.innerWidth > 700;
-  // 단위를 rem 대신 px로 고정하여 브라우저 설정에 상관없이 크게 보이도록 함
-  const modalWidth = isLargeScreen ? "800px" : "90%";
-  const iconSize = isLargeScreen ? "120px" : "80px";
-  const titleSize = isLargeScreen ? "45px" : "32px";
-  const textSize = isLargeScreen ? "40px" : "24px";
-  const btnSize = isLargeScreen ? "36px" : "24px";
-  const btnPadding = isLargeScreen ? "35px" : "20px";
+  // 단위를 rem 대신 px로 고정하되, 모바일에서 너무 거대하지 않도록 적절히 조절함
+  const modalWidth = isLargeScreen ? "500px" : "90%";
+  const iconSize = isLargeScreen ? "80px" : "60px";
+  const titleSize = isLargeScreen ? "28px" : "22px";
+  const textSize = isLargeScreen ? "18px" : "15px";
+  const btnSize = isLargeScreen ? "20px" : "16px";
+  const btnPadding = isLargeScreen ? "20px" : "15px";
 
   modal.innerHTML = `
-    <div style="background:#fff; width:95%; max-width:${modalWidth}; border-radius:40px; padding:${isLargeScreen ? '80px 50px' : '50px 30px'}; text-align:center; transform:scale(0.8); transition:transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow:0 40px 80px rgba(0,0,0,0.5); border-top: 15px solid ${color};">
-      <div style="font-size:${iconSize}; margin-bottom:30px; animation: modalBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);">${icon}</div>
+    <div style="background:#fff; width:95%; max-width:${modalWidth}; border-radius:24px; padding:${isLargeScreen ? '40px 30px' : '30px 20px'}; text-align:center; transform:scale(0.8); transition:transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow:0 20px 50px rgba(0,0,0,0.3); border-top: 10px solid ${color};">
+      <div style="font-size:${iconSize}; margin-bottom:20px; animation: modalBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);">${icon}</div>
       <h2 style="font-size:${titleSize}; margin-bottom:20px; color:#1a202c; font-weight:900; font-family: sans-serif; letter-spacing:-1px;">${title}</h2>
       <div style="font-size:${textSize}; color:#1a202c; margin-bottom:50px; line-height:1.4; word-break:keep-all; font-family: sans-serif; font-weight:700;">${msg.replace(/\n/g, '<br>')}</div>
       <button onclick="closeAppModal(this)" 
