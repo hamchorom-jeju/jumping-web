@@ -6005,7 +6005,7 @@ function getGeminiApiKey() {
   try {
     // 1단계: 보안을 위해 Script Properties에서 꺼내옵니다.
     var key = PropertiesService.getScriptProperties().getProperty("GEMINI_API_KEY");
-    if (key && key.trim()) return key.trim();
+    if (key && key.trim()) return { success: true, key: key.trim() };
     
     // 2단계: 백업용으로 "환경설정" 시트에서 읽어옵니다. (Properties가 초기화되었을 경우 대비)
     var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -6015,13 +6015,14 @@ function getGeminiApiKey() {
       if (val && String(val).trim()) {
         // 복구용으로 PropertiesService에도 함께 갱신해 줍니다.
         PropertiesService.getScriptProperties().setProperty("GEMINI_API_KEY", String(val).trim());
-        return String(val).trim();
+        return { success: true, key: String(val).trim() };
       }
     }
+    return { success: true, key: "" };
   } catch (e) {
     Logger.log("🚨 getGeminiApiKey 오류: " + e.toString());
+    return { success: false, error: e.toString() };
   }
-  return ""; 
 }
 
 function setGeminiApiKey(newKey) {

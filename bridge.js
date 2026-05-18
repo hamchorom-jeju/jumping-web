@@ -80,7 +80,8 @@ if (typeof google === 'undefined' || !google.script) {
                 } else if (prop === 'getActiveEvents') {
                   mockResult = [];
                 } else if (prop === 'getGeminiApiKey') {
-                  mockResult = localStorage.getItem("mock_gemini_api_key") || "";
+                  const keyVal = localStorage.getItem("mock_gemini_api_key") || "";
+                  mockResult = { success: true, key: keyVal };
                 } else if (prop === 'setGeminiApiKey') {
                   const newKey = args[0] || "";
                   localStorage.setItem("mock_gemini_api_key", newKey);

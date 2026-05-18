@@ -878,9 +878,12 @@
         const keyFromBackend = (res && res.success) ? res.key : "";
         let apiKey = String(keyFromBackend || localStorage.getItem('gemini_api_key') || '').trim();
 
-        // 기본 마스터 API 키 자동 장착 (사용자가 개별 키를 설정하지 않은 경우 자동 사용)
         if (!apiKey) {
-          apiKey = "AIzaSyDhdr8c-4GSEFOwM3lZd0IEu-037mo_VSQ";
+          scanLine.style.display = 'none';
+          btn.disabled = false;
+          btn.innerText = '지니 AI 식단 스캔 시작 🚀';
+          alert("🚨 [AI 기능 작동 대기] 지니 AI API Key가 아직 구글 스프레드시트 금고에 등록되지 않았습니다!\n\n화면 우측 상단의 '설정 ⚙️' 아이콘을 클릭하여 API Key를 등록해 주세요!");
+          return;
         }
 
         btn.innerText = '지니가 항상성 점수를 계산하는 중...';
@@ -1165,7 +1168,11 @@
         const keyFromBackend = (res && res.success) ? res.key : "";
         let apiKey = String(keyFromBackend || localStorage.getItem('gemini_api_key') || '').trim();
         if (!apiKey) {
-          apiKey = "AIzaSyDhdr8c-4GSEFOwM3lZd0IEu-037mo_VSQ"; // 기본 마스터 키
+          scanLine.style.display = 'none';
+          btn.disabled = false;
+          btn.innerText = '지니 AI 인바디 스캔 시작 📊';
+          alert("🚨 [AI 기능 작동 대기] 지니 AI API Key가 아직 구글 스프레드시트 금고에 등록되지 않았습니다!\n\n화면 우측 상단의 '설정 ⚙️' 아이콘을 클릭하여 API Key를 등록해 주세요!");
+          return;
         }
 
         btn.innerText = '🤖 지니 AI가 판독 중...';
