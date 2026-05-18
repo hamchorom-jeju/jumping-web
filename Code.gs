@@ -5999,6 +5999,7 @@ function sendWeeklyBonusSms(phoneStr, memberName, count) {
   } catch(e) {
     Logger.log("🚨 체력보너스 문자 발송 대기열 추가 실패: " + e.toString());
   }
+}
 
 // [v46.35] 구글의 소스코드 노출 자동차단을 예방하는 안전한 백엔드 API 키 저장/배포 시스템
 function getGeminiApiKey() {
