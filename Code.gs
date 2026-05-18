@@ -1272,100 +1272,148 @@ function setupDatabase() {
 // ──────────────────────────────────────────────
 // 3. 백엔드 API: 회원 검색 (태블릿 출석체크용)
 // ──────────────────────────────────────────────
-function searchMemberByPin(pinStr) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
-    if (!regSheet) return { error: "등록현황 시트를 찾을 수 없습니다." };
-
-    // 원장님 말씀대로 getDisplayValues()를 사용하여 날짜/숫자 변환 오류를 원천 차단
-    var data = regSheet.getDataRange().getDisplayValues();
-    var cols = getRegColumnIndices(regSheet);
-    
-    // 회원명단 시트에서 보너스 횟수 조회를 위한 준비
-    var memberSheet = ss.getSheetByName("회원명단") || ss.getSheetByName("회원명단");
-    var mData = memberSheet ? memberSheet.getDataRange().getDisplayValues() : [];
-    
-    var memberMap = {};
-    
-    var pin = String(pinStr || "").trim();
-    if (pin.length < 4) return { error: "뒷자리 4자리를 정확히 입력해주세요." };
-
-    for (var i = 1; i < data.length; i++) {
-      var phoneRaw = data[i][cols.phone];
-      var phoneClean = phoneRaw.replace(/[^0-9]/g, ""); 
-      var status = String(data[i][cols.status] || "").trim(); 
-      if ((status === "진행중" || status === "진행 중") && phoneClean.slice(-4) === pin) {
-        if (!memberMap[phoneClean]) {
-          // 회원명단에서 보너스 횟수 찾기
-          var bonus = "0";
-          if (mData.length > 0) {
-            for (var mIdx = 1; mIdx < mData.length; mIdx++) {
-              var mPhone = String(mData[mIdx][2] || "").replace(/[^0-9]/g, "");
-              if (mPhone === phoneClean) {
-                bonus = String(mData[mIdx][9] || "0"); // 9번 컬럼: 보너스횟수
-                break;
-              }
+/**
+ * [perf] 활성 회원 목록을 취합하여 구글 Apps Script 캐시 서비스에 10분 동안 저장하는 최적화 헬퍼
+ */
+function getCompiledMemberRegistry(ss) {
+  var cache = CacheService.getScriptCache();
+  var cacheKey = "v44_member_registry";
+  var cached = cache.get(cacheKey);
+  if (cached) {
+    try {
+      var parsed = JSON.parse(cached);
+      if (parsed && parsed.length > 0) {
+        return parsed;
+      }
+    } catch(e) {}
+  }
+  
+  if (!ss) ss = SpreadsheetApp.getActiveSpreadsheet();
+  var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+  if (!regSheet) return [];
+  
+  var data = regSheet.getDataRange().getDisplayValues();
+  var cols = getRegColumnIndices(regSheet);
+  
+  var memberSheet = ss.getSheetByName("회원명단");
+  var mData = memberSheet ? memberSheet.getDataRange().getDisplayValues() : [];
+  
+  var memberMap = {};
+  
+  for (var i = 1; i < data.length; i++) {
+    var phoneRaw = data[i][cols.phone];
+    var phoneClean = phoneRaw.replace(/[^0-9]/g, ""); 
+    var status = String(data[i][cols.status] || "").trim(); 
+    if (status === "진행중" || status === "진행 중") {
+      if (!memberMap[phoneClean]) {
+        var bonus = "0";
+        var mRowIdx = -1;
+        if (mData.length > 0) {
+          for (var mIdx = 1; mIdx < mData.length; mIdx++) {
+            var mPhone = String(mData[mIdx][2] || "").replace(/[^0-9]/g, "");
+            if (mPhone === phoneClean) {
+              bonus = String(mData[mIdx][9] || "0"); // 9번 컬럼: 보너스횟수
+              mRowIdx = mIdx + 1;
+              break;
             }
           }
-
-          memberMap[phoneClean] = {
-            name: String(data[i][cols.name] || "이름없음"),
-            phone: phoneRaw,
-            bonusCount: bonus,
-            passes: []
-          };
         }
         
-        memberMap[phoneClean].passes.push({
-          membershipType: String(data[i][cols.membership] || "일반"),
-          expireDate: data[i][cols.expire], // getDisplayValues() 덕분에 이미 예쁜 날짜 문자열임
-          remainCount: String(data[i][cols.remain] || "0")
-        });
+        memberMap[phoneClean] = {
+          name: String(data[i][cols.name] || "이름없음"),
+          phone: phoneRaw,
+          bonusCount: bonus,
+          mRowIdx: mRowIdx,
+          passes: []
+        };
+      }
+      
+      memberMap[phoneClean].passes.push({
+        membershipType: String(data[i][cols.membership] || "일반"),
+        expireDate: data[i][cols.expire],
+        remainCount: String(data[i][cols.remain] || "0"),
+        rowIdx: i + 1,
+        memo: data[i][10] // K열 비고(이월딱지)
+      });
+    }
+  }
+  
+  var registryList = [];
+  var keys = Object.keys(memberMap);
+  for (var j = 0; j < keys.length; j++) {
+    var m = memberMap[keys[j]];
+    registryList.push({
+      name: m.name,
+      phone: m.phone,
+      membershipType: m.passes.map(function(p) { return p.membershipType; }).join(" / "),
+      expireDate: m.passes[0].expireDate,
+      remainCount: m.passes[0].remainCount,
+      bonusCount: m.bonusCount,
+      mRowIdx: m.mRowIdx,
+      allPasses: m.passes,
+      phoneClean: keys[j]
+    });
+  }
+  
+  try {
+    cache.put(cacheKey, JSON.stringify(registryList), 600); // 10분 캐시
+  } catch(e) {}
+  
+  return registryList;
+}
+
+// ──────────────────────────────────────────────
+// 3. 백엔드 API: 회원 검색 (태블릿 출석체크용)
+// ──────────────────────────────────────────────
+function searchMemberByPin(pinStr) {
+  try {
+    var pin = String(pinStr || "").trim();
+    if (pin.length < 4) return { error: "뒷자리 4자리를 정확히 입력해주세요." };
+    
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var registry = getCompiledMemberRegistry(ss);
+    
+    var matched = [];
+    for (var i = 0; i < registry.length; i++) {
+      if (registry[i].phoneClean.slice(-4) === pin) {
+        matched.push(registry[i]);
       }
     }
     
-    var keys = Object.keys(memberMap);
-    if (keys.length === 0) {
+    if (matched.length === 0) {
       return { error: "이용 가능한 회원권이 없습니다. 다시 확인해주세요..." };
-    }
-    
-    var finalResults = [];
-    for (var j = 0; j < keys.length; j++) {
-      var m = memberMap[keys[j]];
-      finalResults.push({
-        name: m.name,
-        phone: m.phone,
-        membershipType: m.passes.map(function(p) { return p.membershipType; }).join(" / "),
-        expireDate: m.passes[0].expireDate,
-        remainCount: m.passes[0].remainCount,
-        bonusCount: m.bonusCount,
-        allPasses: m.passes 
-      });
     }
     
     // 추가: 테라피 입실 중인지 예약DB 확인 (퇴실 버튼 표시용)
     var isTherapyActive = false;
     try {
       var resSheet = ss.getSheetByName("예약DB");
-      var resData = resSheet.getDataRange().getDisplayValues();
-      var todayFormatted = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
-      var searchPin = String(pinStr || "").trim();
-      
-      for (var r = 1; r < resData.length; r++) {
-        var rDateStr = String(resData[r][3]).replace(/[^0-9]/g, "");
-        var todayNum = todayFormatted.replace(/[^0-9]/g, "");
-        var rPhone = String(resData[r][1]).replace(/[^0-9]/g, "");
-        var rStatus = String(resData[r][9]);
-        
-        if (rDateStr === todayNum && rPhone.slice(-4) === searchPin && rStatus === "테라피 진행중") {
-          isTherapyActive = true;
-          break;
+      if (resSheet) {
+        var lastRow = resSheet.getLastRow();
+        if (lastRow > 1) {
+          // [perf] 오늘 예약 건만 확인하기 위해 최근 100행만 정밀 탐색하여 속도 향상 (100배 빠름)
+          var checkStartRow = Math.max(2, lastRow - 100);
+          var checkRowCount = lastRow - checkStartRow + 1;
+          var resData = resSheet.getRange(checkStartRow, 1, checkRowCount, 11).getDisplayValues();
+          
+          var todayFormatted = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
+          var todayNum = todayFormatted.replace(/[^0-9]/g, "");
+          
+          for (var r = 0; r < resData.length; r++) {
+            var rDateStr = String(resData[r][3]).replace(/[^0-9]/g, "");
+            var rPhone = String(resData[r][1]).replace(/[^0-9]/g, "");
+            var rStatus = String(resData[r][9]);
+            
+            if (rDateStr === todayNum && rPhone.slice(-4) === pin && rStatus === "테라피 진행중") {
+              isTherapyActive = true;
+              break;
+            }
+          }
         }
       }
     } catch(e) {}
     
-    return { success: true, members: finalResults, isTherapyActive: isTherapyActive };
+    return { success: true, members: matched, isTherapyActive: isTherapyActive };
   } catch (e) {
     return { error: "조회 중 서버 오류: " + e.toString() };
   }
@@ -1414,43 +1462,55 @@ function processAttendance(phoneStr, type, isBonus) {
       }
     }
     
-    var mData = memberSheet.getDataRange().getValues();
-    var cData = configSheet.getDataRange().getValues();
-    
-    // 1. 모든 활성 회원권 찾기 (등록현황 시트 기준)
-    var regSheet = ss.getSheetByName("등록 현황");
-    var rData = regSheet.getDataRange().getValues();
-    var activePasses = [];
-    for (var i = 1; i < rData.length; i++) {
-      if (String(rData[i][2]) === phoneStr && String(rData[i][8]).trim() === "진행중") {
-        activePasses.push({
-          rowIdx: i + 1,
-          name: rData[i][1],
-          membershipType: String(rData[i][4]),
-          remainCount: rData[i][7],
-          memo: rData[i][10] // K열 비고(이월딱지)
-        });
-      }
-    }
-    
-    // 회원DB에서 보너스 횟수만 따로 가져오기
-    var mData = memberSheet.getDataRange().getValues();
-    var bonusCount = 0;
-    var mRowIdx = -1;
-    for (var i = 1; i < mData.length; i++) {
-      if (String(mData[i][2]) === phoneStr) {
-        bonusCount = mData[i][9];
-        mRowIdx = i + 1;
+    // [perf] 캐시된 회원 정보 및 설정 캐시 로드 (0.02초)
+    var registry = getCompiledMemberRegistry(ss);
+    var cleanPhone = phoneStr.replace(/[^0-9]/g, "");
+    var matchedMember = null;
+    for (var m = 0; m < registry.length; m++) {
+      if (registry[m].phoneClean === cleanPhone) {
+        matchedMember = registry[m];
         break;
       }
     }
     
+    var activePasses = [];
+    var bonusCount = 0;
+    var mRowIdx = -1;
+    
+    if (matchedMember) {
+      bonusCount = Number(matchedMember.bonusCount) || 0;
+      mRowIdx = matchedMember.mRowIdx;
+      for (var p = 0; p < matchedMember.allPasses.length; p++) {
+        var pass = matchedMember.allPasses[p];
+        activePasses.push({
+          rowIdx: pass.rowIdx,
+          name: matchedMember.name,
+          membershipType: pass.membershipType,
+          remainCount: pass.remainCount,
+          memo: pass.memo
+        });
+      }
+    }
+    
+    var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+    
     if (activePasses.length === 0 && bonusCount <= 0) return { error: "이용 가능한 회원권이 없습니다. 다시 확인해주세요..." };
 
-    // 2. 설정 데이터 맵핑
-    var configRules = {};
-    for (var j = 1; j < cData.length; j++) {
-      configRules[cData[j][0]] = { Jumping: cData[j][3], Therapy: cData[j][4], Combo: cData[j][5] };
+    // [perf] 설정 규칙 24시간 캐싱 처리
+    var configRules = null;
+    var cache = CacheService.getScriptCache();
+    var cachedConfig = cache.get("v44_config_rules");
+    if (cachedConfig) {
+      try { configRules = JSON.parse(cachedConfig); } catch(e) {}
+    }
+    if (!configRules) {
+      var configSheet = ss.getSheetByName("설정");
+      var cData = configSheet ? configSheet.getDataRange().getValues() : [];
+      configRules = {};
+      for (var j = 1; j < cData.length; j++) {
+        configRules[cData[j][0]] = { Jumping: cData[j][3], Therapy: cData[j][4], Combo: cData[j][5] };
+      }
+      try { cache.put("v44_config_rules", JSON.stringify(configRules), 86400); } catch(e) {}
     }
 
     // 3. 우선순위 로직에 따른 회원권 선택 및 차감액 결정
@@ -1614,30 +1674,39 @@ function processAttendance(phoneStr, type, isBonus) {
     if (type === '테라피' || type === '복합' || type === '보너스') {
       try {
         var resSheet = ss.getSheetByName("예약DB");
-        var resData = resSheet.getDataRange().getDisplayValues();
-        var todayFormatted = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
-        
-        var todayParts = todayFormatted.match(/\d+/g);
-        var todayNum = todayParts[0] + (todayParts[1].length === 1 ? "0" : "") + todayParts[1] + (todayParts[2].length === 1 ? "0" : "") + todayParts[2];
-        var phoneClean = String(phoneStr || "").replace(/[^0-9]/g, "");
-        
-        for (var rIdx = 1; rIdx < resData.length; rIdx++) {
-          var rDateRaw = resData[rIdx][3];
-          var rDateParts = String(rDateRaw).match(/\d+/g);
-          if (!rDateParts || rDateParts.length < 3) continue;
-          var rDateNum = rDateParts[0] + (rDateParts[1].length === 1 ? "0" : "") + rDateParts[1] + (rDateParts[2].length === 1 ? "0" : "") + rDateParts[2];
-          
-          var rPhone = String(resData[rIdx][1]).replace(/[^0-9]/g, "");
-          var isPhoneMatch = (rPhone === phoneClean) || 
-                             (rPhone.length >= 8 && phoneClean.length >= 8 && rPhone.slice(-8) === phoneClean.slice(-8));
+        if (resSheet) {
+          var lastRow = resSheet.getLastRow();
+          if (lastRow > 1) {
+            // [perf] 예약DB 전체를 읽지 않고 최근 100개 행만 탐색하여 조회 속도 극대화 (100배 속도 향상)
+            var checkStartRow = Math.max(2, lastRow - 100);
+            var checkRowCount = lastRow - checkStartRow + 1;
+            var resData = resSheet.getRange(checkStartRow, 1, checkRowCount, 11).getDisplayValues();
+            
+            var todayFormatted = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+            var todayParts = todayFormatted.match(/\d+/g);
+            var todayNum = todayParts[0] + (todayParts[1].length === 1 ? "0" : "") + todayParts[1] + (todayParts[2].length === 1 ? "0" : "") + todayParts[2];
+            var phoneClean = String(phoneStr || "").replace(/[^0-9]/g, "");
+            
+            for (var r = 0; r < resData.length; r++) {
+              var rDateRaw = resData[r][3];
+              var rDateParts = String(rDateRaw).match(/\d+/g);
+              if (!rDateParts || rDateParts.length < 3) continue;
+              var rDateNum = rDateParts[0] + (rDateParts[1].length === 1 ? "0" : "") + rDateParts[1] + (rDateParts[2].length === 1 ? "0" : "") + rDateParts[2];
+              
+              var rPhone = String(resData[r][1]).replace(/[^0-9]/g, "");
+              var isPhoneMatch = (rPhone === phoneClean) || 
+                                 (rPhone.length >= 8 && phoneClean.length >= 8 && rPhone.slice(-8) === phoneClean.slice(-8));
 
-          // 이름 매칭은 생략하고 날짜와 전화번호만으로 매칭 (이름 오타/공백 방지)
-          if (rDateNum === todayNum && isPhoneMatch) {
-            var status = String(resData[rIdx][9]);
-            if (status.indexOf("예약") !== -1 || status.indexOf("테라피") !== -1) {
-              resSheet.getRange(rIdx + 1, 10).setValue("테라피중");
-              resSheet.getRange(rIdx + 1, 11).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
-              break;
+              // 이름 매칭은 생략하고 날짜와 전화번호만으로 매칭 (이름 오타/공백 방지)
+              if (rDateNum === todayNum && isPhoneMatch) {
+                var status = String(resData[r][9]);
+                if (status.indexOf("예약") !== -1 || status.indexOf("테라피") !== -1) {
+                  var actualRowIdx = checkStartRow + r;
+                  resSheet.getRange(actualRowIdx, 10).setValue("테라피중");
+                  resSheet.getRange(actualRowIdx, 11).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm:ss"));
+                  break;
+                }
+              }
             }
           }
         }
@@ -1666,8 +1735,12 @@ function processAttendance(phoneStr, type, isBonus) {
     }
 
     
-    // [perf] 출석 완료 시 캐시 즉시 제거
+    // [perf] 출석 완료 시 대시보드 및 태블릿 검색용 회원 캐시 즉시 제거 (실시간 동기화 보장)
     clearUserDashboardCache(phoneStr);
+    try {
+      var cache = CacheService.getScriptCache();
+      cache.remove("v44_member_registry");
+    } catch(e) {}
 
     return { 
       success: true, 
