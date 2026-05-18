@@ -211,9 +211,15 @@
       <div class="premium-cert-card">
         <div class="section-title">⚔️ 퀘스트 인증하기 (15점)</div>
         
-        <div id="quest-upload-placeholder" onclick="document.getElementById('file-input-quest').click()" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
-          <span style="font-size:2.5rem; margin-bottom:10px;">📸</span>
-          <p style="font-size:0.85rem; color:var(--text-dim); font-weight:800;">퀘스트 인증 사진 촬영</p>
+        <div id="quest-upload-placeholder" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:row; gap: 15px; align-items:center; justify-content:center; padding: 15px;">
+          <div onclick="document.getElementById('file-input-quest-camera').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+            <span style="font-size:2.2rem; margin-bottom:6px;">📸</span>
+            <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">실시간 촬영</p>
+          </div>
+          <div onclick="document.getElementById('file-input-quest-album').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+            <span style="font-size:2.2rem; margin-bottom:6px;">🖼️</span>
+            <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">앨범에서 선택</p>
+          </div>
         </div>
         
         <div id="quest-preview-box" style="display: none; margin-top: 5px;">
@@ -223,7 +229,8 @@
           </div>
         </div>
         
-        <input type="file" id="file-input-quest" hidden accept="image/*" onchange="previewImage('quest', this)">
+        <input type="file" id="file-input-quest-camera" hidden accept="image/*" capture="camera" onchange="previewImage('quest', this)">
+        <input type="file" id="file-input-quest-album" hidden accept="image/*" onchange="previewImage('quest', this)">
 
         <select id="quest-select" style="width: 100%; margin-top: 15px; background: #fff; border: 2px solid var(--v-paper); padding: 15px; border-radius: 15px; font-weight: 800; outline: none; color: var(--text-main);">
           <option value="방문">🏰 방문 인증</option>
@@ -256,9 +263,15 @@
       <div class="premium-cert-card">
         <div class="section-title">🌿 습관 & 플러스 인증 (5점)</div>
         
-        <div id="habit-upload-placeholder" onclick="document.getElementById('file-input-habit').click()" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
-          <span style="font-size:2.5rem; margin-bottom:10px;">📜</span>
-          <p style="font-size:0.85rem; color:var(--text-dim); font-weight:800;">습관 실천 인증 촬영</p>
+        <div id="habit-upload-placeholder" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:row; gap: 15px; align-items:center; justify-content:center; padding: 15px;">
+          <div onclick="document.getElementById('file-input-habit-camera').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+            <span style="font-size:2.2rem; margin-bottom:6px;">📸</span>
+            <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">실시간 촬영</p>
+          </div>
+          <div onclick="document.getElementById('file-input-habit-album').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+            <span style="font-size:2.2rem; margin-bottom:6px;">🖼️</span>
+            <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">앨범에서 선택</p>
+          </div>
         </div>
         
         <div id="habit-preview-box" style="display: none; margin-top: 5px;">
@@ -268,7 +281,8 @@
           </div>
         </div>
         
-        <input type="file" id="file-input-habit" hidden accept="image/*" onchange="previewImage('habit', this)">
+        <input type="file" id="file-input-habit-camera" hidden accept="image/*" capture="camera" onchange="previewImage('habit', this)">
+        <input type="file" id="file-input-habit-album" hidden accept="image/*" onchange="previewImage('habit', this)">
 
         <select id="habit-select" style="width: 100%; margin-top: 15px; background: #fff; border: 2px solid var(--v-paper); padding: 15px; border-radius: 15px; font-weight: 800; outline: none; color: var(--text-main);">
           <optgroup label="🌱 9대 데일리 습관">
@@ -339,10 +353,15 @@
         
         <!-- [v46.6] 저녁 세부 옵션 제거 완료 (AI 자동 판정 시스템 전환으로 불필요한 라디오 선택창 완전 삭제) -->
 
-        <div id="ai-upload-placeholder" onclick="document.getElementById('file-input-ai').click()" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; position: relative; overflow: hidden;">
-          <span style="font-size:2.5rem; margin-bottom:10px;">📸</span>
-          <p style="font-size:0.85rem; color:var(--text-dim); font-weight:800;">음식 사진 촬영 또는 선택</p>
-          <p style="font-size:0.7rem; color:var(--text-dim); font-weight:600;">(단식 인증은 미온수/차 사진 업로드)</p>
+        <div id="ai-upload-placeholder" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:row; gap: 15px; align-items:center; justify-content:center; padding: 15px;">
+          <div onclick="document.getElementById('file-input-ai-camera').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+            <span style="font-size:2.2rem; margin-bottom:6px;">📸</span>
+            <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">실시간 촬영</p>
+          </div>
+          <div onclick="document.getElementById('file-input-ai-album').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+            <span style="font-size:2.2rem; margin-bottom:6px;">🖼️</span>
+            <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">앨범에서 선택</p>
+          </div>
         </div>
         
         <div id="ai-preview-box" style="display: none; position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 20px; overflow: hidden; border: 2px solid var(--emerald);">
@@ -352,7 +371,8 @@
           <div id="ai-scan-line" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(to bottom, rgba(46, 204, 113, 0), rgba(46, 204, 113, 1), rgba(46, 204, 113, 0)); box-shadow: 0 0 10px rgba(46, 204, 113, 0.8); animation: scanAnimation 2s linear infinite;"></div>
         </div>
         
-        <input type="file" id="file-input-ai" hidden accept="image/*" onchange="previewAiImage(this)">
+        <input type="file" id="file-input-ai-camera" hidden accept="image/*" capture="camera" onchange="previewAiImage(this)">
+        <input type="file" id="file-input-ai-album" hidden accept="image/*" onchange="previewAiImage(this)">
         
         <input type="text" id="ai-user-comment" class="comment-input" placeholder="이 음식에 대한 생각이나 오늘 기분은 어떠신가요?" style="margin-top: 15px;">
         
@@ -573,7 +593,8 @@
       document.getElementById('ai-step-result').style.display = 'none';
       document.getElementById('ai-preview-box').style.display = 'none';
       document.getElementById('ai-upload-placeholder').style.display = 'flex';
-      document.getElementById('file-input-ai').value = '';
+      document.getElementById('file-input-ai-camera').value = '';
+      document.getElementById('file-input-ai-album').value = '';
       document.getElementById('ai-user-comment').value = '';
       
       // [v46.6] 라디오 박스 초기화 제거
@@ -654,7 +675,8 @@
     function resetAiPreview() {
       document.getElementById('ai-preview-box').style.display = 'none';
       document.getElementById('ai-upload-placeholder').style.display = 'flex';
-      document.getElementById('file-input-ai').value = "";
+      document.getElementById('file-input-ai-camera').value = "";
+      document.getElementById('file-input-ai-album').value = "";
       aiBase64Image = '';
     }
 
@@ -901,8 +923,9 @@
     function submitAiArchive() {
       if (!aiLastResult) return;
       
-      const fileInput = document.getElementById('file-input-ai');
-      const file = fileInput.files[0];
+      const fileInputCam = document.getElementById('file-input-ai-camera');
+      const fileInputAlb = document.getElementById('file-input-ai-album');
+      const file = fileInputCam.files[0] || fileInputAlb.files[0];
       if (!file) return alert("사진 데이터가 누락되었습니다.");
 
       const submitBtn = document.getElementById('btn-submit-ai-archive');
@@ -1041,7 +1064,10 @@
     function resetPreview(type) {
       document.getElementById(type + '-preview-box').style.display = 'none';
       document.getElementById(type + '-upload-placeholder').style.display = 'flex';
-      document.getElementById('file-input-' + type).value = "";
+      const camInput = document.getElementById('file-input-' + type + '-camera');
+      const albInput = document.getElementById('file-input-' + type + '-album');
+      if (camInput) camInput.value = "";
+      if (albInput) albInput.value = "";
       
       // [v44.194] 숨겼던 식단 섹션 다시 표시
       const certSec = document.querySelector('.cert-section');
@@ -1066,7 +1092,7 @@
       }
       selectField.value = mealCategory;
       commentField.value = `[${mealType}] 인증합니다! `;
-      document.getElementById('file-input-quest').click();
+      document.getElementById('file-input-quest-album').click();
     }
 
     let currentPage = 1;
@@ -1264,8 +1290,9 @@
       const btn = document.getElementById('btn-submit-' + type);
       const item = document.getElementById(type + '-select').value;
       const comment = document.getElementById(type + '-comment').value;
-      const fileInput = document.getElementById('file-input-' + type);
-      const file = fileInput.files[0];
+      const camInput = document.getElementById('file-input-' + type + '-camera');
+      const albInput = document.getElementById('file-input-' + type + '-album');
+      const file = camInput.files[0] || albInput.files[0];
       if (!file) return showAppAlert("인증 사진을 촬영해 주세요!", "error");
       
       btn.disabled = true;
@@ -1328,7 +1355,8 @@
                 document.getElementById(type + '-comment').value = "";
                 document.getElementById(type + '-preview-box').style.display = 'none';
                 document.getElementById(type + '-upload-placeholder').style.display = 'flex';
-                fileInput.value = "";
+                camInput.value = "";
+                albInput.value = "";
                 
                 const certSec = document.querySelector('.cert-section');
                 if (certSec) certSec.style.display = 'block';
