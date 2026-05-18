@@ -157,8 +157,14 @@
           .withSuccessHandler(res => {
             listDiv.innerHTML = "";
             
-            if (res && res.success && res.members.length > 0) {
-              res.members.forEach(m => {
+            // [v46.35] 이장님(9999) 특수 백도어 강제 생성 (회원명단 시트 수정 필요 없음!)
+            let members = (res && res.success) ? res.members : [];
+            if (digits === '9999' && !members.some(m => m.phone.includes('9999'))) {
+              members.push({ name: "이장님", phone: "010-9999-9999" });
+            }
+
+            if (members.length > 0) {
+              members.forEach(m => {
                 const btn = document.createElement('button');
                 btn.className = 'member-btn';
                 btn.id = `btn-member-${m.phone}`;
