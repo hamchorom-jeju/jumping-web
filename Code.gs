@@ -388,11 +388,14 @@ function getUserDashboardData(payload) {
             remarks: remarksStr
           };
           
-          // [v46.37] 업로드(제출) 시각 추출 (없으면 측정일과 동일하게 매칭)
+          // [v46.38] 전용 9번째 열(I열)에서 등록일(Record Date) 추출, 없으면 측정일(A열)과 동일하게 매칭!
           var uploadDate = iDate;
-          var uploadMatch = remarksStr.match(/\[등록일:\s*([\d\-\s:]+)\]/);
-          if (uploadMatch) {
-            uploadDate = new Date(uploadMatch[1]);
+          if (inData[k].length > 8 && inData[k][8]) {
+            var rawUpload = inData[k][8];
+            var uObj = (rawUpload instanceof Date) ? rawUpload : new Date(rawUpload);
+            if (!isNaN(uObj.getTime())) {
+              uploadDate = uObj;
+            }
           }
           
           if (!firstEverInbody || iDate < firstEverInbody.date) {
@@ -559,13 +562,29 @@ function submitInBodyRecord(payload) {
     var muscle = Number(payload.muscle);
     var fat = Number(payload.fat);
     
-    // 이전 기록 찾기 (점수 계산용)
+    // [v46.38] 측정 날짜 먼저 계산!
+    var dateValue = new Date();
+    if (payload.customDate) {
+      var parts = payload.customDate.split('-');
+      if (parts.length === 3) {
+        var now = new Date();
+        dateValue = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), now.getHours(), now.getMinutes(), now.getSeconds());
+      }
+    }
+
+    // 이전 기록 찾기 (점수 계산용 - 신규 측정일보다 과거인 기록 중 가장 최신 것!)
     var data = sheet.getDataRange().getValues();
     var prevRecord = null;
-    for (var i = data.length - 1; i >= 1; i--) {
+    var prevDate = null;
+    for (var i = 1; i < data.length; i++) {
       if (String(data[i][2]).replace(/[^0-9]/g, "") === phone) {
-        prevRecord = { weight: data[i][3], muscle: data[i][4], fat: data[i][5] };
-        break;
+        var rowDate = new Date(data[i][0]);
+        if (rowDate < dateValue) {
+          if (!prevDate || rowDate > prevDate) {
+            prevDate = rowDate;
+            prevRecord = { weight: data[i][3], muscle: data[i][4], fat: data[i][5] };
+          }
+        }
       }
     }
     
@@ -584,19 +603,19 @@ function submitInBodyRecord(payload) {
       if (Math.abs(diffWeight) <= 0.2) changeScore += 100;
     }
     
-    var dateValue = new Date();
-    if (payload.customDate) {
-      var parts = payload.customDate.split('-');
-      if (parts.length === 3) {
-        var now = new Date();
-        dateValue = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), now.getHours(), now.getMinutes(), now.getSeconds());
-      }
-    }
-    
-    var uploadDateStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
-    var finalRemarks = "[등록일: " + uploadDateStr + "] " + (payload.remarks || "");
-    
-    sheet.appendRow([dateValue, name, phone, weight, muscle, fat, changeScore, finalRemarks]);
+    // [v46.38] 전용 9번째 열(I열)을 추가하여 등록일(Record Date) 기록!
+    var uploadDate = new Date();
+    sheet.appendRow([
+      dateValue,              // Column A: 측정일 (Measurement Date)
+      name,                   // Column B: 회원명
+      "'" + phone,            // Column C: 연락처
+      weight,                 // Column D: 체중
+      muscle,                 // Column E: 골격근량
+      fat,                    // Column F: 체지방률
+      changeScore,            // Column G: 변화점수
+      payload.remarks || "",  // Column H: 비고
+      uploadDate              // Column I: 등록일 (Record Date / Submission Date)
+    ]);
     return { success: true, score: changeScore };
   } catch (e) { return { success: false, error: e.toString() }; }
 }
