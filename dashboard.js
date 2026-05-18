@@ -124,6 +124,26 @@ const Village = {
         setTimeout(() => toast.remove(), 2000);
     },
 
+    // [perf] 캐시가 있을 때 백그라운드 동기화 중임을 작은 알림으로 안내
+    showSyncToast() {
+        const id = 'sync-toast';
+        if (document.getElementById(id)) return;
+        const toast = document.createElement('div');
+        toast.id = id;
+        toast.innerHTML = '🔄 최신 데이터로 동기화 중...';
+        toast.style = "position:fixed; top:14px; right:14px; background:rgba(30,30,40,0.82); color:#fff; padding:8px 16px; border-radius:20px; z-index:9999; font-size:0.75rem; font-weight:700; backdrop-filter:blur(6px); transition:opacity 0.4s;";
+        document.body.appendChild(toast);
+        // 서버 응답 후 hideSyncToast()로 제거됨
+    },
+    hideSyncToast() {
+        const toast = document.getElementById('sync-toast');
+        if (toast) {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 400);
+        }
+    },
+
+
     init() {
         console.log("v44.229 Real Data Sync Initialized.");
         
@@ -133,6 +153,7 @@ const Village = {
 
         // [perf] 낙관적 렌더링: localStorage 캐시가 있으면 즉시 화면에 먼저 표시
         const cached = localStorage.getItem('v44_dashboard_cache');
+        let cacheLoaded = false;
         if (cached) {
             try {
                 const c = JSON.parse(cached);
@@ -147,24 +168,19 @@ const Village = {
                         if (found) found.done = h.done;
                     });
                 }
-                this.renderAll();
-                this.updateEvolution();
-                console.log('[perf] 캐시 데이터로 즉시 렌더링 완료. 서버 데이터로 갱신 중...');
+                cacheLoaded = true;
             } catch(e) {
-                console.warn('[perf] 캐시 파싱 실패, 서버 데이터 대기:', e);
+                localStorage.removeItem('v44_dashboard_cache'); // 손상된 캐시 제거
             }
-        } else {
-            // 캐시 없을 때만 로딩 오버레이 표시
-            this.renderAll();
-            this.updateEvolution();
         }
-
-        this.loadRealData();
+        this.renderAll();
+        this.updateEvolution();
+        this.loadRealData(cacheLoaded);
         this.startTicker();
         this.bindEvents();
     },
 
-    loadRealData() {
+    loadRealData(cacheLoaded = false) {
         const params = new URLSearchParams(window.location.search);
         let phone = (params.get('phone') || '').trim();
         
@@ -176,13 +192,17 @@ const Village = {
         if (!phone) return;
 
         if (typeof google !== 'undefined' && google.script && google.script.run) {
-            const hasCachedData = !!localStorage.getItem('v44_dashboard_cache');
-            // 캐시가 없을 때만 전체 로딩 오버레이를 표시 (캐시가 있으면 백그라운드 갱신)
-            if (!hasCachedData) this.showLoading("📜 마을 기록을 불러오고 있습니다...");
+            // 캐시가 로드된 경우: 작은 토스트로 동기화 안내, 캐시 없으면: 전체 로딩 오버레이 표시
+            if (cacheLoaded) {
+                this.showSyncToast();
+            } else {
+                this.showLoading("📜 마을 기록을 불러오고 있습니다...");
+            }
 
             google.script.run
                 .withSuccessHandler(res => {
-                    this.hideLoading(); // 로딩 종료
+                    this.hideLoading();
+                    this.hideSyncToast(); // 동기화 토스트 제거
                     if (res && res.success) {
                         this.user.name = res.name;
                         this.user.tier = res.tier;
@@ -234,7 +254,7 @@ const Village = {
                         if (res.isFirstLoginToday) this.showLoginReward();
                     }
                 })
-                .withFailureHandler(() => this.hideLoading())
+                .withFailureHandler(() => { this.hideLoading(); this.hideSyncToast(); })
                 .getUserDashboardData({ phone: phone });
         }
     },
