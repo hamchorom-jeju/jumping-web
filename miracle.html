@@ -1159,9 +1159,24 @@
               else if (item.type.includes("습관")) icon = "🌿";
               
               const rotation = Math.floor(Math.random() * 11) - 5;
-              let displayItem = (item.item || '기록');
-              if (displayItem.length > 6) displayItem = displayItem.substring(0, 5) + '...';
-              displayItem += ' 인증';
+              
+              // 썸네일용 텍스트 및 티어 뱃지 파싱
+              const rawItem = item.item || '기록';
+              let cleanItem = rawItem.replace(/\s*\(Tier\s+[SABC]\)/i, '').trim();
+              if (cleanItem.length > 5) cleanItem = cleanItem.substring(0, 4) + '..';
+              
+              // 티어 추출 및 초소형 그라데이션 뱃지 생성
+              let tinyBadgeHtml = "";
+              const tierMatch = rawItem.match(/Tier\s+([SABC])/i);
+              if (tierMatch) {
+                const tierLetter = tierMatch[1].toUpperCase();
+                let badgeBg = "linear-gradient(135deg, #fbcfe8 0%, #ec4899 100%)"; // S
+                if (tierLetter === 'A') badgeBg = "linear-gradient(135deg, #a7f3d0 0%, #10b981 100%)";
+                else if (tierLetter === 'B') badgeBg = "linear-gradient(135deg, #fef3c7 0%, #d97706 100%)";
+                else if (tierLetter === 'C') badgeBg = "linear-gradient(135deg, #fee2e2 0%, #ef4444 100%)";
+                
+                tinyBadgeHtml = `<span style="background: ${badgeBg}; color: white; border-radius: 4px; padding: 1px 4px; font-size: 0.55rem; font-weight: 900; margin-left: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); vertical-align: middle; line-height: 1;">${tierLetter}</span>`;
+              }
               
               html += `
                 <div class="polaroid-card" style="transform: rotate(${rotation}deg);" onclick="openModal(${index})">
@@ -1171,7 +1186,9 @@
                   </div>
                   <div class="polaroid-author">
                     ${item.name || '모험가'}
-                    <div style="font-size:0.6rem; color:var(--gold); font-weight:700; margin-top:2px;">${displayItem}</div>
+                    <div style="font-size:0.6rem; color:var(--v-wood); font-weight:800; margin-top:4px; display: flex; align-items: center; justify-content: center; gap: 2px;">
+                      <span>${cleanItem}</span>${tinyBadgeHtml}
+                    </div>
                   </div>
                 </div>
               `;
