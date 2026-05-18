@@ -194,6 +194,7 @@ const Village = {
         if (typeof google !== 'undefined' && google.script && google.script.run) {
             // 캐시가 로드된 경우: 작은 토스트로 동기화 안내, 캐시 없으면: 전체 로딩 오버레이 표시
             if (cacheLoaded) {
+                this.hideLoading(); // ⚡ 이미 캐시가 로드되었으므로 풀스크린 로딩을 즉시 해제합니다!
                 this.showSyncToast();
             } else {
                 this.showLoading("📜 마을 기록을 불러오고 있습니다...");
