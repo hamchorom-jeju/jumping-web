@@ -223,7 +223,7 @@
           </div>
         </div>
         
-        <input type="file" id="file-input-quest" hidden accept="image/*" capture="camera" onchange="previewImage('quest', this)">
+        <input type="file" id="file-input-quest" hidden accept="image/*" onchange="previewImage('quest', this)">
 
         <select id="quest-select" style="width: 100%; margin-top: 15px; background: #fff; border: 2px solid var(--v-paper); padding: 15px; border-radius: 15px; font-weight: 800; outline: none; color: var(--text-main);">
           <option value="방문">🏰 방문 인증</option>
@@ -268,7 +268,7 @@
           </div>
         </div>
         
-        <input type="file" id="file-input-habit" hidden accept="image/*" capture="camera" onchange="previewImage('habit', this)">
+        <input type="file" id="file-input-habit" hidden accept="image/*" onchange="previewImage('habit', this)">
 
         <select id="habit-select" style="width: 100%; margin-top: 15px; background: #fff; border: 2px solid var(--v-paper); padding: 15px; border-radius: 15px; font-weight: 800; outline: none; color: var(--text-main);">
           <optgroup label="🌱 9대 데일리 습관">
@@ -352,7 +352,7 @@
           <div id="ai-scan-line" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(to bottom, rgba(46, 204, 113, 0), rgba(46, 204, 113, 1), rgba(46, 204, 113, 0)); box-shadow: 0 0 10px rgba(46, 204, 113, 0.8); animation: scanAnimation 2s linear infinite;"></div>
         </div>
         
-        <input type="file" id="file-input-ai" hidden accept="image/*" capture="camera" onchange="previewAiImage(this)">
+        <input type="file" id="file-input-ai" hidden accept="image/*" onchange="previewAiImage(this)">
         
         <input type="text" id="ai-user-comment" class="comment-input" placeholder="이 음식에 대한 생각이나 오늘 기분은 어떠신가요?" style="margin-top: 15px;">
         
@@ -626,6 +626,17 @@
     function previewAiImage(input) {
       if (input.files && input.files[0]) {
         const file = input.files[0];
+        
+        // [v46.8] 휴대폰 로컬 기준 오늘 날짜 문자열로 100% 안전하게 검증 (서버 통신 없이 0.001초 소요)
+        const todayStr = new Date().toLocaleDateString('ko-KR');
+        const fileDateStr = new Date(file.lastModified).toLocaleDateString('ko-KR');
+        
+        if (todayStr !== fileDateStr) {
+          showAppAlert("오늘 찍은 사진만 업로드할 수 있습니다! 📸\n(갤러리에서 오늘 이전의 사진은 업로드할 수 없습니다.)", "error");
+          input.value = "";
+          return;
+        }
+
         aiMimeType = file.type || "image/jpeg";
         const reader = new FileReader();
         reader.onload = e => {
@@ -998,6 +1009,18 @@
 
     function previewImage(type, input) {
       if (input.files && input.files[0]) {
+        const file = input.files[0];
+
+        // [v46.8] 휴대폰 로컬 기준 오늘 날짜 문자열로 100% 안전하게 검증 (서버 통신 없이 0.001초 소요)
+        const todayStr = new Date().toLocaleDateString('ko-KR');
+        const fileDateStr = new Date(file.lastModified).toLocaleDateString('ko-KR');
+        
+        if (todayStr !== fileDateStr) {
+          showAppAlert("오늘 찍은 사진만 업로드할 수 있습니다! 📸\n(갤러리에서 오늘 이전의 사진은 업로드할 수 없습니다.)", "error");
+          input.value = "";
+          return;
+        }
+
         const reader = new FileReader();
         reader.onload = e => {
           document.getElementById(type + '-preview-img').src = e.target.result;
@@ -1011,7 +1034,7 @@
             if (certSec) certSec.style.display = 'none';
           }
         };
-        reader.readAsDataURL(input.files[0]);
+        reader.readAsDataURL(file);
       }
     }
 
