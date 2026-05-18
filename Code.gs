@@ -1302,7 +1302,7 @@ function getCompiledMemberRegistry(ss) {
   
   for (var i = 1; i < data.length; i++) {
     var phoneRaw = data[i][cols.phone];
-    var phoneClean = phoneRaw.replace(/[^0-9]/g, ""); 
+    var phoneClean = formatPhoneNumber(phoneRaw).replace(/[^0-9]/g, ""); 
     var status = String(data[i][cols.status] || "").trim(); 
     if (status === "진행중" || status === "진행 중") {
       if (!memberMap[phoneClean]) {
@@ -1310,7 +1310,7 @@ function getCompiledMemberRegistry(ss) {
         var mRowIdx = -1;
         if (mData.length > 0) {
           for (var mIdx = 1; mIdx < mData.length; mIdx++) {
-            var mPhone = String(mData[mIdx][2] || "").replace(/[^0-9]/g, "");
+            var mPhone = formatPhoneNumber(mData[mIdx][2]).replace(/[^0-9]/g, "");
             if (mPhone === phoneClean) {
               bonus = String(mData[mIdx][9] || "0"); // 9번 컬럼: 보너스횟수
               mRowIdx = mIdx + 1;
