@@ -562,7 +562,7 @@ function submitInBodyRecord(payload) {
     var muscle = Number(payload.muscle);
     var fat = Number(payload.fat);
     
-    // [v46.38] 측정 날짜 먼저 계산!
+    // [v46.39] 측정 날짜 먼저 계산!
     var dateValue = new Date();
     if (payload.customDate) {
       var parts = payload.customDate.split('-');
@@ -571,15 +571,24 @@ function submitInBodyRecord(payload) {
         dateValue = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), now.getHours(), now.getMinutes(), now.getSeconds());
       }
     }
+    
+    var targetDateStr = Utilities.formatDate(dateValue, "GMT+9", "yyyy-MM-dd");
 
-    // 이전 기록 찾기 (점수 계산용 - 신규 측정일보다 과거인 기록 중 가장 최신 것!)
+    // 이전 기록 찾기 & 동일한 날짜의 기존 기록(중복) 찾기
     var data = sheet.getDataRange().getValues();
     var prevRecord = null;
     var prevDate = null;
+    var existingRowIndex = -1; // 동일 날짜 중복 행 인덱스
+    
     for (var i = 1; i < data.length; i++) {
       if (String(data[i][2]).replace(/[^0-9]/g, "") === phone) {
         var rowDate = new Date(data[i][0]);
-        if (rowDate < dateValue) {
+        var rowDateStr = Utilities.formatDate(rowDate, "GMT+9", "yyyy-MM-dd");
+        
+        if (rowDateStr === targetDateStr) {
+          existingRowIndex = i + 1; // 1-based index for Google Sheets
+        } else if (rowDate < dateValue) {
+          // 신규 측정일보다 과거인 기록 중 가장 최신 것!
           if (!prevDate || rowDate > prevDate) {
             prevDate = rowDate;
             prevRecord = { weight: data[i][3], muscle: data[i][4], fat: data[i][5] };
@@ -603,19 +612,35 @@ function submitInBodyRecord(payload) {
       if (Math.abs(diffWeight) <= 0.2) changeScore += 100;
     }
     
-    // [v46.38] 전용 9번째 열(I열)을 추가하여 등록일(Record Date) 기록!
+    // [v46.39] 전용 9번째 열(I열)을 추가하여 등록일(Record Date) 기록!
     var uploadDate = new Date();
-    sheet.appendRow([
-      dateValue,              // Column A: 측정일 (Measurement Date)
-      name,                   // Column B: 회원명
-      "'" + phone,            // Column C: 연락처
-      weight,                 // Column D: 체중
-      muscle,                 // Column E: 골격근량
-      fat,                    // Column F: 체지방률
-      changeScore,            // Column G: 변화점수
-      payload.remarks || "",  // Column H: 비고
-      uploadDate              // Column I: 등록일 (Record Date / Submission Date)
-    ]);
+    
+    if (existingRowIndex > -1) {
+      // 동일 날짜에 기록이 이미 존재하면 기존 행을 덮어써서 중복 등록 및 점수 파밍을 차단합니다!
+      sheet.getRange(existingRowIndex, 1).setValue(dateValue);
+      sheet.getRange(existingRowIndex, 2).setValue(name);
+      sheet.getRange(existingRowIndex, 3).setValue("'" + phone);
+      sheet.getRange(existingRowIndex, 4).setValue(weight);
+      sheet.getRange(existingRowIndex, 5).setValue(muscle);
+      sheet.getRange(existingRowIndex, 6).setValue(fat);
+      sheet.getRange(existingRowIndex, 7).setValue(changeScore);
+      sheet.getRange(existingRowIndex, 8).setValue(payload.remarks || "");
+      sheet.getRange(existingRowIndex, 9).setValue(uploadDate);
+    } else {
+      // 기존 기록이 없으면 신규 행 추가
+      sheet.appendRow([
+        dateValue,              // Column A: 측정일 (Measurement Date)
+        name,                   // Column B: 회원명
+        "'" + phone,            // Column C: 연락처
+        weight,                 // Column D: 체중
+        muscle,                 // Column E: 골격근량
+        fat,                    // Column F: 체지방률
+        changeScore,            // Column G: 변화점수
+        payload.remarks || "",  // Column H: 비고
+        uploadDate              // Column I: 등록일 (Record Date / Submission Date)
+      ]);
+    }
+    
     return { success: true, score: changeScore };
   } catch (e) { return { success: false, error: e.toString() }; }
 }
