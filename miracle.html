@@ -874,8 +874,9 @@
       btn.disabled = true;
       btn.innerText = '🔑 보안 키 확인 중...';
 
-      google.script.run.withSuccessHandler(async (backendKey) => {
-        let apiKey = (backendKey || localStorage.getItem('gemini_api_key') || '').trim();
+      google.script.run.withSuccessHandler(async (res) => {
+        const keyFromBackend = (res && res.success) ? res.key : "";
+        let apiKey = String(keyFromBackend || localStorage.getItem('gemini_api_key') || '').trim();
 
         // 기본 마스터 API 키 자동 장착 (사용자가 개별 키를 설정하지 않은 경우 자동 사용)
         if (!apiKey) {
@@ -1078,9 +1079,10 @@
     function resetApiKeyPrompt() {
       // 1. 안전하게 로딩 마스크 띄우며 백엔드 시트 금고 조회
       showLoading();
-      google.script.run.withSuccessHandler(backendKey => {
+      google.script.run.withSuccessHandler(res => {
         hideLoading();
-        const currentKey = backendKey || localStorage.getItem('gemini_api_key') || '';
+        const keyFromBackend = (res && res.success) ? res.key : "";
+        const currentKey = String(keyFromBackend || localStorage.getItem('gemini_api_key') || '');
         
         const newKey = prompt("🔑 [이장 전용] 새로운 구글 Gemini API Key를 입력해주세요 (39자리):\n*여기에 입력하신 키는 모든 회원이 공동으로 즉시 사용하게 됩니다.", currentKey);
         if (newKey !== null) {
@@ -1159,8 +1161,9 @@
       btn.innerText = '🔑 보안 키 확인 중...';
       btn.disabled = true;
 
-      google.script.run.withSuccessHandler(async (backendKey) => {
-        let apiKey = (backendKey || localStorage.getItem('gemini_api_key') || '').trim();
+      google.script.run.withSuccessHandler(async (res) => {
+        const keyFromBackend = (res && res.success) ? res.key : "";
+        let apiKey = String(keyFromBackend || localStorage.getItem('gemini_api_key') || '').trim();
         if (!apiKey) {
           apiKey = "AIzaSyDhdr8c-4GSEFOwM3lZd0IEu-037mo_VSQ"; // 기본 마스터 키
         }
