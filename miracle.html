@@ -990,11 +990,12 @@
         }
         `;
 
-        let response;
-        let success = false;
-        let errMsg = "";
+        try {
+          let response;
+          let success = false;
+          let errMsg = "";
 
-        // 1차 시도: 최신 대세 모델인 gemini-2.5-flash
+          // 1차 시도: 최신 대세 모델인 gemini-2.5-flash
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
           response = await fetch(url, {
@@ -1319,11 +1320,12 @@
           { "error": "not_inbody" }
         `;
 
-        let response;
-        let success = false;
-        let errMsg = "";
+        try {
+          let response;
+          let success = false;
+          let errMsg = "";
 
-        // 1차 시도: 최신 대세 모델인 gemini-2.5-flash
+          // 1차 시도: 최신 대세 모델인 gemini-2.5-flash
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
           response = await fetch(url, {
