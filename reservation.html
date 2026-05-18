@@ -344,6 +344,31 @@
   <script>
     let resData = {};
 
+    // [v44.220] 모바일 기기 하드웨어 뒤로가기 버튼 연동 화면 제어 시스템
+    // 브라우저 history.pushState를 사용하여 예약 흐름 단계 이동 시 히스토리를 쌓고,
+    // 하드웨어 뒤로가기 클릭 시 popstate 이벤트를 가로채어 이전 예약 단계로 우아하게 되돌립니다.
+    let isHistoryNavigating = false;
+
+    window.addEventListener('popstate', function(event) {
+      const state = event.state;
+      isHistoryNavigating = true;
+      
+      if (!state) {
+        // 처음 상태(메인 화면)로 돌아가기
+        goBackToMain();
+      } else if (state.screen === 'lookup') {
+        startLookup();
+      } else if (state.screen === 'booking') {
+        // 예약 흐름의 특정 단계로 복원
+        document.getElementById('main-screen').style.display = 'none';
+        document.getElementById('step-lookup').style.display = 'none';
+        document.getElementById('booking-flow').style.display = 'block';
+        showStep(state.step);
+      }
+      
+      isHistoryNavigating = false;
+    });
+
 
     function renderLoginStatus() {
       const uName = localStorage.getItem('v44_user_name');
@@ -427,6 +452,10 @@
       document.getElementById('step-lookup').style.display='none'; 
       document.getElementById('booking-flow').style.display='block'; 
       
+      if (!isHistoryNavigating) {
+        history.pushState({ screen: 'booking', step: 1 }, "");
+      }
+      
       const savedPhone = localStorage.getItem('v44_user_phone');
       const savedName = localStorage.getItem('v44_user_name');
       
@@ -448,6 +477,10 @@
       document.getElementById('booking-flow').style.display='none'; 
       document.getElementById('step-lookup').style.display='block'; 
       
+      if (!isHistoryNavigating) {
+        history.pushState({ screen: 'lookup' }, "");
+      }
+      
       const savedPhone = localStorage.getItem('v44_user_phone');
       const lookupPhone = document.getElementById('lookupPhone');
       if (savedPhone) {
@@ -465,6 +498,10 @@
       document.getElementById('step-lookup').style.display='none'; 
       refreshSummary(); // 돌아올 때 현황 갱신
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      if (!isHistoryNavigating && history.state) {
+        history.back();
+      }
     }
 
     function checkLookupInput() {
@@ -555,6 +592,14 @@
           step.classList.remove('active');
         }
       }
+
+      if (!isHistoryNavigating) {
+        const currentState = history.state;
+        if (!currentState || currentState.screen !== 'booking' || currentState.step !== num) {
+          history.pushState({ screen: 'booking', step: num }, "");
+        }
+      }
+      
       // 화면 상단으로 부드럽게 이동
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }

@@ -516,6 +516,47 @@
       }
     }
 
+    // [v46.7] 모바일 기기 하드웨어 뒤로가기 버튼 연동 모달 제어 시스템
+    // 브라우저 history.pushState를 사용하여 모달이 열릴 때 히스토리를 쌓고,
+    // 하드웨어 뒤로가기 클릭 시 popstate 이벤트를 가로채어 모달만 안전하게 닫습니다.
+    let isModalPushing = false;
+
+    function pushModalState(modalId) {
+      isModalPushing = true;
+      history.pushState({ modalId: modalId }, "");
+      isModalPushing = false;
+    }
+
+    function popModalStateIfOpen(modalId) {
+      if (history.state && history.state.modalId === modalId) {
+        history.back();
+      }
+    }
+
+    window.addEventListener('popstate', function(event) {
+      const aiModal = document.getElementById('ai-meal-modal');
+      const polaroidModal = document.getElementById('polaroid-modal');
+      
+      // AI 모달이 열려있는 상태에서 뒤로가기가 발생했다면 모달만 닫아줌
+      if (aiModal && aiModal.style.display === 'flex') {
+        aiModal.style.display = 'none';
+        
+        // 스캔 진행 중 스피너와 버튼 복구
+        const scanLine = document.getElementById('ai-scan-line');
+        if (scanLine) scanLine.style.display = 'none';
+        const scanBtn = document.getElementById('btn-start-ai-scan');
+        if (scanBtn) {
+          scanBtn.disabled = false;
+          scanBtn.innerText = '지니 AI 식단 스캔 시작 🚀';
+        }
+      }
+      
+      // 폴라로이드 상세 모달이 열려있다면 닫아줌
+      if (polaroidModal && polaroidModal.style.display === 'flex') {
+        polaroidModal.style.display = 'none';
+      }
+    });
+
     let aiSelectedTime = 'morning';
     let aiBase64Image = '';
     let aiMimeType = 'image/jpeg';
@@ -567,10 +608,12 @@
       }
 
       document.getElementById('ai-meal-modal').style.display = 'flex';
+      pushModalState('ai-meal-modal');
     }
 
     function closeAiMealModal() {
       document.getElementById('ai-meal-modal').style.display = 'none';
+      popModalStateIfOpen('ai-meal-modal');
     }
 
     function setMealTime(time) {
@@ -1146,10 +1189,12 @@
       updateReactionBtn('cheer', '화이팅 🔥', reactions.cheer || []);
       
       document.getElementById('polaroid-modal').style.display = 'flex';
+      pushModalState('polaroid-modal');
     }
 
     function closeModal() {
       document.getElementById('polaroid-modal').style.display = 'none';
+      popModalStateIfOpen('polaroid-modal');
     }
 
     function updateReactionBtn(type, label, list) {
