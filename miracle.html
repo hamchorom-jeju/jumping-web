@@ -1217,6 +1217,73 @@
       pagination.innerHTML = html;
     }
 
+    function formatPolaroidComment(item) {
+      const comment = item.comment || '';
+      const itemType = item.item || '';
+      
+      // AI 스캔 분석 기록인 경우
+      if (comment.includes("🤖 [지니 AI 항상성 식단 분석]")) {
+        const dashIndex = comment.indexOf(" - ");
+        let cleanFeedback = comment;
+        let tierInfo = "";
+        let expInfo = "";
+        
+        if (dashIndex > -1) {
+          cleanFeedback = comment.substring(dashIndex + 3).trim();
+          const prefix = comment.substring(0, dashIndex);
+          
+          // Tier 추출 (예: "Tier S")
+          const tierMatch = prefix.match(/Tier\s+([SABC])/i);
+          if (tierMatch) {
+            tierInfo = `Tier ${tierMatch[1].toUpperCase()}`;
+          }
+          
+          // EXP 추출 (예: "10 EXP")
+          const expMatch = prefix.match(/(\d+)\s*EXP/i);
+          if (expMatch) {
+            expInfo = `+${expMatch[1]} EXP`;
+          }
+        }
+        
+        // 괄호 및 중복 티어 표시 제거하여 깔끔하게 정리된 아이템 타입 만들기
+        const cleanItemType = itemType.replace(/\s*\(Tier\s+[SABC]\)/i, '').trim();
+        
+        let badgeBg = "linear-gradient(135deg, #fbcfe8 0%, #ec4899 100%)"; // Tier S default
+        if (tierInfo.includes("Tier A")) badgeBg = "linear-gradient(135deg, #a7f3d0 0%, #10b981 100%)";
+        else if (tierInfo.includes("Tier B")) badgeBg = "linear-gradient(135deg, #fef3c7 0%, #d97706 100%)";
+        else if (tierInfo.includes("Tier C")) badgeBg = "linear-gradient(135deg, #fee2e2 0%, #ef4444 100%)";
+        
+        let html = `
+          <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; text-align: left;">
+            <span style="background: var(--v-wood); color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800;">🍱 ${cleanItemType}</span>
+        `;
+        
+        if (tierInfo) {
+          html += `<span style="background: ${badgeBg}; color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">${tierInfo}</span>`;
+        }
+        if (expInfo) {
+          html += `<span style="background: rgba(212, 175, 55, 0.15); color: #b8860b; border: 1px solid rgba(212, 175, 55, 0.3); padding: 3px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800;">${expInfo}</span>`;
+        }
+        
+        html += `
+          </div>
+          <div style="background: rgba(93, 64, 55, 0.03); border-left: 4px solid var(--v-wood); padding: 12px 15px; border-radius: 0 12px 12px 0; margin-top: 10px; text-align: left; box-sizing: border-box;">
+            <div style="font-size: 0.75rem; font-weight: 900; color: var(--v-wood); margin-bottom: 6px;">🤖 지니 AI의 항상성 수호 피드백</div>
+            <p style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin: 0; line-height: 1.5; word-break: keep-all; white-space: pre-wrap;">${cleanFeedback}</p>
+          </div>
+        `;
+        return html;
+      } else {
+        // 일반 유저 인증 기록인 경우
+        return `
+          <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; text-align: left;">
+            <span style="background: var(--emerald); color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800;">✨ ${itemType}</span>
+          </div>
+          <p style="font-size: 0.9rem; font-weight: 800; color: var(--text-main); margin: 5px 0 0 0; line-height: 1.4; text-align: left; word-break: keep-all; white-space: pre-wrap;">${comment || '오늘도 멋진 습관 수호 완료! 🌿'}</p>
+        `;
+      }
+    }
+
     let currentModalIndex = -1;
 
     function openModal(index) {
@@ -1228,7 +1295,7 @@
       const photoUrl = photoId ? (photoId.startsWith("data:") ? photoId : `https://lh3.googleusercontent.com/d/${photoId}`) : '';
       
       document.getElementById('modal-img').src = photoUrl;
-      document.getElementById('modal-text').innerText = `[${item.item}] ${item.comment || '멋진 모험가입니다!'}`;
+      document.getElementById('modal-text').innerHTML = formatPolaroidComment(item);
       document.getElementById('modal-author').innerText = item.name;
       document.getElementById('modal-time').innerText = `${item.date} ${item.time}`;
       
