@@ -245,7 +245,7 @@ function getUserDashboardData(payload) {
     if (!phone) return { error: "전화번호가 없습니다." };
     
     // [perf] 구글 초고속 캐시 서비스 확인 (0.05초)
-    var cache = CacheService.getUserCache();
+    var cache = CacheService.getScriptCache();
     var cacheKey = "v44_dash_" + phone;
     var cachedData = cache.get(cacheKey);
     if (cachedData) {
@@ -580,7 +580,7 @@ function clearUserDashboardCache(phone) {
   if (!phone) return;
   var cleanPhone = String(phone).replace(/[^0-9]/g, "");
   try {
-    var cache = CacheService.getUserCache();
+    var cache = CacheService.getScriptCache();
     cache.remove("v44_dash_" + cleanPhone);
     Logger.log("⚡ 대시보드 캐시 강제 삭제 완료: " + cleanPhone);
   } catch (e) {
