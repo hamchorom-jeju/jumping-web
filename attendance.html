@@ -322,7 +322,7 @@
     .user-status-title { font-size: 0.9rem; opacity: 0.7; margin-bottom: 20px; }
     .success-pass-info { margin-top: 15px; font-size: 1.05rem; opacity: 0.9; }
   </style>
-  <script src="bridge.js"></script>
+  <script src="bridge.js?v=45.101"></script>
 </head>
 <body>
   <div id="installBanner">
@@ -764,13 +764,13 @@
       
       if (optRemain !== undefined || optIsUnlimited) {
         const countInfo = optIsUnlimited ? "무제한 이용 중" : `잔여: ${optRemain}회`;
-        const expireInfo = (optExpireDate && optExpireDate !== "-") ? `<div style="font-size: 1.75rem; margin-top: 12px; font-weight: 800; color: #4a5568; white-space: nowrap;">기한: ~${optExpireDate}</div>` : "";
+        const expireInfo = (optExpireDate && optExpireDate !== "-") ? `<div style="font-size: 2.6rem; margin-top: 22px; font-weight: 900; color: #4a5568; white-space: nowrap;">기한: ~${optExpireDate}</div>` : "";
         
-        let finalInfo = `<div style="font-size: 3.4rem; letter-spacing:-1px; line-height:1.2; font-weight: 900; color: #8a2be2; white-space: nowrap;">${countInfo}</div>` + expireInfo;
+        let finalInfo = `<div style="font-size: 4.8rem; letter-spacing:-2px; line-height:1.1; font-weight: 950; color: #8a2be2; white-space: nowrap;">${countInfo}</div>` + expireInfo;
         if (optUsedPassName && optUsedPassName !== "보너스권") {
-          finalInfo = `<div style="font-size: 1.35rem; color:#8a2be2; margin-bottom:10px; opacity:0.8; font-weight: 700; white-space: nowrap;">[${optUsedPassName}]</div>` + finalInfo;
+          finalInfo = `<div style="font-size: 1.8rem; color:#8a2be2; margin-bottom:15px; opacity:0.85; font-weight: 800; white-space: nowrap;">[${optUsedPassName}]</div>` + finalInfo;
         }
-        optSuccessMsg += `<div style="margin-top:18px; background:#f0f7ff; padding:25px 15px; border-radius:24px; border:3px solid #8a2be2; box-shadow: 0 10px 25px rgba(138, 43, 226, 0.12); width: 100%; box-sizing: border-box; text-align: center; display: inline-block;">${finalInfo}</div>`;
+        optSuccessMsg += `<div style="margin-top:25px; background:#f0f7ff; padding:35px 20px; border-radius:32px; border:5px solid #8a2be2; box-shadow: 0 15px 35px rgba(138, 43, 226, 0.18); width: 100%; box-sizing: border-box; text-align: center; display: inline-block;">${finalInfo}</div>`;
       }
       
       showAppAlert(optSuccessMsg, "success");
