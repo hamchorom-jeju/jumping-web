@@ -400,6 +400,7 @@ function getUserDashboardData(payload) {
             }
           }
         }
+      }
     }
 
     // [v47.0] 실시간 로그인 감지 및 자동 점수 지급 엔진 (로그아웃 불필요!)
