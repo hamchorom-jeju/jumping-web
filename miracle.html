@@ -170,6 +170,21 @@
     .reaction-btn.active { background: var(--emerald); color: white; border-color: var(--emerald); box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3); }
 
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* [v46.10] Global Loading Overlay Styles for Miracle page */
+    .v-loading-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(5px);
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 10000; animation: vFadeIn 0.3s;
+    }
+    .v-loading-spinner {
+      width: 50px; height: 50px; border: 5px solid var(--v-paper);
+      border-top: 5px solid var(--gold); border-radius: 50%;
+      animation: vSpin 1s linear infinite; margin-bottom: 15px;
+    }
+    @keyframes vSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes vFadeIn { from { opacity: 0; } to { opacity: 1; } }
   </style>
 </head>
 <body>
