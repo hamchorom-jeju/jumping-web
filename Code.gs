@@ -295,10 +295,10 @@ function getUserDashboardData(payload) {
     
     var now = new Date();
     
-    // [v45.9] 주간: 매주 수요일 기점 (인바디 제출일)
+    // [v46.43] 주간: 매주 목요일 00:00:00 기점 (수요일 자정 마감)
     var day = now.getDay(); // 0(일)~6(토)
-    var diffToWed = (day < 3) ? (day + 4) : (day - 3); 
-    var startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToWed);
+    var diffToThu = (day + 3) % 7; 
+    var startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToThu);
     startOfWeek.setHours(0, 0, 0, 0);
 
     // [v45.9] 월간(시즌): 매월 4째주 수요일 기점 (33챌린지 사이클)
@@ -6371,10 +6371,10 @@ function checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName) {
     if (!sheet) return;
     
     var now = new Date();
-    // 매주 수요일 기점 (인바디 제출 및 챌린지 주간 사이클)
+    // [v46.43] 주간: 매주 목요일 00:00:00 기점 (수요일 자정 마감)
     var day = now.getDay(); // 0(일)~6(토)
-    var diffToWed = (day < 3) ? (day + 4) : (day - 3); 
-    var startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToWed);
+    var diffToThu = (day + 3) % 7; 
+    var startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToThu);
     startOfWeek.setHours(0, 0, 0, 0);
     
     var data = sheet.getDataRange().getValues();
