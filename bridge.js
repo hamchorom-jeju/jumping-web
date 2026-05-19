@@ -244,7 +244,7 @@ function showAppAlert(msg, type = "success", customTitle = "") {
 
   const isLargeScreen = window.innerWidth > 700;
   // 단위를 rem 대신 px로 고정하되, 모바일에서 너무 거대하지 않도록 적절히 조절함
-  const modalWidth = isLargeScreen ? "500px" : "90%";
+  const modalWidth = isLargeScreen ? "520px" : "94%";
   const iconSize = isLargeScreen ? "80px" : "60px";
   const titleSize = isLargeScreen ? "28px" : "22px";
   const textSize = isLargeScreen ? "18px" : "15px";
