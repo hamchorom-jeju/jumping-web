@@ -236,7 +236,7 @@ function navigateTo(page, params = {}, openInNewTab = false) {
 function showAppAlert(msg, type = "success", customTitle = "") {
   const modal = document.createElement('div');
   modal.className = 'app-modal-overlay';
-  modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center; z-index:10000; opacity:0; transition:opacity 0.3s;";
+  modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center; z-index:10000; opacity:0; transition:opacity 0.3s; overflow-y:auto; padding:20px 10px; box-sizing:border-box;";
   
   const icon = type === "success" ? "✅" : (type === "error" ? "⚠️" : "ℹ️");
   const title = customTitle || (type === "success" ? "확인 완료" : (type === "error" ? "알림" : "안내"));
