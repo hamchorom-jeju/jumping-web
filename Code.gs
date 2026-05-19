@@ -285,8 +285,9 @@ function getUserDashboardData(payload) {
     
 
     // [perf] 구글 초고속 캐시 서비스 확인 (0.05초)
+    var todayStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
     var cache = CacheService.getScriptCache();
-    var cacheKey = "v47_dash_" + phone;
+    var cacheKey = "v47_dash_" + phone + "_" + todayStr;
     var cachedData = cache.get(cacheKey);
     if (cachedData) {
       try {
@@ -321,7 +322,6 @@ function getUserDashboardData(payload) {
 
     // [v45.8] 일일_활동_기록 (10컬럼 집약 체계)
     var summarySheet = ss.getSheetByName("일일_활동_기록") || ss.insertSheet("일일_활동_기록");
-    var todayStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
     var doneList = []; 
     var stats = { 
       weekly: { health: 0, perf: 0, def: 0 },
@@ -400,7 +400,35 @@ function getUserDashboardData(payload) {
             }
           }
         }
+    }
+
+    // [v47.0] 실시간 로그인 감지 및 자동 점수 지급 엔진 (로그아웃 불필요!)
+    var hasLoginToday = false;
+    doneList.forEach(function(item) {
+      if (item.indexOf("로그인 체크") > -1) {
+        hasLoginToday = true;
       }
+    });
+
+    var isFirstLoginToday = false;
+    if (!hasLoginToday && memberInfo.name !== "모험가") {
+      isFirstLoginToday = true;
+      // 오늘 첫 로그인 점수 자동 기록
+      recordActivityLog({
+        phone: phone,
+        name: memberInfo.name,
+        type: "로그인",
+        item: "로그인 체크",
+        score: 5,
+        statType: "def"
+      });
+      // 실시간 데이터 즉시 업데이트
+      activityLifetime += 5;
+      activityWeekly += 5;
+      activitySeason += 5;
+      stats.weekly.def += 5;
+      stats.monthly.def += 5;
+      doneList.push("로그인 체크");
     }
 
     // [v46.37] 주간 랭킹 발표 및 잠금 기준선 (목요일 12:00) & 측정 마감선 (수요일 24:00) 연산 엔진
@@ -659,7 +687,8 @@ function getUserDashboardData(payload) {
       quests: questStatus,
       achievedBonuses: achievedBonuses,
       inactiveDays: inactiveDays,
-      inactivityPenalty: inactivityPenalty
+      inactivityPenalty: inactivityPenalty,
+      isFirstLoginToday: isFirstLoginToday
     };
     
     result.cacheHit = false;
@@ -685,7 +714,8 @@ function clearUserDashboardCache(phone) {
   var cleanPhone = String(phone).replace(/[^0-9]/g, "");
   try {
     var cache = CacheService.getScriptCache();
-    cache.remove("v47_dash_" + cleanPhone);
+    var todayStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
+    cache.remove("v47_dash_" + cleanPhone + "_" + todayStr);
     Logger.log("⚡ 대시보드 캐시 강제 삭제 완료: " + cleanPhone);
   } catch (e) {
     Logger.log("캐시 삭제 오류: " + e.toString());
@@ -2535,7 +2565,7 @@ function processAdminCheckout(data) {
       statType: "perf"
     });
     
-    // (2) 운동 강도점수 (+40 or +80 EXP 상향) 혹은 테라피 방어력점수(+30 EXP 상향) 기록
+    // (2) 운동 강도점수 (+40 or +80 EXP 상향) 혹은 테라피 회복력점수(+30 EXP 상향) 기록
     if (timeLogVal > 0) {
       var extraWorkoutScore = (timeLogVal === 1 ? 40 : 80);
       recordActivityLog({
@@ -2548,7 +2578,7 @@ function processAdminCheckout(data) {
         statType: "perf"
       });
     } else {
-      // 0인 경우: 원적외선 테라피로 몸과 마음을 이완하여 스트레스 지수 감소 -> 방어력(+30 EXP 상향) 부여
+      // 0인 경우: 원적외선 테라피로 몸과 마음을 이완하여 스트레스 지수 감소 -> 회복력(+30 EXP 상향) 부여
       recordActivityLog({
         phone: phoneStr,
         name: memberName,
@@ -5794,7 +5824,7 @@ function recordActivityLog(payload) {
     
     if (sheet.getLastRow() === 0) {
       // [v45.8] 10개 컬럼 최적화 (원장님 기획안)
-      var headers = ["날짜", "전화번호", "이름", "센터방문_수행", "운동강도_수행", "일반수행_합산", "일반방어_합산", "체력보너스_합산", "완료내역", "총점"];
+      var headers = ["날짜", "전화번호", "이름", "센터방문_실천", "운동강도_실천", "일반실천_합산", "일반회복_합산", "체력보너스_합산", "완료내역", "웰니스총점"];
       sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground("#f1f3f5");
     }
 
@@ -5805,26 +5835,31 @@ function recordActivityLog(payload) {
     var score = Number(payload.score || 0);
 
     // [v45.8] 머리말 및 액션 결정 (v45.9 정밀 매핑)
-    var statTag = "[수행]"; // 기본은 수행으로 변경 (체력 보너스 남용 방지)
+    var statTag = "[실천]"; // 기본은 실천으로 변경 (체력 보너스 남용 방지)
     
     // 1순위: 명시적인 statType 우선
-    if (payload.statType === "perf") statTag = "[수행]";
-    else if (payload.statType === "def") statTag = "[방어]";
+    if (payload.statType === "perf") statTag = "[실천]";
+    else if (payload.statType === "def") statTag = "[회복]";
     else if (payload.statType === "health") statTag = "[체력]";
     else {
       // 2순위: 타입 및 항목명으로 추론
-      if (type === "습관" || type === "오아시스" || type === "방어" || payload.item === "셀프 칭찬" || payload.item.indexOf("인증") > -1) {
-        // [v45.9] 아카이브/오아시스/보너스는 명시적 타입에 따라 '방어'로 취급
-        statTag = "[방어]";
-      } else if (type === "퀘스트" || type === "식단" || type === "출석" || type === "수행") {
-        statTag = "[수행]";
-      } else if (type === "보너스" || type === "로그인") {
+      if (type === "습관" || type === "오아시스" || type === "방어" || type === "회복" || type === "로그인" || payload.item === "셀프 칭찬" || payload.item.indexOf("인증") > -1) {
+        // [v45.9] 아카이브/오아시스/보너스/로그인은 명시적 타입에 따라 '회복'(회복력)으로 취급
+        statTag = "[회복]";
+      } else if (type === "퀘스트" || type === "식단" || type === "출석" || type === "수행" || type === "실천") {
+        statTag = "[실천]";
+      } else if (type === "보너스") {
         statTag = "[체력]";
       }
     }
 
     var action = payload.action || (type === "습관" ? "체크" : "인증");
     var detailInfo = statTag + " " + payload.item + " " + action + "(" + score + ")";
+
+    if (type === "로그인") {
+      action = "";
+      detailInfo = "[회복] 로그인 체크(5)";
+    }
 
     // 1. 행 찾기 및 중복 체크
     var data = sheet.getDataRange().getValues();
@@ -5852,7 +5887,7 @@ function recordActivityLog(payload) {
         var vD = Number(sheet.getRange(targetRowIdx, 7).getValue() || 0);
         sheet.getRange(targetRowIdx, 7).setValue(vD + 5);
       } else {
-        var loginDetails = "[방어] 로그인 체크(5)";
+        var loginDetails = "[회복] 로그인 체크(5)";
         sheet.appendRow([todayStr, "'" + phone, payload.name, 0, 0, 0, 5, 0, loginDetails, 5]);
         clearUserDashboardCache(phone);
         return { success: true };
@@ -5862,9 +5897,9 @@ function recordActivityLog(payload) {
       if (type === "출석") {
         if (payload.item === "센터방문") colIdx = 4;
         else if (payload.item === "운동강도") colIdx = 5;
-      } else if (statTag === "[방어]") {
+      } else if (statTag === "[회복]") {
         colIdx = 7;
-      } else if (statTag === "[수행]") {
+      } else if (statTag === "[실천]") {
         colIdx = 6;
       } else if (statTag === "[체력]") {
         colIdx = 8;

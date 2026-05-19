@@ -60,11 +60,11 @@ const Village = {
     currentRankIndex: 0,
 
     quests: {
-        sync: { title: "클럽 동기화", icon: "⚡", guide: "클럽 출석 점수를 반영하시겠어요?\n오늘 클럽에 출석 하셨다면 15포인트,\n운동량에 따라 최대 20포인트가 반영됩니다.", btn: "동기화 수행", link: "#", single: true },
+        sync: { title: "클럽 동기화", icon: "⚡", guide: "클럽 출석 점수를 반영하시겠어요?\n오늘 클럽에 출석 하셨다면 15포인트,\n운동량에 따라 최대 20포인트가 반영됩니다.", btn: "동기화 진행", link: "#", single: true },
         visit: { title: "방문 인증", icon: "📸", guide: "오늘 클럽에 출석하셨나요?\n그렇다면 방문 인증을 남겨보세요\n아카이브에 인증시 15점이 추가됩니다.", btn: "인증하러 가기", link: "miracle.html?cat=visit", single: false },
         meal: { title: "식단 인증", icon: "🍱", guide: "꾸준한 식단 기록은 강력한 변화의 열쇠입니다.\n아카이브에 인증시 최대 30점이 지급됩니다.", btn: "인증하러 가기", link: "miracle.html?cat=meal", single: false },
         water: { title: "워터 헌터", icon: "💧", guide: "수분 섭취량 만큼 게이지를 조정해보세요.\n섭취량에 따라 점수를 차등지급합니다. (최대 20점)\n아카이브에 인증시 15점이 추가됩니다.", btn: "인증하러 가기", link: "miracle.html?cat=water", single: false },
-        bonus: { title: "보너스 퀘스트", icon: "✨", guide: "돌발 미션을 수행하시겠어요?\n아카이브로 이동해 인증을 남기실 수 있습니다.\n아카이브 인증시 15점이 추가됩니다.", btn: "인증하러 가기", link: "miracle.html?cat=bonus", single: false }
+        bonus: { title: "보너스 퀘스트", icon: "✨", guide: "돌발 미션을 실천하시겠어요?\n아카이브로 이동해 인증을 남기실 수 있습니다.\n아카이브 인증시 15점이 추가됩니다.", btn: "인증하러 가기", link: "miracle.html?cat=bonus", single: false }
     },
 
     showLoading(msg) {
@@ -214,6 +214,10 @@ const Village = {
                         this.user.rank = res.rank;
 
                         // [v45.0] 오늘 완료한 항목 체크박스 복구
+                        // [v47.0] 날이 바뀐 경우 이전 상태를 리셋하기 위해 모든 습관의 done 상태를 초기화합니다.
+                        this.user.habits.forEach(h => {
+                            h.done = false;
+                        });
                         if (res.doneList && res.doneList.length > 0) {
                             console.log("[v45.0] Restoring doneList:", res.doneList);
                             this.user.habits.forEach(h => {
@@ -305,7 +309,7 @@ const Village = {
             } else if (data.single) {
                 guideText += `\n\n🌿 수호 완료 시 ${habit.base}점 지급`;
             } else if (key === 'h7') {
-                guideText += `\n\n🌿 수호 완료 시 ${habit.base}점 지급\n🌵 다짐의 선언 게시글 등록 시 5점 추가`;
+                guideText += `\n\n🌿 수호 완료 시 ${habit.base}점 지급\n🍵 저녁 단식(물/차) AI 인증 시 10점 자동 연계 지급`;
             } else if (key === 'h9') {
                 guideText += `\n\n🌿 수호 완료 시 ${habit.base}점 지급\n👏 셀프칭찬 등록 시 5점 추가`;
             } else {
