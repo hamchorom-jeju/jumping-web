@@ -171,6 +171,40 @@
       font-size: 1.8rem;
     }
 
+    /* 태블릿/노트북 가로 모드 대응 (기준 완화) */
+    @media (min-width: 700px) {
+      .container { max-width: 100%; padding: 40px; justify-content: flex-start; padding-top: 80px; }
+      .keypad { max-width: 1000px; gap: 40px; }
+      .key { font-size: 4.5rem; }
+      .key.action { font-size: 2.2rem; }
+      .key.submit { font-size: 2.8rem; }
+      .input-display { height: 180px; font-size: 7rem; margin-bottom: 60px; }
+      .logo-img { max-height: 180px; margin-bottom: 40px; }
+
+      /* 모달 및 버튼 확장 (회원선택 화면 포함) */
+      .modal-content { max-width: 1000px !important; width: 95% !important; padding: 60px !important; border-radius: 40px !important; }
+      #userListArea { grid-template-columns: repeat(3, 1fr) !important; gap: 20px !important; max-height: 600px !important; }
+      .user-list-btn { padding: 40px 20px !important; border-radius: 24px !important; }
+      .user-list-btn .u-name { font-size: 2.5rem !important; }
+      
+      .success-content { max-width: 1000px !important; padding: 100px !important; border-radius: 40px !important; }
+      .user-greeting { font-size: 4.5rem !important; margin-bottom: 30px !important; }
+      .user-status { font-size: 2.2rem !important; margin-bottom: 60px !important; }
+      .btn { padding: 40px !important; font-size: 2.5rem !important; border-radius: 25px !important; margin-bottom: 20px !important; }
+      .success-icon { font-size: 10rem !important; }
+      .success-text { font-size: 3rem !important; line-height: 1.6 !important; }
+
+      /* 회원권 및 상세 정보 '왕글씨' 보정 */
+      .pass-type { font-size: 2.5rem !important; margin-bottom: 15px !important; }
+      .pass-detail { font-size: 2rem !important; line-height: 1.4 !important; }
+      .pass-warning { font-size: 1.8rem !important; font-weight: 800 !important; margin-left: 10px !important; }
+      .searching-text { font-size: 3.5rem !important; }
+      .header p { font-size: 2.2rem !important; }
+      .user-greeting { font-size: 4.5rem !important; margin-bottom: 40px !important; }
+      .user-status-title { font-size: 2rem !important; margin-bottom: 30px !important; }
+      .btn-cancel { font-size: 2rem !important; padding: 20px !important; }
+      .success-pass-info { font-size: 2rem !important; margin-top: 25px !important; }
+    }
 
     /* 모바일 세로 모드 대응 (기존 유지) */
     @media (max-width: 600px) {
@@ -528,6 +562,7 @@
       // 보유한 모든 회원권 정보를 리스트로 표시
       if (member.allPasses && member.allPasses.length > 0) {
         member.allPasses.forEach(function(pass) {
+          if (pass.status === "마감" || pass.status === "마감됨") return; // 마감된 회원권은 화면 표시 패스!
           const passDiv = document.createElement('div');
           passDiv.style.marginBottom = "10px";
           passDiv.style.padding = "12px";
@@ -729,13 +764,13 @@
       
       if (optRemain !== undefined || optIsUnlimited) {
         const countInfo = optIsUnlimited ? "무제한 이용 중" : `잔여: ${optRemain}회`;
-        const expireInfo = (optExpireDate && optExpireDate !== "-") ? `<div style="font-size: 1.4rem; margin-top: 10px; opacity: 0.9; font-weight: 800; color: #4a5568;">기한: ~${optExpireDate}</div>` : "";
+        const expireInfo = (optExpireDate && optExpireDate !== "-") ? `<div style="font-size: 3.5rem; margin-top: 30px; opacity: 1; font-weight: 800; color: #4a5568;">기한: ~${optExpireDate}</div>` : "";
         
-        let finalInfo = `<div style="font-size: 2.4rem; letter-spacing:-1px; line-height:1.2; font-weight: 900; color: #8a2be2;">${countInfo}</div>` + expireInfo;
+        let finalInfo = `<div style="font-size: 5.5rem; letter-spacing:-2px; line-height:1;">${countInfo}</div>` + expireInfo;
         if (optUsedPassName && optUsedPassName !== "보너스권") {
-          finalInfo = `<div style="font-size: 1.1rem; color:#8a2be2; margin-bottom:8px; opacity:0.8; font-weight: 700;">[${optUsedPassName}]</div>` + finalInfo;
+          finalInfo = `<div style="font-size: 2rem; color:#8a2be2; margin-bottom:15px; opacity:0.8;">[${optUsedPassName}]</div>` + finalInfo;
         }
-        optSuccessMsg += `<div style="margin-top:15px; background:#f0f7ff; padding:18px 10px; border-radius:24px; border:3px solid #8a2be2; box-shadow: 0 10px 25px rgba(138, 43, 226, 0.15);">${finalInfo}</div>`;
+        optSuccessMsg += `<div style="margin-top:45px; font-weight:900; color:#1a202c; background:#f0f7ff; padding:50px 20px; border-radius:40px; border:8px solid #8a2be2; box-shadow: 0 20px 45px rgba(138, 43, 226, 0.3);">${finalInfo}</div>`;
       }
       
       showAppAlert(optSuccessMsg, "success");

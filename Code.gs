@@ -1438,7 +1438,7 @@ function searchMemberByPin(pinStr) {
     
     var matched = [];
     for (var i = 0; i < registry.length; i++) {
-      if (registry[i].phoneClean.slice(-4) === pin) {
+      if (registry[i].phoneClean.slice(-4) === pin && !registry[i].isExpired) {
         matched.push(registry[i]);
       }
     }
@@ -1450,7 +1450,7 @@ function searchMemberByPin(pinStr) {
       registry = getCompiledMemberRegistry(ss);
       
       for (var i = 0; i < registry.length; i++) {
-        if (registry[i].phoneClean.slice(-4) === pin) {
+        if (registry[i].phoneClean.slice(-4) === pin && !registry[i].isExpired) {
           matched.push(registry[i]);
         }
       }
@@ -1558,13 +1558,15 @@ function processAttendance(phoneStr, type, isBonus) {
       mRowIdx = matchedMember.mRowIdx;
       for (var p = 0; p < matchedMember.allPasses.length; p++) {
         var pass = matchedMember.allPasses[p];
-        activePasses.push({
-          rowIdx: pass.rowIdx,
-          name: matchedMember.name,
-          membershipType: pass.membershipType,
-          remainCount: pass.remainCount,
-          memo: pass.memo
-        });
+        if (pass.status === "진행중" || pass.status === "진행 중") {
+          activePasses.push({
+            rowIdx: pass.rowIdx,
+            name: matchedMember.name,
+            membershipType: pass.membershipType,
+            remainCount: pass.remainCount,
+            memo: pass.memo
+          });
+        }
       }
     }
     
