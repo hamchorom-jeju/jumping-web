@@ -6,17 +6,17 @@
 const Village = {
     perspective: 'weekly',
     user: {
-        name: "회원",
-        tier: "꿈나무 요정",
-        totalScore: 84200,
-        rank: 12,
+        name: "모험가",
+        tier: "씨앗 🌱",
+        totalScore: 0,
+        rank: "-",
         stats: {
-            weekly: { health: 450, perf: 680, def: 320 },
-            monthly: { health: 1200, perf: 2400, def: 950 }
+            weekly: { health: 0, perf: 0, def: 0 },
+            monthly: { health: 0, perf: 0, def: 0 }
         },
         max: {
-            weekly: { health: 600, perf: 1000, def: 700 },
-            monthly: { health: 2400, perf: 4000, def: 2800 }
+            weekly: { health: 1500, perf: 1000, def: 500 },
+            monthly: { health: 6000, perf: 4000, def: 2000 }
         },
         tiers: [
             { name: "씨앗 🌱", min: 0 }, { name: "새싹 🌿", min: 1001 }, { name: "나무 🌳", min: 3001 },
