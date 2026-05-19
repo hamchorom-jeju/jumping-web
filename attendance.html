@@ -764,13 +764,13 @@
       
       if (optRemain !== undefined || optIsUnlimited) {
         const countInfo = optIsUnlimited ? "무제한 이용 중" : `잔여: ${optRemain}회`;
-        const expireInfo = (optExpireDate && optExpireDate !== "-") ? `<div style="font-size: 3.5rem; margin-top: 30px; opacity: 1; font-weight: 800; color: #4a5568;">기한: ~${optExpireDate}</div>` : "";
+        const expireInfo = (optExpireDate && optExpireDate !== "-") ? `<div style="font-size: 1.4rem; margin-top: 10px; opacity: 0.9; font-weight: 800; color: #4a5568;">기한: ~${optExpireDate}</div>` : "";
         
-        let finalInfo = `<div style="font-size: 5.5rem; letter-spacing:-2px; line-height:1;">${countInfo}</div>` + expireInfo;
+        let finalInfo = `<div style="font-size: 2.4rem; letter-spacing:-1px; line-height:1.2; font-weight: 900; color: #8a2be2;">${countInfo}</div>` + expireInfo;
         if (optUsedPassName && optUsedPassName !== "보너스권") {
-          finalInfo = `<div style="font-size: 2rem; color:#8a2be2; margin-bottom:15px; opacity:0.8;">[${optUsedPassName}]</div>` + finalInfo;
+          finalInfo = `<div style="font-size: 1.1rem; color:#8a2be2; margin-bottom:8px; opacity:0.8; font-weight: 700;">[${optUsedPassName}]</div>` + finalInfo;
         }
-        optSuccessMsg += `<div style="margin-top:45px; font-weight:900; color:#1a202c; background:#f0f7ff; padding:50px 20px; border-radius:40px; border:8px solid #8a2be2; box-shadow: 0 20px 45px rgba(138, 43, 226, 0.3);">${finalInfo}</div>`;
+        optSuccessMsg += `<div style="margin-top:15px; background:#f0f7ff; padding:18px 10px; border-radius:24px; border:3px solid #8a2be2; box-shadow: 0 10px 25px rgba(138, 43, 226, 0.15);">${finalInfo}</div>`;
       }
       
       showAppAlert(optSuccessMsg, "success");
