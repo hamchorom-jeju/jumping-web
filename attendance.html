@@ -322,7 +322,7 @@
     .user-status-title { font-size: 0.9rem; opacity: 0.7; margin-bottom: 20px; }
     .success-pass-info { margin-top: 15px; font-size: 1.05rem; opacity: 0.9; }
   </style>
-  <script src="bridge.js?v=45.109"></script>
+  <script src="bridge.js?v=45.111"></script>
 </head>
 <body>
   <div id="installBanner">
@@ -700,6 +700,7 @@
           if (selectedMemberObject.allPasses && selectedMemberObject.allPasses.length > 0) {
             for (let p = 0; p < selectedMemberObject.allPasses.length; p++) {
               const pass = selectedMemberObject.allPasses[p];
+              if (pass.status === "마감" || pass.status === "마감됨") continue; // 마감된 회원권은 매칭 대상에서 제외!
               if (type === '점핑') {
                 if (pass.membershipType.indexOf("점핑") !== -1 || pass.membershipType.indexOf("월권") !== -1 || pass.membershipType.indexOf("운동만") !== -1) {
                   matchedPass = pass;
