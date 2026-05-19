@@ -215,6 +215,45 @@ function submitArchive(payload) {
       photoId: photoId
     });
 
+    // [v47.0] 아침 식단 Tier S (수분/차/단식) 인증 시 모닝 티 습관 연계 완료/인증 자동 지급!
+    if (payload.type === "식단" && payload.item.indexOf("아침 식단") > -1 && payload.item.indexOf("Tier S") > -1) {
+      // 1. 모닝 티 완료 (체크) - 2점 적립 (방어/회복력)
+      recordActivityLog({
+        phone: payload.phone, 
+        name: payload.name, 
+        type: "습관", 
+        item: "모닝 티",
+        action: "완료",
+        score: 2,
+        statType: "def"
+      });
+      // 2. 모닝 티 인증 (사진인증) - 5점 적립 (방어/회복력)
+      recordActivityLog({
+        phone: payload.phone, 
+        name: payload.name, 
+        type: "습관", 
+        item: "모닝 티",
+        action: "인증",
+        score: 5,
+        statType: "def",
+        photoId: photoId
+      });
+    }
+
+    // [v47.0] 저녁 식단 Tier S (저녁 단식 - 물/차만 섭취로 15점 획득) 시 나이트 컷 습관 완료 자동 지급!
+    if (payload.type === "식단" && (payload.item.indexOf("저녁 식단") > -1 || payload.item.indexOf("저녁 단식") > -1) && payload.item.indexOf("Tier S") > -1 && payload.score === 15) {
+      // 나이트 컷 완료 (체크) - 10점 적립 (방어/회복력)
+      recordActivityLog({
+        phone: payload.phone, 
+        name: payload.name, 
+        type: "습관", 
+        item: "나이트 컷",
+        action: "완료",
+        score: 10,
+        statType: "def"
+      });
+    }
+
     // [v46.10] 글리코겐 클리어 퀘스트 발동 조건 감시 (식단이고 Tier C인 경우)
     if (payload.type === "식단" && payload.item.indexOf("Tier C") > -1) {
       triggerGlycogenQuest(formattedPhone, payload.name);
