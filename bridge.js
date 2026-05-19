@@ -244,12 +244,12 @@ function showAppAlert(msg, type = "success", customTitle = "") {
 
   const isLargeScreen = window.innerWidth > 700;
   // 단위를 rem 대신 px로 고정하되, 모바일에서 너무 거대하지 않도록 적절히 조절함
-  const modalWidth = isLargeScreen ? "650px" : "94%";
-  const iconSize = isLargeScreen ? "120px" : "80px";
-  const titleSize = isLargeScreen ? "46px" : "30px";
-  const textSize = isLargeScreen ? "30px" : "20px";
-  const btnSize = isLargeScreen ? "32px" : "22px";
-  const btnPadding = isLargeScreen ? "25px" : "18px";
+  const modalWidth = isLargeScreen ? "850px" : "96%";
+  const iconSize = isLargeScreen ? "160px" : "80px";
+  const titleSize = isLargeScreen ? "60px" : "30px";
+  const textSize = isLargeScreen ? "42px" : "20px";
+  const btnSize = isLargeScreen ? "44px" : "22px";
+  const btnPadding = isLargeScreen ? "32px" : "18px";
 
   modal.innerHTML = `
     <div style="background:#fff; width:95%; max-width:${modalWidth}; border-radius:24px; padding:${isLargeScreen ? '40px 30px' : '30px 20px'}; text-align:center; transform:scale(0.8); transition:transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow:0 20px 50px rgba(0,0,0,0.3); border-top: 10px solid ${color};">
