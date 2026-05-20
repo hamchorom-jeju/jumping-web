@@ -55,7 +55,7 @@
             white-space: nowrap;
             margin-right: 10px;
             border: 1px solid rgba(255,255,255,0.1);
-            cursor: pointer; /* 클릭해서 지난 칭찬 리스트 쫙 볼 수 있게 유도 */
+            cursor: pointer;
             transition: all 0.2s;
         }
         .roller-title:active {
@@ -106,46 +106,51 @@
             transform: scale(0.95);
         }
 
-        /* 👑 오아시스 2.1 위젯 스타일 공통 헤더 */
+        /* 👑 오아시스 2.2 위젯 스타일 공통 헤더 (나를 사랑하기 에메랄드 띠와 통일!) */
         .oasis-section-header {
+            background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+            border-radius: 18px;
+            padding: 10px 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin: 25px 0 12px 0;
-            padding-bottom: 8px;
-            border-bottom: 2px dashed rgba(13, 148, 136, 0.15);
+            box-shadow: 0 4px 12px rgba(15, 118, 110, 0.12);
+            color: white;
+            box-sizing: border-box;
         }
         .oasis-section-title {
             font-weight: 900;
-            font-size: 0.95rem;
-            color: var(--oasis-emerald);
+            font-size: 0.8rem;
+            color: white !important;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
         .oasis-section-title span {
-            font-size: 0.68rem;
-            color: var(--text-dim);
+            font-size: 0.62rem;
+            color: #fef08a;
             font-weight: 800;
-            margin-left: 4px;
+            margin-left: 5px;
         }
         .oasis-section-write-btn {
-            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-            border: none;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 12px;
-            font-size: 0.72rem;
-            font-weight: 900;
+            background: rgba(255, 255, 255, 0.2) !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+            color: white !important;
+            padding: 4px 10px !important;
+            border-radius: 10px !important;
+            font-size: 0.65rem !important;
+            font-weight: 900 !important;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 4px;
-            box-shadow: 0 3px 8px rgba(13, 148, 136, 0.2);
+            box-shadow: none !important;
             transition: all 0.2s;
         }
         .oasis-section-write-btn:active {
             transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.3) !important;
         }
 
         /* 📖 섹션 3: 마음 채우기 (감성 일력 슬라이더북) */
@@ -179,7 +184,7 @@
             padding: 4px;
         }
         
-        /* 📝 고풍스러운 손글씨 공책 스타일 (반응형 보정) */
+        /* 📝 고풍스러운 손글씨 공책 스타일 */
         .v-notebook-paper {
             background-color: #fefdf9;
             background-image: linear-gradient(rgba(13, 148, 136, 0.05) 1px, transparent 1px);
@@ -192,7 +197,7 @@
             border-left: 4.5px double #f43f5e !important;
             position: relative;
             box-sizing: border-box;
-            min-height: 140px; /* 명언들이 정갈하게 안착될 수 있는 높이 확보 */
+            min-height: 140px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -228,7 +233,6 @@
             transform: scale(0.9);
         }
 
-        /* 공감 리액션 하트 버튼 */
         .heart-reaction-btn {
             background: rgba(244, 63, 94, 0.07);
             border: 1px solid rgba(244, 63, 94, 0.12);
@@ -247,7 +251,7 @@
             transform: scale(0.92);
         }
 
-        /* 🤝 섹션 2: 서로 아끼기 (칭찬의 마법체인) */
+        /* 🤝 섹션 2: 서로 아끼기 */
         .praise-chain-timeline {
             display: flex;
             flex-direction: column;
@@ -285,7 +289,7 @@
             100% { transform: translateY(3px); }
         }
 
-        /* 📱 세련된 팝업 모달창 공통 디자인 */
+        /* 📱 극극극강의 세련됨을 갖춘 대기형 팝업 모달창 (엉망이던 팝업 대정비!) */
         .oasis-popup-modal {
             display: none;
             position: fixed;
@@ -293,50 +297,122 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 118, 110, 0.35);
-            backdrop-filter: blur(6px);
-            z-index: 2000;
+            background: rgba(15, 118, 110, 0.38);
+            backdrop-filter: blur(8px);
+            z-index: 5000;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 15px;
             box-sizing: border-box;
         }
         .oasis-popup-content {
             background: white;
-            border-radius: 25px;
+            border-radius: 28px;
             width: 100%;
-            max-width: 420px;
-            padding: 22px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            max-width: 400px;
+            padding: 24px;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.2);
             box-sizing: border-box;
             position: relative;
             border: 2px solid rgba(13, 148, 136, 0.25);
+            animation: popupScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes popupScale {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
         .popup-close-x {
             position: absolute;
-            top: 15px;
+            top: 16px;
             right: 18px;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             font-weight: 900;
             cursor: pointer;
             color: var(--text-dim);
             background: none;
             border: none;
+            transition: color 0.15s;
+        }
+        .popup-close-x:hover {
+            color: #e11d48;
+        }
+
+        /* 팝업 내 인풋 필드 럭셔리 튜닝 */
+        .oasis-title-input {
+            width: 100%;
+            border: 2px solid rgba(13, 148, 136, 0.15);
+            border-radius: 12px;
+            padding: 11px 14px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+            background: #fdfbf7;
+            color: #1e293b;
+            outline: none;
+            transition: all 0.25s;
+        }
+        .oasis-title-input:focus {
+            border-color: var(--oasis-mint);
+            background: #fff;
+            box-shadow: 0 0 10px rgba(13, 148, 136, 0.1);
+        }
+        .oasis-textarea {
+            width: 100%;
+            height: 110px;
+            border: 2px solid rgba(13, 148, 136, 0.15);
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            resize: none;
+            box-sizing: border-box;
+            background: #fdfbf7;
+            color: #1e293b;
+            outline: none;
+            transition: all 0.25s;
+            line-height: 1.5;
+        }
+        .oasis-textarea:focus {
+            border-color: var(--oasis-mint);
+            background: #fff;
+            box-shadow: 0 0 10px rgba(13, 148, 136, 0.1);
+        }
+
+        .oasis-submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 16px;
+            font-weight: 900;
+            font-size: 0.85rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .oasis-submit-btn:active {
+            transform: scale(0.98);
         }
 
         /* 🌸 1초 원터치 칭찬 마법 */
         .magic-template-box {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 5px;
             margin-bottom: 12px;
         }
         .magic-tag-btn {
-            background: #fff;
-            border: 1.5px solid rgba(13, 148, 136, 0.15);
+            background: #f0fdf4;
+            border: 1.5px solid rgba(13, 148, 136, 0.18);
             border-radius: 10px;
-            padding: 5px 10px;
-            font-size: 0.7rem;
+            padding: 6px 9px;
+            font-size: 0.68rem;
             font-weight: 800;
             color: var(--oasis-emerald);
             cursor: pointer;
@@ -344,6 +420,7 @@
         }
         .magic-tag-btn:active {
             transform: scale(0.95);
+            background: #dcfce7;
         }
 
         /* 🤝 칭찬 바톤 알림 가이드 */
@@ -478,7 +555,6 @@
             font-weight: 700;
         }
 
-        /* 지난 기록 보관 모달 */
         .praise-modal {
             display: none;
             position: fixed;
@@ -549,7 +625,6 @@
         <div class="roller-title" onclick="openPastPraiseModal()" title="회원들의 칭찬 목록 쫙 읽기">🌸 나를 사랑하기</div>
         <div class="roller-wrapper" onclick="openPastPraiseModal()">
             <div class="roller-track" id="self-praise-roller-track">
-                <!-- 동적으로 [이름]: [칭찬 내용] 연동되어 흐릅니다! -->
                 <span class="roller-item">"로딩 중... 오늘도 나 자신을 아낌없이 사랑해 줍니다! ✨"</span>
             </div>
         </div>
@@ -560,14 +635,14 @@
 
     <div class="oasis-container">
         
-        <!-- 📖 섹션 3: 마음 채우기 (격언/명언 공책) -->
+        <!-- 📖 섹션 3: 마음 채우기 (에메랄드 띠 통일화 완료!) -->
         <div class="oasis-section-header">
             <div class="oasis-section-title">
                 <i class="fa-solid fa-book-open"></i> 📖 마음 채우기
                 <span>매번 넘겨보는 웰니스 일력</span>
             </div>
             <div style="display:flex; gap:6px;">
-                <button class="oasis-section-write-btn" style="background:rgba(13, 148, 136, 0.1); color:var(--oasis-emerald); box-shadow:none; border:1px solid rgba(13, 148, 136, 0.2);" onclick="openPastQuotesModal()">
+                <button class="oasis-section-write-btn" style="background:rgba(255,255,255,0.15) !important;" onclick="openPastQuotesModal()">
                     더보기
                 </button>
                 <button class="oasis-section-write-btn" onclick="openWriteModal('명언')">
@@ -581,14 +656,14 @@
                 <button class="slider-arrow prev" onclick="prevQuoteSlide()"><i class="fa-solid fa-chevron-left"></i></button>
                 <div class="sliderbook-track-container" id="sliderbook-swipe-zone">
                     <div class="sliderbook-track" id="quote-slider-track">
-                        <!-- 55.0 Fallback & 실시간 명언 공책들이 이곳에 동적 슬라이드로 주입됩니다! -->
+                        <!-- 동적 주입 -->
                     </div>
                 </div>
                 <button class="slider-arrow next" onclick="nextQuoteSlide()"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
         </div>
 
-        <!-- 🤝 섹션 2: 서로 아끼기 (칭찬의 마법체인) -->
+        <!-- 🤝 섹션 2: 서로 아끼기 (에메랄드 띠 통일화 완료!) -->
         <div class="oasis-section-header">
             <div class="oasis-section-title">
                 <i class="fa-solid fa-user-group"></i> 🤝 서로 아끼기
@@ -600,10 +675,10 @@
         </div>
 
         <div id="memorial-chain-section" class="praise-chain-timeline">
-            <!-- 칭찬 바톤 타임라인 고리가 동적 렌더링됩니다! -->
+            <!-- 동적 주입 -->
         </div>
 
-        <!-- ⚡ 섹션 4: 한껏 자유롭기 (자유 다짐 & 돌발 퀘스트) -->
+        <!-- ⚡ 섹션 4: 한껏 자유롭기 (에메랄드 띠 통일화 완료!) -->
         <div class="oasis-section-header">
             <div class="oasis-section-title">
                 <i class="fa-solid fa-pencil"></i> ⚡ 한껏 자유롭기
@@ -615,7 +690,7 @@
         </div>
 
         <div id="oasis-posts-list" style="margin-bottom: 20px;">
-            <!-- 일반/돌발글들이 렌더링되는 공간 -->
+            <!-- 동적 주입 -->
         </div>
         <div style="text-align:center; margin-bottom:30px;" id="memo-more-btn-box">
             <button onclick="expandMemos()" style="background:#fff; border:1px solid rgba(0,0,0,0.08); padding:8px 25px; border-radius:15px; font-weight:800; font-size:0.75rem; color:var(--oasis-emerald); cursor:pointer; box-shadow:0 3px 8px rgba(0,0,0,0.02);">
@@ -623,7 +698,7 @@
             </button>
         </div>
 
-        <!-- 📸 섹션 5: 자랑하기 (습관 Polaroid 피드) -->
+        <!-- 📸 섹션 5: 자랑하기 (에메랄드 띠 통일화 완료!) -->
         <div class="oasis-section-header" style="margin-top: 30px;">
             <div class="oasis-section-title">
                 <i class="fa-solid fa-camera"></i> 📸 자랑하기
@@ -631,18 +706,17 @@
             </div>
         </div>
 
-        <!-- Polaroid Grid -->
         <div id="feed-loader" style="display:none; text-align:center; padding:30px;">
             <div class="v-loading-spinner" style="margin: 0 auto 10px auto;"></div>
             <div style="font-size:0.75rem; color:var(--oasis-emerald); font-weight:800;">갤러리를 정화하고 있습니다...</div>
         </div>
 
         <div id="archive-feed">
-            <!-- Polaroid Cards가 동적으로 주입됩니다! -->
+            <!-- 동적 주입 -->
         </div>
         
         <div id="feed-pagination" class="pagination">
-            <!-- Pagination 1..5 buttons dynamically injected here -->
+            <!-- 동적 주입 -->
         </div>
 
     </div>
@@ -671,11 +745,11 @@
         </a>
     </nav>
 
-    <!-- ✍️ 글쓰기 전용 다이내믹 팝업 모달창 -->
+    <!-- ✍️ 글쓰기 전용 다이내믹 팝업 모달창 (정밀 정화 및 반응형 최적화 완료!) -->
     <div id="write-popup-modal" class="oasis-popup-modal">
         <div class="oasis-popup-content">
             <button class="popup-close-x" onclick="closeWriteModal()">&times;</button>
-            <h3 id="write-popup-title" style="font-weight:900; color:var(--oasis-emerald); font-size:1.05rem; margin-top:0; margin-bottom:15px; display:flex; align-items:center; gap:6px;">
+            <h3 id="write-popup-title" style="font-weight:900; color:var(--oasis-emerald); font-size:1.05rem; margin-top:0; margin-bottom:18px; display:flex; align-items:center; gap:6px;">
                 <i class="fa-solid fa-pen-nib"></i> 글쓰기
             </h3>
             
@@ -695,21 +769,21 @@
 
             <!-- 🤝 칭찬 지목 인풋 & 자동 완성 제안 상자 -->
             <div id="popup-relay-member-box" style="display: none; margin-bottom: 12px; position: relative;">
-                <label style="font-weight: 800; font-size: 0.7rem; color: var(--oasis-emerald); margin-bottom: 5px; display: block;">🤝 칭찬의 바톤을 보낼 회원 지목</label>
-                <input type="text" id="praise-target-member" oninput="filterMemberNames()" placeholder="회원 이름 검색 (예: 홍길동)" style="width: 100%; border: 1.5px solid rgba(13, 148, 136, 0.2); border-radius: 12px; padding: 10px; font-size: 0.8rem; font-weight: 800; outline: none; box-sizing: border-box;">
-                <div id="member-search-suggestions" style="position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid rgba(0,0,0,0.1); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); max-height: 120px; overflow-y: auto; z-index: 100; display: none;"></div>
+                <label style="font-weight: 800; font-size: 0.72rem; color: var(--oasis-emerald); margin-bottom: 5px; display: block;">🤝 칭찬의 바톤을 보낼 회원 지목</label>
+                <input type="text" id="praise-target-member" oninput="filterMemberNames()" placeholder="회원 이름 검색 (예: 홍길동)" style="width: 100%; border: 2px solid rgba(13, 148, 136, 0.18); border-radius: 12px; padding: 10px; font-size: 0.8rem; font-weight: 800; outline: none; box-sizing: border-box; background: #fdfbf7;">
+                <div id="member-search-suggestions" style="position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid rgba(0,0,0,0.1); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); max-height: 120px; overflow-y: auto; z-index: 5500; display: none;"></div>
             </div>
 
             <input type="text" id="post-title" class="oasis-title-input" placeholder="한줄 제목을 입력하세요">
             <textarea id="post-content" class="oasis-textarea" placeholder="이곳에 소중한 하루 기록을 남겨보세요..."></textarea>
             
             <!-- ⚡ 돌발 퀘스트 연계 체크박스 -->
-            <div class="oasis-checkbox-container" id="sudden-quest-link-box" style="display: none; width:100%; box-sizing:border-box; margin-top: 10px;">
+            <div class="oasis-checkbox-container" id="sudden-quest-link-box" style="display: none; width:100%; box-sizing:border-box; margin-top: 12px;">
                 <input type="checkbox" id="sudden-quest-check" onchange="toggleSuddenLabel()">
-                <span id="sudden-quest-label" style="font-size:0.7rem; font-weight:800; color:var(--oasis-emerald);">⚡ [오늘의 돌발 퀘스트] 인증 완료하기 (+15 EXP)</span>
+                <span id="sudden-quest-label" style="font-size:0.72rem; font-weight:800; color:var(--oasis-emerald);">⚡ [오늘의 돌발 퀘스트] 인증 완료하기 (+15 EXP)</span>
             </div>
             
-            <button class="oasis-submit-btn" style="margin-top: 15px;" onclick="submitPost()">
+            <button class="oasis-submit-btn" style="margin-top: 18px;" onclick="submitPost()">
                 <i class="fa-solid fa-paper-plane"></i> 다짐샘에 기록하기
             </button>
         </div>
@@ -736,7 +810,7 @@
                 <i class="fa-solid fa-heart"></i> 나를 사랑하기 다짐 기록들 🌸
             </h3>
             <div id="past-praise-list" style="display:flex; flex-direction:column; gap:10px; max-height: 350px; overflow-y: auto;">
-                <!-- 모든 회원이 남긴 셀프 칭찬 리스트들이 흐릅니다! -->
+                <!-- 동적 주입 -->
             </div>
         </div>
     </div>
@@ -749,7 +823,7 @@
                 <i class="fa-solid fa-book-open"></i> 흘러간 마음 채우기 보관함 📖
             </h3>
             <div id="past-quotes-list" style="display:flex; flex-direction:column; gap:10px; max-height: 350px; overflow-y: auto;">
-                <!-- 흘러간 마음 채우기 목록이 렌더링됩니다! -->
+                <!-- 동적 주입 -->
             </div>
         </div>
     </div>
@@ -765,12 +839,10 @@
         let selectedCategoryVal = '셀프칭찬';
         let currentQuoteIndex = 0;
 
-        // 한도 노출 제어 변수들
         let memoLimit = 3;
-        let galleryLimit = 3;
-        let totalPhotosGlobal = [];
+        let currentPage = 1;
 
-        // 🌟 엄선된 영혼의 웰니스 명언 5선 (Fallback용 기본 데이터)
+        // 🌟 Fallback 명언
         const defaultWellnessQuotes = [
             {
                 id: null,
@@ -837,7 +909,6 @@
             const modal = document.getElementById('write-popup-modal');
             const titleEl = document.getElementById('write-popup-title');
             
-            // 모든 폼 리셋
             document.getElementById('popup-self-magic-box').style.display = 'none';
             document.getElementById('popup-relay-member-box').style.display = 'none';
             document.getElementById('sudden-quest-link-box').style.display = 'none';
@@ -859,7 +930,6 @@
                 document.getElementById('post-title').value = "🤝 동료에게 보낸 칭찬의 마법";
                 document.getElementById('post-content').placeholder = "동료의 감사한 행동이나 칭찬할 내용을 적고 바톤을 전송하세요 (+5 EXP)...";
                 
-                // 로그인 감지 바톤 주자 박스
                 if (praiseBatonSenderName) {
                     const batonGuide = document.getElementById('popup-baton-guide-box');
                     document.getElementById('popup-baton-guide-text').innerHTML = `🏃‍♂️ <strong>[${praiseBatonSenderName}]</strong> 님께 칭찬의 바톤을 이어받아 작성 중입니다!`;
@@ -1065,7 +1135,7 @@
             document.getElementById('past-praise-modal').style.display = 'none';
         }
 
-        // 📖 흘러간 마음 채우기(명언) 보관함 팝업 열기
+        // 📖 흘러간 마음 채우기 명언 보관함 팝업 열기
         function openPastQuotesModal() {
             const listEl = document.getElementById('past-quotes-list');
             listEl.innerHTML = '';
@@ -1084,6 +1154,7 @@
                 card.style.lineHeight = '1.6rem';
                 card.style.backgroundSize = '100% 1.6rem';
                 card.style.marginBottom = '10px';
+                card.style.minHeight = 'auto';
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; font-size:0.65rem; color:var(--text-dim); font-weight:800;">
                         <span>📖 ${q.title}</span>
@@ -1142,10 +1213,7 @@
                     if (res.success) {
                         alert(res.message);
                         closeWriteModal();
-                        
-                        // 바톤 알림 가이드 소멸
                         praiseBatonSenderName = "";
-                        
                         loadPosts();
                     } else {
                         alert("에러: " + res.error);
@@ -1154,7 +1222,6 @@
                 .submitOasisPost(payload);
         }
 
-        // 오아시스 2.1 롤링 띠 배너 & 슬라이더 & 타임라인 렌더링
         function loadPosts() {
             if (typeof google === 'undefined') {
                 renderMockPosts();
@@ -1183,7 +1250,6 @@
             const now = new Date();
             const todayStr = Utilities_formatDate_local(now, "yyyy-MM-dd");
 
-            // 1. 셀프 칭찬 롤링 띠 (이름: 내용 포맷 연동)
             const todayPraises = posts.filter(p => p.category === '셀프칭찬' && p.date === todayStr);
             if (todayPraises.length > 0) {
                 todayPraises.forEach(p => {
@@ -1199,7 +1265,6 @@
                 `;
             }
 
-            // 2. 마음 채우기 (명언 5선 Fallback & 유기적 밀어내기)
             const userQuotes = posts.filter(p => p.category === '명언' || p.category === '격언');
             let mergedQuotes = [];
             userQuotes.forEach(q => mergedQuotes.push(q));
@@ -1226,7 +1291,6 @@
                     `;
                 }
 
-                // 줄공책 템플릿에 들어찰 수 있도록 정갈하게 폰트 사이즈 조정
                 let textLength = String(q.content).length;
                 let autoFontSize = "0.78rem";
                 let autoLineHeight = "1.85rem";
@@ -1252,7 +1316,6 @@
             currentQuoteIndex = 0;
             quoteTrack.style.transform = 'translateX(0%)';
 
-            // 3. 서로 아끼기 (칭찬의 마법체인 7일 필터링)
             const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
             const relayPosts = posts.filter(p => {
                 const pDate = new Date(p.date);
@@ -1293,7 +1356,6 @@
                 `;
             }
 
-            // 4. 한껏 자유롭기 (자유 다짐 & 돌발 퀘스트 콤팩트 제어)
             const memoPosts = posts.filter(p => {
                 const pDate = new Date(p.date);
                 return (p.category === '일반' || p.category === '돌발') && pDate >= sevenDaysAgo;
@@ -1327,7 +1389,6 @@
                     memoList.appendChild(card);
                 });
                 
-                // 더보기 버튼 활성화 여부
                 if (memoPosts.length > memoLimit) {
                     document.getElementById('memo-more-btn-box').style.display = 'block';
                 } else {
@@ -1339,13 +1400,11 @@
             }
         }
 
-        // 한껏 자유롭기 리스트 더보기
         function expandMemos() {
             memoLimit += 5;
             renderOasis21Dashboard(loadedPostsGlobal);
         }
 
-        // 칭찬 바톤 로그인 감지 박스
         function checkActivePraiseBaton() {
             if (typeof google === 'undefined') return;
             google.script.run
@@ -1354,7 +1413,6 @@
                         activeSuddenQuest = res.quests ? res.quests.todayQuest : null;
                         if (res.praiseBatonSender) {
                             praiseBatonSenderName = res.praiseBatonSender;
-                            // 바로 글쓰기 팝업을 열어줍니다!
                             openWriteModal('릴레이칭찬');
                         }
                     }
@@ -1364,7 +1422,6 @@
 
         let currentPage = 1;
 
-        // 📸 자랑하기 (습관 Polaroid 피드 페이지네이션 구조 정상화)
         function loadArchiveFeed() {
             const loader = document.getElementById('feed-loader');
             const feedEl = document.getElementById('archive-feed');
@@ -1423,7 +1480,6 @@
 
             feedEl.appendChild(grid);
 
-            // 1..5 등 페이지 번호 렌더링
             const totalPages = Math.ceil(data.total / 12);
             for (let i = 1; i <= totalPages; i++) {
                 const btn = document.createElement('button');
