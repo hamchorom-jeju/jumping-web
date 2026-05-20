@@ -6777,13 +6777,15 @@ function getVillageSettings() {
       "bgm_rain": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
       "bgm_snow": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3",
       "bgm_blossom": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-      "bgm_leaves": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"
+      "bgm_leaves": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
+      "bgmForceOverride": "false",
+      "bgmForceUrl": ""
     };
 
     var addedNewRow = false;
     for (var key in defaultBgmMap) {
       if (!keysInSheet[key]) {
-        sheet.appendRow([key, defaultBgmMap[key], "기후별 커스텀 배경음악"]);
+        sheet.appendRow([key, defaultBgmMap[key], "기후별 커스텀 배경음악 및 고정 설정"]);
         settings[key] = defaultBgmMap[key];
         addedNewRow = true;
       }
@@ -6801,23 +6803,30 @@ function getVillageSettings() {
       settings.resolvedWeather = jeju.weather;
       settings.realJejuTemp = jeju.temp; // 현재 제주의 실시간 온도 정보도 화면단에 함께 주입!
       settings.realJejuWind = jeju.wind; // 현재 제주의 실시간 풍속 정보(m/s) 주입!
-      
-      if (settings.bgmEnabled === "true") {
-        // [원장님 직관적 설계 반영] 대표 배경음악 칸(bgmUrl)이 수동으로 입력되어 있으면 auto 모드에서도 해당 대표곡으로 우선 고정!
-        // 대표 배경음악 칸이 비어있거나 기본곡일 때만 아래 5가지 날씨별 커스텀 BGM이 제주의 날씨에 맞춰 지능적으로 자동 스위칭!
-        var hasCustomRepresentativeBgm = settings.bgmUrl && settings.bgmUrl.trim() !== "" && settings.bgmUrl.indexOf("SoundHelix-Song-1") === -1;
-        if (!hasCustomRepresentativeBgm) {
-          var weatherKey = "bgm_" + jeju.weather;
-          settings.bgmUrl = settings[weatherKey] || settings["bgm_sun"] || defaultBgmMap["bgm_sun"];
-        }
-      }
     } else {
       settings.resolvedWeather = settings.weather;
+    }
+
+    // [원장님 직관적 설계 반영] 강제 고정 모드와 기후별 연동 분기 처리
+    if (settings.bgmEnabled === "true") {
+      var isForce = settings.bgmForceOverride === "true";
+      var forceUrl = settings.bgmForceUrl || "";
+      if (isForce && forceUrl.trim() !== "") {
+        // 1. 강제 고정 모드가 켜져 있고 음악 주소가 있으면 무조건 강제 고정곡 재생!
+        settings.bgmUrl = forceUrl;
+      } else {
+        // 2. 그 외에는 100% 날씨와 한 세트로 묶여서 재생!
+        var weatherKey = "bgm_" + (settings.resolvedWeather || "sun");
+        settings.bgmUrl = settings[weatherKey] || settings["bgm_sun"] || defaultBgmMap["bgm_sun"];
+      }
     }
     
     // [v48.0] 불러올 때도 기존에 시트에 박혀있는 모든 Suno 단축/공유 링크를 오디오 다이렉트 주소로 초고속 해독!
     if (settings.bgmUrl) {
       settings.bgmUrl = resolveSunoUrl(settings.bgmUrl);
+    }
+    if (settings.bgmForceUrl) {
+      settings.bgmForceUrl = resolveSunoUrl(settings.bgmForceUrl);
     }
     for (var key in defaultBgmMap) {
       if (settings[key]) {
@@ -6885,7 +6894,8 @@ function updateVillageSettings(payload) {
     var settingsMap = {
       "weather": payload.weather || "sun",
       "bgmEnabled": String(payload.bgmEnabled || "false"),
-      "bgmUrl": resolveSunoUrl(payload.bgmUrl || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
+      "bgmForceOverride": String(payload.bgmForceOverride || "false"),
+      "bgmForceUrl": payload.bgmForceUrl ? resolveSunoUrl(payload.bgmForceUrl.trim()) : ""
     };
 
     // [v48.0] 기후별 커스텀 BGM 키 동적 수신 및 매핑 저장

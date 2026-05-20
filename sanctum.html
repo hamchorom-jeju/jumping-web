@@ -234,47 +234,53 @@
       <div class="section-title"><i class="fa-solid fa-cloud-sun"></i> 마을 기후 및 음악 마법 환경 제어</div>
       
       <div class="env-grid">
-        <div class="env-btn" id="env-sun" onclick="setWeather('sun')">☀️<span>맑음</span></div>
-        <div class="env-btn" id="env-rain" onclick="setWeather('rain')">🌧️<span>비</span></div>
-        <div class="env-btn" id="env-snow" onclick="setWeather('snow')">❄️<span>눈</span></div>
-        <div class="env-btn" id="env-blossom" onclick="setWeather('blossom')">🌸<span>벚꽃</span></div>
-        <div class="env-btn" id="env-leaves" onclick="setWeather('leaves')">🍁<span>낙엽</span></div>
-        <div class="env-btn" id="env-auto" onclick="setWeather('auto')">🌌<span>제주 싱크</span></div>
+        <div class="env-btn" id="env-sun" onclick="setWeather('sun')">☀️<span>기본 맑음<br>(여름/겨울)</span></div>
+        <div class="env-btn" id="env-rain" onclick="setWeather('rain')">🌧️<span>비 내림</span></div>
+        <div class="env-btn" id="env-snow" onclick="setWeather('snow')">❄️<span>눈 내림</span></div>
+        <div class="env-btn" id="env-blossom" onclick="setWeather('blossom')">🌸<span>벚꽃<br>(봄의 맑은 날)</span></div>
+        <div class="env-btn" id="env-leaves" onclick="setWeather('leaves')">🍁<span>낙엽<br>(가을의 맑은 날)</span></div>
+        <div class="env-btn" id="env-auto" onclick="setWeather('auto')">🔄<span>제주 실시간<br>기후 싱크</span></div>
       </div>
 
-      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
         <input type="checkbox" id="bgm-enabled-check" style="width: 18px; height: 18px; accent-color: var(--sanctum-gold);">
-        <label for="bgm-enabled-check" style="font-size: 0.75rem; font-weight: 800; color: var(--text-main);">마을 전체 배경음악(BGM) 켜기</label>
+        <label for="bgm-enabled-check" style="font-size: 0.75rem; font-weight: 800; color: var(--text-main); cursor: pointer;">마을 전체 배경음악(BGM) 켜기</label>
       </div>
 
-      <div style="font-size: 0.65rem; color: var(--text-sub); font-weight: 700; margin-bottom: 4px; display: block;">수동 모드용 배경음악 (날씨 수동 지정 시 사용)</div>
-      <input type="text" id="bgm-url-input" class="pillar-input" placeholder="BGM 오디오 주소 (MP3형식 URL)">
+      <!-- 🃏 강제 고정 배경음악 설정 (기후 무시하고 1곡만 계속 틀고 싶을 때) -->
+      <div style="margin-top: 10px; margin-bottom: 15px; padding: 12px; background: rgba(255, 255, 255, 0.02); border: 1.5px dashed rgba(217, 119, 6, 0.3); border-radius: 15px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <input type="checkbox" id="bgm-force-check" style="width: 16px; height: 16px; accent-color: var(--sanctum-gold);">
+          <label for="bgm-force-check" style="font-size: 0.72rem; font-weight: 850; color: var(--sanctum-gold-light); cursor: pointer;">🃏 날씨 상관없이 특정 음악 강제 고정하기</label>
+        </div>
+        <input type="text" id="bgm-force-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px;" placeholder="강제 고정할 수노/MP3 음악 주소">
+      </div>
       
       <!-- 🎵 기후별 커스텀 BGM 설정 (제주 기상싱크 및 각 기후 매칭용) -->
       <div id="custom-bgm-panel" style="margin-top: 15px; margin-bottom: 15px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 20px; border: 1px solid rgba(217, 119, 6, 0.2);">
         <div style="font-size: 0.78rem; font-weight: 900; color: var(--sanctum-gold-light); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-sliders"></i> 기후 마법별 배경음악 지정 (MP3 주소)
+          <i class="fa-solid fa-sliders"></i> 🌦️ 기후 연동 배경음악 세트 지정 (Suno 또는 MP3 주소)
         </div>
         <div style="display: flex; flex-direction: column; gap: 10px;">
           <div>
-            <span style="font-size: 0.65rem; color: var(--text-sub); font-weight: 800; display: block; margin-bottom: 4px;">☀️ 맑음 날씨 BGM</span>
-            <input type="text" id="bgm-sun-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px;" placeholder="맑음 테마곡 MP3 주소">
+            <span style="font-size: 0.65rem; color: var(--text-sub); font-weight: 800; display: block; margin-bottom: 4px;">☀️ 기본 맑음 BGM (여름/겨울의 맑은 날)</span>
+            <input type="text" id="bgm-sun-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px;" placeholder="맑음 테마곡 주소">
           </div>
           <div>
-            <span style="font-size: 0.65rem; color: var(--text-sub); font-weight: 800; display: block; margin-bottom: 4px;">🌧️ 비 날씨 BGM</span>
-            <input type="text" id="bgm-rain-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px;" placeholder="비 테마곡 MP3 주소">
+            <span style="font-size: 0.65rem; color: var(--text-sub); font-weight: 800; display: block; margin-bottom: 4px;">🌧️ 비 내리는 날 BGM (실시간 비 올 때)</span>
+            <input type="text" id="bgm-rain-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px;" placeholder="비 테마곡 주소">
           </div>
           <div>
-            <span style="font-size: 0.65rem; color: var(--text-sub); font-weight: 800; display: block; margin-bottom: 4px;">❄️ 눈 날씨 BGM</span>
-            <input type="text" id="bgm-snow-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px;" placeholder="눈 테마곡 MP3 주소">
+            <span style="font-size: 0.65rem; color: var(--text-sub); font-weight: 800; display: block; margin-bottom: 4px;">❄️ 눈 내리는 날 BGM (실시간 눈 올 때)</span>
+            <input type="text" id="bgm-snow-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px;" placeholder="눈 테마곡 주소">
           </div>
           <div>
-            <span style="font-size: 0.65rem; color: var(--text-sub); font-weight: 800; display: block; margin-bottom: 4px;">🌸 벚꽃 날씨 BGM</span>
-            <input type="text" id="bgm-blossom-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px;" placeholder="벚꽃 테마곡 MP3 주소">
+            <span style="font-size: 0.65rem; color: var(--text-sub); font-weight: 800; display: block; margin-bottom: 4px;">🌸 벚꽃 BGM (봄의 맑은 날 - 3~5월)</span>
+            <input type="text" id="bgm-blossom-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px;" placeholder="벚꽃 테마곡 주소">
           </div>
           <div>
-            <span style="font-size: 0.65rem; color: var(--text-sub); font-weight: 800; display: block; margin-bottom: 4px;">🍁 낙엽 날씨 BGM</span>
-            <input type="text" id="bgm-leaves-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px;" placeholder="낙엽 테마곡 MP3 주소">
+            <span style="font-size: 0.65rem; color: var(--text-sub); font-weight: 800; display: block; margin-bottom: 4px;">🍁 낙엽 BGM (가을의 맑은 날 - 9~11월)</span>
+            <input type="text" id="bgm-leaves-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px;" placeholder="낙엽 테마곡 주소">
           </div>
         </div>
       </div>
@@ -420,7 +426,8 @@
           activeWeather = settings.weather || 'sun';
           updateWeatherUI();
           document.getElementById('bgm-enabled-check').checked = settings.bgmEnabled === 'true';
-          document.getElementById('bgm-url-input').value = settings.bgmUrl || '';
+          document.getElementById('bgm-force-check').checked = settings.bgmForceOverride === 'true';
+          document.getElementById('bgm-force-input').value = settings.bgmForceUrl || '';
           
           // 기후별 커스텀 BGM 입력란 바인딩
           document.getElementById('bgm-sun-input').value = settings.bgm_sun || '';
@@ -486,7 +493,7 @@
     async function saveEnvironment() {
       showLoading("음악 주소를 해독하고 기후 설정을 기록하는 중...");
 
-      const bgmUrlRaw = document.getElementById('bgm-url-input').value.trim();
+      const bgmForceUrlRaw = document.getElementById('bgm-force-input').value.trim();
       const bgmSunRaw = document.getElementById('bgm-sun-input').value.trim();
       const bgmRainRaw = document.getElementById('bgm-rain-input').value.trim();
       const bgmSnowRaw = document.getElementById('bgm-snow-input').value.trim();
@@ -494,7 +501,7 @@
       const bgmLeavesRaw = document.getElementById('bgm-leaves-input').value.trim();
 
       // Suno 단축/공유 링크 초고속 프론트엔드 해독 실행!
-      const bgmUrl = await resolveSunoLinkClient(bgmUrlRaw);
+      const bgmForceUrl = await resolveSunoLinkClient(bgmForceUrlRaw);
       const bgm_sun = await resolveSunoLinkClient(bgmSunRaw);
       const bgm_rain = await resolveSunoLinkClient(bgmRainRaw);
       const bgm_snow = await resolveSunoLinkClient(bgmSnowRaw);
@@ -502,7 +509,7 @@
       const bgm_leaves = await resolveSunoLinkClient(bgmLeavesRaw);
 
       // 입력란 갱신 (시각적 피드백 제공!)
-      document.getElementById('bgm-url-input').value = bgmUrl;
+      document.getElementById('bgm-force-input').value = bgmForceUrl;
       document.getElementById('bgm-sun-input').value = bgm_sun;
       document.getElementById('bgm-rain-input').value = bgm_rain;
       document.getElementById('bgm-snow-input').value = bgm_snow;
@@ -510,11 +517,13 @@
       document.getElementById('bgm-leaves-input').value = bgm_leaves;
 
       const bgmEnabled = document.getElementById('bgm-enabled-check').checked;
+      const bgmForceOverride = document.getElementById('bgm-force-check').checked;
 
       const payload = {
         weather: activeWeather,
         bgmEnabled: String(bgmEnabled),
-        bgmUrl: bgmUrl,
+        bgmForceOverride: String(bgmForceOverride),
+        bgmForceUrl: bgmForceUrl,
         bgm_sun: bgm_sun,
         bgm_rain: bgm_rain,
         bgm_snow: bgm_snow,
