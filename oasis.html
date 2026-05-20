@@ -397,6 +397,125 @@
         .oasis-badge.praise { background: #ffe4e6; color: #e11d48; }
         .oasis-badge.relay { background: #ecfdf5; color: #047857; }
         .oasis-badge.sudden { background: #fef08a; color: #854d0e; }
+
+        /* 📸 모달 뷰어 & 자랑하기 페이지네이션 버튼 & 지난보관함 팝업 모달 */
+        .page-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: #fff;
+            color: #64748b;
+            font-weight: 800;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .page-btn.active {
+            background: var(--oasis-emerald) !important;
+            color: #fff !important;
+            border-color: var(--oasis-emerald) !important;
+            box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25);
+        }
+
+        .polaroid-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 3000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            box-sizing: border-box;
+        }
+        .polaroid-modal-content {
+            background: #fff;
+            padding: 15px 15px 25px 15px;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+            box-sizing: border-box;
+        }
+        .modal-close-btn {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            font-weight: 900;
+            background: none;
+            border: none;
+            outline: none;
+        }
+        .modal-img {
+            width: 100%;
+            border-radius: 3px;
+            margin-bottom: 15px;
+        }
+        .modal-text {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+        .modal-meta {
+            font-size: 0.72rem;
+            color: #64748b;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+        }
+
+        /* 지난 기록 보관 모달 */
+        .praise-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 2500;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(3px);
+            box-sizing: border-box;
+        }
+        .praise-modal-content {
+            background: white;
+            border-radius: 25px;
+            width: 100%;
+            max-width: 420px;
+            padding: 25px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            box-sizing: border-box;
+        }
+        .praise-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            color: var(--text-dim);
+            background: none;
+            border: none;
+        }
     </style>
 </head>
 <body>
