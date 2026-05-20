@@ -295,6 +295,9 @@ function getUserDashboardData(payload) {
         if (parsed && parsed.success) {
           Logger.log("⚡ 캐시 데이터 반환 완료 (0.01초): " + phone);
           parsed.cacheHit = true;
+          // [v48.0] 캐시 반환 시에도 실시간 마을 설정 및 공지는 3분 딜레이 없이 항상 최신 상태로 주입!
+          parsed.villageSettings = getVillageSettings();
+          parsed.pillarNotice = getPillarNotice();
           return parsed;
         }
       } catch (e) {
@@ -6733,6 +6736,16 @@ function getJejuRealtimeWeather() {
 }
 
 function getVillageSettings() {
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get("global_village_settings");
+  if (cached) {
+    try {
+      return JSON.parse(cached);
+    } catch(e) {
+      cache.remove("global_village_settings");
+    }
+  }
+
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("마을_설정");
@@ -6795,6 +6808,8 @@ function getVillageSettings() {
       }
     }
     
+    // 5분 동안 설정 캐시 저장 (update 시 즉시 날라감)
+    cache.put("global_village_settings", JSON.stringify(settings), 300);
     return settings;
   } catch (e) {
     return { weather: "sun", bgmEnabled: "false", bgmUrl: "" };
@@ -6810,7 +6825,8 @@ function resolveSunoUrl(url) {
     return url;
   }
   
-  var songRegex = /suno\.com\/song\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+  // 상대 경로(/song/[UUID])와 절대 경로(suno.com/song/[UUID])를 모두 추출할 수 있게 고도화된 정규식 탑재!
+  var songRegex = /\/song\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
   
   // 2. 풀버전 공유 링크 매칭 (suno.com/song/[UUID])
   var match = url.match(songRegex);
@@ -6876,6 +6892,12 @@ function updateVillageSettings(payload) {
         sheet.appendRow([k, settingsMap[k], "마을 설정 요소"]);
       }
     }
+    
+    // [v48.0] 마을 설정 캐시 강제 무효화 처리 (대시보드 즉시 실시간 동기화 보장!)
+    try {
+      var cache = CacheService.getScriptCache();
+      cache.remove("global_village_settings");
+    } catch(err) {}
     
     return { success: true, message: "마을의 기후와 음악 환경이 신비롭게 변화했습니다! 🌌🌦️" };
   } catch (e) {
