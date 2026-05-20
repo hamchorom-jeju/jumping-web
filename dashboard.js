@@ -701,17 +701,17 @@ const Village = {
         const bgmUrl = settings.bgmUrl || '';
         this.handleBgm(bgmEnabled, bgmUrl);
 
-        // [v48.0] 실시간 제주시 노형동 기상 싱크 배너 노출 (배너는 항상 유지)
+        // [v48.0] 실시간 제주시 노형동 기상 싱크 배너 노출 (수동 날씨 모드일 때도 온/오프 버튼 제어를 위해 노출!)
         const jejuBar = document.getElementById('jeju-sync-weather-bar');
         const jejuText = document.getElementById('jeju-sync-weather-text');
         if (jejuBar && jejuText) {
-            if (settings.realJejuTemp !== undefined) {
+            const origWeather = settings.weather || 'sun';
+            
+            // 날씨가 맑음(sun)이고 실시간 기온 정보도 없다면 기상 바 감추기
+            if (origWeather === 'sun' && settings.realJejuTemp === undefined) {
+                jejuBar.style.display = 'none';
+            } else {
                 jejuBar.style.display = 'flex';
-                const temp = settings.realJejuTemp;
-                
-                // 원본 기상 기준 안내
-                const origWeather = settings.weather || 'sun';
-                const origWind = parseFloat(settings.realJejuWind) || 0;
                 
                 let weatherEmoji = '☀️';
                 let weatherName = '맑음';
@@ -720,22 +720,30 @@ const Village = {
                 else if (origWeather === 'snow') { weatherEmoji = '❄️'; weatherName = '눈'; }
                 else if (origWeather === 'blossom') { weatherEmoji = '🌸'; weatherName = '벚꽃 흩날림'; }
                 else if (origWeather === 'leaves') { weatherEmoji = '🍁'; weatherName = '낙엽 낙하'; }
+                else if (origWeather === 'auto') { weatherEmoji = '🔄'; weatherName = '제주 실시간 싱크'; }
                 
-                let windStatus = '';
-                if (origWind >= 14.0) {
-                    windStatus = ` ⚠️ <strong>태풍급 강풍 주의!</strong>`;
-                    jejuBar.classList.add('wind-gale');
-                } else if (origWind >= 5.0) {
-                    windStatus = ` 🍃 <strong>강한 제주의 바람 부는 중!</strong>`;
-                    jejuBar.classList.add('wind-gale');
+                if (settings.realJejuTemp !== undefined) {
+                    const temp = settings.realJejuTemp;
+                    const origWind = parseFloat(settings.realJejuWind) || 0;
+                    
+                    let windStatus = '';
+                    if (origWind >= 14.0) {
+                        windStatus = ` ⚠️ <strong>태풍급 강풍 주의!</strong>`;
+                        jejuBar.classList.add('wind-gale');
+                    } else if (origWind >= 5.0) {
+                        windStatus = ` 🍃 <strong>강한 제주의 바람 부는 중!</strong>`;
+                        jejuBar.classList.add('wind-gale');
+                    } else {
+                        windStatus = ` 🍃 산들바람`;
+                        jejuBar.classList.remove('wind-gale');
+                    }
+                    
+                    jejuText.innerHTML = `현재 제주시 노형동은 <strong>${weatherEmoji} ${weatherName} (${temp}°C)</strong>, 풍속 <strong>${origWind} m/s</strong>${windStatus}`;
                 } else {
-                    windStatus = ` 🍃 산들바람`;
+                    // 수동 세팅 모드인 경우
                     jejuBar.classList.remove('wind-gale');
+                    jejuText.innerHTML = `마을 기후 마법 작동 중: <strong>${weatherEmoji} ${weatherName}</strong> (수동 설정)`;
                 }
-                
-                jejuText.innerHTML = `현재 제주시 노형동은 <strong>${weatherEmoji} ${weatherName} (${temp}°C)</strong>, 풍속 <strong>${origWind} m/s</strong>${windStatus}`;
-            } else {
-                jejuBar.style.display = 'none';
             }
         }
     },
