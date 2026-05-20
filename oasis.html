@@ -522,10 +522,8 @@
             <!-- Polaroid Cards가 동적으로 주입됩니다! -->
         </div>
         
-        <div style="text-align:center; margin-top:20px; display:none;" id="gallery-more-btn-box">
-            <button onclick="expandGallery()" style="background:#fff; border:1px solid rgba(0,0,0,0.08); padding:8px 25px; border-radius:15px; font-weight:800; font-size:0.75rem; color:var(--oasis-emerald); cursor:pointer; box-shadow:0 3px 8px rgba(0,0,0,0.02);">
-                자랑 더 구경하기 <i class="fa-solid fa-chevron-down"></i>
-            </button>
+        <div id="feed-pagination" class="pagination">
+            <!-- Pagination 1..5 buttons dynamically injected here -->
         </div>
 
     </div>
@@ -1245,14 +1243,15 @@
                 .getUserDashboardData({ phone: currentUser.phone });
         }
 
-        // 📸 자랑하기 (습관 Polaroid 피드 콤팩트화 및 정상화)
+        let currentPage = 1;
+
+        // 📸 자랑하기 (습관 Polaroid 피드 페이지네이션 구조 정상화)
         function loadArchiveFeed() {
             const loader = document.getElementById('feed-loader');
             const feedEl = document.getElementById('archive-feed');
-            const moreBox = document.getElementById('gallery-more-btn-box');
             
             loader.style.display = 'block';
-            moreBox.style.display = 'none';
+            feedEl.innerHTML = '';
 
             if (typeof google === 'undefined') {
                 loader.style.display = 'none';
@@ -1262,23 +1261,20 @@
             google.script.run
                 .withSuccessHandler(res => {
                     loader.style.display = 'none';
-                    if (res && res.success && res.data && res.data.photos) {
-                        totalPhotosGlobal = res.data.photos;
-                        renderGalleryGrid();
+                    if (res && res.success && res.data) {
+                        renderGalleryGrid(res.data);
                     }
                 })
-                // 전체 사진을 한 번에 긁어와 로컬에서 콤팩트 노출 제어합니다!
-                .getArchivePhotos({ page: 1, limit: 100 });
+                .getArchivePhotos({ page: currentPage, limit: 12 });
         }
 
-        function renderGalleryGrid() {
+        function renderGalleryGrid(data) {
             const feedEl = document.getElementById('archive-feed');
-            const moreBox = document.getElementById('gallery-more-btn-box');
+            const paginationEl = document.getElementById('feed-pagination');
             feedEl.innerHTML = '';
+            paginationEl.innerHTML = '';
 
-            const slicedPhotos = totalPhotosGlobal.slice(0, galleryLimit);
-            
-            if (slicedPhotos.length === 0) {
+            if (!data.photos || data.photos.length === 0) {
                 feedEl.innerHTML = '<div style="text-align:center; padding:30px; font-size:0.75rem; color:var(--text-dim); font-weight:800;">아직 보관된 자랑하기 Polaroid 사진이 없습니다. 📸</div>';
                 return;
             }
@@ -1286,7 +1282,7 @@
             const grid = document.createElement('div');
             grid.className = 'polaroid-grid';
 
-            slicedPhotos.forEach((p, idx) => {
+            data.photos.forEach((p, idx) => {
                 const card = document.createElement('div');
                 card.className = 'polaroid-card';
                 
@@ -1308,17 +1304,18 @@
 
             feedEl.appendChild(grid);
 
-            // 더보기 버튼 활성화 여부
-            if (totalPhotosGlobal.length > galleryLimit) {
-                moreBox.style.display = 'block';
-            } else {
-                moreBox.style.display = 'none';
+            // 1..5 등 페이지 번호 렌더링
+            const totalPages = Math.ceil(data.total / 12);
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                btn.innerText = i;
+                btn.onclick = () => {
+                    currentPage = i;
+                    loadArchiveFeed();
+                };
+                paginationEl.appendChild(btn);
             }
-        }
-
-        function expandGallery() {
-            galleryLimit += 6;
-            renderGalleryGrid();
         }
 
         function openModal(url, desc, author, date) {
