@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>GATEWAY - GENIE WORLD</title>
+  <title>GENIE WORLD GATEWAY</title>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -13,131 +13,543 @@
       --v-border: #e0dacc;
       --emerald: #2ecc71;
       --gold: #d4af37;
-      --text-main: #2c3e50;
-      --text-dim: #7f8c8d;
+      --dark-bg: #12161a;
+      --glass-bg: rgba(255, 255, 255, 0.08);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --text-gold: #f39c12;
     }
     
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
     body { 
-      font-family: 'Pretendard', sans-serif; background-color: var(--v-paper); 
-      color: var(--text-main); margin: 0; padding: 0; 
-      display: flex; align-items: center; justify-content: center; min-height: 100vh;
+      font-family: 'Pretendard', sans-serif; 
+      background: radial-gradient(circle at center, #1e252b 0%, #0f1316 100%);
+      color: #fff; margin: 0; padding: 0; 
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: 40px 20px;
+    }
+
+    /* 🌌 Full Page Brand Container */
+    .brand-landing {
+      width: 100%;
+      max-width: 460px;
+      text-align: center;
+      animation: fadeIn 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .brand-logo-area {
+      font-size: 5rem;
+      margin-bottom: 10px;
+      animation: float 4s ease-in-out infinite;
+      text-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+    }
+
+    h1.brand-title {
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      margin: 0;
+      background: linear-gradient(135deg, #fff 30%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--text-gold);
+      letter-spacing: 4px;
+      margin: 5px 0 30px 0;
+      text-transform: uppercase;
+    }
+
+    /* 📜 Worldview Parchment Glass Card */
+    .worldview-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 32px;
+      padding: 30px 25px;
+      text-align: left;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      margin-bottom: 30px;
+      position: relative;
       overflow: hidden;
     }
 
-    .login-container {
-      width: 90%; max-width: 400px; background: #fff; border-radius: 40px;
-      padding: 40px 30px; box-shadow: 0 20px 50px rgba(93, 64, 55, 0.1);
-      border: 1px solid var(--v-border); text-align: center;
-      animation: zoomIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    .worldview-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(212,175,55,0.05) 0%, transparent 70%);
+      pointer-events: none;
     }
 
-    .logo-area { font-size: 4rem; margin-bottom: 20px; animation: bounce 2s infinite; }
-    
-    h1 { font-size: 1.6rem; font-weight: 900; color: var(--v-wood); margin-bottom: 10px; letter-spacing: -1px; }
-    p { font-size: 0.9rem; color: var(--text-dim); font-weight: 700; margin-bottom: 30px; line-height: 1.5; }
-
-    .input-group { margin-bottom: 15px; text-align: left; }
-    .input-group label { display: block; font-size: 0.75rem; font-weight: 800; color: var(--v-wood); margin-bottom: 8px; margin-left: 5px; }
-    input {
-      width: 100%; padding: 18px; border: 2px solid var(--v-paper); border-radius: 20px;
-      font-size: 1rem; font-weight: 800; outline: none; transition: all 0.3s;
-      background: var(--v-paper); color: var(--v-wood);
-    }
-    input:focus { border-color: var(--gold); background: #fff; box-shadow: 0 0 0 5px rgba(212, 175, 55, 0.1); }
-
-    .start-btn {
-      width: 100%; padding: 20px; background: var(--v-wood); color: #fff;
-      border: none; border-radius: 20px; font-size: 1.2rem; font-weight: 900;
-      cursor: pointer; margin-top: 25px; transition: all 0.3s;
-      box-shadow: 0 10px 20px rgba(93, 64, 55, 0.2);
-    }
-    .start-btn:active { transform: scale(0.95); }
-
-    .v-search-btn {
-      background: var(--gold); color: #fff; border: none; border-radius: 15px;
-      padding: 0 25px; font-weight: 900; font-size: 1rem; cursor: pointer;
-      transition: all 0.2s; white-space: nowrap;
-    }
-    .v-search-btn:active { transform: scale(0.9); opacity: 0.8; }
-
-    .footer-link { margin-top: 30px; font-size: 0.75rem; color: var(--text-dim); font-weight: 800; }
-
-    @keyframes zoomIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
-    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-
-    /* [v44.223] Member Button Styling */
-    .member-btn {
-      width: 100%; padding: 20px; 
-      background: #fff; color: var(--v-wood);
-      border: 2px solid var(--v-border); border-radius: 20px;
-      font-size: 1.1rem; font-weight: 800;
-      cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      display: flex; align-items: center; justify-content: space-between;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-      position: relative; overflow: hidden;
-    }
-    .member-btn:active { transform: scale(0.96); }
-    .member-btn .name-tag { display: flex; align-items: center; gap: 10px; }
-    .member-btn .name-tag b { font-size: 1.2rem; color: var(--v-wood); }
-    .member-btn .arrow-icon { color: var(--gold); font-size: 1.2rem; }
-    
-    .member-btn.loading {
-      background: var(--v-paper) !important;
-      border-color: var(--v-border) !important;
-      color: var(--text-dim) !important;
-      cursor: not-allowed !important;
-      pointer-events: none !important;
-    }
-    .member-btn.loading .arrow-icon {
-      animation: vSpin 1s linear infinite;
-    }
-    .member-btn.loading .arrow-icon::before {
-      content: "\f110"; /* font-awesome spinner icon */
-      font-family: "Font Awesome 6 Free";
+    .section-title {
+      font-size: 1.1rem;
       font-weight: 900;
+      color: #fff;
+      margin-bottom: 15px;
+      border-bottom: 1px solid var(--glass-border);
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .intro-p {
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: #cbd5e1;
+      font-weight: 700;
+      margin: 0 0 20px 0;
+      word-break: keep-all;
+    }
+
+    .intro-p strong {
+      color: #fff;
+    }
+
+    /* 3대 스탯 설명 보드 */
+    .stat-desc-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-desc-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .stat-desc-item .stat-icon {
+      font-size: 1.3rem;
+      padding-top: 2px;
+    }
+
+    .stat-desc-item .stat-text {
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: #94a3b8;
+      font-weight: 700;
+    }
+
+    .stat-desc-item .stat-text b {
+      color: #fff;
+      font-size: 0.85rem;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .active-gate-badge {
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 14px;
+      padding: 10px 15px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* 🗝️ Connect Gate Button */
+    .connect-gate-btn {
+      width: 100%;
+      padding: 22px;
+      background: linear-gradient(135deg, var(--gold) 0%, #b8860b 100%);
+      color: #fff;
+      border: none;
+      border-radius: 24px;
+      font-size: 1.15rem;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(212, 175, 55, 0.25);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      animation: pulse 2s infinite;
+    }
+
+    .connect-gate-btn:hover, .connect-gate-btn:active {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 40px rgba(212, 175, 55, 0.4);
+    }
+
+    /* 🔒 Modal overlay for entering gate */
+    .login-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      padding: 20px;
+    }
+
+    .login-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* 🎫 Popup Box Styling */
+    .login-container {
+      width: 100%; max-width: 400px; 
+      background: #fff; color: var(--text-main);
+      border-radius: 40px;
+      padding: 40px 30px; 
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+      border: 1px solid var(--v-border); 
+      text-align: center;
+      transform: scale(0.9) translateY(20px);
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+    }
+
+    .login-overlay.active .login-container {
+      transform: scale(1) translateY(0);
+    }
+
+    .close-modal-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: var(--v-paper);
+      border: 1px solid var(--v-border);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      color: var(--v-wood);
+      transition: all 0.2s;
+    }
+    .close-modal-btn:active { transform: scale(0.9); }
+
+    .logo-area { font-size: 3.5rem; margin-bottom: 15px; }
+    .login-container h2 { font-size: 1.4rem; font-weight: 900; color: var(--v-wood); margin: 0 0 8px 0; }
+    .login-container p { font-size: 0.85rem; color: var(--text-dim); font-weight: 700; margin-bottom: 25px; }
+
+    /* 🔢 Keypad */
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 15px;
+    }
+    .key-btn {
+      background: var(--v-paper);
+      color: var(--v-wood);
+      border: 1px solid var(--v-border);
+      border-radius: 15px;
+      padding: 14px 0;
+      font-size: 1.25rem;
+      font-weight: 900;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .key-btn:active {
+      transform: scale(0.92);
+      background: var(--v-border);
+    }
+    .key-btn.delete { color: #e74c3c; }
+    .key-btn.search {
+      background: var(--gold);
+      color: #fff;
+      border-color: var(--gold);
+    }
+    .key-btn.search:active { background: #c29d2f; }
+
+    /* 👥 Choice Cards for Multiple Matches */
+    .member-choice-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-top: 15px;
+    }
+    .member-choice-card {
+      background: #fff;
+      border: 2px solid var(--v-border);
+      border-radius: 20px;
+      padding: 18px 12px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 10px rgba(93, 64, 55, 0.03);
+    }
+    .member-choice-card:hover, .member-choice-card:active {
+      border-color: var(--gold);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(212, 175, 55, 0.15);
+    }
+    .member-choice-card .avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: var(--v-paper);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      border: 2px solid var(--v-border);
+      transition: all 0.25s;
+    }
+    .member-choice-card:hover .avatar, .member-choice-card:active .avatar {
+      background: var(--gold);
+      color: #fff;
+      border-color: var(--gold);
+      transform: rotate(10deg);
+    }
+    .member-choice-card .name {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: var(--v-wood);
+    }
+    .member-choice-card .role {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      font-weight: 800;
+      background: rgba(93, 64, 55, 0.05);
+      padding: 3px 8px;
+      border-radius: 8px;
+    }
+
+    /* 🏰 Portal Spinner */
+    .portal-gate {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gate-ring {
+      position: absolute;
+      border: 3px solid transparent;
+      border-radius: 50%;
+      animation: spin linear infinite;
+    }
+    .ring-1 {
+      width: 100px;
+      height: 100px;
+      border-top-color: var(--gold);
+      border-bottom-color: var(--gold);
+      animation-duration: 2s;
+    }
+    .ring-2 {
+      width: 80px;
+      height: 80px;
+      border-left-color: var(--v-wood);
+      border-right-color: var(--v-wood);
+      animation-duration: 1.5s;
+      animation-direction: reverse;
+    }
+    .ring-3 {
+      width: 60px;
+      height: 60px;
+      border-top-color: var(--emerald);
+      border-bottom-color: var(--emerald);
+      animation-duration: 1s;
+    }
+    .gate-icon {
+      font-size: 2.2rem;
+      animation: pulse 1.5s infinite alternate;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      from { transform: scale(0.9); opacity: 0.8; }
+      to { transform: scale(1.1); opacity: 1; }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
 
-  <div class="login-container">
-    <div class="logo-area">🏰</div>
-    <h1>회원 로그인</h1>
-    <p>전화번호 뒷 4자리를 입력하고<br>자신의 이름을 선택해 주세요!</p>
+  <!-- 🌌 Full Page Brand Landing -->
+  <div class="brand-landing">
+    <div class="brand-logo-area">🌌</div>
+    <h1 class="brand-title">GENIE WORLD</h1>
+    <div class="brand-subtitle">Wellness Universe</div>
 
-    <div class="input-group">
-      <label>전화번호 뒷 4자리</label>
-      <div style="display:flex; gap:10px;">
-        <input type="tel" id="user-phone" placeholder="4자리 숫자" maxlength="4" style="flex:1;">
-        <button class="v-search-btn" onclick="startManualSearch()">찾기</button>
+    <!-- 📜 Worldview Guide Card -->
+    <div class="worldview-card">
+      <div class="section-title"><i class="fas fa-book-open" style="color: var(--gold);"></i> 웰니스 세계관 가이드</div>
+      <p class="intro-p">
+        지니 월드는 신체의 한계를 돌파하고 일상 속에 조화로운 웰니스(Wellness) 에너지를 일깨우기 위해 설립된 온오프라인 연계형 건강 연맹입니다. 아래 3대 스탯의 성장은 당신을 더 위대한 모험으로 이끌어 줄 것입니다.
+      </p>
+
+      <!-- 3대 스탯 명확한 철학적 정의 -->
+      <div class="stat-desc-list">
+        <div class="stat-desc-item">
+          <span class="stat-icon">❤️</span>
+          <div class="stat-text">
+            <b>체력 (Health) | 신체 활력과 근력</b>
+            점핑 피트니스 운동과 체성분 분석(인바디 지표 변화)을 통해 피지컬 에너지를 강화합니다.
+          </div>
+        </div>
+        <div class="stat-desc-item">
+          <span class="stat-icon">🗡️</span>
+          <div class="stat-text">
+            <b>실천력 (Performance) | 일상 속 루틴의 능동적 실행</b>
+            건강한 식단 유지 및 충분한 수분 섭취 실천, 데일리 퀘스트 및 오프라인 미션 완수 능력을 단련합니다.
+          </div>
+        </div>
+        <div class="stat-desc-item">
+          <span class="stat-icon">🔮</span>
+          <div class="stat-text">
+            <b>회복력 (Recovery) | 마음 치유와 연대를 통한 에너지 회복</b>
+            마음을 치유하는 좋은 습관들을 유지하고, 커뮤니티 활동 및 소통을 통해 지친 심신에 활력을 충전하고 회복력을 높입니다.
+          </div>
+        </div>
+      </div>
+
+      <!-- 현재 활성화된 게이트 정보 -->
+      <div class="active-gate-badge">
+        <i class="fas fa-door-open"></i> 현재 활성화된 게이트 : 노형 빌리지 (노형점핑클럽) 🏡
       </div>
     </div>
 
-    <div id="member-selection-list" style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px; max-height: 250px; overflow-y: auto; padding-right: 5px;">
-      <!-- 매칭된 회원 버튼이 여기에 생성됨 -->
+    <!-- 🗝️ Gate Connect CTA Button -->
+    <button class="connect-gate-btn" onclick="openLoginModal()">
+      <i class="fas fa-key"></i> 노형 빌리지 게이트 접속하기
+    </button>
+  </div>
+
+
+  <!-- 🔒 Login Overlay Modal -->
+  <div class="login-overlay" id="login-overlay-modal">
+    
+    <!-- 🏰 Portal Entrance Loader (Hidden initially inside popup) -->
+    <div id="login-loading-wrapper" style="display:none; flex-direction:column; align-items:center; justify-content:center; padding: 40px 0; min-height: 250px; background: #fff; width: 100%; max-width: 400px; border-radius: 40px; border: 1px solid var(--v-border); box-shadow: 0 25px 60px rgba(0,0,0,0.5); text-align: center;">
+      <div class="portal-gate">
+        <div class="gate-ring ring-1"></div>
+        <div class="gate-ring ring-2"></div>
+        <div class="gate-ring ring-3"></div>
+        <span class="gate-icon">🏰</span>
+      </div>
+      <h2 style="font-size:1.4rem; font-weight:900; color:var(--v-wood); margin: 25px 0 10px 0; letter-spacing:-0.5px;"><span id="welcome-user-name">모험가</span> 님</h2>
+      <p style="font-size:0.85rem; color:var(--text-dim); font-weight:800; line-height:1.5; margin:0; word-break:keep-all;">
+        노형 빌리지 게이트가 열리고 있습니다...<br>
+        <span style="color:var(--gold); font-size:0.75rem; display:block; margin-top:5px; animation: pulse 1.5s infinite;">⚡ 마을 연결 통로 활성화 중</span>
+      </p>
     </div>
 
-    <div class="footer-link">© 2024 Nohyung Village / Antigravity</div>
+    <!-- 🎫 Active Form Wrapper Card -->
+    <div class="login-container" id="login-form-wrapper">
+      <button class="close-modal-btn" onclick="closeLoginModal()"><i class="fas fa-times"></i></button>
+      <div class="logo-area">🗝️</div>
+      <h2>노형 빌리지 게이트</h2>
+      <p>전화번호 뒷 4자리를 아래 숫자 패드에서 탭하여<br>주민 등록 명단을 활성화해 주세요.</p>
+
+      <div class="input-group">
+        <input type="tel" id="user-phone" placeholder="4자리 번호" maxlength="4" style="text-align: center; font-size: 1.6rem; letter-spacing: 5px; font-weight:900;" readonly>
+      </div>
+
+      <!-- Compact Keypad Grid -->
+      <div class="keypad-grid">
+        <button class="key-btn" onclick="pressKey('1')">1</button>
+        <button class="key-btn" onclick="pressKey('2')">2</button>
+        <button class="key-btn" onclick="pressKey('3')">3</button>
+        <button class="key-btn" onclick="pressKey('4')">4</button>
+        <button class="key-btn" onclick="pressKey('5')">5</button>
+        <button class="key-btn" onclick="pressKey('6')">6</button>
+        <button class="key-btn" onclick="pressKey('7')">7</button>
+        <button class="key-btn" onclick="pressKey('8')">8</button>
+        <button class="key-btn" onclick="pressKey('9')">9</button>
+        <button class="key-btn delete" onclick="pressKey('delete')"><i class="fas fa-backspace"></i></button>
+        <button class="key-btn" onclick="pressKey('0')">0</button>
+        <button class="key-btn search" onclick="startManualSearch()"><i class="fas fa-search"></i></button>
+      </div>
+
+      <div id="member-selection-list" style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto; padding-right: 5px;">
+        <!-- 매칭된 회원 버튼이 여기에 생성됨 -->
+      </div>
+    </div>
   </div>
 
   <script src="bridge.js"></script>
   <script>
-    window.onload = function() {
-      const savedName = localStorage.getItem('v44_user_name');
-      const savedPhone = localStorage.getItem('v44_user_phone');
-      if (savedName && savedPhone) {
-        // 자동 로그인 방지 (새로 선택하고 싶을 수 있으므로)
-        // navigateTo('index', { name: savedName, phone: savedPhone });
+    function openLoginModal() {
+      document.getElementById('login-overlay-modal').classList.add('active');
+    }
+
+    function closeLoginModal() {
+      document.getElementById('login-overlay-modal').classList.remove('active');
+      // Reset input on close
+      document.getElementById('user-phone').value = "";
+      document.getElementById('member-selection-list').innerHTML = "";
+    }
+
+    function pressKey(key) {
+      const input = document.getElementById('user-phone');
+      if (key === 'delete') {
+        input.value = input.value.slice(0, -1);
+      } else {
+        if (input.value.length < 4) {
+          input.value += key;
+        }
       }
-    };
+      
+      // 4자리가 가득 차면 자동으로 검색 시작
+      if (input.value.length === 4) {
+        startManualSearch();
+      }
+    }
 
     function startManualSearch() {
       const digits = document.getElementById('user-phone').value.trim();
       searchMembers(digits);
     }
 
-    let searchTimeout;
     function searchMembers(digits) {
       const listDiv = document.getElementById('member-selection-list');
       if (digits.length < 2) {
@@ -148,7 +560,7 @@
       // 검색 중 상태 표시
       listDiv.innerHTML = `
         <div style="padding:20px; background:var(--v-paper); border-radius:20px; border:1px solid var(--v-border);">
-          <p style='font-size:0.85rem; color:var(--text-dim); font-weight:800;'>등록된 회원 명단을 확인합니다...</p>
+          <p style='font-size:0.85rem; color:var(--text-dim); font-weight:800; margin:0;'>🔄 주민 명단을 조회 중입니다...</p>
         </div>
       `;
 
@@ -157,27 +569,28 @@
           .withSuccessHandler(res => {
             listDiv.innerHTML = "";
             
-            // [v46.35] 이장님(9999) 특수 백도어 강제 생성 (회원명단 시트 수정 필요 없음!)
             let members = (res && res.success) ? res.members : [];
             if (digits === '9999' && !members.some(m => m.phone.includes('9999'))) {
               members.push({ name: "이장님", phone: "010-9999-9999" });
             }
 
             if (members.length > 0) {
+              const grid = document.createElement('div');
+              grid.className = 'member-choice-grid';
+              
               members.forEach(m => {
-                const btn = document.createElement('button');
-                btn.className = 'member-btn';
-                btn.id = `btn-member-${m.phone}`;
-                btn.innerHTML = `
-                  <div class="name-tag">
-                    <span style="font-size:1.5rem;">👤</span>
-                    <b>${m.name}</b> 님
-                  </div>
-                  <i class="fas fa-chevron-right arrow-icon"></i>
+                const card = document.createElement('div');
+                card.className = 'member-choice-card';
+                card.id = `card-member-${m.phone}`;
+                card.innerHTML = `
+                  <div class="avatar">👤</div>
+                  <div class="name">${m.name}</div>
+                  <div class="role">노형 빌리지 주민</div>
                 `;
-                btn.onclick = () => selectMember(m.name, m.phone);
-                listDiv.appendChild(btn);
+                card.onclick = () => selectMember(m.name, m.phone);
+                grid.appendChild(card);
               });
+              listDiv.appendChild(grid);
             } else {
               listDiv.innerHTML = `
                 <div style="padding:20px; background:#fff5f5; border-radius:20px; border:1px solid #feb2b2;">
@@ -194,11 +607,10 @@
     }
 
     function selectMember(name, phone) {
-      const btn = document.getElementById(`btn-member-${phone}`);
-      if (btn) {
-        btn.classList.add('loading');
-        btn.querySelector('b').innerText = "연결 중...";
-      }
+      // 🏰 Portal transition (hide form, show spinner)
+      document.getElementById('login-form-wrapper').style.display = 'none';
+      document.getElementById('welcome-user-name').innerText = `${name} 님`;
+      document.getElementById('login-loading-wrapper').style.display = 'flex';
 
       localStorage.setItem('v44_user_name', name);
       localStorage.setItem('v44_user_phone', phone);
@@ -216,7 +628,9 @@
           })
           .getUserDashboardData({ phone: phone });
       } else {
-        navigateTo('index', { name: name, phone: phone });
+        setTimeout(() => {
+          navigateTo('index', { name: name, phone: phone });
+        }, 1200); // 로컬 테스트용 가벼운 딜레이로 감성 극대화
       }
     }
   </script>

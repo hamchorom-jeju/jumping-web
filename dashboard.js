@@ -160,6 +160,7 @@ const Village = {
                 this.user.name = c.name || this.user.name;
                 this.user.tier = c.tier || this.user.tier;
                 this.user.totalScore = c.totalScore || this.user.totalScore;
+                this.user.rank = c.rank || this.user.rank;
                 this.user.stats = c.stats || this.user.stats;
                 this.user.max = c.max || this.user.max;
                 if (c.habits) {
@@ -242,6 +243,7 @@ const Village = {
                                 name: res.name,
                                 tier: res.tier,
                                 totalScore: res.totalScore,
+                                rank: res.rank,
                                 stats: res.stats,
                                 max: this.user.max,
                                 habits: this.user.habits.map(h => ({ id: h.id, done: h.done }))

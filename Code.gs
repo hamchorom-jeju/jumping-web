@@ -287,7 +287,7 @@ function getUserDashboardData(payload) {
     // [perf] 구글 초고속 캐시 서비스 확인 (0.05초)
     var todayStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
     var cache = CacheService.getScriptCache();
-    var cacheKey = "v47_dash_" + phone + "_" + todayStr;
+    var cacheKey = "v48_dash_" + phone + "_" + todayStr;
     var cachedData = cache.get(cacheKey);
     if (cachedData) {
       try {
