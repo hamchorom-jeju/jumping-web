@@ -33,12 +33,58 @@
     .container { padding: 20px; padding-bottom: 120px; max-width: 500px; margin: 0 auto; }
 
     /* 탭 시스템 */
-    .v-tabs { display: flex; gap: 10px; margin-bottom: 25px; background: #fff; padding: 8px; border-radius: 20px; border: 1px solid var(--v-border); }
-    .v-tab-btn { flex: 1; padding: 12px; border: none; border-radius: 15px; font-weight: 900; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; color: var(--text-main); background: transparent; }
-    .v-tab-btn.active { background: var(--v-wood) !important; color: #fff !important; box-shadow: 0 4px 10px rgba(93, 64, 55, 0.3); }
+    /* ============================================
+       [v50.0] 5섹션 구조 버튼 그리드 스타일
+       ============================================ */
+    .arc-section { background: #fff; border-radius: 22px; padding: 18px; border: 1px solid var(--v-border); margin-bottom: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
+    .arc-section-title { font-size: 0.95rem; font-weight: 900; color: var(--v-wood); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
 
-    .tab-content { display: none; }
-    .tab-content.active { display: block; animation: slideUp 0.4s ease-out; }
+    /* 식단: 3열 버튼 */
+    .meal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .meal-slot { aspect-ratio: 1/1; background: var(--v-paper); border-radius: 18px; border: 2px dashed var(--v-border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: pointer; position: relative; overflow: hidden; transition: all 0.2s; }
+    .meal-slot:active { transform: scale(0.96); }
+    .meal-slot.done { background: linear-gradient(135deg, #d1fae5, #a7f3d0); border: 2px solid var(--emerald); }
+    .meal-slot .icon { font-size: 1.6rem; }
+    .meal-slot .label { font-size: 0.7rem; font-weight: 800; color: var(--text-dim); }
+
+    /* 퀘스트: 3열 버튼 */
+    .quest-btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .quest-btn { background: var(--v-paper); border: 2px solid var(--v-border); border-radius: 18px; padding: 14px 8px; display: flex; flex-direction: column; align-items: center; gap: 7px; cursor: pointer; transition: all 0.25s; font-weight: 800; font-size: 0.78rem; color: var(--text-main); text-align: center; }
+    .quest-btn:active { transform: scale(0.95); }
+    .quest-btn .q-icon { font-size: 1.8rem; }
+    .quest-btn.water-btn { border-color: #93c5fd; background: linear-gradient(135deg, #eff6ff, #dbeafe); }
+    .quest-btn.workout-btn { border-color: #fca5a5; background: linear-gradient(135deg, #fff1f2, #ffe4e6); }
+    .quest-btn.bonus-btn { border-color: #fde68a; background: linear-gradient(135deg, #fffbeb, #fef3c7); }
+
+    /* 습관/미라클: 2열 버튼 */
+    .habit-btn-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .habit-btn { background: var(--v-paper); border: 2px solid var(--v-border); border-radius: 16px; padding: 12px 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s; font-weight: 800; font-size: 0.8rem; color: var(--text-main); }
+    .habit-btn:active { transform: scale(0.96); }
+    .habit-btn .h-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .habit-btn.done { background: linear-gradient(135deg, #d1fae5, #a7f3d0); border-color: var(--emerald); color: #065f46; }
+    .habit-btn.done::after { content: '✓'; margin-left: auto; font-size: 1rem; color: var(--emerald); font-weight: 900; }
+    .miracle-btn { background: linear-gradient(135deg, #faf5ff, #ede9fe); border-color: #c4b5fd; }
+    .miracle-btn .h-icon { font-size: 1.4rem; }
+
+    /* 설명 팝업 모달 */
+    .info-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); z-index: 4000; align-items: flex-end; justify-content: center; backdrop-filter: blur(6px); }
+    .info-modal-card { background: #fff; border-radius: 30px 30px 0 0; padding: 28px 22px 40px; width: 100%; max-width: 500px; box-shadow: 0 -8px 40px rgba(0,0,0,0.15); animation: slideUpModal 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    @keyframes slideUpModal { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .info-modal-icon { font-size: 3rem; text-align: center; margin-bottom: 8px; }
+    .info-modal-title { font-size: 1.2rem; font-weight: 900; color: var(--v-wood); text-align: center; margin-bottom: 5px; }
+    .info-modal-score { text-align: center; background: rgba(212,175,55,0.12); color: #b8860b; border: 1px solid rgba(212,175,55,0.3); border-radius: 20px; padding: 4px 14px; font-size: 0.8rem; font-weight: 900; display: inline-block; margin: 0 auto 14px; }
+    .info-modal-guide { font-size: 0.88rem; font-weight: 700; color: var(--text-dim); line-height: 1.65; background: var(--v-paper); border-radius: 18px; padding: 16px; margin-bottom: 18px; white-space: pre-wrap; word-break: keep-all; }
+    .info-modal-btns { display: flex; gap: 10px; }
+    .info-modal-btns button { flex: 1; padding: 15px; border: none; border-radius: 15px; font-weight: 900; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; }
+    .info-btn-cancel { background: #eee; color: #777; }
+    .info-btn-check { background: var(--emerald); color: white; }
+    .info-btn-auth { background: var(--v-wood); color: var(--gold); }
+
+    /* 수분 게이지 슬라이더 (팝업용) */
+    .water-gauge-wrap { background: linear-gradient(135deg, #eff6ff, #dbeafe); border-radius: 16px; padding: 14px; margin-bottom: 14px; }
+    .water-gauge-label { font-size: 0.8rem; font-weight: 900; color: #1d4ed8; margin-bottom: 8px; display: flex; justify-content: space-between; }
+    #info-water-range { width: 100%; accent-color: #3b82f6; height: 6px; }
+    #info-water-val { font-size: 1.1rem; font-weight: 900; color: #1d4ed8; }
 
     /* 인증 카드 */
     .premium-cert-card { background: #fff; border-radius: 25px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid var(--v-border); margin-bottom: 25px; }
@@ -216,16 +262,110 @@
   </div>
 
   <div class="container">
-    <div class="v-tabs">
-      <button class="v-tab-btn active" id="btn-quest" onclick="switchTab('quest')">퀘스트 인증 ⚔️</button>
-      <button class="v-tab-btn" id="btn-habit" onclick="switchTab('habit')">습관 인증 🌿</button>
-      <button class="v-tab-btn" id="btn-inbody" onclick="switchTab('inbody')">인바디 AI 스캔 📊</button>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 🍱 섹션 1: 오늘의 식단 인증 -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="arc-section">
+      <div class="arc-section-title">🍱 오늘의 식단 인증
+        <span style="font-size:0.7rem; font-weight:700; color:var(--text-dim); margin-left:auto;">AI 분석 · 최대 30점</span>
+      </div>
+      <div class="meal-grid">
+        <div class="meal-slot" id="meal-morning" onclick="openAiMealModal('morning')">
+          <span class="icon">🌅</span><span class="label">아침</span>
+        </div>
+        <div class="meal-slot" id="meal-noon" onclick="openAiMealModal('noon')">
+          <span class="icon">☀️</span><span class="label">점심</span>
+        </div>
+        <div class="meal-slot" id="meal-evening" onclick="openAiMealModal('evening')">
+          <span class="icon">🌙</span><span class="label">저녁</span>
+        </div>
+      </div>
     </div>
 
-    <!-- 퀘스트 탭 -->
-    <div id="tab-quest" class="tab-content active">
-      <div class="premium-cert-card">
-        <div class="section-title">⚔️ 퀘스트 인증하기 (15점)</div>
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- ⚔️ 섹션 2: 퀘스트 인증 -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="arc-section">
+      <div class="arc-section-title">⚔️ 퀘스트 인증
+        <span style="font-size:0.7rem; font-weight:700; color:var(--text-dim); margin-left:auto;">인증 · 15점</span>
+      </div>
+      <div class="quest-btn-grid">
+        <div class="quest-btn water-btn" onclick="showInfoPopup('water')">
+          <span class="q-icon">💧</span><span>수분 섭취</span>
+        </div>
+        <div class="quest-btn workout-btn" onclick="showInfoPopup('workout')">
+          <span class="q-icon">🔥</span><span>오운완 / 오테완</span>
+        </div>
+        <div class="quest-btn bonus-btn" id="bonus-quest-btn" onclick="showInfoPopup('bonus')">
+          <span class="q-icon">⚡</span><span>돌발 퀘스트</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 🌿 섹션 3: 습관 인증 (9대 데일리, 2열) -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="arc-section">
+      <div class="arc-section-title">🌿 습관 인증
+        <span style="font-size:0.7rem; font-weight:700; color:var(--text-dim); margin-left:auto;">체크 · 2~3점</span>
+      </div>
+      <div class="habit-btn-grid">
+        <div class="habit-btn" id="hbtn-h1" onclick="showInfoPopup('h1')">
+          <span class="h-icon">🍵</span><span>모닝 티</span>
+        </div>
+        <div class="habit-btn" id="hbtn-h2" onclick="showInfoPopup('h2')">
+          <span class="h-icon">🧘</span><span>모닝 스트레칭</span>
+        </div>
+        <div class="habit-btn" id="hbtn-h3" onclick="showInfoPopup('h3')">
+          <span class="h-icon">🥗</span><span>베지 퍼스트</span>
+        </div>
+        <div class="habit-btn" id="hbtn-h4" onclick="showInfoPopup('h4')">
+          <span class="h-icon">😮</span><span>슬로우 치잉</span>
+        </div>
+        <div class="habit-btn" id="hbtn-h5" onclick="showInfoPopup('h5')">
+          <span class="h-icon">👟</span><span>7,000보 달성</span>
+        </div>
+        <div class="habit-btn" id="hbtn-h6" onclick="showInfoPopup('h6')">
+          <span class="h-icon">🪜</span><span>스테어 마법</span>
+        </div>
+        <div class="habit-btn" id="hbtn-h7" onclick="showInfoPopup('h7')">
+          <span class="h-icon">🌙</span><span>나이트 컷</span>
+        </div>
+        <div class="habit-btn" id="hbtn-h8" onclick="showInfoPopup('h8')">
+          <span class="h-icon">💤</span><span>굿 슬립</span>
+        </div>
+        <div class="habit-btn" id="hbtn-h9" onclick="showInfoPopup('h9')" style="grid-column: 1 / -1;">
+          <span class="h-icon">👏</span><span>셀프 칭찬</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- ✨ 섹션 4: 미라클 플러스 (2열) -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="arc-section">
+      <div class="arc-section-title">✨ 미라클 플러스
+        <span style="font-size:0.7rem; font-weight:700; color:var(--text-dim); margin-left:auto;">인증 · 5점</span>
+      </div>
+      <div class="habit-btn-grid">
+        <div class="habit-btn miracle-btn" onclick="showInfoPopup('miracle_dawn')">
+          <span class="h-icon">☀️</span><span>새벽 기상</span>
+        </div>
+        <div class="habit-btn miracle-btn" onclick="showInfoPopup('miracle_read')">
+          <span class="h-icon">📚</span><span>독서 인증</span>
+        </div>
+        <div class="habit-btn miracle-btn" onclick="showInfoPopup('miracle_eco')">
+          <span class="h-icon">🌍</span><span>환경 사랑</span>
+        </div>
+        <div class="habit-btn miracle-btn" onclick="showInfoPopup('miracle_etc')">
+          <span class="h-icon">🏆</span><span>기타 성취</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 📊 섹션 5: 인바디 AI 스캔 (기존 그대로) -->
         
         <div id="quest-upload-placeholder" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:row; gap: 15px; align-items:center; justify-content:center; padding: 15px;">
           <div onclick="document.getElementById('file-input-quest-camera').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
@@ -316,8 +456,7 @@
       </div>
     </div>
 
-    <!-- 인바디 AI 스캔 탭 -->
-    <div id="tab-inbody" class="tab-content">
+    <div class="arc-section" style="border-top: 4px solid #6366f1;">
       <div class="premium-cert-card" style="border-top: 5px solid #6366f1;">
         <div class="section-title" style="color: #4f46e5;">📊 지니 AI 인바디 스캐너</div>
         <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: -10px; margin-bottom: 15px; font-weight: 700; line-height: 1.4;">
@@ -396,6 +535,56 @@
       <div id="archive-feed"></div>
       <div class="pagination" id="feed-pagination"></div>
     </section>
+  </div>
+
+  <!-- [v50.0] 설명 팝업 모달 (바텀시트) -->
+  <div id="info-modal" class="info-modal" onclick="closeInfoModal(event)">
+    <div class="info-modal-card">
+      <div class="info-modal-icon" id="info-icon">🛡️</div>
+      <div class="info-modal-title" id="info-title">제목</div>
+      <div style="text-align:center; margin-bottom:14px;">
+        <span class="info-modal-score" id="info-score">+5 EXP</span>
+      </div>
+      <!-- 수분 전용 게이지 슬라이더 -->
+      <div class="water-gauge-wrap" id="info-water-wrap" style="display:none;">
+        <div class="water-gauge-label">
+          <span>💧 오늘 수분 섭취량</span>
+          <span id="info-water-val">1.2L</span>
+        </div>
+        <input type="range" id="info-water-range" min="0" max="20" value="12"
+               oninput="document.getElementById('info-water-val').innerText=(this.value/10).toFixed(1)+'L'; window.currentWaterL=(this.value/10);">
+      </div>
+      <div class="info-modal-guide" id="info-guide">안내 텍스트</div>
+      <div class="info-modal-btns" id="info-btns"></div>
+    </div>
+  </div>
+
+  <!-- [v50.0] 공통 인증 모달 (cert-modal) -->
+  <div id="cert-modal" class="polaroid-modal" style="display:none; align-items:flex-end;">
+    <div style="background:#fff; border-radius:30px 30px 0 0; width:100%; max-width:500px; padding:25px 20px 40px; box-shadow:0 -8px 40px rgba(0,0,0,0.15); animation:slideUp 0.35s ease-out;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div style="font-size:1rem; font-weight:900; color:var(--v-wood);" id="cert-modal-title">인증</div>
+        <button onclick="closeCertModal()" style="background:none; border:none; font-size:1.4rem; color:var(--text-dim); cursor:pointer;">✕</button>
+      </div>
+      <div id="cert-upload-placeholder" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:18px; display:flex; gap:12px; align-items:center; justify-content:center; padding:12px;">
+        <div onclick="document.getElementById('file-input-cert-camera').click()" style="flex:1; height:100%; background:#fff; border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; border:1px solid var(--v-border); transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+          <span style="font-size:2rem; margin-bottom:5px;">📸</span>
+          <p style="font-size:0.75rem; color:var(--v-wood); font-weight:900; margin:0;">실시간 촬영</p>
+        </div>
+        <div onclick="document.getElementById('file-input-cert-album').click()" style="flex:1; height:100%; background:#fff; border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; border:1px solid var(--v-border); transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+          <span style="font-size:2rem; margin-bottom:5px;">🖼️</span>
+          <p style="font-size:0.75rem; color:var(--v-wood); font-weight:900; margin:0;">앨범에서 선택</p>
+        </div>
+      </div>
+      <div id="cert-preview-box" style="display:none; margin-top:8px; position:relative; width:100%; height:280px; border-radius:18px; overflow:hidden; border:2px solid var(--emerald); background:#111827; align-items:center; justify-content:center;">
+        <img id="cert-preview-img" src="" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;">
+        <div onclick="resetCertPreview()" style="position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,0.6); color:white; padding:5px 10px; border-radius:8px; font-size:0.7rem; font-weight:800; cursor:pointer;">다시 선택</div>
+      </div>
+      <input type="file" id="file-input-cert-camera" hidden accept="image/*" capture="camera" onchange="previewCertImage(this)">
+      <input type="file" id="file-input-cert-album" hidden accept="image/*" onchange="previewCertImage(this)">
+      <input type="text" id="cert-comment" class="comment-input" placeholder="오늘의 소감을 한마디 남겨주세요!" style="margin-top:12px;">
+      <button id="btn-submit-cert" onclick="submitCertEntry()" style="width:100%; margin-top:12px; background:var(--emerald); color:white; border:none; padding:16px; border-radius:15px; font-weight:900; font-size:1rem; cursor:pointer;">✔️ 인증 기록 완료</button>
+    </div>
   </div>
 
   <!-- 폴라로이드 상세 모달 -->
@@ -1494,6 +1683,248 @@
           fat: fatVal,
           customDate: dateVal
         });
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // [v50.0] 설명 팝업 + 공통 인증 모달 엔진
+    // ═══════════════════════════════════════════════════════
+
+    // 각 항목 데이터 정의
+    const POPUP_DATA = {
+      // 퀘스트
+      water:        { icon:'💧', title:'수분 섭취 인증', score:'+15~20 EXP', guide:'오늘 마신 수분량을 게이지로 조절한 뒤 인증 사진을 남겨주세요!\n(물병, 텀블러, 차 등)\n\n💧 섭취량에 따라 최대 +20 EXP 지급\n📸 사진 인증 시 추가 +15 EXP', type:'quest', item:'수분', isWater:true },
+      workout:      { icon:'🔥', title:'오운완 / 오테완', score:'+15 EXP', guide:'오늘 운동을 완료하셨나요?\n테라피, 점핑, 러닝, 홈트 등 모든 운동이 해당됩니다.\n\n📸 인증 사진을 남겨 +15 EXP를 획득하세요!', type:'quest', item:'오운완' },
+      bonus:        { icon:'⚡', title:'돌발 퀘스트', score:'+15 EXP', guide:'오늘의 돌발 퀘스트를 인증해 주세요!\n이장님이 특별히 준비한 미션입니다.\n\n📸 인증 사진 제출 시 +15 EXP 지급', type:'quest', item:'돌발퀘스트' },
+      // 습관 (h4, h8은 체크 전용)
+      h1:  { icon:'🍵', title:'모닝 티', score:'+2 EXP', guide:'기상 직후 따뜻한 물이나 차 한 잔은 밤새 잠들었던 장기를 깨우고 신진대사의 점화를 유도합니다.\n체온보다 약간 높은 미온수를 권장합니다.', type:'habit', item:'모닝티', habitId:'h1', checkOnly:false },
+      h2:  { icon:'🧘', title:'모닝 스트레칭', score:'+2 EXP', guide:'기상 후 5분 내외의 가벼운 전신 스트레칭은 신체의 가동 범위를 확보하고 근육에 산소를 공급합니다.\n목, 어깨, 허리 위주로 부드럽게 이완해 보세요.', type:'habit', item:'모닝스트레칭', habitId:'h2', checkOnly:false },
+      h3:  { icon:'🥗', title:'베지 퍼스트', score:'+2 EXP', guide:'식사 시 채소를 먼저 섭취하면 인슐린 스파이크(급격한 혈당 상승)를 효과적으로 방지합니다.\n첫 젓가락은 무조건 채소류부터!', type:'habit', item:'베지퍼스트', habitId:'h3', checkOnly:false },
+      h4:  { icon:'😮', title:'슬로우 치잉', score:'+2 EXP', guide:'한 입당 20회 이상 천천히 씹는 습관은 소화를 돕고 뇌가 포만감을 느낄 시간을 충분히 부여합니다.\n식사 시간을 최소 20분 이상 유지하세요.', type:'habit', item:'슬로우치잉', habitId:'h4', checkOnly:true },
+      h5:  { icon:'👟', title:'7,000보 달성', score:'+3 EXP', guide:'일상 활동량을 정량적으로 확보하여 기초 대사량을 유지하고 혈당 조절에 기여합니다.\n스마트폰 기준 7,000보를 달성해 보세요.', type:'habit', item:'7000보달성', habitId:'h5', checkOnly:false },
+      h6:  { icon:'🪜', title:'스테어 마법', score:'+2 EXP', guide:'3층 이하의 낮은 층수는 계단을 이용하여 하체 근력을 강화하고 유산소 효과를 얻습니다.\n\n📸 인증 사진 등록 시 보너스 점수 추가!', type:'habit', item:'스테어마법', habitId:'h6', checkOnly:false },
+      h7:  { icon:'🌙', title:'나이트 컷', score:'+10 EXP', guide:'밤 20시 이후의 금식은 신체가 소화가 아닌 지방 연소와 세포 재생에 집중하게 만듭니다.\n\n오늘 나이트 컷을 지키셨다면 체크해 주세요!\n따뜻한 차나 물 사진을 인증하면 추가 점수!', type:'habit', item:'나이트컷', habitId:'h7', checkOnly:false },
+      h8:  { icon:'💤', title:'굿 슬립', score:'+2 EXP', guide:'세포가 재생되고 성장 호르몬이 활발히 분비되는 자정 전 취침으로 신체 회복을 최적화하세요.\n충분한 수면은 식욕 억제 호르몬인 렙틴 분비를 도와 다이어트를 수월하게 합니다.', type:'habit', item:'굿슬립', habitId:'h8', checkOnly:true },
+      h9:  { icon:'👏', title:'셀프 칭찬', score:'+2 EXP', guide:'오늘 하루도 노력한 나 자신을 위해 따뜻한 한마디를 해주세요.\n"오늘도 수고했어!"\n\n오아시스 게시판에 셀프 칭찬글도 남겨보세요 😊', type:'habit', item:'셀프칭찬', habitId:'h9', checkOnly:false },
+      // 미라클 플러스
+      miracle_dawn: { icon:'☀️', title:'새벽 기상', score:'+5 EXP', guide:'새벽 기상의 위대한 사소한 승리를 인증해 주세요!\n인증 사진(시계, 창밖 새벽 하늘 등)을 남기시면 +5 EXP가 지급됩니다.', type:'miracle', item:'새벽기상' },
+      miracle_read: { icon:'📚', title:'독서 인증', score:'+5 EXP', guide:'오늘 읽은 책의 한 페이지 또는 독서 중인 사진을 인증해 주세요!\n+5 EXP가 지급됩니다.', type:'miracle', item:'독서인증' },
+      miracle_eco:  { icon:'🌍', title:'환경 사랑', score:'+5 EXP', guide:'플로깅, 분리수거, 텀블러 사용 등 환경을 사랑하는 사소한 행동을 인증해 주세요!\n+5 EXP가 지급됩니다.', type:'miracle', item:'환경사랑' },
+      miracle_etc:  { icon:'🏆', title:'기타 소소한 성취', score:'+5 EXP', guide:'오늘 나를 기쁘게 만든 사소하지만 위대한 성취를 인증해 주세요!\n+5 EXP가 지급됩니다.', type:'miracle', item:'기타성취' },
+    };
+
+    // 현재 선택된 항목 키
+    window.currentPopupKey = null;
+    window.currentWaterL = 1.2;
+
+    function showInfoPopup(key) {
+      const d = POPUP_DATA[key];
+      if (!d) return;
+      window.currentPopupKey = key;
+
+      document.getElementById('info-icon').innerText  = d.icon;
+      document.getElementById('info-title').innerText = d.title;
+      document.getElementById('info-score').innerText = d.score;
+      document.getElementById('info-guide').innerText = d.guide;
+
+      // 수분 게이지 표시 여부
+      const waterWrap = document.getElementById('info-water-wrap');
+      waterWrap.style.display = d.isWater ? 'block' : 'none';
+      if (d.isWater) {
+        document.getElementById('info-water-range').value = 12;
+        document.getElementById('info-water-val').innerText = '1.2L';
+        window.currentWaterL = 1.2;
+      }
+
+      // 버튼 구성
+      const btnsEl = document.getElementById('info-btns');
+      btnsEl.innerHTML = '';
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'info-btn-cancel';
+      cancelBtn.innerText = '닫기';
+      cancelBtn.onclick = () => closeInfoModal();
+      btnsEl.appendChild(cancelBtn);
+
+      if (d.checkOnly) {
+        // 체크만 가능한 항목 (h4 슬로우치잉, h8 굿슬립)
+        const checkBtn = document.createElement('button');
+        checkBtn.className = 'info-btn-check';
+        checkBtn.innerText = '✅ 체크 완료';
+        checkBtn.onclick = () => { doHabitCheck(key); closeInfoModal(); };
+        btnsEl.appendChild(checkBtn);
+      } else if (d.type === 'habit') {
+        // 체크 or 인증 선택 가능한 습관
+        const checkBtn = document.createElement('button');
+        checkBtn.className = 'info-btn-check';
+        checkBtn.style.flex = '1';
+        checkBtn.innerText = '✅ 체크만';
+        checkBtn.onclick = () => { doHabitCheck(key); closeInfoModal(); };
+
+        const authBtn = document.createElement('button');
+        authBtn.className = 'info-btn-auth';
+        authBtn.style.flex = '1.5';
+        authBtn.innerText = '📸 인증하기';
+        authBtn.onclick = () => { closeInfoModal(); openCertModal(key); };
+
+        btnsEl.appendChild(checkBtn);
+        btnsEl.appendChild(authBtn);
+      } else {
+        // 퀘스트 / 미라클: 인증만 가능
+        const authBtn = document.createElement('button');
+        authBtn.className = 'info-btn-auth';
+        authBtn.innerText = '📸 인증하러 가기';
+        authBtn.onclick = () => { closeInfoModal(); openCertModal(key); };
+        btnsEl.appendChild(authBtn);
+      }
+
+      document.getElementById('info-modal').style.display = 'flex';
+    }
+
+    function closeInfoModal(e) {
+      if (e && e.target !== document.getElementById('info-modal')) return;
+      document.getElementById('info-modal').style.display = 'none';
+    }
+
+    function doHabitCheck(key) {
+      const d = POPUP_DATA[key];
+      if (!d || !d.habitId) return;
+      if (!TARGET_PHONE) return showAppAlert('로그인이 필요합니다.', 'error');
+
+      const hbtn = document.getElementById('hbtn-' + d.habitId);
+      if (hbtn && hbtn.classList.contains('done')) {
+        return showAppAlert(`✨ 이미 오늘 [${d.title}]을 완료했습니다!`, 'error');
+      }
+
+      const score = parseInt((d.score || '+2').replace(/[^0-9]/g,'')) || 2;
+      google.script.run
+        .withSuccessHandler(res => {
+          if (res && res.success) {
+            if (hbtn) hbtn.classList.add('done');
+            showAppAlert(`✨ [${d.title}] 수호 완료! +${score} EXP 획득! 🌿`, 'success');
+          }
+        })
+        .withFailureHandler(() => {})
+        .recordHabit({ phone: TARGET_PHONE, name: TARGET_NAME, habitId: d.habitId, item: d.item, score: score });
+    }
+
+    // 공통 인증 모달 열기
+    window.currentCertKey = null;
+    function openCertModal(key) {
+      const d = POPUP_DATA[key];
+      if (!d) return;
+      window.currentCertKey = key;
+
+      document.getElementById('cert-modal-title').innerHTML = `${d.icon} ${d.title} 인증`;
+      document.getElementById('cert-comment').value = '';
+      resetCertPreview();
+      document.getElementById('cert-modal').style.display = 'flex';
+    }
+    function closeCertModal() {
+      document.getElementById('cert-modal').style.display = 'none';
+      resetCertPreview();
+    }
+    function previewCertImage(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const todayStr = new Date().toLocaleDateString('ko-KR');
+        const fileDateStr = new Date(file.lastModified).toLocaleDateString('ko-KR');
+        if (todayStr !== fileDateStr) {
+          showAppAlert('오늘 찍은 사진만 업로드할 수 있습니다! 📸', 'error');
+          input.value = '';
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = e => {
+          document.getElementById('cert-preview-img').src = e.target.result;
+          document.getElementById('cert-preview-box').style.display = 'flex';
+          document.getElementById('cert-upload-placeholder').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    function resetCertPreview() {
+      document.getElementById('cert-preview-box').style.display = 'none';
+      document.getElementById('cert-upload-placeholder').style.display = 'flex';
+      const cam = document.getElementById('file-input-cert-camera');
+      const alb = document.getElementById('file-input-cert-album');
+      if (cam) cam.value = '';
+      if (alb) alb.value = '';
+    }
+
+    function submitCertEntry() {
+      const key = window.currentCertKey;
+      const d = POPUP_DATA[key];
+      if (!d) return;
+      if (!TARGET_PHONE) return showAppAlert('로그인이 필요합니다.', 'error');
+
+      const cam = document.getElementById('file-input-cert-camera');
+      const alb = document.getElementById('file-input-cert-album');
+      const file = cam.files[0] || alb.files[0];
+      if (!file) return showAppAlert('인증 사진을 촬영해 주세요!', 'error');
+
+      const btn = document.getElementById('btn-submit-cert');
+      btn.disabled = true;
+      btn.innerText = '사진 압축 및 전송 중...';
+
+      let finalType = '퀘스트';
+      let score = 15;
+      if (d.type === 'habit') { finalType = '습관'; score = parseInt((d.score||'+2').replace(/[^0-9]/g,''))||2; }
+      if (d.type === 'miracle') { finalType = '습관'; score = 5; }
+      if (d.isWater) { score = Math.round(window.currentWaterL * 10); }
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let w = img.width, h = img.height, max = 800;
+          if (w > h) { if (w > max) { h *= max/w; w = max; } }
+          else { if (h > max) { w *= max/h; h = max; } }
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          drawRetroTimestamp(ctx, w, h);
+          const b64 = canvas.toDataURL('image/jpeg', 0.8);
+
+          // 수분이면 소감에 게이지 정보 포함
+          let comment = document.getElementById('cert-comment').value || '';
+          if (d.isWater) {
+            comment = `[수분 ${window.currentWaterL.toFixed(1)}L] ${comment}`.trim();
+          }
+
+          const payload = {
+            name: TARGET_NAME, phone: TARGET_PHONE,
+            type: finalType, item: d.item,
+            comment: comment, image: b64, score: score
+          };
+
+          showLoading('⚔️ 인증을 전송하고 있습니다...');
+          google.script.run
+            .withSuccessHandler(res => {
+              hideLoading();
+              btn.disabled = false; btn.innerText = '✔️ 인증 기록 완료';
+              if (res && res.success) {
+                closeCertModal();
+                // 습관이면 버튼도 done 처리
+                if (d.habitId) {
+                  const hbtn = document.getElementById('hbtn-' + d.habitId);
+                  if (hbtn) hbtn.classList.add('done');
+                }
+                showAppAlert(`✨ 인증 성공!\n[${d.title}] +${score} EXP 적립! 🏆`, 'success');
+                loadArchiveFeed();
+              } else {
+                showAppAlert('🚨 저장 실패: ' + (res ? res.error : '응답 없음'), 'error');
+              }
+            })
+            .withFailureHandler(() => {
+              hideLoading(); btn.disabled = false; btn.innerText = '✔️ 인증 기록 완료';
+              showAppAlert('🚨 서버 통신 오류', 'error');
+            })
+            .submitArchive(payload);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
     }
 
     function switchTab(type) {
