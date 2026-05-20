@@ -231,6 +231,40 @@
     }
     @keyframes vSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     @keyframes vFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* AI 식단 시간대 선택 버튼 */
+    .v-tab-btn {
+      background: #f3f4f6;
+      border: 2px solid transparent;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: #4b5563;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .v-tab-btn:hover {
+      background: #e5e7eb;
+    }
+    .v-tab-btn.active {
+      background: linear-gradient(135deg, var(--emerald), #2ecc71) !important;
+      color: white !important;
+      border-color: transparent !important;
+      box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3) !important;
+      transform: translateY(-2px);
+    }
+    
+    /* 완료된 퀘스트 버튼 스타일 */
+    .quest-btn.done {
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0) !important;
+      border-color: var(--emerald) !important;
+      color: #065f46 !important;
+    }
   </style>
 </head>
 <body>
@@ -716,7 +750,11 @@
         google.script.run
           .withSuccessHandler(res => {
             if (res && res.success) {
-              if (res.doneList) updateMealButtonsState(res.doneList);
+              if (res.doneList) {
+                window.lastDoneList = res.doneList;
+                updateMealButtonsState(res.doneList);
+                syncDoneListStates(res.doneList);
+              }
               
               // [v46.4] 체력 보너스 획득 실시간 실감 팝업 띄우기 (localStorage 기반 1회 노출 차단)
               if (res.achievedBonuses && res.achievedBonuses.length > 0) {
@@ -992,6 +1030,115 @@
         eveningBtn.style.border = '1px solid var(--v-border)';
         eveningBtn.style.cursor = 'not-allowed';
       }
+    }
+
+    // [v50.3] 오늘 완료한 퀘스트, 습관 및 미라클 플러스 상태 동기화
+    function syncDoneListStates(doneList) {
+      console.log("🔄 [Sync Done States] Full doneList today:", doneList);
+      if (!doneList || !Array.isArray(doneList)) return;
+
+      // 1. 퀘스트 인증 상태 동기화
+      const waterBtn = document.querySelector('.quest-btn.water-btn');
+      const workoutBtn = document.querySelector('.quest-btn.workout-btn');
+      const bonusBtn = document.querySelector('.quest-btn.bonus-btn');
+
+      // "수분 인증" 존재 여부
+      const hasWater = doneList.some(item => item.includes('수분'));
+      if (waterBtn && hasWater) {
+        waterBtn.classList.add('done');
+        waterBtn.style.opacity = '0.55';
+        waterBtn.style.cursor = 'not-allowed';
+        const label = waterBtn.querySelector('span:not(.q-icon)');
+        if (label) label.innerText = '수분 섭취 [완료]';
+      } else if (waterBtn) {
+        waterBtn.classList.remove('done');
+        waterBtn.style.opacity = '1';
+        waterBtn.style.cursor = 'pointer';
+        const label = waterBtn.querySelector('span:not(.q-icon)');
+        if (label) label.innerText = '수분 섭취';
+      }
+
+      // "오운완 인증" 존재 여부
+      const hasWorkout = doneList.some(item => item.includes('오운완'));
+      if (workoutBtn && hasWorkout) {
+        workoutBtn.classList.add('done');
+        workoutBtn.style.opacity = '0.55';
+        workoutBtn.style.cursor = 'not-allowed';
+        const label = workoutBtn.querySelector('span:not(.q-icon)');
+        if (label) label.innerText = '오운완/오테완 [완료]';
+      } else if (workoutBtn) {
+        workoutBtn.classList.remove('done');
+        workoutBtn.style.opacity = '1';
+        workoutBtn.style.cursor = 'pointer';
+        const label = workoutBtn.querySelector('span:not(.q-icon)');
+        if (label) label.innerText = '오운완/오테완';
+      }
+
+      // "돌발퀘스트 인증" 존재 여부
+      const hasBonus = doneList.some(item => item.includes('돌발퀘스트'));
+      if (bonusBtn && hasBonus) {
+        bonusBtn.classList.add('done');
+        bonusBtn.style.opacity = '0.55';
+        bonusBtn.style.cursor = 'not-allowed';
+        const label = bonusBtn.querySelector('span:not(.q-icon)');
+        if (label) label.innerText = '돌발 퀘스트 [완료]';
+      } else if (bonusBtn) {
+        bonusBtn.classList.remove('done');
+        bonusBtn.style.opacity = '1';
+        bonusBtn.style.cursor = 'pointer';
+        const label = bonusBtn.querySelector('span:not(.q-icon)');
+        if (label) label.innerText = '돌발 퀘스트';
+      }
+
+      // 2. 습관 인증 상태 동기화 (h1 ~ h9)
+      const habits = [
+        { id: 'h1', name: '모닝티' },
+        { id: 'h2', name: '모닝스트레칭' },
+        { id: 'h3', name: '베지퍼스트' },
+        { id: 'h4', name: '슬로우치잉' },
+        { id: 'h5', name: '7000보달성' },
+        { id: 'h6', name: '스테어마법' },
+        { id: 'h7', name: '나이트컷' },
+        { id: 'h8', name: '굿슬립' },
+        { id: 'h9', name: '셀프칭찬' }
+      ];
+
+      habits.forEach(h => {
+        const btn = document.getElementById('hbtn-' + h.id);
+        if (btn) {
+          const isDone = doneList.some(item => item.includes(h.name));
+          if (isDone) {
+            btn.classList.add('done');
+            btn.style.opacity = '0.7';
+          } else {
+            btn.classList.remove('done');
+            btn.style.opacity = '1';
+          }
+        }
+      });
+
+      // 3. 미라클 플러스 상태 동기화
+      const miracles = [
+        { key: 'miracle_dawn', name: '새벽기상' },
+        { key: 'miracle_read', name: '독서인증' },
+        { key: 'miracle_eco', name: '환경사랑' },
+        { key: 'miracle_etc', name: '기타성취' }
+      ];
+
+      const miracleBtns = document.querySelectorAll('.miracle-btn');
+      miracles.forEach((m, idx) => {
+        const btn = miracleBtns[idx];
+        if (btn) {
+          const isDone = doneList.some(item => item.includes(m.name));
+          if (isDone) {
+            btn.classList.add('done');
+            btn.style.opacity = '0.7';
+          } else {
+            btn.classList.remove('done');
+            btn.style.opacity = '1';
+          }
+        }
+      });
     }
 
     // [v46.1] 사진에 레트로 카메라 감성의 네온 오렌지 LED 타임스탬프 워터마크 그리기
@@ -1653,6 +1800,9 @@
       document.getElementById('info-score').innerText = d.score;
       document.getElementById('info-guide').innerText = d.guide;
 
+      // 오늘 완료 여부 검증
+      const isCompleted = window.lastDoneList && window.lastDoneList.some(item => item.includes(d.item));
+
       // 수분 게이지 표시 여부
       const waterWrap = document.getElementById('info-water-wrap');
       waterWrap.style.display = d.isWater ? 'block' : 'none';
@@ -1660,6 +1810,13 @@
         document.getElementById('info-water-range').value = 12;
         document.getElementById('info-water-val').innerText = '1.2L';
         window.currentWaterL = 1.2;
+        
+        // 수분이 이미 완료되었으면 슬라이더 비활성화
+        if (isCompleted) {
+          document.getElementById('info-water-range').disabled = true;
+        } else {
+          document.getElementById('info-water-range').disabled = false;
+        }
       }
 
       // 버튼 구성
@@ -1672,36 +1829,48 @@
       cancelBtn.onclick = () => closeInfoModal();
       btnsEl.appendChild(cancelBtn);
 
-      if (d.checkOnly) {
-        // 체크만 가능한 항목 (h4 슬로우치잉, h8 굿슬립)
-        const checkBtn = document.createElement('button');
-        checkBtn.className = 'info-btn-check';
-        checkBtn.innerText = '✅ 체크 완료';
-        checkBtn.onclick = () => { doHabitCheck(key); closeInfoModal(); };
-        btnsEl.appendChild(checkBtn);
-      } else if (d.type === 'habit') {
-        // 체크 or 인증 선택 가능한 습관
-        const checkBtn = document.createElement('button');
-        checkBtn.className = 'info-btn-check';
-        checkBtn.style.flex = '1';
-        checkBtn.innerText = '✅ 체크만';
-        checkBtn.onclick = () => { doHabitCheck(key); closeInfoModal(); };
-
-        const authBtn = document.createElement('button');
-        authBtn.className = 'info-btn-auth';
-        authBtn.style.flex = '1.5';
-        authBtn.innerText = '📸 인증하기';
-        authBtn.onclick = () => { closeInfoModal(); openCertModal(key); };
-
-        btnsEl.appendChild(checkBtn);
-        btnsEl.appendChild(authBtn);
+      if (isCompleted) {
+        // 이미 오늘 완료된 경우: 전송 버튼을 노출하지 않고 알림 문구 버튼으로 대체
+        const doneIndicator = document.createElement('button');
+        doneIndicator.className = 'info-btn-cancel';
+        doneIndicator.style.background = '#e5e7eb';
+        doneIndicator.style.color = '#9ca3af';
+        doneIndicator.style.cursor = 'not-allowed';
+        doneIndicator.style.flex = '2';
+        doneIndicator.innerText = '✨ 오늘 수호 완료!';
+        btnsEl.appendChild(doneIndicator);
       } else {
-        // 퀘스트 / 미라클: 인증만 가능
-        const authBtn = document.createElement('button');
-        authBtn.className = 'info-btn-auth';
-        authBtn.innerText = '📸 인증하러 가기';
-        authBtn.onclick = () => { closeInfoModal(); openCertModal(key); };
-        btnsEl.appendChild(authBtn);
+        if (d.checkOnly) {
+          // 체크만 가능한 항목 (h4 슬로우치잉, h8 굿슬립)
+          const checkBtn = document.createElement('button');
+          checkBtn.className = 'info-btn-check';
+          checkBtn.innerText = '✅ 체크 완료';
+          checkBtn.onclick = () => { doHabitCheck(key); closeInfoModal(); };
+          btnsEl.appendChild(checkBtn);
+        } else if (d.type === 'habit') {
+          // 체크 or 인증 선택 가능한 습관
+          const checkBtn = document.createElement('button');
+          checkBtn.className = 'info-btn-check';
+          checkBtn.style.flex = '1';
+          checkBtn.innerText = '✅ 체크만';
+          checkBtn.onclick = () => { doHabitCheck(key); closeInfoModal(); };
+
+          const authBtn = document.createElement('button');
+          authBtn.className = 'info-btn-auth';
+          authBtn.style.flex = '1.5';
+          authBtn.innerText = '📸 인증하기';
+          authBtn.onclick = () => { closeInfoModal(); openCertModal(key); };
+
+          btnsEl.appendChild(checkBtn);
+          btnsEl.appendChild(authBtn);
+        } else {
+          // 퀘스트 / 미라클: 인증만 가능
+          const authBtn = document.createElement('button');
+          authBtn.className = 'info-btn-auth';
+          authBtn.innerText = '📸 인증하러 가기';
+          authBtn.onclick = () => { closeInfoModal(); openCertModal(key); };
+          btnsEl.appendChild(authBtn);
+        }
       }
 
       document.getElementById('info-modal').style.display = 'flex';
@@ -1726,6 +1895,9 @@
       google.script.run
         .withSuccessHandler(res => {
           if (res && res.success) {
+            if (!window.lastDoneList) window.lastDoneList = [];
+            window.lastDoneList.push(d.item);
+            syncDoneListStates(window.lastDoneList);
             if (hbtn) hbtn.classList.add('done');
             showAppAlert(`✨ [${d.title}] 수호 완료! +${score} EXP 획득! 🌿`, 'success');
           }
@@ -1797,7 +1969,7 @@
       let score = 15;
       if (d.type === 'habit') { finalType = '습관'; score = parseInt((d.score||'+2').replace(/[^0-9]/g,''))||2; }
       if (d.type === 'miracle') { finalType = '습관'; score = 5; }
-      if (d.isWater) { score = Math.round(window.currentWaterL * 10); }
+      if (d.isWater) { score = Math.round(window.currentWaterL * 10) + 15; }
 
       const reader = new FileReader();
       reader.onload = e => {
@@ -1832,6 +2004,9 @@
               btn.disabled = false; btn.innerText = '✔️ 인증 기록 완료';
               if (res && res.success) {
                 closeCertModal();
+                if (!window.lastDoneList) window.lastDoneList = [];
+                window.lastDoneList.push(d.item);
+                syncDoneListStates(window.lastDoneList);
                 // 습관이면 버튼도 done 처리
                 if (d.habitId) {
                   const hbtn = document.getElementById('hbtn-' + d.habitId);
