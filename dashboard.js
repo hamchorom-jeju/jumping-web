@@ -716,11 +716,8 @@ const Village = {
         if (jejuBar && jejuText) {
             const origWeather = settings.weather || 'sun';
             
-            // 날씨가 맑음(sun)이고 실시간 기온 정보도 없다면 기상 바 감추기
-            if (origWeather === 'sun' && settings.realJejuTemp === undefined) {
-                jejuBar.style.display = 'none';
-            } else {
-                jejuBar.style.display = 'flex';
+            // [v51.0] 기상 상태와 무관하게 날씨 배너는 항상 우아하게 노출하여 자리를 채웁니다.
+            jejuBar.style.display = 'flex';
                 
                 let weatherEmoji = '☀️';
                 let weatherName = '맑음';
