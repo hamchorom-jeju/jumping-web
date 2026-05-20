@@ -1441,6 +1441,35 @@
               
               if (res && res.success) {
                 closeAiMealModal();
+                
+                // [v50.4] 아침 식단 S 판정 시 모닝티 즉시 완료 비주얼 처리
+                if (!window.lastDoneList) window.lastDoneList = [];
+                let mealTitle = aiSelectedTime === 'morning' ? '아침 식단' : aiSelectedTime === 'noon' ? '점심 식단' : '저녁 식단';
+                const checkedRadio = document.querySelector('input[name="evening-type"]:checked');
+                if (aiSelectedTime === 'evening' && checkedRadio && checkedRadio.value === 'fasting') {
+                  mealTitle = '저녁 단식';
+                }
+
+                // 식단 추가
+                window.lastDoneList.push(`${mealTitle} (Tier ${aiLastResult.tier})`);
+
+                // 모닝 티 자동 완화 연계 UI 전환
+                if (aiSelectedTime === 'morning' && aiLastResult.tier === 'S') {
+                  if (!window.lastDoneList.includes('모닝티')) {
+                    window.lastDoneList.push('모닝티');
+                  }
+                }
+                // 나이트 컷 자동 완화 연계 UI 전환
+                if ((aiSelectedTime === 'evening' || mealTitle === '저녁 단식') && aiLastResult.tier === 'S' && aiLastResult.score === 15) {
+                  if (!window.lastDoneList.includes('나이트컷')) {
+                    window.lastDoneList.push('나이트컷');
+                  }
+                }
+
+                // UI 상태 일제히 리프레시!
+                syncDoneListStates(window.lastDoneList);
+                updateMealButtonsState(window.lastDoneList);
+
                 showAppAlert(`✨ 식단 분석 제출 완료!\nTier ${aiLastResult.tier} 판정으로 +${aiLastResult.score} EXP가 적립되었습니다!`, "success");
                 loadArchiveFeed();
               } else {
