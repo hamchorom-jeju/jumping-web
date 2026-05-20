@@ -35,105 +35,108 @@
 
         /* 🌸 섹션 1: 나를 사랑하기 (셀프 칭찬 롤링 띠 배너) */
         .v-self-praise-roller-container {
-            background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
-            color: white;
-            padding: 12px 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 4px 15px rgba(15, 118, 110, 0.1);
-            position: sticky;
-            top: 56px;
-            z-index: 100;
+            background: linear-gradient(135deg, #0f766e 0%, #115e59 100%) !important;
+            color: white !important;
+            padding: 12px 15px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            box-shadow: 0 4px 15px rgba(15, 118, 110, 0.1) !important;
+            position: sticky !important;
+            top: 56px !important;
+            z-index: 100 !important;
+            border-radius: 0 0 16px 16px !important;
         }
         .roller-title {
-            font-size: 0.72rem;
-            font-weight: 900;
-            background: rgba(255, 255, 255, 0.15);
-            padding: 4px 8px;
-            border-radius: 12px;
-            white-space: nowrap;
-            margin-right: 10px;
-            border: 1px solid rgba(255,255,255,0.1);
-            cursor: pointer;
-            transition: all 0.2s;
+            font-size: 0.72rem !important;
+            font-weight: 900 !important;
+            background: rgba(255, 255, 255, 0.15) !important;
+            padding: 4px 8px !important;
+            border-radius: 12px !important;
+            white-space: nowrap !important;
+            margin-right: 10px !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            cursor: pointer !important;
+            transition: all 0.2s !important;
+            color: white !important;
         }
         .roller-title:active {
-            transform: scale(0.95);
+            transform: scale(0.95) !important;
         }
         .roller-wrapper {
-            flex-grow: 1;
-            overflow: hidden;
-            position: relative;
-            height: 20px;
-            cursor: pointer;
+            flex-grow: 1 !important;
+            overflow: hidden !important;
+            position: relative !important;
+            height: 20px !important;
+            cursor: pointer !important;
         }
         .roller-track {
-            display: flex;
-            position: absolute;
-            white-space: nowrap;
-            animation: rollerMarquee 25s linear infinite;
-            align-items: center;
-            gap: 40px;
+            display: flex !important;
+            position: absolute !important;
+            white-space: nowrap !important;
+            animation: rollerMarquee 25s linear infinite !important;
+            align-items: center !important;
+            gap: 40px !important;
         }
         .roller-item {
-            font-size: 0.75rem;
-            font-weight: 800;
-            color: #fef08a;
-            letter-spacing: -0.3px;
+            font-size: 0.75rem !important;
+            font-weight: 800 !important;
+            color: #fef08a !important;
+            letter-spacing: -0.3px !important;
         }
         @keyframes rollerMarquee {
             0% { transform: translateX(100%); }
             100% { transform: translateX(-100%); }
         }
         .roller-box-btn {
-            background: #e11d48;
-            border: none;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 10px;
-            font-size: 0.65rem;
-            font-weight: 900;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin-left: 10px;
-            transition: all 0.2s;
-            box-shadow: 0 2px 6px rgba(225, 29, 72, 0.3);
+            background: #e11d48 !important;
+            border: none !important;
+            color: white !important;
+            padding: 4px 8px !important;
+            border-radius: 10px !important;
+            font-size: 0.65rem !important;
+            font-weight: 900 !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            margin-left: 10px !important;
+            transition: all 0.2s !important;
+            box-shadow: 0 2px 6px rgba(225, 29, 72, 0.3) !important;
         }
         .roller-box-btn:active {
-            transform: scale(0.95);
+            transform: scale(0.95) !important;
         }
 
-        /* 👑 오아시스 2.2 위젯 스타일 공통 헤더 (나를 사랑하기 에메랄드 띠와 통일!) */
-        .oasis-section-header {
-            background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
-            border-radius: 18px;
-            padding: 10px 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 25px 0 12px 0;
-            box-shadow: 0 4px 12px rgba(15, 118, 110, 0.12);
-            color: white;
-            box-sizing: border-box;
-        }
-        .oasis-section-title {
-            font-weight: 900;
-            font-size: 0.8rem;
+        /* 👑 오아시스 2.3 프리미엄 위젯 스타일 공통 헤더 띠 (스타일 충돌 무력화!) */
+        .v-premium-header-bar {
+            background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%) !important;
+            border-radius: 18px !important;
+            padding: 10px 14px !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            margin: 25px 0 12px 0 !important;
+            box-shadow: 0 4px 12px rgba(15, 118, 110, 0.12) !important;
             color: white !important;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            box-sizing: border-box !important;
+            border: none !important;
         }
-        .oasis-section-title span {
-            font-size: 0.62rem;
-            color: #fef08a;
-            font-weight: 800;
-            margin-left: 5px;
+        .v-premium-header-title {
+            font-weight: 900 !important;
+            font-size: 0.82rem !important;
+            color: white !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
         }
-        .oasis-section-write-btn {
+        .v-premium-header-title span {
+            font-size: 0.62rem !important;
+            color: #fef08a !important;
+            font-weight: 800 !important;
+            margin-left: 5px !important;
+        }
+        .v-premium-header-btn {
             background: rgba(255, 255, 255, 0.2) !important;
             border: 1px solid rgba(255, 255, 255, 0.25) !important;
             color: white !important;
@@ -141,15 +144,15 @@
             border-radius: 10px !important;
             font-size: 0.65rem !important;
             font-weight: 900 !important;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
             box-shadow: none !important;
-            transition: all 0.2s;
+            transition: all 0.2s !important;
         }
-        .oasis-section-write-btn:active {
-            transform: scale(0.95);
+        .v-premium-header-btn:active {
+            transform: scale(0.95) !important;
             background: rgba(255, 255, 255, 0.3) !important;
         }
 
@@ -186,21 +189,21 @@
         
         /* 📝 고풍스러운 손글씨 공책 스타일 */
         .v-notebook-paper {
-            background-color: #fefdf9;
-            background-image: linear-gradient(rgba(13, 148, 136, 0.05) 1px, transparent 1px);
-            background-size: 100% 1.85rem;
-            line-height: 1.85rem;
+            background-color: #fefdf9 !important;
+            background-image: linear-gradient(rgba(13, 148, 136, 0.05) 1px, transparent 1px) !important;
+            background-size: 100% 1.85rem !important;
+            line-height: 1.85rem !important;
             padding: 15px 15px 15px 35px !important;
-            border-radius: 20px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.02);
-            border: 1px solid rgba(13, 148, 136, 0.12);
+            border-radius: 20px !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.02) !important;
+            border: 1px solid rgba(13, 148, 136, 0.12) !important;
             border-left: 4.5px double #f43f5e !important;
-            position: relative;
-            box-sizing: border-box;
-            min-height: 140px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            position: relative !important;
+            box-sizing: border-box !important;
+            min-height: 140px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
         }
         .v-notebook-paper::after {
             content: '';
@@ -251,45 +254,7 @@
             transform: scale(0.92);
         }
 
-        /* 🤝 섹션 2: 서로 아끼기 */
-        .praise-chain-timeline {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 25px;
-        }
-        .praise-chain-card {
-            background: white;
-            border-radius: 20px;
-            padding: 14px 16px;
-            border: 1px solid rgba(13, 148, 136, 0.1);
-            position: relative;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-        }
-        .praise-chain-card.baton-glow {
-            border: 2px solid #eab308;
-            box-shadow: 0 0 15px rgba(234, 179, 8, 0.25);
-            animation: borderPulse 1.5s infinite alternate;
-        }
-        @keyframes borderPulse {
-            0% { border-color: #eab308; }
-            100% { border-color: #fef08a; }
-        }
-
-        .praise-arrow-connector {
-            text-align: center;
-            color: var(--oasis-mint);
-            font-size: 1.0rem;
-            margin: -6px 0;
-            opacity: 0.65;
-            animation: bounceArrow 1.5s infinite alternate;
-        }
-        @keyframes bounceArrow {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(3px); }
-        }
-
-        /* 📱 극극극강의 세련됨을 갖춘 대기형 팝업 모달창 (엉망이던 팝업 대정비!) */
+        /* 📱 대기형 팝업 모달창 (정합성 100% 확보!) */
         .oasis-popup-modal {
             display: none;
             position: fixed;
@@ -297,24 +262,24 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 118, 110, 0.38);
-            backdrop-filter: blur(8px);
-            z-index: 5000;
+            background: rgba(15, 118, 110, 0.38) !important;
+            backdrop-filter: blur(8px) !important;
+            z-index: 5000 !important;
             align-items: center;
             justify-content: center;
             padding: 15px;
             box-sizing: border-box;
         }
         .oasis-popup-content {
-            background: white;
-            border-radius: 28px;
-            width: 100%;
-            max-width: 400px;
-            padding: 24px;
-            box-shadow: 0 20px 45px rgba(0,0,0,0.2);
-            box-sizing: border-box;
-            position: relative;
-            border: 2px solid rgba(13, 148, 136, 0.25);
+            background: white !important;
+            border-radius: 28px !important;
+            width: 100% !important;
+            max-width: 400px !important;
+            padding: 24px !important;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.2) !important;
+            box-sizing: border-box !important;
+            position: relative !important;
+            border: 2px solid rgba(13, 148, 136, 0.25) !important;
             animation: popupScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         @keyframes popupScale {
@@ -322,180 +287,165 @@
             100% { transform: scale(1); opacity: 1; }
         }
         .popup-close-x {
-            position: absolute;
-            top: 16px;
-            right: 18px;
-            font-size: 1.4rem;
-            font-weight: 900;
-            cursor: pointer;
-            color: var(--text-dim);
-            background: none;
-            border: none;
+            position: absolute !important;
+            top: 16px !important;
+            right: 18px !important;
+            font-size: 1.4rem !important;
+            font-weight: 900 !important;
+            cursor: pointer !important;
+            color: var(--text-dim) !important;
+            background: none !important;
+            border: none !important;
             transition: color 0.15s;
         }
         .popup-close-x:hover {
-            color: #e11d48;
+            color: #e11d48 !important;
         }
 
-        /* 팝업 내 인풋 필드 럭셔리 튜닝 */
+        /* 팝업 인풋 필드 */
         .oasis-title-input {
-            width: 100%;
-            border: 2px solid rgba(13, 148, 136, 0.15);
-            border-radius: 12px;
-            padding: 11px 14px;
-            font-size: 0.82rem;
-            font-weight: 800;
-            margin-bottom: 12px;
-            box-sizing: border-box;
-            background: #fdfbf7;
-            color: #1e293b;
-            outline: none;
-            transition: all 0.25s;
+            width: 100% !important;
+            border: 2px solid rgba(13, 148, 136, 0.15) !important;
+            border-radius: 12px !important;
+            padding: 11px 14px !important;
+            font-size: 0.82rem !important;
+            font-weight: 800 !important;
+            margin-bottom: 12px !important;
+            box-sizing: border-box !important;
+            background: #fdfbf7 !important;
+            color: #1e293b !important;
+            outline: none !important;
+            transition: all 0.25s !important;
         }
         .oasis-title-input:focus {
-            border-color: var(--oasis-mint);
-            background: #fff;
-            box-shadow: 0 0 10px rgba(13, 148, 136, 0.1);
+            border-color: var(--oasis-mint) !important;
+            background: #fff !important;
+            box-shadow: 0 0 10px rgba(13, 148, 136, 0.1) !important;
         }
         .oasis-textarea {
-            width: 100%;
-            height: 110px;
-            border: 2px solid rgba(13, 148, 136, 0.15);
-            border-radius: 14px;
-            padding: 12px 14px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            resize: none;
-            box-sizing: border-box;
-            background: #fdfbf7;
-            color: #1e293b;
-            outline: none;
-            transition: all 0.25s;
-            line-height: 1.5;
+            width: 100% !important;
+            height: 110px !important;
+            border: 2px solid rgba(13, 148, 136, 0.15) !important;
+            border-radius: 14px !important;
+            padding: 12px 14px !important;
+            font-size: 0.8rem !important;
+            font-weight: 700 !important;
+            resize: none !important;
+            box-sizing: border-box !important;
+            background: #fdfbf7 !important;
+            color: #1e293b !important;
+            outline: none !important;
+            transition: all 0.25s !important;
+            line-height: 1.5 !important;
         }
         .oasis-textarea:focus {
-            border-color: var(--oasis-mint);
-            background: #fff;
-            box-shadow: 0 0 10px rgba(13, 148, 136, 0.1);
+            border-color: var(--oasis-mint) !important;
+            background: #fff !important;
+            box-shadow: 0 0 10px rgba(13, 148, 136, 0.1) !important;
         }
 
         .oasis-submit-btn {
-            width: 100%;
-            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 16px;
-            font-weight: 900;
-            font-size: 0.85rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+            width: 100% !important;
+            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+            color: white !important;
+            border: none !important;
+            padding: 12px !important;
+            border-radius: 16px !important;
+            font-weight: 900 !important;
+            font-size: 0.85rem !important;
+            cursor: pointer !important;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2) !important;
+            transition: all 0.2s !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
         }
         .oasis-submit-btn:active {
-            transform: scale(0.98);
+            transform: scale(0.98) !important;
         }
 
         /* 🌸 1초 원터치 칭찬 마법 */
         .magic-template-box {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-bottom: 12px;
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 5px !important;
+            margin-bottom: 12px !important;
         }
         .magic-tag-btn {
-            background: #f0fdf4;
-            border: 1.5px solid rgba(13, 148, 136, 0.18);
-            border-radius: 10px;
-            padding: 6px 9px;
-            font-size: 0.68rem;
-            font-weight: 800;
-            color: var(--oasis-emerald);
-            cursor: pointer;
-            transition: all 0.15s;
+            background: #f0fdf4 !important;
+            border: 1.5px solid rgba(13, 148, 136, 0.18) !important;
+            border-radius: 10px !important;
+            padding: 6px 9px !important;
+            font-size: 0.68rem !important;
+            font-weight: 800 !important;
+            color: var(--oasis-emerald) !important;
+            cursor: pointer !important;
+            transition: all 0.15s !important;
         }
         .magic-tag-btn:active {
-            transform: scale(0.95);
-            background: #dcfce7;
-        }
-
-        /* 🤝 칭찬 바톤 알림 가이드 */
-        .baton-guide-box {
-            background: linear-gradient(135deg, #fef08a 0%, #fde047 100%);
-            border: 1.5px solid #eab308;
-            border-radius: 12px;
-            padding: 8px 12px;
-            font-size: 0.7rem;
-            font-weight: 900;
-            color: #854d0e;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            transform: scale(0.95) !important;
+            background: #dcfce7 !important;
         }
 
         /* 📸 폴라로이드 스타일 갤러리 피드 */
-        .polaroid-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 8px; padding: 5px 0; }
+        .polaroid-grid { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 12px 8px !important; padding: 5px 0 !important; }
         .polaroid-card { 
-            background: #fdfbf7; 
-            padding: 6px 6px 14px 6px; 
-            box-shadow: 2px 4px 8px rgba(0,0,0,0.05); 
-            border-radius: 4px;
-            border: 1px solid rgba(0,0,0,0.03);
-            position: relative; 
-            cursor: pointer; 
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); 
+            background: #fdfbf7 !important; 
+            padding: 6px 6px 14px 6px !important; 
+            box-shadow: 2px 4px 8px rgba(0,0,0,0.05) !important; 
+            border-radius: 4px !important;
+            border: 1px solid rgba(0,0,0,0.03) !important;
+            position: relative !important; 
+            cursor: pointer !important; 
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important; 
         }
-        .polaroid-card:hover { transform: scale(1.04) rotate(0deg) !important; z-index: 10; box-shadow: 4px 8px 15px rgba(0,0,0,0.08); }
+        .polaroid-card:hover { transform: scale(1.04) rotate(0deg) !important; z-index: 10 !important; box-shadow: 4px 8px 15px rgba(0,0,0,0.08) !important; }
         .polaroid-img-wrapper { 
-            width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #e2e8f0; 
-            border-radius: 2px;
+            width: 100% !important; aspect-ratio: 1/1 !important; overflow: hidden !important; background: #e2e8f0 !important; 
+            border-radius: 2px !important;
         }
         .polaroid-img { 
-            width: 100%; height: 100%; object-fit: cover; 
-            filter: contrast(1.02) sepia(0.04);
+            width: 100% !important; height: 100% !important; object-fit: cover !important; 
+            filter: contrast(1.02) sepia(0.04) !important;
         }
-        .polaroid-author { font-weight: 800; font-size: 0.6rem; color: #1e293b; text-align: center; margin-top: 6px; }
-        .polaroid-badge { position: absolute; top: -5px; left: -5px; background: var(--gold); color: #fff; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 0.55rem; box-shadow: 0 2px 4px rgba(0,0,0,0.12); z-index: 2; border: 1px solid #fff; }
+        .polaroid-author { font-weight: 800 !important; font-size: 0.6rem !important; color: #1e293b !important; text-align: center !important; margin-top: 6px !important; }
+        .polaroid-badge { position: absolute !important; top: -5px !important; left: -5px !important; background: var(--gold) !important; color: #fff !important; border-radius: 50% !important; width: 18px !important; height: 18px !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 0.55rem !important; box-shadow: 0 2px 4px rgba(0,0,0,0.12) !important; z-index: 2 !important; border: 1px solid #fff !important; }
         
-        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
+        .pagination { display: flex !important; justify-content: center !important; gap: 8px !important; margin-top: 20px !important; }
 
         .oasis-badge {
-            font-size: 0.55rem;
-            padding: 2px 6px;
-            border-radius: 20px;
-            font-weight: 900;
+            font-size: 0.55rem !important;
+            padding: 2px 6px !important;
+            border-radius: 20px !important;
+            font-weight: 900 !important;
         }
-        .oasis-badge.general { background: rgba(13, 148, 136, 0.08); color: var(--oasis-mint); }
-        .oasis-badge.praise { background: #ffe4e6; color: #e11d48; }
-        .oasis-badge.relay { background: #ecfdf5; color: #047857; }
-        .oasis-badge.sudden { background: #fef08a; color: #854d0e; }
+        .oasis-badge.general { background: rgba(13, 148, 136, 0.08) !important; color: var(--oasis-mint) !important; }
+        .oasis-badge.praise { background: #ffe4e6 !important; color: #e11d48 !important; }
+        .oasis-badge.relay { background: #ecfdf5 !important; color: #047857 !important; }
+        .oasis-badge.sudden { background: #fef08a !important; color: #854d0e !important; }
 
         /* 📸 모달 뷰어 & 자랑하기 페이지네이션 버튼 & 지난보관함 팝업 모달 */
         .page-btn {
-            width: 30px;
-            height: 30px;
-            border-radius: 8px;
-            border: 1px solid rgba(0,0,0,0.08);
-            background: #fff;
-            color: #64748b;
-            font-weight: 800;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 8px !important;
+            border: 1px solid rgba(0,0,0,0.08) !important;
+            background: #fff !important;
+            color: #64748b !important;
+            font-weight: 800 !important;
+            font-size: 0.75rem !important;
+            cursor: pointer !important;
+            transition: all 0.2s !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
         .page-btn.active {
             background: var(--oasis-emerald) !important;
             color: #fff !important;
             border-color: var(--oasis-emerald) !important;
-            box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25);
+            box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25) !important;
         }
 
         .polaroid-modal {
@@ -505,54 +455,54 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 3000;
+            background: rgba(0,0,0,0.8) !important;
+            z-index: 6000 !important;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px) !important;
             box-sizing: border-box;
         }
         .polaroid-modal-content {
-            background: #fff;
-            padding: 15px 15px 25px 15px;
-            border-radius: 5px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            position: relative;
+            background: #fff !important;
+            padding: 15px 15px 25px 15px !important;
+            border-radius: 5px !important;
+            width: 100% !important;
+            max-width: 400px !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important;
+            position: relative !important;
             box-sizing: border-box;
         }
         .modal-close-btn {
-            position: absolute;
-            top: -40px;
-            right: 0;
-            color: white;
-            font-size: 2rem;
-            cursor: pointer;
-            font-weight: 900;
-            background: none;
-            border: none;
-            outline: none;
+            position: absolute !important;
+            top: -40px !important;
+            right: 0 !important;
+            color: white !important;
+            font-size: 2rem !important;
+            cursor: pointer !important;
+            font-weight: 900 !important;
+            background: none !important;
+            border: none !important;
+            outline: none !important;
         }
         .modal-img {
-            width: 100%;
-            border-radius: 3px;
-            margin-bottom: 15px;
+            width: 100% !important;
+            border-radius: 3px !important;
+            margin-bottom: 15px !important;
         }
         .modal-text {
-            font-size: 0.9rem;
-            font-weight: 800;
-            color: #1e293b;
-            margin-bottom: 5px;
+            font-size: 0.9rem !important;
+            font-weight: 800 !important;
+            color: #1e293b !important;
+            margin-bottom: 5px !important;
         }
         .modal-meta {
-            font-size: 0.72rem;
-            color: #64748b;
-            display: flex;
-            justify-content: space-between;
-            font-weight: 700;
+            font-size: 0.72rem !important;
+            color: #64748b !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            font-weight: 700 !important;
         }
 
         .praise-modal {
@@ -562,35 +512,35 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.6);
-            z-index: 2500;
+            background: rgba(0,0,0,0.6) !important;
+            z-index: 5500 !important;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            backdrop-filter: blur(3px);
+            backdrop-filter: blur(3px) !important;
             box-sizing: border-box;
         }
         .praise-modal-content {
-            background: white;
-            border-radius: 25px;
-            width: 100%;
-            max-width: 420px;
-            padding: 25px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-            max-height: 80vh;
-            overflow-y: auto;
-            position: relative;
+            background: white !important;
+            border-radius: 25px !important;
+            width: 100% !important;
+            max-width: 420px !important;
+            padding: 25px !important;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15) !important;
+            max-height: 80vh !important;
+            overflow-y: auto !important;
+            position: relative !important;
             box-sizing: border-box;
         }
         .praise-modal-close {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 1.3rem;
-            cursor: pointer;
-            color: var(--text-dim);
-            background: none;
-            border: none;
+            position: absolute !important;
+            top: 15px !important;
+            right: 20px !important;
+            font-size: 1.3rem !important;
+            cursor: pointer !important;
+            color: var(--text-dim) !important;
+            background: none !important;
+            border: none !important;
         }
     </style>
 </head>
@@ -635,17 +585,17 @@
 
     <div class="oasis-container">
         
-        <!-- 📖 섹션 3: 마음 채우기 (에메랄드 띠 통일화 완료!) -->
-        <div class="oasis-section-header">
-            <div class="oasis-section-title">
-                <i class="fa-solid fa-book-open"></i> 📖 마음 채우기
+        <!-- 📖 섹션 2: 마음 채우기 (중복 아이콘 제거, 이모지만 깔끔하게 배치!) -->
+        <div class="v-premium-header-bar">
+            <div class="v-premium-header-title">
+                📖 마음 채우기
                 <span>매번 넘겨보는 웰니스 일력</span>
             </div>
             <div style="display:flex; gap:6px;">
-                <button class="oasis-section-write-btn" style="background:rgba(255,255,255,0.15) !important;" onclick="openPastQuotesModal()">
+                <button class="v-premium-header-btn" onclick="openPastQuotesModal()">
                     더보기
                 </button>
-                <button class="oasis-section-write-btn" onclick="openWriteModal('명언')">
+                <button class="v-premium-header-btn" onclick="openWriteModal('명언')">
                     <i class="fa-solid fa-pen"></i> 기록
                 </button>
             </div>
@@ -663,28 +613,13 @@
             </div>
         </div>
 
-        <!-- 🤝 섹션 2: 서로 아끼기 (에메랄드 띠 통일화 완료!) -->
-        <div class="oasis-section-header">
-            <div class="oasis-section-title">
-                <i class="fa-solid fa-user-group"></i> 🤝 서로 아끼기
-                <span>꼬리를 무는 칭찬 릴레이</span>
-            </div>
-            <button class="oasis-section-write-btn" onclick="openWriteModal('릴레이칭찬')">
-                <i class="fa-solid fa-pen"></i> 기록
-            </button>
-        </div>
-
-        <div id="memorial-chain-section" class="praise-chain-timeline">
-            <!-- 동적 주입 -->
-        </div>
-
-        <!-- ⚡ 섹션 4: 한껏 자유롭기 (에메랄드 띠 통일화 완료!) -->
-        <div class="oasis-section-header">
-            <div class="oasis-section-title">
-                <i class="fa-solid fa-pencil"></i> ⚡ 한껏 자유롭기
+        <!-- ⚡ 섹션 3: 한껏 자유롭기 (중복 아이콘 제거, 이모지만 깔끔하게 배치!) -->
+        <div class="v-premium-header-bar">
+            <div class="v-premium-header-title">
+                ⚡ 한껏 자유롭기
                 <span>일상의 성찰과 돌발 인증</span>
             </div>
-            <button class="oasis-section-write-btn" onclick="openWriteModal('일반')">
+            <button class="v-premium-header-btn" onclick="openWriteModal('일반')">
                 <i class="fa-solid fa-pen"></i> 기록
             </button>
         </div>
@@ -698,10 +633,10 @@
             </button>
         </div>
 
-        <!-- 📸 섹션 5: 자랑하기 (에메랄드 띠 통일화 완료!) -->
-        <div class="oasis-section-header" style="margin-top: 30px;">
-            <div class="oasis-section-title">
-                <i class="fa-solid fa-camera"></i> 📸 자랑하기
+        <!-- 📸 섹션 4: 자랑하기 (중복 아이콘 제거, 이모지만 깔끔하게 배치!) -->
+        <div class="v-premium-header-bar" style="margin-top: 30px;">
+            <div class="v-premium-header-title">
+                📸 자랑하기
                 <span>모험가들의 활력 자랑판</span>
             </div>
         </div>
@@ -745,19 +680,13 @@
         </a>
     </nav>
 
-    <!-- ✍️ 글쓰기 전용 다이내믹 팝업 모달창 (정밀 정화 및 반응형 최적화 완료!) -->
+    <!-- ✍️ 글쓰기 전용 다이내믹 팝업 모달창 (100% 정상 작동 보증!) -->
     <div id="write-popup-modal" class="oasis-popup-modal">
         <div class="oasis-popup-content">
             <button class="popup-close-x" onclick="closeWriteModal()">&times;</button>
             <h3 id="write-popup-title" style="font-weight:900; color:var(--oasis-emerald); font-size:1.05rem; margin-top:0; margin-bottom:18px; display:flex; align-items:center; gap:6px;">
                 <i class="fa-solid fa-pen-nib"></i> 글쓰기
             </h3>
-            
-            <!-- 🤝 칭찬 바톤 알림 박스 -->
-            <div id="popup-baton-guide-box" class="baton-guide-box" style="display: none;">
-                <i class="fa-solid fa-hourglass-start"></i>
-                <span id="popup-baton-guide-text">바톤 터치 알림</span>
-            </div>
 
             <!-- 🌸 1초 원터치 칭찬 마법사 템플릿 상자 (셀프칭찬 시 노출) -->
             <div id="popup-self-magic-box" class="magic-template-box" style="display:none;">
@@ -765,13 +694,6 @@
                 <div class="magic-tag-btn" onclick="applyMagicTemplate('🌙 야식의 강력한 유혹을 완벽하게 수호 차단!')">🌙 야식 차단!</div>
                 <div class="magic-tag-btn" onclick="applyMagicTemplate('💧 내 몸을 맑게 하는 충분한 수분 충전 완료!')">💧 수분 충전!</div>
                 <div class="magic-tag-btn" onclick="applyMagicTemplate('🌟 오늘도 한 걸음 더 나아간 기특한 나를 칭찬해!')">🌟 기특한 나!</div>
-            </div>
-
-            <!-- 🤝 칭찬 지목 인풋 & 자동 완성 제안 상자 -->
-            <div id="popup-relay-member-box" style="display: none; margin-bottom: 12px; position: relative;">
-                <label style="font-weight: 800; font-size: 0.72rem; color: var(--oasis-emerald); margin-bottom: 5px; display: block;">🤝 칭찬의 바톤을 보낼 회원 지목</label>
-                <input type="text" id="praise-target-member" oninput="filterMemberNames()" placeholder="회원 이름 검색 (예: 홍길동)" style="width: 100%; border: 2px solid rgba(13, 148, 136, 0.18); border-radius: 12px; padding: 10px; font-size: 0.8rem; font-weight: 800; outline: none; box-sizing: border-box; background: #fdfbf7;">
-                <div id="member-search-suggestions" style="position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid rgba(0,0,0,0.1); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); max-height: 120px; overflow-y: auto; z-index: 5500; display: none;"></div>
             </div>
 
             <input type="text" id="post-title" class="oasis-title-input" placeholder="한줄 제목을 입력하세요">
@@ -835,14 +757,13 @@
         let allMemberNames = [];
         
         let loadedPostsGlobal = [];
-        let praiseBatonSenderName = "";
         let selectedCategoryVal = '셀프칭찬';
         let currentQuoteIndex = 0;
 
         let memoLimit = 3;
-        let currentPage = 1;
+        let currentPage = 1; // 🌟 단일 변수 선언으로 중복 선언 크래시 해결 완료!
 
-        // 🌟 Fallback 명언
+        // 🌟 Fallback 명언 5선
         const defaultWellnessQuotes = [
             {
                 id: null,
@@ -903,20 +824,17 @@
             }
         }
 
-        // 📱 세련된 다이내믹 팝업 모달창 열기
+        // 📱 팝업 모달창 열기
         function openWriteModal(category) {
             selectedCategoryVal = category;
             const modal = document.getElementById('write-popup-modal');
             const titleEl = document.getElementById('write-popup-title');
             
             document.getElementById('popup-self-magic-box').style.display = 'none';
-            document.getElementById('popup-relay-member-box').style.display = 'none';
             document.getElementById('sudden-quest-link-box').style.display = 'none';
-            document.getElementById('popup-baton-guide-box').style.display = 'none';
             
             document.getElementById('post-title').value = '';
             document.getElementById('post-content').value = '';
-            document.getElementById('praise-target-member').value = '';
             document.getElementById('sudden-quest-check').checked = false;
             
             if (category === '셀프칭찬') {
@@ -924,18 +842,6 @@
                 document.getElementById('popup-self-magic-box').style.display = 'flex';
                 document.getElementById('post-title').value = "🌸 나를 위한 1초 칭찬";
                 document.getElementById('post-content').placeholder = "아래 템플릿 태그를 누르거나, 오늘 나를 격려하는 한마디를 적어보세요 (+3 EXP)...";
-            } else if (category === '릴레이칭찬') {
-                titleEl.innerHTML = '<i class="fa-solid fa-user-group"></i> 🤝 서로 아끼기 칭찬 바톤 전송';
-                document.getElementById('popup-relay-member-box').style.display = 'block';
-                document.getElementById('post-title').value = "🤝 동료에게 보낸 칭찬의 마법";
-                document.getElementById('post-content').placeholder = "동료의 감사한 행동이나 칭찬할 내용을 적고 바톤을 전송하세요 (+5 EXP)...";
-                
-                if (praiseBatonSenderName) {
-                    const batonGuide = document.getElementById('popup-baton-guide-box');
-                    document.getElementById('popup-baton-guide-text').innerHTML = `🏃‍♂️ <strong>[${praiseBatonSenderName}]</strong> 님께 칭찬의 바톤을 이어받아 작성 중입니다!`;
-                    batonGuide.style.display = 'flex';
-                }
-                loadAllMemberNames();
             } else if (category === '명언') {
                 titleEl.innerHTML = '<i class="fa-solid fa-book-open"></i> 📖 마음 채우기 한 줄 공유';
                 document.getElementById('post-title').placeholder = "마음 채우기 요약 (예: 용기를 주는 구절)";
@@ -970,46 +876,6 @@
                 lbl.style.color = 'var(--oasis-emerald)';
                 lbl.style.fontWeight = '800';
             }
-        }
-
-        function loadAllMemberNames() {
-            if (allMemberNames.length > 0) return;
-            if (typeof google === 'undefined') return;
-            google.script.run
-                .withSuccessHandler(names => {
-                    allMemberNames = names || [];
-                })
-                .getAllMemberNames();
-        }
-
-        function filterMemberNames() {
-            const query = document.getElementById('praise-target-member').value.trim();
-            const suggestionsBox = document.getElementById('member-search-suggestions');
-            
-            if (!query) {
-                suggestionsBox.style.display = 'none';
-                return;
-            }
-            
-            const matches = allMemberNames.filter(name => name.indexOf(query) > -1 && name !== currentUser.name);
-            
-            if (matches.length === 0) {
-                suggestionsBox.style.display = 'none';
-                return;
-            }
-            
-            suggestionsBox.innerHTML = '';
-            matches.forEach(name => {
-                const div = document.createElement('div');
-                div.className = 'suggestion-item';
-                div.innerText = name;
-                div.onclick = () => {
-                    document.getElementById('praise-target-member').value = name;
-                    suggestionsBox.style.display = 'none';
-                };
-                suggestionsBox.appendChild(div);
-            });
-            suggestionsBox.style.display = 'block';
         }
 
         // 📖 감성 일력 슬라이더 제어 로직
@@ -1173,16 +1039,10 @@
         function submitPost() {
             const title = document.getElementById('post-title').value.trim();
             const content = document.getElementById('post-content').value.trim();
-            const targetMember = document.getElementById('praise-target-member').value.trim();
             const isSuddenChecked = document.getElementById('sudden-quest-check').checked;
 
             if (!content) {
                 alert("기록할 내용을 소중히 입력해 주세요!");
-                return;
-            }
-
-            if (selectedCategoryVal === '릴레이칭찬' && !targetMember) {
-                alert("칭찬의 바톤을 넘겨받을 동료 회원을 선택해 주세요!");
                 return;
             }
 
@@ -1195,7 +1055,7 @@
                 title: title || `${currentUser.name} 님의 기록`,
                 content: content,
                 category: isSuddenChecked ? '돌발' : selectedCategoryVal,
-                targetMember: selectedCategoryVal === '릴레이칭찬' ? targetMember : '',
+                targetMember: '',
                 questTitle: isSuddenChecked && activeSuddenQuest ? activeSuddenQuest.title : null
             };
 
@@ -1213,7 +1073,6 @@
                     if (res.success) {
                         alert(res.message);
                         closeWriteModal();
-                        praiseBatonSenderName = "";
                         loadPosts();
                     } else {
                         alert("에러: " + res.error);
@@ -1239,12 +1098,10 @@
         function renderOasis21Dashboard(posts) {
             const rollerTrack = document.getElementById('self-praise-roller-track');
             const quoteTrack = document.getElementById('quote-slider-track');
-            const chainSection = document.getElementById('memorial-chain-section');
             const memoList = document.getElementById('oasis-posts-list');
             
             rollerTrack.innerHTML = '';
             quoteTrack.innerHTML = '';
-            chainSection.innerHTML = '';
             memoList.innerHTML = '';
 
             const now = new Date();
@@ -1317,45 +1174,6 @@
             quoteTrack.style.transform = 'translateX(0%)';
 
             const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            const relayPosts = posts.filter(p => {
-                const pDate = new Date(p.date);
-                return p.category === '릴레이칭찬' && pDate >= sevenDaysAgo;
-            }).reverse();
-
-            if (relayPosts.length > 0) {
-                relayPosts.forEach((p, idx) => {
-                    const isLast = idx === relayPosts.length - 1;
-                    const card = document.createElement('div');
-                    card.className = `praise-chain-card ${isLast ? 'baton-glow' : ''}`;
-                    card.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; font-size:0.62rem; color:var(--text-dim); margin-bottom:5px; font-weight:700;">
-                            <span>🤝 ${p.date} (${p.time})</span>
-                            <span style="font-weight:900; color:#f43f5e;"><i class="fa-solid fa-link"></i> 칭찬 체인 연결됨</span>
-                        </div>
-                        <div style="font-size:0.75rem; font-weight:850; color:var(--oasis-emerald); margin-bottom:5px;">
-                            ${p.author} 님 ➔ 💌 칭찬 배달 ➔ <strong style="font-size:0.82rem; color:#f43f5e;">${p.targetMember}</strong> 님 지목!
-                        </div>
-                        <div style="font-size:0.76rem; font-weight:750; color:#475569; line-height:1.4; white-space:pre-wrap;">${p.content}</div>
-                    `;
-                    chainSection.appendChild(card);
-                    
-                    if (idx < relayPosts.length - 1) {
-                        const arrow = document.createElement('div');
-                        arrow.className = 'praise-arrow-connector';
-                        arrow.innerHTML = '<i class="fa-solid fa-circle-chevron-down"></i>';
-                        chainSection.appendChild(arrow);
-                    }
-                });
-            } else {
-                chainSection.innerHTML = `
-                    <div style="text-align:center; padding:30px; background:white; border-radius:20px; border:1px dashed rgba(13,148,136,0.2);">
-                        <div style="font-size:1.8rem; margin-bottom:6px;">🤝</div>
-                        <div style="font-size:0.75rem; font-weight:800; color:var(--oasis-emerald); margin-bottom:3px;">현재 칭찬 바톤이 촌장님께 쥐어져 있습니다!</div>
-                        <div style="font-size:0.65rem; color:var(--text-dim); font-weight:700;">기록 버튼을 눌러 첫 칭찬을 건네 체인을 활기차게 열어보세요.</div>
-                    </div>
-                `;
-            }
-
             const memoPosts = posts.filter(p => {
                 const pDate = new Date(p.date);
                 return (p.category === '일반' || p.category === '돌발') && pDate >= sevenDaysAgo;
@@ -1411,16 +1229,10 @@
                 .withSuccessHandler(res => {
                     if (res && res.success) {
                         activeSuddenQuest = res.quests ? res.quests.todayQuest : null;
-                        if (res.praiseBatonSender) {
-                            praiseBatonSenderName = res.praiseBatonSender;
-                            openWriteModal('릴레이칭찬');
-                        }
                     }
                 })
                 .getUserDashboardData({ phone: currentUser.phone });
         }
-
-        let currentPage = 1;
 
         function loadArchiveFeed() {
             const loader = document.getElementById('feed-loader');
