@@ -75,6 +75,19 @@
     }
     .miracle-btn { background: linear-gradient(135deg, #faf5ff, #ede9fe); border-color: #c4b5fd; }
     .miracle-btn .h-icon { font-size: 1.4rem; }
+    /* [v50.9] 미라클 플러스 인증 완료 시 눈에 확 띄는 연보라색 완결 스타일 지정! */
+    .miracle-btn.done { 
+      background: linear-gradient(135deg, #f3e8ff, #e9d5ff) !important; 
+      border-color: #a855f7 !important; 
+      color: #6b21a8 !important; 
+    }
+    .miracle-btn.done::after { 
+      content: '✓'; 
+      margin-left: auto; 
+      font-size: 1rem; 
+      color: #a855f7; 
+      font-weight: 900; 
+    }
 
     /* 설명 팝업 모달 */
     .info-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); z-index: 4000; align-items: flex-end; justify-content: center; backdrop-filter: blur(6px); }
@@ -2104,6 +2117,12 @@
       const d = POPUP_DATA[key];
       if (!d) return;
       if (!TARGET_PHONE) return showAppAlert('로그인이 필요합니다.', 'error');
+
+      // [v50.9] 중복 전송 원천 차단 가드!
+      const isAlreadyDone = window.lastDoneList && window.lastDoneList.some(item => item.includes(d.item));
+      if (isAlreadyDone) {
+        return showAppAlert(`✨ 이미 오늘 [${d.title}]을 완료했습니다!`, 'error');
+      }
 
       const cam = document.getElementById('file-input-cert-camera');
       const alb = document.getElementById('file-input-cert-album');
