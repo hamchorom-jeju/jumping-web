@@ -893,7 +893,17 @@ const Village = {
         }
         
         let btn = document.getElementById('village-bgm-toggle');
-        if (!btn) {
+        if (!enabled) {
+            // [원장님 피드백 반영] BGM이 비활성화 상태라면 화면에서 음악 버튼을 완전히 숨기고 즉시 정지!
+            if (btn) btn.style.display = 'none';
+            audio.pause();
+            return;
+        }
+        
+        // BGM이 다시 활성화되면 음악 버튼을 노출
+        if (btn) {
+            btn.style.display = 'flex';
+        } else {
             btn = document.createElement('div');
             btn.id = 'village-bgm-toggle';
             btn.style = "position:fixed; bottom:90px; right:15px; width:45px; height:45px; border-radius:50%; background:rgba(255,255,255,0.85); box-shadow:0 8px 32px rgba(31,38,135,0.15); backdrop-filter:blur(6px); border:1.5px solid rgba(255,255,255,0.18); display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:9998; transition:transform 0.3s ease;";
@@ -917,7 +927,7 @@ const Village = {
         }
         
         const userPlayPreference = localStorage.getItem('v44_bgm_user_play');
-        const shouldPlay = enabled && userPlayPreference !== 'false';
+        const shouldPlay = userPlayPreference !== 'false';
         
         if (shouldPlay) {
             const startPlay = () => {
