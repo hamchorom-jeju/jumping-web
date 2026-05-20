@@ -7038,10 +7038,25 @@ function submitOasisPost(payload) {
     var statType = "def"; // 기본적으로 칭찬/수호 다짐은 회복력(def)으로 연동!
     var itemTitle = "";
     
-    if (category === "돌발" && payload.questTitle) {
+    var qTitle = payload.questTitle || "";
+    if (category === "돌발" && !qTitle) {
+      try {
+        var questStatus = getActiveQuestStatus(phone, ss, null, payload.author);
+        if (questStatus && questStatus.todayQuest) {
+          qTitle = questStatus.todayQuest.title;
+        }
+      } catch (err) {
+        Logger.log("돌발 퀘스트 제목 스캔 중 에러: " + err.toString());
+      }
+    }
+    if (!qTitle && category === "돌발") {
+      qTitle = "오아시스 돌발 퀘스트 수행";
+    }
+
+    if (category === "돌발") {
       expAwarded = 15;
       statType = "perf";
-      itemTitle = "🔥 돌발: " + payload.questTitle;
+      itemTitle = "🔥 돌발: " + qTitle;
     } else if (category === "셀프칭찬") {
       expAwarded = 5;
       statType = "def";
@@ -7060,13 +7075,17 @@ function submitOasisPost(payload) {
       var recordResult = recordActivityLog({
         phone: phone,
         name: payload.author,
-        type: "오아시스",
+        type: (category === "돌발") ? "퀘스트" : "오아시스",
         item: itemTitle,
         score: expAwarded,
         statType: statType
       });
       if (recordResult && recordResult.success) {
-        awardMessage = " (오아시스 보상 +" + expAwarded + " EXP가 실시간 적립되었습니다!) 🌟";
+        if (category === "돌발") {
+          awardMessage = " (돌발 퀘스트 완료 +15 EXP가 실시간 적립되었습니다!) ⚡";
+        } else {
+          awardMessage = " (오아시스 보상 +" + expAwarded + " EXP가 실시간 적립되었습니다!) 🌟";
+        }
       }
     }
     
