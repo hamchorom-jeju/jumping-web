@@ -754,7 +754,7 @@
     function selectMember(name, phone) {
       // 🏰 Portal transition (hide form wrapper, show loading)
       document.getElementById('login-form-wrapper').style.display = 'none';
-      document.getElementById('welcome-user-name').innerText = `${name} 님`;
+      document.getElementById('welcome-user-name').innerText = name;
       document.getElementById('login-loading-wrapper').style.display = 'flex';
 
       localStorage.setItem('v44_user_name', name);
