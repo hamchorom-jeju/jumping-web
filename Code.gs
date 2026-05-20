@@ -6808,6 +6808,16 @@ function getVillageSettings() {
       }
     }
     
+    // [v48.0] 불러올 때도 기존에 시트에 박혀있는 모든 Suno 단축/공유 링크를 오디오 다이렉트 주소로 초고속 해독!
+    if (settings.bgmUrl) {
+      settings.bgmUrl = resolveSunoUrl(settings.bgmUrl);
+    }
+    for (var key in defaultBgmMap) {
+      if (settings[key]) {
+        settings[key] = resolveSunoUrl(settings[key]);
+      }
+    }
+    
     // 5분 동안 설정 캐시 저장 (update 시 즉시 날라감)
     cache.put("global_village_settings", JSON.stringify(settings), 300);
     return settings;
