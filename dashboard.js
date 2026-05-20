@@ -216,6 +216,7 @@ const Village = {
                         this.user.habits.forEach(h => {
                             h.done = false;
                         });
+                        this.user.doneList = res.doneList || [];
                         if (res.doneList && res.doneList.length > 0) {
                             console.log("[v45.0] Restoring doneList:", res.doneList);
                             this.user.habits.forEach(h => {
@@ -257,8 +258,10 @@ const Village = {
                         }
                         if (res.isFirstLoginToday) this.showLoginReward();
                         
-                        // [v51.0] 실시간 릴레이 칭찬 수신 여부에 따라 마법의 편지 팝업 가동!
-                        if (res.praiseNotice) {
+                        // [v55.0] 실시간 릴레이 칭찬 수신 여부 및 칭찬 바톤 주자 팝업 가동!
+                        if (res.praiseBatonSender) {
+                            this.showPraiseBatonNotice(res.praiseBatonSender);
+                        } else if (res.praiseNotice) {
                             this.showPraiseWizardNotice(res.praiseNotice);
                         }
                         
@@ -591,7 +594,18 @@ const Village = {
         if (suddenBar) {
             if (quests.todayQuest) {
                 suddenBar.style.display = 'block';
-                suddenBar.innerHTML = `⚡ [오늘의 돌발] <strong>${quests.todayQuest.title}</strong> (인증 시 +15 EXP)`;
+                const isCompleted = this.user.doneList && this.user.doneList.some(item => item.indexOf(quests.todayQuest.title) > -1);
+                if (isCompleted) {
+                    suddenBar.style.background = 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)';
+                    suddenBar.style.color = '#fff';
+                    suddenBar.style.border = '1px solid rgba(255,255,255,0.2)';
+                    suddenBar.innerHTML = `🎉 <strong>[돌발 완료]</strong> 오늘의 돌발 퀘스트를 멋지게 완수하셨습니다! (+15 EXP가 지급되었습니다)`;
+                } else {
+                    suddenBar.style.background = '';
+                    suddenBar.style.color = '';
+                    suddenBar.style.border = '';
+                    suddenBar.innerHTML = `⚡ [오늘의 돌발] <strong>${quests.todayQuest.title}</strong> (인증 시 +15 EXP)`;
+                }
             } else {
                 suddenBar.style.display = 'none';
             }
@@ -687,6 +701,29 @@ const Village = {
                 widget.style.display = 'none';
             }
         }
+    },
+
+    showPraiseBatonNotice(senderName) {
+        if (document.getElementById('v-praise-baton-modal')) return;
+        const modal = document.createElement('div');
+        modal.id = 'v-praise-baton-modal';
+        modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 118, 110, 0.45); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; z-index:99999;";
+        modal.innerHTML = `
+            <div style="background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%); width:90%; max-width:380px; padding:30px; border-radius:30px; border:2.5px solid #eab308; box-shadow:0 20px 50px rgba(0,0,0,0.15); text-align:center;">
+                <div style="font-size: 3rem; margin-bottom: 15px; animation: bounce 2s infinite;">🏃‍♂️🔗</div>
+                <h3 style="font-size: 1.15rem; font-weight: 900; color: #854d0e; margin: 0 0 10px 0;">칭찬 릴레이 바톤 터치!</h3>
+                <p style="font-size: 0.82rem; font-weight: 800; color: #334155; line-height: 1.6; word-break: keep-all; margin-bottom: 22px;">
+                    축하합니다! 🌟<br>
+                    <strong>[${senderName}]</strong> 님이 당신을 지목하여 칭찬의 바톤을 넘겨주셨습니다!<br><br>
+                    <span style="color: #d97706; font-weight: 900;">지금 바로 다음 주자를 지목해 끊어지지 않는 칭찬의 고리를 완성해 주세요! 🌴</span>
+                </p>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="document.getElementById('v-praise-baton-modal').remove()" style="flex:1; background:rgba(0,0,0,0.06); border:none; padding:12px 0; border-radius:15px; font-size:0.8rem; font-weight:900; color:#475569; cursor:pointer;">확인</button>
+                    <button onclick="location.href='oasis.html'" style="flex:1.5; background:linear-gradient(135deg, #eab308 0%, #ca8a04 100%); border:none; padding:12px 0; border-radius:15px; font-size:0.8rem; font-weight:900; color:#fff; cursor:pointer; box-shadow:0 4px 12px rgba(234,179,8,0.25);">바톤 이어받기</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
     },
 
     showPraiseWizardNotice(message) {

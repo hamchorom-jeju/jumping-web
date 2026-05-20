@@ -287,8 +287,9 @@ function getUserDashboardData(payload) {
     // [perf] 구글 초고속 캐시 서비스 확인 (0.05초)
     var todayStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
     
-    // [v51.0] 실시간 릴레이 칭찬 수신 여부 스캔 연동!
+    // [v55.0] 실시간 릴레이 칭찬 수신 여부 및 칭찬 바톤 주자 스캔 연동!
     var praiseNotice = "";
+    var praiseBatonSender = ""; // 나에게 바톤을 넘겨준 사람 이름
     try {
       var ssTemp = SpreadsheetApp.getActiveSpreadsheet();
       var oasisSheet = ssTemp.getSheetByName("오아시스_글");
@@ -307,6 +308,8 @@ function getUserDashboardData(payload) {
       }
       if (oasisSheet && myNameTemp && myNameTemp !== "모험가") {
         var oasisData = oasisSheet.getDataRange().getValues();
+        
+        // 1. 오늘의 릴레이 칭찬 알림 검출 (오늘 날짜 나를 지목한 릴레이 칭찬이 있는지 확인)
         for (var o = oasisData.length - 1; o >= 1; o--) {
           var rowDate = oasisData[o][0];
           var targetName = String(oasisData[o][7] || "").trim();
@@ -315,6 +318,24 @@ function getUserDashboardData(payload) {
             praiseNotice = "💌 누군가 당신을 지목하여 칭찬의 마법을 보냈습니다!";
             break;
           }
+        }
+        
+        // 2. [v55.0] 실시간 칭찬 바톤 루프 검출 (가장 최근 릴레이칭찬의 대상이 나인지 판별)
+        var latestBatonSender = "";
+        for (var k = oasisData.length - 1; k >= 1; k--) {
+          var cat = String(oasisData[k][6] || "").trim();
+          if (cat === "릴레이칭찬") {
+            var target = String(oasisData[k][7] || "").trim();
+            if (target === myNameTemp) {
+              latestBatonSender = String(oasisData[k][3] || "").trim(); // 작성자가 나에게 바톤을 토스함!
+            }
+            break; // 가장 최신 릴레이칭찬 하나만 조회하고 탈출
+          }
+        }
+        
+        // 만약 내가 최신 칭찬 바톤을 받았고, 오늘 아직 칭찬을 수행하지 않았다면 바톤 주자로 공인!
+        if (latestBatonSender) {
+          praiseBatonSender = latestBatonSender;
         }
       }
     } catch (e) {
@@ -331,6 +352,7 @@ function getUserDashboardData(payload) {
           Logger.log("⚡ 캐시 데이터 반환 완료 (0.01초): " + phone);
           parsed.cacheHit = true;
           parsed.praiseNotice = praiseNotice; // 캐시 반환 시에도 실시간 칭찬 알림 실시간 동기화!
+          parsed.praiseBatonSender = praiseBatonSender; // [v55.0] 실시간 칭찬 바톤 연동!
           parsed.villageSettings = getVillageSettings();
           parsed.pillarNotice = getPillarNotice();
           return parsed;
@@ -765,6 +787,7 @@ function getUserDashboardData(payload) {
       inactivityPenalty: inactivityPenalty,
       isFirstLoginToday: isFirstLoginToday,
       praiseNotice: praiseNotice, // 실시간 칭찬 알림 전달!
+      praiseBatonSender: praiseBatonSender, // [v55.0] 실시간 칭찬 바톤 연동!
       villageSettings: getVillageSettings(),
       pillarNotice: getPillarNotice()
     };
@@ -6981,15 +7004,22 @@ function getOasisPosts() {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("오아시스_글") || ss.insertSheet("오아시스_글");
     if (sheet.getLastRow() < 1) {
-      sheet.appendRow(["날짜", "시간", "연락처", "작성자", "제목", "내용", "구분", "칭찬대상"]);
+      sheet.appendRow(["날짜", "시간", "연락처", "작성자", "제목", "내용", "구분", "칭찬대상", "공감수", "공감클릭연락처들"]);
       sheet.setFrozenRows(1);
       return [];
     }
+    
+    // [v55.0 컬럼 보정] 기존 8개 컬럼 구조일 경우 10개 컬럼으로 자동 헤더 확장
+    if (sheet.getLastColumn() < 10) {
+      var headerRange = sheet.getRange(1, 1, 1, 10);
+      headerRange.setValues([["날짜", "시간", "연락처", "작성자", "제목", "내용", "구분", "칭찬대상", "공감수", "공감클릭연락처들"]]);
+    }
+
     var data = sheet.getDataRange().getDisplayValues();
     var posts = [];
     for (var i = 1; i < data.length; i++) {
       posts.push({
-        id: i,
+        id: i + 1, // 시트 행 인덱스와 동기화 (1-based row index)
         date: data[i][0],
         time: data[i][1],
         phone: data[i][2],
@@ -6997,7 +7027,9 @@ function getOasisPosts() {
         title: data[i][4],
         content: data[i][5],
         category: data[i][6] || "일반",
-        targetMember: data[i][7] || ""
+        targetMember: data[i][7] || "",
+        hearts: Number(data[i][8] || 0),
+        heartPhones: data[i][9] || ""
       });
     }
     return posts.reverse(); // 최신글이 상단으로
@@ -7011,10 +7043,16 @@ function submitOasisPost(payload) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("오아시스_글") || ss.insertSheet("오아시스_글");
     if (sheet.getLastRow() === 0) {
-      sheet.appendRow(["날짜", "시간", "연락처", "작성자", "제목", "내용", "구분", "칭찬대상"]);
+      sheet.appendRow(["날짜", "시간", "연락처", "작성자", "제목", "내용", "구분", "칭찬대상", "공감수", "공감클릭연락처들"]);
       sheet.setFrozenRows(1);
     }
     
+    // [v55.0 컬럼 보정]
+    if (sheet.getLastColumn() < 10) {
+      var headerRange = sheet.getRange(1, 1, 1, 10);
+      headerRange.setValues([["날짜", "시간", "연락처", "작성자", "제목", "내용", "구분", "칭찬대상", "공감수", "공감클릭연락처들"]]);
+    }
+
     var now = new Date();
     var dateStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
     var timeStr = Utilities.formatDate(now, "GMT+9", "HH:mm:ss");
@@ -7030,7 +7068,9 @@ function submitOasisPost(payload) {
       payload.title,
       payload.content,
       category,
-      targetMember
+      targetMember,
+      0,  // 초기 공감수
+      ""  // 초기 공감클릭연락처들
     ]);
     
     var awardMessage = "";
@@ -7058,13 +7098,13 @@ function submitOasisPost(payload) {
       statType = "perf";
       itemTitle = "🔥 돌발: " + qTitle;
     } else if (category === "셀프칭찬") {
-      expAwarded = 5;
+      expAwarded = 3; // [v55.0] 나를 사랑하기 3점!
       statType = "def";
       itemTitle = "🌸 셀프 칭찬의 샘 기록";
-    } else if (category === "나이트컷다짐") {
-      expAwarded = 5;
+    } else if (category === "명언" || category === "격언") {
+      expAwarded = 10; // [v55.0] 명언 작성자 10점 큰보상!
       statType = "def";
-      itemTitle = "🌙 나이트컷 야식 차단 수호 다짐";
+      itemTitle = "📖 명언/격언 공유 공책 작성";
     } else if (category === "릴레이칭찬") {
       expAwarded = 5;
       statType = "def";
@@ -7090,6 +7130,69 @@ function submitOasisPost(payload) {
     }
     
     return { success: true, message: "오아시스 생명샘에 소중한 마음이 안전하게 기록되었습니다!" + awardMessage };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * [v55.0] 오아시스 명언/글 공감 리액션 API
+ */
+function reactOasisPost(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("오아시스_글");
+    if (!sheet) return { success: false, error: "오아시스 글 시트가 존재하지 않습니다." };
+    
+    var rowIdx = Number(payload.rowIdx);
+    var clickerPhone = String(payload.phone || "").replace(/[^0-9]/g, "");
+    var clickerName = payload.author || "모험가";
+    
+    if (!rowIdx || rowIdx < 2 || rowIdx > sheet.getLastRow()) {
+      return { success: false, error: "유효하지 않은 게시글 번호입니다." };
+    }
+    
+    var postData = sheet.getRange(rowIdx, 1, 1, 10).getValues()[0];
+    var authorPhone = String(postData[2]).replace(/[^0-9]/g, "");
+    var authorName = postData[3];
+    var currentHearts = Number(postData[8] || 0);
+    var heartPhones = String(postData[9] || "");
+    
+    // 중복 하트 클릭 방지
+    if (heartPhones.indexOf(clickerPhone) > -1) {
+      return { success: false, error: "이미 마음에 스며든 명언입니다. ❤️" };
+    }
+    
+    // 1. 공감클릭자 리스트에 연락처 추가 및 공감수 1 증가
+    var newHeartPhones = heartPhones ? (heartPhones + "," + clickerPhone) : clickerPhone;
+    var newHearts = currentHearts + 1;
+    
+    sheet.getRange(rowIdx, 9).setValue(newHearts);
+    sheet.getRange(rowIdx, 10).setValue(newHeartPhones);
+    
+    // 2. 리액션을 누른 나에게 +1 EXP 적립
+    recordActivityLog({
+      phone: clickerPhone,
+      name: clickerName,
+      type: "오아시스",
+      item: "❤️ 명언 공감하기 참여",
+      score: 1,
+      statType: "def"
+    });
+    
+    // 3. 리액션을 받은 원작자에게 +1 EXP 보너스 적립!
+    if (authorPhone && authorPhone !== clickerPhone) {
+      recordActivityLog({
+        phone: authorPhone,
+        name: authorName,
+        type: "오아시스",
+        item: "✨ 내가 올린 명언에 동료가 공감함",
+        score: 1,
+        statType: "def"
+      });
+    }
+    
+    return { success: true, hearts: newHearts, message: "마음의 온기가 성공적으로 스며들었습니다! (+1 EXP 적립) ❤️" };
   } catch (e) {
     return { success: false, error: e.toString() };
   }
