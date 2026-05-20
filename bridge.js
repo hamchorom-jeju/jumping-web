@@ -194,7 +194,7 @@ const Auth = {
     }
   },
   logout: function() {
-    if (confirm("🕌 지니 월드에서 퇴장하시겠습니까?")) {
+    if (confirm("🔑 로그아웃 하시겠습니까?")) {
       localStorage.removeItem('v44_user_name');
       localStorage.removeItem('v44_user_phone');
       localStorage.removeItem('v44_user_tier');
