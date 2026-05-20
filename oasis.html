@@ -1307,7 +1307,7 @@
 
             if (typeof google === 'undefined') {
                 loader.style.display = 'none';
-                console.warn("⚠️ [Local Environment] getArchivePhotos skipped.");
+                console.warn("⚠️ [Local Environment] getArchiveFeed skipped.");
                 return;
             }
 
@@ -1329,7 +1329,7 @@
                     feedEl.innerHTML = `<div style="text-align:center; padding:20px; color:#e11d48; font-size:0.75rem; font-weight:900;">🚨 서버 통신 실패: ${failureMsg}</div>`;
                     console.error("[Gallery Failure]", err);
                 })
-                .getArchivePhotos({ page: currentPage, limit: 12 });
+                .getArchiveFeed({ page: currentPage, limit: 12 });
         }
 
         function renderGalleryGrid(data) {

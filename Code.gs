@@ -3,7 +3,7 @@
  * v1.0 - Core Routing & Database Setup
  */
 
-function getArchivePhotos(payload) {
+function getArchiveFeed(payload) {
   try {
     var p = 1;
     var limit = 12;
