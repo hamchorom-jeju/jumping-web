@@ -693,7 +693,7 @@ const Village = {
         }
         
         // 온/오프 상태에 따라 파티클 렌더링 값 분기
-        const weather = weatherDisabled ? 'sun' : (settings.weather || 'sun');
+        const weather = weatherDisabled ? 'sun' : (settings.resolvedWeather || settings.weather || 'sun');
         const windSpeed = weatherDisabled ? 0 : (parseFloat(settings.realJejuWind) || 0);
         this.renderWeatherParticles(weather, windSpeed);
         
@@ -716,11 +716,13 @@ const Village = {
                 let weatherEmoji = '☀️';
                 let weatherName = '맑음';
                 
-                if (origWeather === 'rain') { weatherEmoji = '🌧️'; weatherName = '비'; }
-                else if (origWeather === 'snow') { weatherEmoji = '❄️'; weatherName = '눈'; }
-                else if (origWeather === 'blossom') { weatherEmoji = '🌸'; weatherName = '벚꽃 흩날림'; }
-                else if (origWeather === 'leaves') { weatherEmoji = '🍁'; weatherName = '낙엽 낙하'; }
-                else if (origWeather === 'auto') { weatherEmoji = '🔄'; weatherName = '제주 실시간 싱크'; }
+                const displayWeather = settings.resolvedWeather || origWeather;
+                
+                if (displayWeather === 'rain') { weatherEmoji = '🌧️'; weatherName = '비'; }
+                else if (displayWeather === 'snow') { weatherEmoji = '❄️'; weatherName = '눈'; }
+                else if (displayWeather === 'blossom') { weatherEmoji = '🌸'; weatherName = '벚꽃 흩날림'; }
+                else if (displayWeather === 'leaves') { weatherEmoji = '🍁'; weatherName = '낙엽 낙하'; }
+                else if (displayWeather === 'sun') { weatherEmoji = '☀️'; weatherName = '맑음'; }
                 
                 if (settings.realJejuTemp !== undefined) {
                     const temp = settings.realJejuTemp;

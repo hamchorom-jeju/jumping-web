@@ -6798,14 +6798,21 @@ function getVillageSettings() {
     // [v48.0] 실시간 제주시 노형동 기상싱크 모드 발동 처리
     if (settings.weather === "auto") {
       var jeju = getJejuRealtimeWeather();
-      settings.weather = jeju.weather;
+      settings.resolvedWeather = jeju.weather;
       settings.realJejuTemp = jeju.temp; // 현재 제주의 실시간 온도 정보도 화면단에 함께 주입!
       settings.realJejuWind = jeju.wind; // 현재 제주의 실시간 풍속 정보(m/s) 주입!
       
       if (settings.bgmEnabled === "true") {
-        var weatherKey = "bgm_" + jeju.weather;
-        settings.bgmUrl = settings[weatherKey] || settings["bgm_sun"] || defaultBgmMap["bgm_sun"];
+        // [원장님 직관적 설계 반영] 대표 배경음악 칸(bgmUrl)이 수동으로 입력되어 있으면 auto 모드에서도 해당 대표곡으로 우선 고정!
+        // 대표 배경음악 칸이 비어있거나 기본곡일 때만 아래 5가지 날씨별 커스텀 BGM이 제주의 날씨에 맞춰 지능적으로 자동 스위칭!
+        var hasCustomRepresentativeBgm = settings.bgmUrl && settings.bgmUrl.trim() !== "" && settings.bgmUrl.indexOf("SoundHelix-Song-1") === -1;
+        if (!hasCustomRepresentativeBgm) {
+          var weatherKey = "bgm_" + jeju.weather;
+          settings.bgmUrl = settings[weatherKey] || settings["bgm_sun"] || defaultBgmMap["bgm_sun"];
+        }
       }
+    } else {
+      settings.resolvedWeather = settings.weather;
     }
     
     // [v48.0] 불러올 때도 기존에 시트에 박혀있는 모든 Suno 단축/공유 링크를 오디오 다이렉트 주소로 초고속 해독!
