@@ -34,6 +34,78 @@
             50% { transform: scale(1.02); box-shadow: 0 4px 20px rgba(239, 68, 68, 0.35); }
             100% { transform: scale(1); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15); }
         }
+        .v-jeju-sync-bar {
+            display: none;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            background: linear-gradient(135deg, rgba(20, 30, 48, 0.9) 0%, rgba(36, 59, 85, 0.9) 100%);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-weight: 800;
+            font-size: 0.78rem;
+            text-align: left;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+            transition: all 0.3s ease;
+        }
+        .v-jeju-sync-bar .jeju-badge {
+            background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 900;
+            box-shadow: 0 2px 8px rgba(0, 114, 255, 0.4);
+            display: inline-block;
+            white-space: nowrap;
+        }
+        .v-jeju-sync-bar .jeju-text {
+            color: #f1f5f9;
+            line-height: 1.4;
+            word-break: keep-all;
+            flex: 1;
+        }
+        .v-jeju-sync-bar .jeju-toggle-btn {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .v-jeju-sync-bar .jeju-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.22);
+            transform: scale(1.05);
+        }
+        .v-jeju-sync-bar .jeju-toggle-btn.disabled {
+            background: rgba(0, 0, 0, 0.35);
+            border-color: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.45);
+        }
+        .v-jeju-sync-bar.wind-gale {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.9) 0%, rgba(185, 28, 28, 0.9) 100%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+            box-shadow: 0 8px 32px rgba(220, 38, 38, 0.3) !important;
+            animation: pulse-warning 1.8s infinite ease-in-out !important;
+        }
+        .v-jeju-sync-bar.wind-gale .jeju-badge {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4) !important;
+        }
     </style>
     <script>
         // [v44.219] 최우선 순위로 로그인 상태를 체크합니다.
@@ -61,7 +133,13 @@
     <div class="v-container">
         
         <!-- 📢 SEPARATED BANNERS (Fixed) -->
-        <div class="v-banner-notice">
+        <div class="v-jeju-sync-bar" id="jeju-sync-weather-bar">
+            <span class="jeju-badge">🌌 Jeju Sync</span>
+            <span class="jeju-text" id="jeju-sync-weather-text">실시간 노형동 날씨 동기화 중...</span>
+            <button onclick="Village.toggleWeatherParticles(event)" id="jeju-weather-toggle-btn" class="jeju-toggle-btn">👁️ 끄기</button>
+        </div>
+
+        <div class="v-banner-notice" id="village-notice-banner">
             📢 [마을 공지] 33 챌린지 시즌 4주차 결산 안내 | 20시 이후 금식 엄수!
         </div>
 

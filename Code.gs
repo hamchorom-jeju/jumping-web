@@ -725,7 +725,9 @@ function getUserDashboardData(payload) {
       achievedBonuses: achievedBonuses,
       inactiveDays: inactiveDays,
       inactivityPenalty: inactivityPenalty,
-      isFirstLoginToday: isFirstLoginToday
+      isFirstLoginToday: isFirstLoginToday,
+      villageSettings: getVillageSettings(),
+      pillarNotice: getPillarNotice()
     };
     
     result.cacheHit = false;
@@ -6078,10 +6080,11 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
 
       // 1. 이장 공지 퀘스트
       if (type === "이장") {
+        var qScore = data[i].length > 8 ? Number(data[i][8] || 15) : 15;
         if (dateStr === todayStr) {
-          result.todayQuest = { title: title, description: desc };
+          result.todayQuest = { title: title, description: desc, score: qScore };
         } else if (dateStr === tomorrowStr) {
-          result.tomorrowQuest = { title: title, description: desc };
+          result.tomorrowQuest = { title: title, description: desc, score: qScore };
         }
       }
 
@@ -6664,4 +6667,504 @@ function setGeminiApiKey(newKey) {
     return { success: false, error: e.toString() };
   }
 }
+
+/**
+ * ==========================================
+ * 🌦️ 실시간 날짜/날씨 컨트롤 및 BGM 설정 API (Cyworld Nostalgia)
+ * ==========================================
+ */
+/**
+ * [v48.0] 실시간 제주의 실제 기상 상황을 조회하여 가상 기후와 연동해주는 마법 에이전트 엔진
+ * Open-Meteo API를 사용하며, 서버 부하와 속도 유지를 위해 1시간 동안 조회 결과를 캐싱합니다.
+ */
+function getJejuRealtimeWeather() {
+  var cache = CacheService.getScriptCache();
+  var cachedWeather = cache.get("jeju_realtime_weather");
+  if (cachedWeather) {
+    try {
+      return JSON.parse(cachedWeather);
+    } catch (e) {
+      cache.remove("jeju_realtime_weather");
+    }
+  }
+
+  try {
+    // 제주시 노형동(클럽 위치) 기준 위도(33.4781), 경도(126.4755) API 호출
+    var url = "https://api.open-meteo.com/v1/forecast?latitude=33.4781&longitude=126.4755&current_weather=true";
+    var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+    if (response.getResponseCode() === 200) {
+      var json = JSON.parse(response.getContentText());
+      var currentWeather = json.current_weather;
+      var weatherCode = currentWeather.weathercode;
+      
+      var windSpeed = currentWeather.windspeed; // km/h
+      var windSpeedMs = Number((windSpeed / 3.6).toFixed(1)); // m/s
+      
+      var weather = "sun";
+      // WMO Weather Codes 번역:
+      // - 비(Rain/Drizzle): 51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99
+      // - 눈(Snow): 71, 73, 75, 85, 86
+      // - 맑음/흐림(Seasonal Blossom/Leaves/Sun): 그 외 코드
+      if ([51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99].indexOf(weatherCode) > -1) {
+        weather = "rain";
+      } else if ([71, 73, 75, 85, 86].indexOf(weatherCode) > -1) {
+        weather = "snow";
+      } else {
+        // 눈/비가 아니면 맑은 날씨! ➡️ 계절에 따른 감성 기후 효과 매핑
+        var month = new Date().getMonth() + 1; // 1-12월
+        if (month >= 3 && month <= 5) {
+          weather = "blossom"; // 봄: 흩날리는 벚꽃
+        } else if (month >= 9 && month <= 11) {
+          weather = "leaves";  // 가을: 떨어지는 낙엽
+        } else {
+          weather = "sun";     // 여름/겨울: 맑은 태양
+        }
+      }
+
+      var result = { weather: weather, temp: currentWeather.temperature, wind: windSpeedMs };
+      // 1시간(3600초) 캐싱
+      cache.put("jeju_realtime_weather", JSON.stringify(result), 3600);
+      return result;
+    }
+  } catch (e) {
+    Logger.log("제주 기상 데이터 동기화 실패: " + e.toString());
+  }
+  return { weather: "sun", temp: 20, wind: 0 };
+}
+
+function getVillageSettings() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("마을_설정");
+    if (!sheet) {
+      sheet = ss.insertSheet("마을_설정");
+      sheet.appendRow(["키", "값", "설명"]);
+      sheet.appendRow(["weather", "sun", "마을 날씨 (sun, rain, snow, blossom, leaves, auto)"]);
+      sheet.appendRow(["bgmEnabled", "false", "배경음악 활성화 여부 (true, false)"]);
+      sheet.appendRow(["bgmUrl", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", "배경음악 음원 주소"]);
+      sheet.appendRow(["bgm_sun", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", "맑음 테마 배경음악"]);
+      sheet.appendRow(["bgm_rain", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3", "비 테마 배경음악"]);
+      sheet.appendRow(["bgm_snow", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3", "눈 테마 배경음악"]);
+      sheet.appendRow(["bgm_blossom", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", "벚꽃 테마 배경음악"]);
+      sheet.appendRow(["bgm_leaves", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", "낙엽 테마 배경음악"]);
+      sheet.setFrozenRows(1);
+    }
+    
+    var data = sheet.getDataRange().getDisplayValues();
+    var settings = {};
+    var keysInSheet = {};
+    for (var i = 1; i < data.length; i++) {
+      settings[data[i][0]] = data[i][1];
+      keysInSheet[data[i][0]] = i + 1;
+    }
+
+    // [v48.0] 만약 기존 마을_설정 시트에 기후별 BGM 키가 누락되어 있다면 자동 복구/추가
+    var defaultBgmMap = {
+      "bgm_sun": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+      "bgm_rain": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
+      "bgm_snow": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3",
+      "bgm_blossom": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+      "bgm_leaves": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"
+    };
+
+    var addedNewRow = false;
+    for (var key in defaultBgmMap) {
+      if (!keysInSheet[key]) {
+        sheet.appendRow([key, defaultBgmMap[key], "기후별 커스텀 배경음악"]);
+        settings[key] = defaultBgmMap[key];
+        addedNewRow = true;
+      }
+    }
+    if (addedNewRow) {
+      data = sheet.getDataRange().getDisplayValues();
+      for (var i = 1; i < data.length; i++) {
+        settings[data[i][0]] = data[i][1];
+      }
+    }
+
+    // [v48.0] 실시간 제주시 노형동 기상싱크 모드 발동 처리
+    if (settings.weather === "auto") {
+      var jeju = getJejuRealtimeWeather();
+      settings.weather = jeju.weather;
+      settings.realJejuTemp = jeju.temp; // 현재 제주의 실시간 온도 정보도 화면단에 함께 주입!
+      settings.realJejuWind = jeju.wind; // 현재 제주의 실시간 풍속 정보(m/s) 주입!
+      
+      if (settings.bgmEnabled === "true") {
+        var weatherKey = "bgm_" + jeju.weather;
+        settings.bgmUrl = settings[weatherKey] || settings["bgm_sun"] || defaultBgmMap["bgm_sun"];
+      }
+    }
+    
+    return settings;
+  } catch (e) {
+    return { weather: "sun", bgmEnabled: "false", bgmUrl: "" };
+  }
+}
+
+function updateVillageSettings(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("마을_설정") || ss.insertSheet("마을_설정");
+    
+    var settingsMap = {
+      "weather": payload.weather || "sun",
+      "bgmEnabled": String(payload.bgmEnabled || "false"),
+      "bgmUrl": payload.bgmUrl || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    };
+
+    // [v48.0] 기후별 커스텀 BGM 키 동적 수신 및 매핑 저장
+    var customKeys = ["bgm_sun", "bgm_rain", "bgm_snow", "bgm_blossom", "bgm_leaves"];
+    customKeys.forEach(function(k) {
+      if (payload[k] !== undefined) {
+        settingsMap[k] = payload[k];
+      }
+    });
+    
+    var data = sheet.getDataRange().getValues();
+    var keysInSheet = {};
+    for (var i = 1; i < data.length; i++) {
+      keysInSheet[data[i][0]] = i + 1;
+    }
+    
+    for (var k in settingsMap) {
+      if (keysInSheet[k]) {
+        sheet.getRange(keysInSheet[k], 2).setValue(settingsMap[k]);
+      } else {
+        sheet.appendRow([k, settingsMap[k], "마을 설정 요소"]);
+      }
+    }
+    
+    return { success: true, message: "마을의 기후와 음악 환경이 신비롭게 변화했습니다! 🌌🌦️" };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * ==========================================
+ * 🌵 오아시스 돌발 게시판 (소통/다짐 스레드) API
+ * ==========================================
+ */
+function getOasisPosts() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("오아시스_글") || ss.insertSheet("오아시스_글");
+    if (sheet.getLastRow() < 1) {
+      sheet.appendRow(["날짜", "시간", "연락처", "작성자", "제목", "내용", "구분"]);
+      sheet.setFrozenRows(1);
+      return [];
+    }
+    var data = sheet.getDataRange().getDisplayValues();
+    var posts = [];
+    for (var i = 1; i < data.length; i++) {
+      posts.push({
+        id: i,
+        date: data[i][0],
+        time: data[i][1],
+        phone: data[i][2],
+        author: data[i][3],
+        title: data[i][4],
+        content: data[i][5],
+        category: data[i][6] || "일반"
+      });
+    }
+    return posts.reverse(); // 최신글이 상단으로
+  } catch (e) {
+    return [];
+  }
+}
+
+function submitOasisPost(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("오아시스_글") || ss.insertSheet("오아시스_글");
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(["날짜", "시간", "연락처", "작성자", "제목", "내용", "구분"]);
+      sheet.setFrozenRows(1);
+    }
+    
+    var now = new Date();
+    var dateStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    var timeStr = Utilities.formatDate(now, "GMT+9", "HH:mm:ss");
+    var phone = String(payload.phone || "").replace(/[^0-9]/g, "");
+    
+    sheet.appendRow([
+      dateStr,
+      timeStr,
+      "'" + phone,
+      payload.author,
+      payload.title,
+      payload.content,
+      payload.category || "일반"
+    ]);
+    
+    // 돌발 퀘스트 완료 자동 보상 점수 (+15 EXP) 트리거 처리
+    var awardMessage = "";
+    if (payload.category === "돌발" && payload.questTitle) {
+      var recordResult = recordActivityLog({
+        phone: phone,
+        name: payload.author,
+        type: "퀘스트",
+        item: "🔥 돌발: " + payload.questTitle,
+        score: 15,
+        statType: "perf" // 수행력 점수로 즉시 합산
+      });
+      if (recordResult && recordResult.success) {
+        awardMessage = " (돌발 퀘스트 완료 +15 EXP가 실시간 적립되었습니다!) ⚡";
+      }
+    }
+    
+    return { success: true, message: "오아시스 생명샘에 소중한 마음이 안전하게 기록되었습니다!" + awardMessage };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * ==========================================
+ * 📚 지혜의 보물고 반응 및 댓글 API
+ * ==========================================
+ */
+function getWisdomTipsWithReactions() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("지혜의_보물고") || ss.insertSheet("지혜의_보물고");
+    if (sheet.getLastRow() < 1) {
+      sheet.appendRow(["날짜", "제목", "내용", "카테고리", "작성자", "조회수", "공감수", "깨달음수"]);
+      sheet.setFrozenRows(1);
+      return [];
+    }
+    
+    var data = sheet.getDataRange().getDisplayValues();
+    var commentSheet = ss.getSheetByName("지혜의_보물고_댓글") || ss.insertSheet("지혜의_보물고_댓글");
+    var cData = commentSheet.getLastRow() > 1 ? commentSheet.getDataRange().getDisplayValues() : [];
+    
+    var tips = [];
+    for (var i = 1; i < data.length; i++) {
+      var tipId = i; // 행 번호 기반 ID
+      var comments = [];
+      for (var j = 1; j < cData.length; j++) {
+        if (Number(cData[j][1]) === tipId) {
+          comments.push({
+            date: cData[j][0],
+            author: cData[j][2],
+            content: cData[j][3]
+          });
+        }
+      }
+      
+      tips.push({
+        id: tipId,
+        date: data[i][0],
+        title: data[i][1],
+        content: data[i][2],
+        category: data[i][3],
+        author: data[i][4] || "길드마스터",
+        views: Number(data[i][5] || 0),
+        likes: Number(data[i][6] || 0),
+        insights: Number(data[i][7] || 0),
+        comments: comments
+      });
+    }
+    return tips.reverse();
+  } catch (e) {
+    return [];
+  }
+}
+
+function addWisdomReaction(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("지혜의_보물고");
+    var rowIdx = Number(payload.tipId) + 1; // 1-indexed header + row
+    
+    var colIdx = payload.type === "like" ? 7 : 8; // G열: 공감수, H열: 깨달음수
+    var curVal = Number(sheet.getRange(rowIdx, colIdx).getValue() || 0);
+    sheet.getRange(rowIdx, colIdx).setValue(curVal + 1);
+    
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+function addWisdomComment(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var commentSheet = ss.getSheetByName("지혜의_보물고_댓글") || ss.insertSheet("지혜의_보물고_댓글");
+    if (commentSheet.getLastRow() === 0) {
+      commentSheet.appendRow(["날짜", "글ID", "작성자", "댓글내용"]);
+      commentSheet.setFrozenRows(1);
+    }
+    
+    var now = new Date();
+    commentSheet.appendRow([
+      Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm:ss"),
+      payload.tipId,
+      payload.author,
+      payload.content
+    ]);
+    
+    return { success: true, message: "칭찬 한마디가 건강 비법서에 기록되었습니다! ✍️" };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * ==========================================
+ * 🛡️ 이장의 특별 축복 실시간 리액션 API
+ * ==========================================
+ */
+function blessActivityReaction(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var archiveSheet = ss.getSheetByName("아카이브");
+    var rowIdx = Number(payload.rowIdx);
+    
+    // 1. 아카이브 시트 리액션 저장 업데이트
+    var reactionJson = String(archiveSheet.getRange(rowIdx, 10).getValue() || "{}");
+    var reactions = { cool: [], best: [], cheer: [] };
+    try { reactions = JSON.parse(reactionJson); } catch(e) {}
+    
+    if (!reactions[payload.reactionType]) reactions[payload.reactionType] = [];
+    
+    // 이장님의 특별 도장
+    var chiefTag = "CHIEF_" + payload.reactionType;
+    if (reactions[payload.reactionType].indexOf(chiefTag) === -1) {
+      reactions[payload.reactionType].push(chiefTag);
+    }
+    
+    archiveSheet.getRange(rowIdx, 10).setValue(JSON.stringify(reactions));
+    
+    // 2. 해당 회원에게 축복 보너스 점수 하사 (+5 / +10 중첩 가능)
+    var studentName = payload.name;
+    var studentPhone = String(payload.phone).replace(/[^0-9]/g, "");
+    var bonusScore = Number(payload.score || 5);
+    
+    var recordResult = recordActivityLog({
+      phone: studentPhone,
+      name: studentName,
+      type: "방어", // 회복력 [회복]으로 합산
+      item: "✨ 이장의 특별 축복(" + payload.reactionType + ")",
+      score: bonusScore,
+      statType: "def" // 회복력 점수로 즉시 반영
+    });
+    
+    return { success: true, message: studentName + " 모험가에게 특별 축복 점수(+" + bonusScore + " EXP)를 하사하셨습니다! 🛡️✨" };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * ==========================================
+ * 📅 돌발 퀘스트 날짜별 캘린더 선세팅 API
+ * ==========================================
+ */
+function getScheduledQuests() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = checkAndCreateQuestRegistrySheet();
+    var data = sheet.getDataRange().getDisplayValues();
+    var list = [];
+    
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][2] === "이장") {
+        list.push({
+          rowIdx: i + 1,
+          date: data[i][1],
+          title: data[i][3],
+          description: data[i][4],
+          status: data[i][7] || "대기",
+          score: data[i].length > 8 ? Number(data[i][8] || 15) : 15
+        });
+      }
+    }
+    return list.reverse(); // 최근 등록 순
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveScheduledQuest(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = checkAndCreateQuestRegistrySheet();
+    
+    var dateStr = payload.date; // "yyyy-MM-dd"
+    var title = payload.title;
+    var desc = payload.description;
+    var score = Number(payload.score || 15);
+    
+    // 동일한 날짜에 이미 등록된 이장 돌발 퀘스트가 있는지 검사하여 덮어쓰기/수정 지원
+    var data = sheet.getDataRange().getDisplayValues();
+    var foundRowIdx = -1;
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][2] === "이장" && data[i][1] === dateStr) {
+        foundRowIdx = i + 1;
+        break;
+      }
+    }
+    
+    if (foundRowIdx > -1) {
+      // 덮어쓰기 수정
+      sheet.getRange(foundRowIdx, 4).setValue(title);
+      sheet.getRange(foundRowIdx, 5).setValue(desc);
+      sheet.getRange(foundRowIdx, 8).setValue("대기");
+      sheet.getRange(foundRowIdx, 9).setValue(score);
+    } else {
+      // 신규 등록
+      var newId = "Q_" + Date.now();
+      sheet.appendRow([
+        newId,
+        dateStr,
+        "이장",
+        title,
+        desc,
+        dateStr + " 23:59:59", // 만료 시간
+        "ALL_MEMBERS",
+        "대기",
+        score
+      ]);
+    }
+    
+    return { success: true, message: dateStr + "일 자정에 자동 실행되는 돌발 퀘스트가 안전하게 예약되었습니다! 📅⚡" };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+function deleteScheduledQuest(rowIdx) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = checkAndCreateQuestRegistrySheet();
+    sheet.deleteRow(Number(rowIdx));
+    return { success: true, message: "예약된 돌발 퀘스트가 캘린더에서 제거되었습니다." };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+function getVillageNotices() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("마을_공지") || ss.insertSheet("마을_공지");
+    if (sheet.getLastRow() < 1) return [];
+    var data = sheet.getDataRange().getDisplayValues();
+    var list = [];
+    for (var i = 1; i < data.length; i++) {
+      list.push({
+        date: data[i][0],
+        content: data[i][1],
+        category: data[i][2] || "공지",
+        active: String(data[i][3]).toUpperCase() === "TRUE"
+      });
+    }
+    return list.reverse(); // 최신 공지 순
+  } catch (e) {
+    return [];
+  }
+}
+
 

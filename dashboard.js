@@ -259,6 +259,18 @@ const Village = {
                             this.renderInactivityDebuff(res.inactiveDays, res.inactivityPenalty);
                         }
                         if (res.isFirstLoginToday) this.showLoginReward();
+                        
+                        // 🌦️ 마을 기후 및 배경음악 환경 실시간 동기화 반영
+                        if (res.villageSettings) {
+                            this.applyVillageEnvironment(res.villageSettings);
+                        }
+                        // 📢 전령의 기둥 공지 실시간 동기화 반영
+                        if (res.pillarNotice) {
+                            const noticeEl = document.getElementById('village-notice-banner');
+                            if (noticeEl) {
+                                noticeEl.innerHTML = `📢 [마을 공지] ${res.pillarNotice.content}`;
+                            }
+                        }
                     }
                 })
                 .withFailureHandler(() => { this.hideLoading(); this.hideSyncToast(); })
@@ -661,6 +673,276 @@ const Village = {
                 widget.style.display = 'none';
             }
         }
+    },
+
+    applyVillageEnvironment(settings) {
+        if (!settings) return;
+        this.lastSettings = settings; // 토글 시 재참조용으로 보관
+        
+        // [v48.0] 회원별 날씨 효과 온/오프 상태 로드 및 스위치 UI 동기화
+        const weatherDisabled = localStorage.getItem('village_weather_disabled') === 'true';
+        const btn = document.getElementById('jeju-weather-toggle-btn');
+        if (btn) {
+            if (weatherDisabled) {
+                btn.innerHTML = '🚫 켜기';
+                btn.classList.add('disabled');
+            } else {
+                btn.innerHTML = '👁️ 끄기';
+                btn.classList.remove('disabled');
+            }
+        }
+        
+        // 온/오프 상태에 따라 파티클 렌더링 값 분기
+        const weather = weatherDisabled ? 'sun' : (settings.weather || 'sun');
+        const windSpeed = weatherDisabled ? 0 : (parseFloat(settings.realJejuWind) || 0);
+        this.renderWeatherParticles(weather, windSpeed);
+        
+        const bgmEnabled = settings.bgmEnabled === 'true';
+        const bgmUrl = settings.bgmUrl || '';
+        this.handleBgm(bgmEnabled, bgmUrl);
+
+        // [v48.0] 실시간 제주시 노형동 기상 싱크 배너 노출 (배너는 항상 유지)
+        const jejuBar = document.getElementById('jeju-sync-weather-bar');
+        const jejuText = document.getElementById('jeju-sync-weather-text');
+        if (jejuBar && jejuText) {
+            if (settings.realJejuTemp !== undefined) {
+                jejuBar.style.display = 'flex';
+                const temp = settings.realJejuTemp;
+                
+                // 원본 기상 기준 안내
+                const origWeather = settings.weather || 'sun';
+                const origWind = parseFloat(settings.realJejuWind) || 0;
+                
+                let weatherEmoji = '☀️';
+                let weatherName = '맑음';
+                
+                if (origWeather === 'rain') { weatherEmoji = '🌧️'; weatherName = '비'; }
+                else if (origWeather === 'snow') { weatherEmoji = '❄️'; weatherName = '눈'; }
+                else if (origWeather === 'blossom') { weatherEmoji = '🌸'; weatherName = '벚꽃 흩날림'; }
+                else if (origWeather === 'leaves') { weatherEmoji = '🍁'; weatherName = '낙엽 낙하'; }
+                
+                let windStatus = '';
+                if (origWind >= 14.0) {
+                    windStatus = ` ⚠️ <strong>태풍급 강풍 주의!</strong>`;
+                    jejuBar.classList.add('wind-gale');
+                } else if (origWind >= 5.0) {
+                    windStatus = ` 🍃 <strong>강한 제주의 바람 부는 중!</strong>`;
+                    jejuBar.classList.add('wind-gale');
+                } else {
+                    windStatus = ` 🍃 산들바람`;
+                    jejuBar.classList.remove('wind-gale');
+                }
+                
+                jejuText.innerHTML = `현재 제주시 노형동은 <strong>${weatherEmoji} ${weatherName} (${temp}°C)</strong>, 풍속 <strong>${origWind} m/s</strong>${windStatus}`;
+            } else {
+                jejuBar.style.display = 'none';
+            }
+        }
+    },
+    
+    renderWeatherParticles(weather, windSpeed = 0) {
+        const oldWrap = document.getElementById('village-weather-wrapper');
+        if (oldWrap) oldWrap.remove();
+        
+        // 바람 세기 정의: 5.0 m/s 이상이면 강풍(windy) 비주얼 모드 발동!
+        const isWindy = windSpeed >= 5.0;
+        
+        // 맑고 바람도 없는 날씨라면 아무것도 그리지 않음
+        if (weather === 'sun' && !isWindy) return;
+        
+        const wrapper = document.createElement('div');
+        wrapper.id = 'village-weather-wrapper';
+        wrapper.style = "position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:9999; overflow:hidden;";
+        document.body.appendChild(wrapper);
+        
+        // 1. 강풍 상태(Jeju Windy)일 때 은은하게 흐르는 '바람 줄기(Wind Wisps)' 이펙트 추가!
+        if (isWindy) {
+            const windWispCount = 12;
+            for (let i = 0; i < windWispCount; i++) {
+                const wisp = document.createElement('div');
+                wisp.style.position = 'absolute';
+                wisp.style.top = (Math.random() * 90) + 'vh';
+                wisp.style.left = '-250px';
+                wisp.style.width = (Math.random() * 180 + 100) + 'px';
+                wisp.style.height = '1.2px';
+                wisp.style.background = 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent)';
+                wisp.style.opacity = Math.random() * 0.5 + 0.15;
+                
+                // 풍속에 비례해서 더 빠르게 휭휭 날아감!
+                const duration = Math.max(1.2, 5.5 - (windSpeed * 0.35)); 
+                const delay = Math.random() * 5;
+                
+                wisp.style.animation = `blow-wind ${duration}s linear ${delay}s infinite`;
+                wrapper.appendChild(wisp);
+            }
+        }
+        
+        // 2. 날씨 효과 렌더링 (비, 눈, 벚꽃, 낙엽)
+        if (weather !== 'sun') {
+            const particleCount = weather === 'rain' ? 80 : weather === 'snow' ? 50 : 32;
+            const chars = {
+                snow: '❄',
+                blossom: '🌸',
+                leaves: '🍁'
+            };
+            
+            for (let i = 0; i < particleCount; i++) {
+                const p = document.createElement('div');
+                p.style.position = 'absolute';
+                p.style.top = '-20px';
+                p.style.left = Math.random() * 100 + 'vw';
+                p.style.opacity = Math.random() * 0.7 + 0.3;
+                
+                const size = Math.random() * 15 + 10;
+                p.style.fontSize = size + 'px';
+                
+                // 강풍이 불면 떨어지는 속도를 2배 빠르게 조절!
+                let duration = Math.random() * 5 + 5;
+                if (isWindy) duration = duration * 0.45;
+                
+                const delay = Math.random() * 8;
+                
+                if (weather === 'rain') {
+                    p.style.width = '1.5px';
+                    p.style.height = (Math.random() * 20 + 15) + 'px';
+                    p.style.background = 'rgba(174, 219, 255, 0.6)';
+                    
+                    // 강풍일 때는 빗줄기가 휘몰아치듯 더 심하게 꺾임! (35도 vs 15도)
+                    const angle = isWindy ? 35 : 15;
+                    p.style.transform = `rotate(${angle}deg)`;
+                } else {
+                    p.innerText = chars[weather] || '';
+                }
+                
+                // 강풍일 때는 더 멀리 옆으로 날아가도록 전용 windy 애니메이션 적용!
+                const animName = isWindy ? `fall-${weather}-windy` : `fall-${weather}`;
+                p.style.animation = `${animName} ${duration}s linear ${delay}s infinite`;
+                wrapper.appendChild(p);
+            }
+        }
+        
+        const styleId = 'weather-keyframes-style';
+        if (!document.getElementById(styleId)) {
+            const style = document.createElement('style');
+            style.id = styleId;
+            style.innerHTML = `
+                @keyframes blow-wind {
+                    0% { transform: translateX(-250px); }
+                    100% { transform: translateX(110vw); }
+                }
+                @keyframes fall-rain {
+                    to { transform: translateY(105vh) rotate(15deg); }
+                }
+                @keyframes fall-rain-windy {
+                    to { transform: translateY(105vh) translateX(35vw) rotate(35deg); }
+                }
+                @keyframes fall-snow {
+                    0% { transform: translateY(-20px) translateX(0) rotate(0deg); }
+                    50% { transform: translateY(50vh) translateX(20px) rotate(180deg); }
+                    100% { transform: translateY(105vh) translateX(-10px) rotate(360deg); }
+                }
+                @keyframes fall-snow-windy {
+                    0% { transform: translateY(-20px) translateX(0) rotate(0deg); }
+                    100% { transform: translateY(105vh) translateX(65vw) rotate(720deg); }
+                }
+                @keyframes fall-blossom {
+                    0% { transform: translateY(-20px) translateX(0) rotate(0deg); }
+                    50% { transform: translateY(50vh) translateX(30px) rotate(120deg); }
+                    100% { transform: translateY(105vh) translateX(-20px) rotate(240deg); }
+                }
+                @keyframes fall-blossom-windy {
+                    0% { transform: translateY(-20px) translateX(0) rotate(0deg); }
+                    100% { transform: translateY(105vh) translateX(75vw) rotate(540deg); }
+                }
+                @keyframes fall-leaves {
+                    0% { transform: translateY(-20px) translateX(0) rotate(0deg); }
+                    50% { transform: translateY(50vh) translateX(-20px) rotate(180deg); }
+                    100% { transform: translateY(105vh) translateX(15px) rotate(360deg); }
+                }
+                @keyframes fall-leaves-windy {
+                    0% { transform: translateY(-20px) translateX(0) rotate(0deg); }
+                    100% { transform: translateY(105vh) translateX(70vw) rotate(480deg); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    },
+    
+    handleBgm(enabled, url) {
+        if (!url) return;
+        
+        let audio = document.getElementById('village-bgm-audio');
+        if (!audio) {
+            audio = document.createElement('audio');
+            audio.id = 'village-bgm-audio';
+            audio.loop = true;
+            audio.src = url;
+            document.body.appendChild(audio);
+        } else if (audio.src !== url) {
+            audio.src = url;
+        }
+        
+        let btn = document.getElementById('village-bgm-toggle');
+        if (!btn) {
+            btn = document.createElement('div');
+            btn.id = 'village-bgm-toggle';
+            btn.style = "position:fixed; bottom:90px; right:15px; width:45px; height:45px; border-radius:50%; background:rgba(255,255,255,0.85); box-shadow:0 8px 32px rgba(31,38,135,0.15); backdrop-filter:blur(6px); border:1.5px solid rgba(255,255,255,0.18); display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:9998; transition:transform 0.3s ease;";
+            btn.innerHTML = `<i class="fas fa-music" style="color:var(--v-wood); font-size:1.1rem; transition: color 0.3s;"></i>`;
+            document.body.appendChild(btn);
+            
+            btn.onclick = () => {
+                if (audio.paused) {
+                    audio.play().then(() => {
+                        btn.querySelector('i').style.color = '#e74c3c';
+                        btn.style.transform = 'scale(1.1) rotate(15deg)';
+                        localStorage.setItem('v44_bgm_user_play', 'true');
+                    }).catch(e => console.log("BGM Play error:", e));
+                } else {
+                    audio.pause();
+                    btn.querySelector('i').style.color = 'var(--v-wood)';
+                    btn.style.transform = 'scale(1) rotate(0deg)';
+                    localStorage.setItem('v44_bgm_user_play', 'false');
+                }
+            };
+        }
+        
+        const userPlayPreference = localStorage.getItem('v44_bgm_user_play');
+        if (enabled && userPlayPreference === 'true') {
+            audio.play().then(() => {
+                btn.querySelector('i').style.color = '#e74c3c';
+                btn.style.transform = 'scale(1.1) rotate(15deg)';
+            }).catch(e => {
+                console.log("Auto-play blocked by browser; waiting for user interaction.");
+            });
+        } else {
+            audio.pause();
+            btn.querySelector('i').style.color = 'var(--v-wood)';
+            btn.style.transform = 'scale(1) rotate(0deg)';
+        }
+    },
+    
+    toggleWeatherParticles(event) {
+        if (event) event.stopPropagation();
+        
+        const current = localStorage.getItem('village_weather_disabled') === 'true';
+        const newVal = !current;
+        localStorage.setItem('village_weather_disabled', String(newVal));
+        
+        const btn = document.getElementById('jeju-weather-toggle-btn');
+        if (btn) {
+            if (newVal) {
+                btn.innerHTML = '🚫 켜기';
+                btn.classList.add('disabled');
+            } else {
+                btn.innerHTML = '👁️ 끄기';
+                btn.classList.remove('disabled');
+            }
+        }
+        
+        const settings = this.lastSettings || {};
+        const weather = newVal ? 'sun' : (settings.weather || 'sun');
+        const windSpeed = newVal ? 0 : (parseFloat(settings.realJejuWind) || 0);
+        this.renderWeatherParticles(weather, windSpeed);
     }
 };
 

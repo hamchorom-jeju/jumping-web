@@ -2,45 +2,260 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WISDOM WAREHOUSE - 노형 빌리지</title>
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .wisdom-container { padding: 40px 20px; text-align: center; color: var(--v-wood); }
-        .wisdom-icon { font-size: 4rem; color: #f1c40f; margin-bottom: 20px; }
+        :root {
+            --wisdom-gold: #d4af37;
+            --wisdom-gold-dark: #aa7c11;
+            --wisdom-bg: #fdfbf7;
+            --wisdom-paper: #fcf9f2;
+            --wisdom-border: rgba(170, 124, 17, 0.2);
+            --wisdom-wood: #2c1a04;
+        }
+
+        body {
+            background-color: var(--wisdom-bg) !important;
+            font-family: 'Outfit', 'Inter', 'Noto Sans KR', sans-serif;
+            color: #2c1a04;
+        }
+
+        .wisdom-header-banner {
+            background: linear-gradient(135deg, #2c1a04 0%, #1e1001 100%);
+            color: #f7e7c4;
+            padding: 35px 20px;
+            text-align: center;
+            border-bottom-left-radius: 40px;
+            border-bottom-right-radius: 40px;
+            box-shadow: 0 10px 30px rgba(44, 26, 4, 0.15);
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 3px solid var(--wisdom-gold);
+        }
+
+        .wisdom-header-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .wisdom-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 0 15px 120px 15px;
+        }
+
+        .scroll-card {
+            background: var(--wisdom-paper);
+            border-radius: 25px;
+            padding: 25px;
+            border: 2px solid var(--wisdom-border);
+            box-shadow: 0 10px 25px rgba(44, 26, 4, 0.05);
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scroll-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--wisdom-gold) 0%, var(--wisdom-gold-dark) 100%);
+        }
+
+        .scroll-category {
+            font-size: 0.65rem;
+            font-weight: 900;
+            color: var(--wisdom-gold-dark);
+            background: rgba(212, 175, 55, 0.15);
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .scroll-title {
+            font-size: 1.05rem;
+            font-weight: 900;
+            color: var(--wisdom-wood);
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .scroll-meta {
+            font-size: 0.68rem;
+            color: #7c6a56;
+            font-weight: 800;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .scroll-content {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #4a3c2c;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+            word-break: keep-all;
+        }
+
+        .scroll-reactions {
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid rgba(170, 124, 17, 0.1);
+            border-bottom: 1px solid rgba(170, 124, 17, 0.1);
+            padding: 12px 0;
+            margin-bottom: 15px;
+        }
+
+        .reaction-btn {
+            flex: 1;
+            background: white;
+            border: 1.5px solid var(--wisdom-border);
+            padding: 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--wisdom-wood);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .reaction-btn:active {
+            transform: scale(0.95);
+        }
+
+        .reaction-btn.liked {
+            background: #fff5f5;
+            border-color: #feb2b2;
+            color: #e53e3e;
+        }
+
+        .reaction-btn.insightful {
+            background: #fefcbf;
+            border-color: #faf089;
+            color: #b7791f;
+        }
+
+        .comments-section {
+            background: rgba(44, 26, 4, 0.02);
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+        .comment-item {
+            border-bottom: 1px solid rgba(44, 26, 4, 0.05);
+            padding: 8px 0;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #4a3c2c;
+        }
+
+        .comment-item:last-child {
+            border-bottom: none;
+        }
+
+        .comment-author {
+            font-weight: 900;
+            color: var(--wisdom-gold-dark);
+            margin-right: 8px;
+        }
+
+        .comment-input-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .comment-input {
+            flex: 1;
+            border: 1.5px solid var(--wisdom-border);
+            border-radius: 12px;
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            box-sizing: border-box;
+            background: white;
+        }
+
+        .comment-input:focus {
+            outline: none;
+            border-color: var(--wisdom-gold-dark);
+        }
+
+        .comment-submit-btn {
+            background: var(--wisdom-wood);
+            color: #f7e7c4;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body style="margin:0; padding:0;">
     <!-- [v44.218] 로딩 오버레이 -->
     <div id="v-loading" class="v-loading-overlay" style="display: flex;">
         <div class="v-loading-spinner"></div>
-        <div id="v-loading-msg" style="font-weight: 800; color: var(--v-wood); font-size: 0.9rem;">지혜의 고서를 불러오고 있습니다...</div>
+        <div id="v-loading-msg" style="font-weight: 800; color: var(--wisdom-wood); font-size: 0.9rem;">지혜의 고서를 불러오고 있습니다...</div>
     </div>
 
-    <header class="v-global-header">
+    <header class="v-global-header" style="background: var(--wisdom-wood); border-bottom: 2px solid var(--wisdom-gold);">
         <div style="display:flex; justify-content:space-between; align-items:center; width:100%; max-width:500px; margin:0 auto;">
             <div style="width:40px;"></div>
-            <h1>지식창고</h1>
+            <h1 style="color:#f7e7c4;">지혜의 보물고</h1>
             <button class="v-header-logout" id="header-logout-btn" onclick="Auth.logout()" title="마을 퇴장" style="display: flex !important;">
                 <i class="fas fa-sign-out-alt"></i>
             </button>
         </div>
     </header>
 
-    <div class="v-profile-bar">
-        <div class="v-status-badge" id="user-status-badge">
-            <div class="v-status-dot" id="user-status-dot"></div>
+    <div class="v-profile-bar" style="background: rgba(170, 124, 17, 0.08); border-bottom: 1px solid rgba(170, 124, 17, 0.15);">
+        <div class="v-status-badge" id="user-status-badge" style="background: var(--wisdom-wood); color: #f7e7c4; border: 1px solid var(--wisdom-gold);">
+            <div class="v-status-dot" id="user-status-dot" style="background:#f7e7c4;"></div>
             <span id="user-status-name">정보 로딩 중...</span>
         </div>
-        <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700;" id="user-status-phone">
+        <div style="font-size: 0.7rem; color: var(--wisdom-gold-dark); font-weight: 800;" id="user-status-phone">
             NO SESSION
         </div>
     </div>
+
+    <div class="wisdom-header-banner">
+        <div style="font-size: 2.5rem; margin-bottom: 10px;">📜</div>
+        <h2 style="font-weight: 900; margin: 0 0 8px 0; font-size: 1.3rem; letter-spacing: -0.5px; color: var(--wisdom-gold);">이장님의 황금 건강 고서</h2>
+        <p style="font-weight: 800; font-size: 0.75rem; opacity: 0.85; margin: 0; word-break: keep-all; line-height: 1.4; color: #fdf4df;">
+            이장님이 집필한 건강 지식과 꿀팁을 정독하고, 공감과 깨달음을 나누며 칭찬 코멘트를 달아보세요!
+        </p>
+    </div>
+
     <div class="wisdom-container">
-        <div class="wisdom-icon">📚</div>
-        <h2 style="font-weight: 900; margin-bottom: 15px;">이장님의 건강 비법서</h2>
-        <p style="font-weight: 700; opacity: 0.8;">현재 지식의 고서들을 정리 중입니다.<br>잠시만 기다려 주세요!</p>
+        
+        <!-- 📜 고서 목록 컨테이너 -->
+        <div id="wisdom-tips-list">
+            <!-- Dynamic Tip Cards will be injected here -->
+        </div>
+
     </div>
 
     <!-- 📱 GLOBAL VILLAGE NAV -->
@@ -66,8 +281,11 @@
             <span>테라피(예약)</span>
         </a>
     </nav>
+
     <script src="bridge.js"></script>
     <script>
+        let currentUser = { name: '', phone: '' };
+
         function renderLoginStatus() {
             const uName = localStorage.getItem('v44_user_name');
             const uPhone = localStorage.getItem('v44_user_phone');
@@ -78,19 +296,160 @@
             const logoutBtn = document.getElementById('header-logout-btn');
 
             if (uName && uPhone) {
-                badge.style.background = "var(--emerald)";
-                badge.style.color = "white";
-                dot.style.background = "#fff";
+                currentUser.name = uName;
+                currentUser.phone = uPhone;
                 nameEl.innerText = `${uName}(${uPhone.slice(-4)}) 님 접속중!`;
                 const uTier = localStorage.getItem('v44_user_tier') || "🌱 회원";
-                phoneEl.innerText = uTier;      logoutBtn.style.display = "flex";
+                phoneEl.innerText = uTier;
+                logoutBtn.style.display = "flex";
             }
+        }
+
+        function loadWisdomTips() {
+            showLoading("지혜의 도서관에서 고서를 가져오는 중...");
+            if (typeof google === 'undefined') {
+                hideLoading();
+                return;
+            }
+            google.script.run
+                .withSuccessHandler(tips => {
+                    hideLoading();
+                    renderTips(tips);
+                })
+                .getWisdomTipsWithReactions();
+        }
+
+        function renderTips(tips) {
+            const container = document.getElementById('wisdom-tips-list');
+            if (!tips || tips.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:40px; background:#fff; border-radius:20px; border:2px solid var(--wisdom-border); color:#7c6a56; font-weight:800; font-size:0.8rem;">
+                        📜 아직 이장님이 집필한 고서가 보물고에 없습니다.<br>첫 집필을 기다려 주세요!
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = tips.map(t => {
+                const commentMarkup = t.comments.map(c => `
+                    <div class="comment-item">
+                        <span class="comment-author">👤 ${c.author}:</span>
+                        <span>${c.content}</span>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="scroll-card" id="tip-card-${t.id}">
+                        <span class="scroll-category">📖 ${t.category || '건강꿀팁'}</span>
+                        <div class="scroll-title">${t.title}</div>
+                        <div class="scroll-meta">
+                            <span>✍️ 작성자: ${t.author}</span>
+                            <span>📅 ${t.date}</span>
+                        </div>
+                        <div class="scroll-content">${t.content}</div>
+                        
+                        <!-- 👍 리액션 패널 -->
+                        <div class="scroll-reactions">
+                            <button class="reaction-btn" onclick="sendReaction(${t.id}, 'like', this)">
+                                ❤️ 공감하기 (<span class="like-cnt">${t.likes || 0}</span>)
+                            </button>
+                            <button class="reaction-btn" onclick="sendReaction(${t.id}, 'insight', this)">
+                                💡 깊은 깨달음 (<span class="insight-cnt">${t.insights || 0}</span>)
+                            </button>
+                        </div>
+                        
+                        <!-- 💬 칭찬 코멘트 패널 -->
+                        <div class="comments-section">
+                            <div style="font-weight:900; font-size:0.75rem; color:var(--wisdom-wood); margin-bottom:8px;">
+                                <i class="fa-regular fa-comment-dots"></i> 모험가들의 칭찬 코멘트 (${t.comments.length})
+                            </div>
+                            <div class="comments-list" id="comments-list-${t.id}">
+                                ${commentMarkup || '<div style="font-size:0.7rem; color:#999; text-align:center; padding:10px 0;">첫 칭찬 코멘트를 남겨보세요!</div>'}
+                            </div>
+                            
+                            <!-- 댓글 입력 창 -->
+                            <div class="comment-input-container">
+                                <input type="text" id="comment-input-${t.id}" class="comment-input" placeholder="칭찬 한마디와 건강 다짐을 적으세요...">
+                                <button class="comment-submit-btn" onclick="submitComment(${t.id})">보내기</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function sendReaction(tipId, type, btnEl) {
+            if (typeof google === 'undefined') return;
+            
+            // UI 낙관적 반영
+            const cntSpan = btnEl.querySelector(type === 'like' ? '.like-cnt' : '.insight-cnt');
+            let cur = parseInt(cntSpan.innerText) || 0;
+            cntSpan.innerText = cur + 1;
+            
+            btnEl.classList.add(type === 'like' ? 'liked' : 'insightful');
+            btnEl.disabled = true;
+
+            google.script.run
+                .withSuccessHandler(res => {
+                    if (!res.success) {
+                        console.error("Reaction failed:", res.error);
+                    }
+                })
+                .addWisdomReaction({ tipId: tipId, type: type });
+        }
+
+        function submitComment(tipId) {
+            const input = document.getElementById(`comment-input-${tipId}`);
+            const text = input.value.trim();
+            if (!text) {
+                alert("내용을 입력해 주세요!");
+                return;
+            }
+
+            showLoading("코멘트를 기록하는 중...");
+            
+            const payload = {
+                tipId: tipId,
+                author: currentUser.name,
+                content: text
+            };
+
+            if (typeof google !== 'undefined') {
+                google.script.run
+                    .withSuccessHandler(res => {
+                        hideLoading();
+                        if (res.success) {
+                            input.value = '';
+                            loadWisdomTips(); // Reload complete list to get fresh comments
+                        } else {
+                            alert("코멘트 기록 실패: " + res.error);
+                        }
+                    })
+                    .addWisdomComment(payload);
+            } else {
+                hideLoading();
+                alert("구글 연동 환경이 아닙니다.");
+            }
+        }
+
+        function showLoading(msg) {
+            const overlay = document.getElementById('v-loading');
+            const msgEl = document.getElementById('v-loading-msg');
+            if (overlay && msgEl) {
+                msgEl.innerText = msg;
+                overlay.style.display = 'flex';
+            }
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('v-loading');
+            if (overlay) overlay.style.display = 'none';
         }
 
         window.onload = function() {
             Auth.check();
             renderLoginStatus();
-            setTimeout(hideLoading, 500);
+            setTimeout(loadWisdomTips, 300);
         };
     </script>
 </body>

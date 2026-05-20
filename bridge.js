@@ -37,8 +37,9 @@ if (typeof google === 'undefined' || !google.script) {
             target.successHandler = null;
             target.failureHandler = null;
 
-            // [v45.10] 만약 로컬 file:// 환경이라면, 실서버 통신 대신 가상 모의(Mock) 데이터 즉시 반환!
-            if (window.location.protocol === 'file:') {
+            // [v45.10] 만약 로컬 환경(file://, localhost, 127.0.0.1)이라면, 실서버 통신 대신 가상 모의(Mock) 데이터 즉시 반환!
+            const isLocalEnv = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            if (isLocalEnv) {
               console.log(`🎮 [Local Mock Mode] Intercepted: ${prop}`, args);
               setTimeout(() => {
                 let mockResult = { success: true };
@@ -54,12 +55,23 @@ if (typeof google === 'undefined' || !google.script) {
                 } else if (prop === 'getUserDashboardData') {
                   mockResult = {
                     success: true,
+                    name: "이장님",
                     tier: "🏆 마스터 모험가",
                     exp: 750,
                     level: 5,
+                    totalScore: 750,
+                    rank: 1,
                     doneList: ["아침 식단"],
-                    weeklyTargets: {},
-                    monthlyTargets: {}
+                    weeklyTargets: { health: 1500, perf: 1000, def: 500 },
+                    monthlyTargets: { health: 6000, perf: 4000, def: 2000 },
+                    villageSettings: {
+                      weather: "blossom",
+                      bgmEnabled: "true",
+                      bgmUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+                    },
+                    pillarNotice: {
+                      content: "노형 빌리지 리뉴얼 완공! 🏰 따사로운 봄바람과 함께 벚꽃 마법이 시작되었습니다. 🌸 우측 하단의 BGM 플레이어를 켜고 낭만 넘치는 음악을 감상해 보세요!"
+                    }
                   };
                 } else if (prop === 'getArchiveFeed') {
                   let stored = sessionStorage.getItem("mock_feed");
@@ -77,6 +89,49 @@ if (typeof google === 'undefined' || !google.script) {
                     totalPages: 1,
                     currentPage: 1
                   };
+                } else if (prop === 'getVillageSettings') {
+                  const storedWeather = localStorage.getItem("mock_weather") || "blossom";
+                  const storedBgmEnabled = localStorage.getItem("mock_bgm_enabled") || "true";
+                  const storedBgmUrl = localStorage.getItem("mock_bgm_url") || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+                  
+                  const bgm_sun = localStorage.getItem("mock_bgm_sun") || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+                  const bgm_rain = localStorage.getItem("mock_bgm_rain") || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3";
+                  const bgm_snow = localStorage.getItem("mock_bgm_snow") || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3";
+                  const bgm_blossom = localStorage.getItem("mock_bgm_blossom") || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3";
+                  const bgm_leaves = localStorage.getItem("mock_bgm_leaves") || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3";
+                  
+                  let weather = storedWeather;
+                  let bgmUrl = storedBgmUrl;
+                  
+                  if (weather === "auto") {
+                    weather = "blossom"; // 로컬 프리뷰에서는 제주의 봄철 벚꽃 날씨와 BGM으로 시뮬레이션!
+                    bgmUrl = bgm_blossom;
+                  }
+
+                  mockResult = {
+                    weather: weather,
+                    bgmEnabled: storedBgmEnabled,
+                    bgmUrl: bgmUrl,
+                    bgm_sun: bgm_sun,
+                    bgm_rain: bgm_rain,
+                    bgm_snow: bgm_snow,
+                    bgm_blossom: bgm_blossom,
+                    bgm_leaves: bgm_leaves,
+                    realJejuTemp: 18.5,
+                    realJejuWind: weather === "blossom" ? 8.5 : 2.1 // 벚꽃 기후일 때 시원한 8.5m/s 강풍 시뮬레이션!
+                  };
+                } else if (prop === 'updateVillageSettings') {
+                  const payload = args[0] || {};
+                  localStorage.setItem("mock_weather", payload.weather || "sun");
+                  localStorage.setItem("mock_bgm_enabled", String(payload.bgmEnabled || "false"));
+                  localStorage.setItem("mock_bgm_url", payload.bgmUrl || "");
+                  
+                  localStorage.setItem("mock_bgm_sun", payload.bgm_sun || "");
+                  localStorage.setItem("mock_bgm_rain", payload.bgm_rain || "");
+                  localStorage.setItem("mock_bgm_snow", payload.bgm_snow || "");
+                  localStorage.setItem("mock_bgm_blossom", payload.bgm_blossom || "");
+                  localStorage.setItem("mock_bgm_leaves", payload.bgm_leaves || "");
+                  mockResult = { success: true, message: "[로컬 모크] 마을 기후 마법이 성공적으로 저장되었습니다!" };
                 } else if (prop === 'getActiveEvents') {
                   mockResult = [];
                 } else if (prop === 'getGeminiApiKey') {
