@@ -1983,7 +1983,7 @@
       if (!TARGET_PHONE) return showAppAlert('로그인이 필요합니다.', 'error');
 
       const hbtn = document.getElementById('hbtn-' + d.habitId);
-      if (hbtn && hbtn.classList.contains('done')) {
+      if (hbtn && (hbtn.classList.contains('done-auth') || hbtn.classList.contains('done-check'))) {
         return showAppAlert(`✨ 이미 오늘 [${d.title}]을 완료했습니다!`, 'error');
       }
 
@@ -1995,30 +1995,39 @@
         if (!window.lastDoneList) window.lastDoneList = [];
         window.lastDoneList.push(d.item);
         syncDoneListStates(window.lastDoneList);
-        if (hbtn) hbtn.classList.add('done');
         closeInfoModal();
         showAppAlert(`✨ [${d.title}] 수호 완료! +${score} EXP 획득! 🌿 (가상 적립)`, 'success');
         return;
       }
 
-      showLoading("🌿 습관 수호 기록하는 중...");
+      // [v50.7] 초고속 낙관적 UI(Optimistic UI) 적용: 장막 없이 0.01초 만에 즉시 로컬 완료 처리!
+      if (!window.lastDoneList) window.lastDoneList = [];
+      if (!window.lastDoneList.includes(d.item)) {
+        window.lastDoneList.push(d.item);
+      }
+      
+      // 즉시 화면 갱신 (사용자는 누르는 즉시 대기시간 0초로 완료를 체감!)
+      syncDoneListStates(window.lastDoneList);
+      closeInfoModal();
+      showAppAlert(`✨ [${d.title}] 수호 완료! +${score} EXP 획득! 🌿`, 'success');
+
+      // 구글 앱스 스크립트 미지원 로컬 환경일 경우 백그라운드 전송은 스킵
+      if (typeof google === 'undefined' || !google.script || !google.script.run) {
+        console.warn("⚠️ [Local Environment] recordActivityLog silently simulated.");
+        return;
+      }
+
+      // [v50.7] 서버 전송은 사용자를 방해하지 않고 뒤에서 조용히(Silent Background Sync) 처리!
       google.script.run
         .withSuccessHandler(res => {
-          hideLoading();
           if (res && res.success) {
-            if (!window.lastDoneList) window.lastDoneList = [];
-            window.lastDoneList.push(d.item);
-            syncDoneListStates(window.lastDoneList);
-            if (hbtn) hbtn.classList.add('done');
-            closeInfoModal();
-            showAppAlert(`✨ [${d.title}] 수호 완료! +${score} EXP 획득! 🌿`, 'success');
+            console.log(`[Background Sync] ${d.title} recorded successfully.`);
           } else {
-            showAppAlert('🚨 습관 체크 실패: ' + (res ? res.error : '서버 오류'), 'error');
+            console.error('[Background Sync Failed]', res ? res.error : 'unknown');
           }
         })
         .withFailureHandler(err => {
-          hideLoading();
-          showAppAlert('🚨 습관 체크 통신 에러 발생!', 'error');
+          console.error('[Background Sync Network Error]', err);
         })
         .recordActivityLog({ 
           phone: TARGET_PHONE, 
