@@ -443,22 +443,84 @@
       if (activeBtn) activeBtn.classList.add('active');
     }
 
-    function saveEnvironment() {
+    async function resolveSunoLinkClient(url) {
+      if (!url) return url;
+      url = url.trim();
+      
+      // 1. 만약 이미 cdn1.suno.ai 직접 주소거나 다른 일반 주소라면 그대로 반환
+      if (url.indexOf("cdn1.suno.ai") > -1) {
+        return url;
+      }
+      
+      // 상대 경로(/song/[UUID])와 절대 경로(suno.com/song/[UUID])를 모두 추출할 수 있게 정규식 탑재!
+      var songRegex = /\/song\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+      
+      // 2. 풀버전 공유 링크 매칭 (suno.com/song/[UUID])
+      var match = url.match(songRegex);
+      if (match && match[1]) {
+        return "https://cdn1.suno.ai/" + match[1] + ".mp3";
+      }
+      
+      // 3. 단축 공유 링크 처리 (suno.com/s/[ID])
+      var shortRegex = /suno\.com\/s\/([a-zA-Z0-9]+)/i;
+      if (shortRegex.test(url)) {
+        try {
+          const res = await fetch("https://unshorten.me/json/" + encodeURIComponent(url));
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.success && data.resolved_url) {
+              const matchResolved = data.resolved_url.match(songRegex);
+              if (matchResolved && matchResolved[1]) {
+                return "https://cdn1.suno.ai/" + matchResolved[1] + ".mp3";
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Client-side Suno unshorten failed:", e);
+        }
+      }
+      
+      return url;
+    }
+
+    async function saveEnvironment() {
+      showLoading("음악 주소를 해독하고 기후 설정을 기록하는 중...");
+
+      const bgmUrlRaw = document.getElementById('bgm-url-input').value.trim();
+      const bgmSunRaw = document.getElementById('bgm-sun-input').value.trim();
+      const bgmRainRaw = document.getElementById('bgm-rain-input').value.trim();
+      const bgmSnowRaw = document.getElementById('bgm-snow-input').value.trim();
+      const bgmBlossomRaw = document.getElementById('bgm-blossom-input').value.trim();
+      const bgmLeavesRaw = document.getElementById('bgm-leaves-input').value.trim();
+
+      // Suno 단축/공유 링크 초고속 프론트엔드 해독 실행!
+      const bgmUrl = await resolveSunoLinkClient(bgmUrlRaw);
+      const bgm_sun = await resolveSunoLinkClient(bgmSunRaw);
+      const bgm_rain = await resolveSunoLinkClient(bgmRainRaw);
+      const bgm_snow = await resolveSunoLinkClient(bgmSnowRaw);
+      const bgm_blossom = await resolveSunoLinkClient(bgmBlossomRaw);
+      const bgm_leaves = await resolveSunoLinkClient(bgmLeavesRaw);
+
+      // 입력란 갱신 (시각적 피드백 제공!)
+      document.getElementById('bgm-url-input').value = bgmUrl;
+      document.getElementById('bgm-sun-input').value = bgm_sun;
+      document.getElementById('bgm-rain-input').value = bgm_rain;
+      document.getElementById('bgm-snow-input').value = bgm_snow;
+      document.getElementById('bgm-blossom-input').value = bgm_blossom;
+      document.getElementById('bgm-leaves-input').value = bgm_leaves;
+
       const bgmEnabled = document.getElementById('bgm-enabled-check').checked;
-      const bgmUrl = document.getElementById('bgm-url-input').value.trim();
 
       const payload = {
         weather: activeWeather,
         bgmEnabled: String(bgmEnabled),
         bgmUrl: bgmUrl,
-        bgm_sun: document.getElementById('bgm-sun-input').value.trim(),
-        bgm_rain: document.getElementById('bgm-rain-input').value.trim(),
-        bgm_snow: document.getElementById('bgm-snow-input').value.trim(),
-        bgm_blossom: document.getElementById('bgm-blossom-input').value.trim(),
-        bgm_leaves: document.getElementById('bgm-leaves-input').value.trim()
+        bgm_sun: bgm_sun,
+        bgm_rain: bgm_rain,
+        bgm_snow: bgm_snow,
+        bgm_blossom: bgm_blossom,
+        bgm_leaves: bgm_leaves
       };
-
-      showLoading("마을에 신비로운 기상 음악 효과를 설정하는 중...");
 
       google.script.run
         .withSuccessHandler(res => {
