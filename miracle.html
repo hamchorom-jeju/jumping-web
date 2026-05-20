@@ -1806,8 +1806,29 @@
 
       document.getElementById('info-icon').innerText  = d.icon;
       document.getElementById('info-title').innerText = d.title;
-      document.getElementById('info-score').innerText = d.score;
-      document.getElementById('info-guide').innerText = d.guide;
+
+      let scoreText = d.score;
+      let guideText = d.guide;
+
+      if (d.type === 'habit') {
+        const base = (key === 'h5') ? 3 : (key === 'h7') ? 10 : 2;
+        if (d.checkOnly) {
+          scoreText = `+${base} EXP`;
+          guideText += `\n\n🌿 수호 완료 시 ${base}점 지급`;
+        } else if (key === 'h7') {
+          scoreText = `+${base} EXP`;
+          guideText += `\n\n🌿 수호 완료 시 ${base}점 지급\n🍵 저녁 단식(물/차) AI 인증 시 10점 자동 연계 지급`;
+        } else if (key === 'h9') {
+          scoreText = `+${base} EXP`;
+          guideText += `\n\n🌿 수호 완료 시 ${base}점 지급\n👏 셀프칭찬 등록 시 5점 추가`;
+        } else {
+          scoreText = `+${base} EXP`;
+          guideText += `\n\n🌿 수호 완료 시 ${base}점 지급\n📸 아카이브 인증 시 5점 추가`;
+        }
+      }
+
+      document.getElementById('info-score').innerText = scoreText;
+      document.getElementById('info-guide').innerText = guideText;
 
       // 오늘 완료 여부 검증
       const isCompleted = window.lastDoneList && window.lastDoneList.some(item => item.includes(d.item));
@@ -1996,7 +2017,7 @@
 
       let finalType = '퀘스트';
       let score = 15;
-      if (d.type === 'habit') { finalType = '습관'; score = parseInt((d.score||'+2').replace(/[^0-9]/g,''))||2; }
+      if (d.type === 'habit') { finalType = '습관'; score = 5; } // 습관 인증 점수는 5점 부여!
       if (d.type === 'miracle') { finalType = '습관'; score = 5; }
       if (d.isWater) { score = Math.round(window.currentWaterL * 10) + 15; }
 
