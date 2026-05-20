@@ -599,7 +599,9 @@
     <!-- 🎫 Active Form Wrapper Card (어텐던스 모달 디자인과 완전 통일) -->
     <div class="login-container" id="login-form-wrapper">
       <button class="close-modal-btn" onclick="closeLoginModal()"><i class="fas fa-times"></i></button>
-      <div class="logo-area" style="color: var(--gold);">🗝️</div>
+      <div class="logo-area" style="margin-bottom: 15px; display: flex; justify-content: center;">
+        <img src="https://drive.google.com/thumbnail?id=1294x-K2aBT5CzyoNnaq2-6CPEIfyFEzk&sz=w150" alt="노형점핑 로고" style="max-height: 40px; border-radius: 10px; background: rgba(255, 255, 255, 0.95); padding: 5px 15px; object-fit: contain; box-shadow: 0 4px 15px rgba(0,0,0,0.3);" onerror="this.onerror=null; this.src='https://lh3.googleusercontent.com/d/1294x-K2aBT5CzyoNnaq2-6CPEIfyFEzk';">
+      </div>
       <h2 id="modal-title">회원 본인 확인</h2>
       <p class="modal-sub" id="modal-subtitle">전화번호 뒷 4자리를 아래 숫자 패드에서 탭하여 로그인해 주세요.</p>
 
@@ -694,7 +696,7 @@
       // 검색 중 상태 표시
       listDiv.innerHTML = `
         <div style="padding:20px; background:rgba(255,255,255,0.03); border-radius:20px; border:1px solid var(--popup-border);">
-          <p style='font-size:0.85rem; color:#aaa; font-weight:800; margin:0;'>🔄 주민 명단을 조회 중입니다...</p>
+          <p style='font-size:0.85rem; color:#aaa; font-weight:800; margin:0;'>🔄 회원 명단을 확인하고 있습니다...</p>
         </div>
       `;
 
