@@ -6691,6 +6691,15 @@ function getJejuRealtimeWeather() {
     }
   }
 
+  // WMO 날씨 코드가 아니거나 API 실패 시 사용할 계절 기반 기본 날씨 분석
+  var currentMonth = new Date().getMonth() + 1; // 1-12월
+  var defaultSeasonalWeather = "sun";
+  if (currentMonth >= 3 && currentMonth <= 5) {
+    defaultSeasonalWeather = "blossom"; // 봄: 벚꽃
+  } else if (currentMonth >= 9 && currentMonth <= 11) {
+    defaultSeasonalWeather = "leaves";  // 가을: 낙엽
+  }
+
   try {
     // 제주시 노형동(클럽 위치) 기준 위도(33.4781), 경도(126.4755) API 호출
     var url = "https://api.open-meteo.com/v1/forecast?latitude=33.4781&longitude=126.4755&current_weather=true";
@@ -6703,7 +6712,7 @@ function getJejuRealtimeWeather() {
       var windSpeed = currentWeather.windspeed; // km/h
       var windSpeedMs = Number((windSpeed / 3.6).toFixed(1)); // m/s
       
-      var weather = "sun";
+      var weather = defaultSeasonalWeather;
       // WMO Weather Codes 번역:
       // - 비(Rain/Drizzle): 51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99
       // - 눈(Snow): 71, 73, 75, 85, 86
@@ -6713,15 +6722,7 @@ function getJejuRealtimeWeather() {
       } else if ([71, 73, 75, 85, 86].indexOf(weatherCode) > -1) {
         weather = "snow";
       } else {
-        // 눈/비가 아니면 맑은 날씨! ➡️ 계절에 따른 감성 기후 효과 매핑
-        var month = new Date().getMonth() + 1; // 1-12월
-        if (month >= 3 && month <= 5) {
-          weather = "blossom"; // 봄: 흩날리는 벚꽃
-        } else if (month >= 9 && month <= 11) {
-          weather = "leaves";  // 가을: 떨어지는 낙엽
-        } else {
-          weather = "sun";     // 여름/겨울: 맑은 태양
-        }
+        weather = defaultSeasonalWeather;
       }
 
       var result = { weather: weather, temp: currentWeather.temperature, wind: windSpeedMs };
@@ -6732,7 +6733,7 @@ function getJejuRealtimeWeather() {
   } catch (e) {
     Logger.log("제주 기상 데이터 동기화 실패: " + e.toString());
   }
-  return { weather: "sun", temp: 20, wind: 0 };
+  return { weather: defaultSeasonalWeather, temp: 20, wind: 0 };
 }
 
 function getVillageSettings() {
@@ -6807,9 +6808,10 @@ function getVillageSettings() {
       settings.resolvedWeather = settings.weather;
     }
 
-    // [원장님 직관적 설계 반영] 강제 고정 모드와 기후별 연동 분기 처리
-    if (settings.bgmEnabled === "true") {
-      var isForce = settings.bgmForceOverride === "true";
+    // [원장님 직관적 설계 반영] 강제 고정 모드와 기후별 연동 분기 처리 (Google Sheets 대소문자 TRUE/FALSE 극복)
+    var isBgmEnabled = settings.bgmEnabled && settings.bgmEnabled.toString().toLowerCase() === "true";
+    if (isBgmEnabled) {
+      var isForce = settings.bgmForceOverride && settings.bgmForceOverride.toString().toLowerCase() === "true";
       var forceUrl = settings.bgmForceUrl || "";
       if (isForce && forceUrl.trim() !== "") {
         // 1. 강제 고정 모드가 켜져 있고 음악 주소가 있으면 무조건 강제 고정곡 재생!
