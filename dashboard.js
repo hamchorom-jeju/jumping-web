@@ -257,6 +257,11 @@ const Village = {
                         }
                         if (res.isFirstLoginToday) this.showLoginReward();
                         
+                        // [v51.0] 실시간 릴레이 칭찬 수신 여부에 따라 마법의 편지 팝업 가동!
+                        if (res.praiseNotice) {
+                            this.showPraiseWizardNotice(res.praiseNotice);
+                        }
+                        
                         // 🌦️ 마을 기후 및 배경음악 환경 실시간 동기화 반영
                         if (res.villageSettings) {
                             this.applyVillageEnvironment(res.villageSettings);
@@ -682,6 +687,28 @@ const Village = {
                 widget.style.display = 'none';
             }
         }
+    },
+
+    showPraiseWizardNotice(message) {
+        if (document.getElementById('v-praise-magic-modal')) return;
+        const modal = document.createElement('div');
+        modal.id = 'v-praise-magic-modal';
+        modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 118, 110, 0.45); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; z-index:99999;";
+        modal.innerHTML = `
+            <div style="background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); width:90%; max-width:380px; padding:30px; border-radius:30px; border:2px solid #0d9488; box-shadow:0 20px 50px rgba(0,0,0,0.15); text-align:center;">
+                <div style="font-size: 3rem; margin-bottom: 15px; animation: bounce 2s infinite;">💌</div>
+                <h3 style="font-size: 1.15rem; font-weight: 900; color: #0f766e; margin: 0 0 10px 0;">칭찬의 마법 배달!</h3>
+                <p style="font-size: 0.82rem; font-weight: 800; color: #334155; line-height: 1.6; word-break: keep-all; margin-bottom: 22px;">
+                    ${message}<br><br>
+                    <span style="color: #0d9488; font-weight: 900;">지금 바로 오아시스 탭으로 이동하여 따뜻한 칭찬의 글을 확인해 보세요! 🌴</span>
+                </p>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="document.getElementById('v-praise-magic-modal').remove()" style="flex:1; background:rgba(0,0,0,0.06); border:none; padding:12px 0; border-radius:15px; font-size:0.8rem; font-weight:900; color:#475569; cursor:pointer;">확인</button>
+                    <button onclick="location.href='oasis.html'" style="flex:1.5; background:linear-gradient(135deg, #0d9488 0%, #0f766e 100%); border:none; padding:12px 0; border-radius:15px; font-size:0.8rem; font-weight:900; color:#fff; cursor:pointer; box-shadow:0 4px 12px rgba(15,118,110,0.25);">오아시스로 이동</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
     },
 
     applyVillageEnvironment(settings) {

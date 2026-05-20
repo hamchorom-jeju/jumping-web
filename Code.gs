@@ -286,6 +286,41 @@ function getUserDashboardData(payload) {
 
     // [perf] 구글 초고속 캐시 서비스 확인 (0.05초)
     var todayStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
+    
+    // [v51.0] 실시간 릴레이 칭찬 수신 여부 스캔 연동!
+    var praiseNotice = "";
+    try {
+      var ssTemp = SpreadsheetApp.getActiveSpreadsheet();
+      var oasisSheet = ssTemp.getSheetByName("오아시스_글");
+      var regSheetTemp = ssTemp.getSheetByName("등록 현황") || ssTemp.getSheetByName("등록현황");
+      var myNameTemp = "모험가";
+      if (regSheetTemp) {
+        var regDataTemp = regSheetTemp.getDataRange().getDisplayValues();
+        var regColsTemp = getRegColumnIndices(regSheetTemp);
+        for (var i = 1; i < regDataTemp.length; i++) {
+          var sheetPhone = String(regDataTemp[i][regColsTemp.phone]).replace(/[^0-9]/g, ""); 
+          if (sheetPhone === phone || (phone.length >= 8 && sheetPhone.endsWith(phone.substring(phone.length - 8)))) {
+            myNameTemp = regDataTemp[i][regColsTemp.name];
+            break;
+          }
+        }
+      }
+      if (oasisSheet && myNameTemp && myNameTemp !== "모험가") {
+        var oasisData = oasisSheet.getDataRange().getValues();
+        for (var o = oasisData.length - 1; o >= 1; o--) {
+          var rowDate = oasisData[o][0];
+          var targetName = String(oasisData[o][7] || "").trim();
+          var rDateStr = (rowDate instanceof Date) ? Utilities.formatDate(rowDate, "GMT+9", "yyyy-MM-dd") : String(rowDate);
+          if (rDateStr === todayStr && targetName === myNameTemp) {
+            praiseNotice = "💌 누군가 당신을 지목하여 칭찬의 마법을 보냈습니다!";
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      Logger.log("칭찬 알림 스캔 중 에러: " + e.toString());
+    }
+
     var cache = CacheService.getScriptCache();
     var cacheKey = "v48_dash_" + phone + "_" + todayStr;
     var cachedData = cache.get(cacheKey);
@@ -295,7 +330,7 @@ function getUserDashboardData(payload) {
         if (parsed && parsed.success) {
           Logger.log("⚡ 캐시 데이터 반환 완료 (0.01초): " + phone);
           parsed.cacheHit = true;
-          // [v48.0] 캐시 반환 시에도 실시간 마을 설정 및 공지는 3분 딜레이 없이 항상 최신 상태로 주입!
+          parsed.praiseNotice = praiseNotice; // 캐시 반환 시에도 실시간 칭찬 알림 실시간 동기화!
           parsed.villageSettings = getVillageSettings();
           parsed.pillarNotice = getPillarNotice();
           return parsed;
@@ -729,6 +764,7 @@ function getUserDashboardData(payload) {
       inactiveDays: inactiveDays,
       inactivityPenalty: inactivityPenalty,
       isFirstLoginToday: isFirstLoginToday,
+      praiseNotice: praiseNotice, // 실시간 칭찬 알림 전달!
       villageSettings: getVillageSettings(),
       pillarNotice: getPillarNotice()
     };
@@ -6945,7 +6981,7 @@ function getOasisPosts() {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("오아시스_글") || ss.insertSheet("오아시스_글");
     if (sheet.getLastRow() < 1) {
-      sheet.appendRow(["날짜", "시간", "연락처", "작성자", "제목", "내용", "구분"]);
+      sheet.appendRow(["날짜", "시간", "연락처", "작성자", "제목", "내용", "구분", "칭찬대상"]);
       sheet.setFrozenRows(1);
       return [];
     }
@@ -6960,7 +6996,8 @@ function getOasisPosts() {
         author: data[i][3],
         title: data[i][4],
         content: data[i][5],
-        category: data[i][6] || "일반"
+        category: data[i][6] || "일반",
+        targetMember: data[i][7] || ""
       });
     }
     return posts.reverse(); // 최신글이 상단으로
@@ -6974,7 +7011,7 @@ function submitOasisPost(payload) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("오아시스_글") || ss.insertSheet("오아시스_글");
     if (sheet.getLastRow() === 0) {
-      sheet.appendRow(["날짜", "시간", "연락처", "작성자", "제목", "내용", "구분"]);
+      sheet.appendRow(["날짜", "시간", "연락처", "작성자", "제목", "내용", "구분", "칭찬대상"]);
       sheet.setFrozenRows(1);
     }
     
@@ -6982,6 +7019,8 @@ function submitOasisPost(payload) {
     var dateStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
     var timeStr = Utilities.formatDate(now, "GMT+9", "HH:mm:ss");
     var phone = String(payload.phone || "").replace(/[^0-9]/g, "");
+    var category = payload.category || "일반";
+    var targetMember = payload.targetMember || "";
     
     sheet.appendRow([
       dateStr,
@@ -6990,22 +7029,44 @@ function submitOasisPost(payload) {
       payload.author,
       payload.title,
       payload.content,
-      payload.category || "일반"
+      category,
+      targetMember
     ]);
     
-    // 돌발 퀘스트 완료 자동 보상 점수 (+15 EXP) 트리거 처리
     var awardMessage = "";
-    if (payload.category === "돌발" && payload.questTitle) {
+    var expAwarded = 0;
+    var statType = "def"; // 기본적으로 칭찬/수호 다짐은 회복력(def)으로 연동!
+    var itemTitle = "";
+    
+    if (category === "돌발" && payload.questTitle) {
+      expAwarded = 15;
+      statType = "perf";
+      itemTitle = "🔥 돌발: " + payload.questTitle;
+    } else if (category === "셀프칭찬") {
+      expAwarded = 5;
+      statType = "def";
+      itemTitle = "🌸 셀프 칭찬의 샘 기록";
+    } else if (category === "나이트컷다짐") {
+      expAwarded = 5;
+      statType = "def";
+      itemTitle = "🌙 나이트컷 야식 차단 수호 다짐";
+    } else if (category === "릴레이칭찬") {
+      expAwarded = 5;
+      statType = "def";
+      itemTitle = "🤝 릴레이 칭찬 체인 동참 (" + targetMember + "님 지목)";
+    }
+    
+    if (expAwarded > 0) {
       var recordResult = recordActivityLog({
         phone: phone,
         name: payload.author,
-        type: "퀘스트",
-        item: "🔥 돌발: " + payload.questTitle,
-        score: 15,
-        statType: "perf" // 수행력 점수로 즉시 합산
+        type: "오아시스",
+        item: itemTitle,
+        score: expAwarded,
+        statType: statType
       });
       if (recordResult && recordResult.success) {
-        awardMessage = " (돌발 퀘스트 완료 +15 EXP가 실시간 적립되었습니다!) ⚡";
+        awardMessage = " (오아시스 보상 +" + expAwarded + " EXP가 실시간 적립되었습니다!) 🌟";
       }
     }
     
@@ -7257,6 +7318,29 @@ function getVillageNotices() {
       });
     }
     return list.reverse(); // 최신 공지 순
+  } catch (e) {
+    return [];
+  }
+}
+
+function getAllMemberNames() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+    if (!regSheet) return [];
+    var regData = regSheet.getDataRange().getDisplayValues();
+    var regCols = getRegColumnIndices(regSheet);
+    var names = [];
+    for (var i = 1; i < regData.length; i++) {
+      var name = String(regData[i][regCols.name]).trim();
+      if (name && name !== "모험가") {
+        names.push(name);
+      }
+    }
+    // 중복 제거 및 가나다 정렬
+    names = names.filter(function(item, pos) { return names.indexOf(item) === pos; });
+    names.sort();
+    return names;
   } catch (e) {
     return [];
   }
