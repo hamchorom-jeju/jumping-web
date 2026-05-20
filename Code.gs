@@ -287,60 +287,9 @@ function getUserDashboardData(payload) {
     // [perf] 구글 초고속 캐시 서비스 확인 (0.05초)
     var todayStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
     
-    // [v55.0] 실시간 릴레이 칭찬 수신 여부 및 칭찬 바톤 주자 스캔 연동!
+    // [v56.5] 릴레이 칭찬 섹션 영구 폐지로 관련 백엔드 실시간 알림/바톤 스캐너 로직 완전 제거!
     var praiseNotice = "";
-    var praiseBatonSender = ""; // 나에게 바톤을 넘겨준 사람 이름
-    try {
-      var ssTemp = SpreadsheetApp.getActiveSpreadsheet();
-      var oasisSheet = ssTemp.getSheetByName("오아시스_글");
-      var regSheetTemp = ssTemp.getSheetByName("등록 현황") || ssTemp.getSheetByName("등록현황");
-      var myNameTemp = "모험가";
-      if (regSheetTemp) {
-        var regDataTemp = regSheetTemp.getDataRange().getDisplayValues();
-        var regColsTemp = getRegColumnIndices(regSheetTemp);
-        for (var i = 1; i < regDataTemp.length; i++) {
-          var sheetPhone = String(regDataTemp[i][regColsTemp.phone]).replace(/[^0-9]/g, ""); 
-          if (sheetPhone === phone || (phone.length >= 8 && sheetPhone.endsWith(phone.substring(phone.length - 8)))) {
-            myNameTemp = regDataTemp[i][regColsTemp.name];
-            break;
-          }
-        }
-      }
-      if (oasisSheet && myNameTemp && myNameTemp !== "모험가") {
-        var oasisData = oasisSheet.getDataRange().getValues();
-        
-        // 1. 오늘의 릴레이 칭찬 알림 검출 (오늘 날짜 나를 지목한 릴레이 칭찬이 있는지 확인)
-        for (var o = oasisData.length - 1; o >= 1; o--) {
-          var rowDate = oasisData[o][0];
-          var targetName = String(oasisData[o][7] || "").trim();
-          var rDateStr = (rowDate instanceof Date) ? Utilities.formatDate(rowDate, "GMT+9", "yyyy-MM-dd") : String(rowDate);
-          if (rDateStr === todayStr && targetName === myNameTemp) {
-            praiseNotice = "💌 누군가 당신을 지목하여 칭찬의 마법을 보냈습니다!";
-            break;
-          }
-        }
-        
-        // 2. [v55.0] 실시간 칭찬 바톤 루프 검출 (가장 최근 릴레이칭찬의 대상이 나인지 판별)
-        var latestBatonSender = "";
-        for (var k = oasisData.length - 1; k >= 1; k--) {
-          var cat = String(oasisData[k][6] || "").trim();
-          if (cat === "릴레이칭찬") {
-            var target = String(oasisData[k][7] || "").trim();
-            if (target === myNameTemp) {
-              latestBatonSender = String(oasisData[k][3] || "").trim(); // 작성자가 나에게 바톤을 토스함!
-            }
-            break; // 가장 최신 릴레이칭찬 하나만 조회하고 탈출
-          }
-        }
-        
-        // 만약 내가 최신 칭찬 바톤을 받았고, 오늘 아직 칭찬을 수행하지 않았다면 바톤 주자로 공인!
-        if (latestBatonSender) {
-          praiseBatonSender = latestBatonSender;
-        }
-      }
-    } catch (e) {
-      Logger.log("칭찬 알림 스캔 중 에러: " + e.toString());
-    }
+    var praiseBatonSender = "";
 
     var cache = CacheService.getScriptCache();
     var cacheKey = "v48_dash_" + phone + "_" + todayStr;
