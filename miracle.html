@@ -302,7 +302,7 @@
     <!-- ═══════════════════════════════════════════════ -->
     <div class="arc-section">
       <div class="arc-section-title">🍱 오늘의 식단 인증
-        <span style="font-size:0.7rem; font-weight:700; color:var(--text-dim); margin-left:auto;">AI 분석 · 최대 30점</span>
+        <span style="font-size:0.7rem; font-weight:700; color:var(--text-dim); margin-left:auto;">AI 분석 · 최대 35점 (아침 10 · 점심 10 · 저녁 15)</span>
       </div>
       <div class="meal-grid">
         <div class="meal-slot" id="meal-morning" onclick="openAiMealModal('morning')">
@@ -1049,7 +1049,10 @@
         waterBtn.style.opacity = '0.55';
         waterBtn.style.cursor = 'not-allowed';
         const label = waterBtn.querySelector('span:not(.q-icon)');
-        if (label) label.innerText = '수분 섭취 [완료]';
+        if (label) {
+          label.innerHTML = '수분 섭취<br>[완료]';
+          label.style.display = 'block';
+        }
       } else if (waterBtn) {
         waterBtn.classList.remove('done');
         waterBtn.style.opacity = '1';
@@ -1065,13 +1068,16 @@
         workoutBtn.style.opacity = '0.55';
         workoutBtn.style.cursor = 'not-allowed';
         const label = workoutBtn.querySelector('span:not(.q-icon)');
-        if (label) label.innerText = '오운완/오테완 [완료]';
+        if (label) {
+          label.innerHTML = '오운완/오테완<br>[완료]';
+          label.style.display = 'block';
+        }
       } else if (workoutBtn) {
         workoutBtn.classList.remove('done');
         workoutBtn.style.opacity = '1';
         workoutBtn.style.cursor = 'pointer';
         const label = workoutBtn.querySelector('span:not(.q-icon)');
-        if (label) label.innerText = '오운완/오테완';
+        if (label) label.innerText = '오운완 / 오테완';
       }
 
       // "돌발퀘스트 인증" 존재 여부
@@ -1081,7 +1087,10 @@
         bonusBtn.style.opacity = '0.55';
         bonusBtn.style.cursor = 'not-allowed';
         const label = bonusBtn.querySelector('span:not(.q-icon)');
-        if (label) label.innerText = '돌발 퀘스트 [완료]';
+        if (label) {
+          label.innerHTML = '돌발 퀘스트<br>[완료]';
+          label.style.display = 'block';
+        }
       } else if (bonusBtn) {
         bonusBtn.classList.remove('done');
         bonusBtn.style.opacity = '1';
