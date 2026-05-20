@@ -419,6 +419,20 @@ window.initVillageEnvironment = function() {
 window.applySharedEnvironment = function(settings) {
   if (!settings) return;
   
+  const path = window.location.pathname.toLowerCase();
+  // [v51.0] 출석체크, 회원가입, 회원재등록, 어드민 등 업무용/키오스크 페이지는 날씨 마법사 및 BGM을 원천 차단하여 성능을 보장합니다!
+  if (
+    path.includes('attendance') || 
+    path.includes('registration') || 
+    path.includes('renewal') || 
+    path.includes('admin')
+  ) {
+    console.log("🚫 [Shared Environment] Weather and BGM disabled for utility/kiosk page.");
+    const oldWrap = document.getElementById('village-weather-wrapper');
+    if (oldWrap) oldWrap.remove();
+    return;
+  }
+  
   const weatherDisabled = localStorage.getItem('village_weather_disabled') === 'true';
   const weather = weatherDisabled ? 'sun' : (settings.resolvedWeather || settings.weather || 'sun');
   const windSpeed = weatherDisabled ? 0 : (parseFloat(settings.realJejuWind) || 0);
