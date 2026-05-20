@@ -6801,6 +6801,49 @@ function getVillageSettings() {
   }
 }
 
+function resolveSunoUrl(url) {
+  if (!url) return url;
+  url = url.trim();
+  
+  // 1. 만약 이미 cdn1.suno.ai 직접 주소거나 다른 일반 주소라면 그대로 반환
+  if (url.indexOf("cdn1.suno.ai") > -1) {
+    return url;
+  }
+  
+  var songRegex = /suno\.com\/song\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+  
+  // 2. 풀버전 공유 링크 매칭 (suno.com/song/[UUID])
+  var match = url.match(songRegex);
+  if (match && match[1]) {
+    return "https://cdn1.suno.ai/" + match[1] + ".mp3";
+  }
+  
+  // 3. 단축 공유 링크 처리 (suno.com/s/[ID])
+  var shortRegex = /suno\.com\/s\/([a-zA-Z0-9]+)/i;
+  var shortMatch = url.match(shortRegex);
+  if (shortMatch && shortMatch[1]) {
+    try {
+      // followRedirects: false로 설정하여 302 리다이렉트 헤더의 Location 주소를 추출합니다.
+      var response = UrlFetchApp.fetch(url, {
+        followRedirects: false,
+        muteHttpExceptions: true
+      });
+      var headers = response.getHeaders();
+      var redirectUrl = headers["Location"] || headers["location"];
+      if (redirectUrl) {
+        var matchRedirect = redirectUrl.match(songRegex);
+        if (matchRedirect && matchRedirect[1]) {
+          return "https://cdn1.suno.ai/" + matchRedirect[1] + ".mp3";
+        }
+      }
+    } catch (e) {
+      Logger.log("Suno 단축 URL 리다이렉트 해석 실패: " + e.toString());
+    }
+  }
+  
+  return url;
+}
+
 function updateVillageSettings(payload) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -6809,14 +6852,14 @@ function updateVillageSettings(payload) {
     var settingsMap = {
       "weather": payload.weather || "sun",
       "bgmEnabled": String(payload.bgmEnabled || "false"),
-      "bgmUrl": payload.bgmUrl || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+      "bgmUrl": resolveSunoUrl(payload.bgmUrl || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
     };
 
     // [v48.0] 기후별 커스텀 BGM 키 동적 수신 및 매핑 저장
     var customKeys = ["bgm_sun", "bgm_rain", "bgm_snow", "bgm_blossom", "bgm_leaves"];
     customKeys.forEach(function(k) {
       if (payload[k] !== undefined) {
-        settingsMap[k] = payload[k];
+        settingsMap[k] = resolveSunoUrl(payload[k]);
       }
     });
     
