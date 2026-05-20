@@ -1924,7 +1924,7 @@
           const checkBtn = document.createElement('button');
           checkBtn.className = 'info-btn-check';
           checkBtn.innerText = '✅ 체크 완료';
-          checkBtn.onclick = () => { doHabitCheck(key); closeInfoModal(); };
+          checkBtn.onclick = () => { doHabitCheck(key); };
           btnsEl.appendChild(checkBtn);
         } else if (d.type === 'habit') {
           // 체크 or 인증 선택 가능한 습관
@@ -1932,7 +1932,7 @@
           checkBtn.className = 'info-btn-check';
           checkBtn.style.flex = '1';
           checkBtn.innerText = '✅ 체크만';
-          checkBtn.onclick = () => { doHabitCheck(key); closeInfoModal(); };
+          checkBtn.onclick = () => { doHabitCheck(key); };
 
           const authBtn = document.createElement('button');
           authBtn.className = 'info-btn-auth';
@@ -1971,18 +1971,47 @@
       }
 
       const score = parseInt((d.score || '+2').replace(/[^0-9]/g,'')) || 2;
+
+      // [v50.5] 구글 앱스 스크립트 미지원 로컬 가상 환경 대응 방어막
+      if (typeof google === 'undefined' || !google.script || !google.script.run) {
+        console.warn("⚠️ [Local Environment] recordActivityLog simulated.");
+        if (!window.lastDoneList) window.lastDoneList = [];
+        window.lastDoneList.push(d.item);
+        syncDoneListStates(window.lastDoneList);
+        if (hbtn) hbtn.classList.add('done');
+        closeInfoModal();
+        showAppAlert(`✨ [${d.title}] 수호 완료! +${score} EXP 획득! 🌿 (가상 적립)`, 'success');
+        return;
+      }
+
+      showLoading("🌿 습관 수호 기록하는 중...");
       google.script.run
         .withSuccessHandler(res => {
+          hideLoading();
           if (res && res.success) {
             if (!window.lastDoneList) window.lastDoneList = [];
             window.lastDoneList.push(d.item);
             syncDoneListStates(window.lastDoneList);
             if (hbtn) hbtn.classList.add('done');
+            closeInfoModal();
             showAppAlert(`✨ [${d.title}] 수호 완료! +${score} EXP 획득! 🌿`, 'success');
+          } else {
+            showAppAlert('🚨 습관 체크 실패: ' + (res ? res.error : '서버 오류'), 'error');
           }
         })
-        .withFailureHandler(() => {})
-        .recordHabit({ phone: TARGET_PHONE, name: TARGET_NAME, habitId: d.habitId, item: d.item, score: score });
+        .withFailureHandler(err => {
+          hideLoading();
+          showAppAlert('🚨 습관 체크 통신 에러 발생!', 'error');
+        })
+        .recordActivityLog({ 
+          phone: TARGET_PHONE, 
+          name: TARGET_NAME, 
+          type: "습관", 
+          item: d.item, 
+          action: "완료",
+          score: score, 
+          statType: "def"
+        });
     }
 
     // 공통 인증 모달 열기
