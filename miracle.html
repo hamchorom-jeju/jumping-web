@@ -336,169 +336,79 @@
           <span class="h-icon">💤</span><span>굿 슬립</span>
         </div>
         <div class="habit-btn" id="hbtn-h9" onclick="showInfoPopup('h9')" style="grid-column: 1 / -1;">
-          <span class="h-icon">👏</span><span>셀프 칭찬</span>
-        </div>
-      </div>
-    </div>
-
+             <!-- ═══════════════════════════════════════════════ -->
+    <!-- 📊 섹션 5: 지니 AI 인바디 스캐너 -->
     <!-- ═══════════════════════════════════════════════ -->
-    <!-- ✨ 섹션 4: 미라클 플러스 (2열) -->
-    <!-- ═══════════════════════════════════════════════ -->
-    <div class="arc-section">
-      <div class="arc-section-title">✨ 미라클 플러스
-        <span style="font-size:0.7rem; font-weight:700; color:var(--text-dim); margin-left:auto;">인증 · 5점</span>
-      </div>
-      <div class="habit-btn-grid">
-        <div class="habit-btn miracle-btn" onclick="showInfoPopup('miracle_dawn')">
-          <span class="h-icon">☀️</span><span>새벽 기상</span>
-        </div>
-        <div class="habit-btn miracle-btn" onclick="showInfoPopup('miracle_read')">
-          <span class="h-icon">📚</span><span>독서 인증</span>
-        </div>
-        <div class="habit-btn miracle-btn" onclick="showInfoPopup('miracle_eco')">
-          <span class="h-icon">🌍</span><span>환경 사랑</span>
-        </div>
-        <div class="habit-btn miracle-btn" onclick="showInfoPopup('miracle_etc')">
-          <span class="h-icon">🏆</span><span>기타 성취</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- 📊 섹션 5: 인바디 AI 스캔 (기존 그대로) -->
-        
-        <div id="quest-upload-placeholder" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:row; gap: 15px; align-items:center; justify-content:center; padding: 15px;">
-          <div onclick="document.getElementById('file-input-quest-camera').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
-            <span style="font-size:2.2rem; margin-bottom:6px;">📸</span>
-            <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">실시간 촬영</p>
-          </div>
-          <div onclick="document.getElementById('file-input-quest-album').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
-            <span style="font-size:2.2rem; margin-bottom:6px;">🖼️</span>
-            <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">앨범에서 선택</p>
-          </div>
-        </div>
-        
-        <div id="quest-preview-box" style="display: none; margin-top: 5px; position: relative; width: 100%; height: 320px; border-radius: 20px; overflow: hidden; border: 2px solid var(--emerald); background: #111827; align-items: center; justify-content: center;">
-          <img id="quest-preview-img" src="" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-          <div onclick="resetPreview('quest')" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; backdrop-filter: blur(5px); cursor:pointer; z-index: 10;">다시 선택</div>
-        </div>
-        
-        <input type="file" id="file-input-quest-camera" hidden accept="image/*" capture="camera" onchange="previewImage('quest', this)">
-        <input type="file" id="file-input-quest-album" hidden accept="image/*" onchange="previewImage('quest', this)">
-
-        <select id="quest-select" style="width: 100%; margin-top: 15px; background: #fff; border: 2px solid var(--v-paper); padding: 15px; border-radius: 15px; font-weight: 800; outline: none; color: var(--text-main);">
-          <option value="방문">🏰 방문 인증</option>
-          <option value="오운완">🔥 오운완 (운동 완료)</option>
-          <option value="수분">💧 수분 섭취 인증</option>
-          <option value="돌발퀘스트">⚡ 돌발 퀘스트</option>
-        </select>
-        <input type="text" id="quest-comment" class="comment-input" placeholder="오늘의 소감을 한마디 남겨주세요!">
-        <button id="btn-submit-quest" onclick="submitEntry('quest')" style="width: 100%; margin-top: 15px; background: var(--emerald); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2);">퀘스트 기록 완료</button>
-      </div>
-
-      <div class="cert-section">
-        <div class="section-title">🍱 오늘의 식단 인증하기</div>
-        <div class="meal-grid">
-          <div class="meal-slot" id="meal-morning" onclick="openAiMealModal('morning')">
-            <span class="icon">🌅</span><span class="label">아침</span>
-          </div>
-          <div class="meal-slot" id="meal-noon" onclick="openAiMealModal('noon')">
-            <span class="icon">☀️</span><span class="label">점심</span>
-          </div>
-          <div class="meal-slot" id="meal-evening" onclick="openAiMealModal('evening')">
-            <span class="icon">🌙</span><span class="label">저녁</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 습관 탭 -->
-    <div id="tab-habit" class="tab-content">
-      <div class="premium-cert-card">
-        <div class="section-title">🌿 습관 & 플러스 인증 (5점)</div>
-        
-        <div id="habit-upload-placeholder" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:row; gap: 15px; align-items:center; justify-content:center; padding: 15px;">
-          <div onclick="document.getElementById('file-input-habit-camera').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
-            <span style="font-size:2.2rem; margin-bottom:6px;">📸</span>
-            <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">실시간 촬영</p>
-          </div>
-          <div onclick="document.getElementById('file-input-habit-album').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
-            <span style="font-size:2.2rem; margin-bottom:6px;">🖼️</span>
-            <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">앨범에서 선택</p>
-          </div>
-        </div>
-        
-        <div id="habit-preview-box" style="display: none; margin-top: 5px; position: relative; width: 100%; height: 320px; border-radius: 20px; overflow: hidden; border: 2px solid var(--v-wood); background: #111827; align-items: center; justify-content: center;">
-          <img id="habit-preview-img" src="" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-          <div onclick="resetPreview('habit')" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; backdrop-filter: blur(5px); cursor:pointer; z-index: 10;">다시 선택</div>
-        </div>
-        
-        <input type="file" id="file-input-habit-camera" hidden accept="image/*" capture="camera" onchange="previewImage('habit', this)">
-        <input type="file" id="file-input-habit-album" hidden accept="image/*" onchange="previewImage('habit', this)">
-
-        <select id="habit-select" style="width: 100%; margin-top: 15px; background: #fff; border: 2px solid var(--v-paper); padding: 15px; border-radius: 15px; font-weight: 800; outline: none; color: var(--text-main);">
-          <optgroup label="🌱 9대 데일리 습관">
-            <option value="모닝티">🍵 모닝 티 (따뜻한 물)</option>
-            <option value="모닝스트레칭">🧘 모닝 스트레칭</option>
-            <option value="베지퍼스트">🥗 베지 퍼스트 (채소 먼저)</option>
-            <option value="7000보달성">🏃 7,000보 달성</option>
-            <option value="스테어마법">🪜 스테어 마법 (계단 이용)</option>
-          </optgroup>
-          <optgroup label="✨ 미라클 플러스 (하루 1개 제한)">
-            <option value="새벽기상">☀️ 새벽 기상</option>
-            <option value="독서인증">📚 독서 인증</option>
-            <option value="환경사랑">🌍 환경 사랑 (플로깅 등)</option>
-            <option value="기타">🏆 기타 사소한 성취</option>
-          </optgroup>
-        </select>
-        <input type="text" id="habit-comment" class="comment-input" placeholder="실천 소감을 남겨주세요!">
-        <button id="btn-submit-habit" onclick="submitEntry('habit')" style="width: 100%; margin-top: 15px; background: var(--v-wood); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(93, 64, 55, 0.2);">습관 기록 완료</button>
-      </div>
-    </div>
-
     <div class="arc-section" style="border-top: 4px solid #6366f1;">
-      <div class="premium-cert-card" style="border-top: 5px solid #6366f1;">
-        <div class="section-title" style="color: #4f46e5;">📊 지니 AI 인바디 스캐너</div>
-        <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: -10px; margin-bottom: 15px; font-weight: 700; line-height: 1.4;">
-          인바디 어플 화면이나 결과지 사진을 올리면 지니 AI가 수치를 자동 분석하여 챌린지 기록으로 등록해 드립니다!
-        </p>
+      <div class="arc-section-title" style="color: #4f46e5; margin-bottom: 8px;">📊 지니 AI 인바디 스캐너
+        <span style="font-size:0.7rem; font-weight:700; color:var(--text-dim); margin-left:auto;">AI 스캔 · 인바디 등록</span>
+      </div>
+      <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0; margin-bottom: 15px; font-weight: 700; line-height: 1.45; word-break: keep-all;">
+        인바디 어플 화면이나 결과지 사진을 올리면 지니 AI가 수치를 자동 분석하여 챌린지 기록으로 등록해 드립니다!
+      </p>
 
-        <div id="inbody-upload-placeholder" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:row; gap: 15px; align-items:center; justify-content:center; padding: 15px;">
-          <div onclick="document.getElementById('file-input-inbody-camera').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
-            <span style="font-size:2.2rem; margin-bottom:6px;">📸</span>
-            <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">실시간 촬영</p>
+      <div id="inbody-upload-placeholder" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:row; gap: 15px; align-items:center; justify-content:center; padding: 15px;">
+        <div onclick="document.getElementById('file-input-inbody-camera').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+          <span style="font-size:2.2rem; margin-bottom:6px;">📸</span>
+          <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">실시간 촬영</p>
+        </div>
+        <div onclick="document.getElementById('file-input-inbody-album').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+          <span style="font-size:2.2rem; margin-bottom:6px;">🖼️</span>
+          <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">앨범에서 선택</p>
+        </div>
+      </div>
+
+      <div id="inbody-preview-box" style="display: none; margin-top: 10px; position: relative; width: 100%; height: 320px; border-radius: 20px; overflow: hidden; border: 2px solid #6366f1; background: #111827; align-items: center; justify-content: center;">
+        <img id="inbody-preview-img" src="" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+        <div onclick="resetInbodyPreview()" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; backdrop-filter: blur(5px); cursor:pointer; z-index: 10;">다시 선택</div>
+        <!-- 스캔 라인 애니메이션 -->
+        <div id="inbody-scan-line" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(to bottom, rgba(99, 102, 241, 0), rgba(99, 102, 241, 1), rgba(99, 102, 241, 0)); box-shadow: 0 0 10px rgba(99, 102, 241, 0.8); animation: scanAnimation 2s linear infinite; z-index: 5;"></div>
+      </div>
+
+      <input type="file" id="file-input-inbody-camera" hidden accept="image/*" capture="camera" onchange="previewInbodyImage(this)">
+      <input type="file" id="file-input-inbody-album" hidden accept="image/*" onchange="previewInbodyImage(this)">
+
+      <!-- AI 분석된 수치 입력 폼 (스캔 완료 후 표시) -->
+      <div id="inbody-scan-result-form" style="display: none; margin-top: 15px; background: #f3f4f6; padding: 15px; border-radius: 20px; border: 1px solid #e5e7eb;">
+        <div style="font-size: 0.85rem; font-weight: 900; color: #4f46e5; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+          ✨ 지니 AI 분석 완료 (직접 수정 가능)
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+          <div>
+            <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">체중(kg)</label>
+            <input type="number" id="inbody-scan-weight" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
           </div>
-          <div onclick="document.getElementById('file-input-inbody-album').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
-            <span style="font-size:2.2rem; margin-bottom:6px;">🖼️</span>
-            <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">앨범에서 선택</p>
+          <div>
+            <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">골격근량(kg)</label>
+            <input type="number" id="inbody-scan-muscle" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
+          </div>
+          <div>
+            <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">체지방률(%)</label>
+            <input type="number" id="inbody-scan-fat" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
           </div>
         </div>
-
-        <div id="inbody-preview-box" style="display: none; margin-top: 5px; position: relative; width: 100%; height: 400px; border-radius: 20px; overflow: hidden; border: 2px solid #6366f1; background: #111827; align-items: center; justify-content: center;">
-          <img id="inbody-preview-img" src="" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-          <div onclick="resetInbodyPreview()" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; backdrop-filter: blur(5px); cursor:pointer; z-index: 10;">다시 선택</div>
-          <!-- 스캔 라인 애니메이션 -->
-          <div id="inbody-scan-line" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(to bottom, rgba(99, 102, 241, 0), rgba(99, 102, 241, 1), rgba(99, 102, 241, 0)); box-shadow: 0 0 10px rgba(99, 102, 241, 0.8); animation: scanAnimation 2s linear infinite; z-index: 5;"></div>
+        <div style="margin-bottom: 10px;">
+          <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563; display: block; margin-bottom: 3px;">측정 날짜 (결과지 검사일시)</label>
+          <input type="date" id="inbody-scan-date" class="comment-input" style="font-weight: 800; background: #fff; width: 100%; box-sizing: border-box; border: 1.5px solid var(--v-border); padding: 8px 12px; border-radius: 10px; font-size: 0.8rem;">
         </div>
+        <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; line-height: 1.3;">
+          * AI 판독이 틀렸을 경우 숫자를 수동으로 올바르게 보정하실 수 있습니다.
+        </div>
+      </div>
 
-        <input type="file" id="file-input-inbody-camera" hidden accept="image/*" capture="camera" onchange="previewInbodyImage(this)">
-        <input type="file" id="file-input-inbody-album" hidden accept="image/*" onchange="previewInbodyImage(this)">
-
-
-
-        <!-- AI 분석된 수치 입력 폼 (스캔 완료 후 표시) -->
-        <div id="inbody-scan-result-form" style="display: none; margin-top: 15px; background: #f3f4f6; padding: 15px; border-radius: 20px; border: 1px solid #e5e7eb;">
-          <div style="font-size: 0.85rem; font-weight: 900; color: #4f46e5; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-            ✨ 지니 AI 분석 완료 (직접 수정 가능)
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
-            <div>
-              <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">체중(kg)</label>
-              <input type="number" id="inbody-scan-weight" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
-            </div>
-            <div>
-              <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">골격근량(kg)</label>
-              <input type="number" id="inbody-scan-muscle" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
+      <div style="display:flex; gap:10px; margin-top:15px; width: 100%;">
+        <button id="btn-start-inbody-scan" onclick="startInbodyScan()" style="flex:4; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 900; font-size: 1rem; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2); cursor: pointer;">
+          지니 AI 인바디 스캔 시작 📊
+        </button>
+        <button id="btn-reset-inbody-api-key" onclick="resetApiKeyPrompt()" style="flex:2; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; padding: 12px; border-radius: 15px; font-weight: 800; font-size: 0.75rem; cursor: pointer; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 4px;">
+          🔑 키 설정
+        </button>
+        <button id="btn-submit-inbody-scan" onclick="submitInbodyScanData()" style="display: none; flex:4; background: var(--emerald); color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 900; font-size: 1rem; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2); cursor: pointer;">
+          이 수치로 인바디 최종 등록 🏆
+        </button>
+      </div>
+    </div>
+      <input type="number" id="inbody-scan-muscle" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
             </div>
             <div>
               <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">체지방률(%)</label>
@@ -766,26 +676,23 @@
       
 
       
-      // [v45.2] URL 파라미터에 따른 자동 탭 및 항목 선택
+      // [v50.0] URL 파라미터에 따른 자동 설명 팝업 및 스크롤
       const cat = urlParams.get('tab') || urlParams.get('cat');
       const itemKey = urlParams.get('item');
       
-      if (cat === 'habit') {
-        switchTab('habit');
-        const hMap = { 'h1': '모닝티', 'h2': '모닝스트레칭', 'h3': '베지퍼스트', 'h5': '7000보달성', 'h6': '스테어마법' };
-        if (itemKey && hMap[itemKey]) document.getElementById('habit-select').value = hMap[itemKey];
-      } else {
-        switchTab('quest');
-        if (cat === 'visit') document.getElementById('quest-select').value = '방문';
-        else if (cat === 'water') document.getElementById('quest-select').value = '수분';
-        else if (cat === 'bonus') document.getElementById('quest-select').value = '돌발퀘스트';
-        else if (cat === 'meal') {
-            document.getElementById('quest-select').value = '식단';
-            setTimeout(() => {
-                const mealSec = document.querySelector('.cert-section');
-                if (mealSec) mealSec.scrollIntoView({ behavior: 'smooth' });
-            }, 500);
-        }
+      if (cat === 'habit' && itemKey) {
+        setTimeout(() => showInfoPopup(itemKey), 400);
+      } else if (cat === 'water' || itemKey === 'water') {
+        setTimeout(() => showInfoPopup('water'), 400);
+      } else if (cat === 'visit') {
+        setTimeout(() => showInfoPopup('water'), 400);
+      } else if (cat === 'bonus' || itemKey === 'bonus') {
+        setTimeout(() => showInfoPopup('bonus'), 400);
+      } else if (cat === 'meal') {
+        setTimeout(() => {
+          const mealSec = document.querySelector('.arc-section');
+          if (mealSec) mealSec.scrollIntoView({ behavior: 'smooth' });
+        }, 400);
       }
       
       loadArchiveFeed();
@@ -1928,10 +1835,9 @@
     }
 
     function switchTab(type) {
-      document.querySelectorAll('.v-tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-      document.getElementById('btn-' + type).classList.add('active');
-      document.getElementById('tab-' + type).classList.add('active');
+      // [v50.0] 5섹션 통합 화면이므로 탭 전환 대신 피드 갤러리로 스크롤하여 완성 실감 부여
+      const feedSec = document.querySelector('.feed-section');
+      if (feedSec) feedSec.scrollIntoView({ behavior: 'smooth' });
     }
 
     function previewImage(type, input) {
