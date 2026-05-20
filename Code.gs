@@ -227,14 +227,14 @@ function submitArchive(payload) {
         score: 2,
         statType: "def"
       });
-      // 2. 모닝 티 인증 (사진인증) - 5점 적립 (방어/회복력)
+      // 2. 모닝 티 인증 (사진인증) - 3점 적립 (방어/회복력)
       recordActivityLog({
         phone: payload.phone, 
         name: payload.name, 
         type: "습관", 
         item: "모닝 티",
         action: "인증",
-        score: 5,
+        score: 3,
         statType: "def",
         photoId: photoId
       });
@@ -242,14 +242,14 @@ function submitArchive(payload) {
 
     // [v47.0] 저녁 식단 Tier S (저녁 단식 - 물/차만 섭취로 15점 획득) 시 나이트 컷 습관 완료 자동 지급!
     if (payload.type === "식단" && (payload.item.indexOf("저녁 식단") > -1 || payload.item.indexOf("저녁 단식") > -1) && payload.item.indexOf("Tier S") > -1 && payload.score === 15) {
-      // 나이트 컷 완료 (체크) - 10점 적립 (방어/회복력)
+      // 나이트 컷 완료 (체크) - 5점 적립 (방어/회복력)
       recordActivityLog({
         phone: payload.phone, 
         name: payload.name, 
         type: "습관", 
         item: "나이트 컷",
         action: "완료",
-        score: 10,
+        score: 5,
         statType: "def"
       });
     }

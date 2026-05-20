@@ -1852,21 +1852,21 @@
       water:        { icon:'💧', title:'수분 섭취 인증', score:'+15~20 EXP', guide:'오늘 마신 수분량을 게이지로 조절한 뒤 인증 사진을 남겨주세요!\n(물병, 텀블러, 차 등)\n\n💧 섭취량에 따라 최대 +20 EXP 지급\n📸 사진 인증 시 추가 +15 EXP', type:'quest', item:'수분', isWater:true },
       workout:      { icon:'🔥', title:'오운완 / 오테완', score:'+15 EXP', guide:'오늘 운동을 완료하셨나요?\n테라피, 점핑, 러닝, 홈트 등 모든 운동이 해당됩니다.\n\n📸 인증 사진을 남겨 +15 EXP를 획득하세요!', type:'quest', item:'오운완' },
       bonus:        { icon:'⚡', title:'돌발 퀘스트', score:'+15 EXP', guide:'오늘의 돌발 퀘스트를 인증해 주세요!\n이장님이 특별히 준비한 미션입니다.\n\n📸 인증 사진 제출 시 +15 EXP 지급', type:'quest', item:'돌발퀘스트' },
-      // 습관 (h4, h8은 체크 전용)
-      h1:  { icon:'🍵', title:'모닝 티', score:'+2 EXP', guide:'기상 직후 따뜻한 물이나 차 한 잔은 밤새 잠들었던 장기를 깨우고 신진대사의 점화를 유도합니다. 체온보다 약간 높은 온도의 미온수를 권장하며, 이는 대사 촉진 및 독소 배출의 소중한 첫 단계가 됩니다.', type:'habit', item:'모닝티', habitId:'h1', checkOnly:false },
-      h2:  { icon:'🧘', title:'모닝 스트레칭', score:'+2 EXP', guide:'기상 후 5분 내외의 가벼운 전신 스트레칭은 신체의 가동 범위를 확보하고 근육에 산소를 공급합니다. 목, 어깨, 허리 위주의 부드러운 이완으로 활기찬 하루를 시작해 보세요.', type:'habit', item:'모닝스트레칭', habitId:'h2', checkOnly:true },
-      h3:  { icon:'🥗', title:'베지 퍼스트', score:'+2 EXP', guide:'식사 시 채소를 먼저 섭취하면 인슐린 스파이크(급격한 혈당 상승)를 효과적으로 방지할 수 있습니다. 첫 젓가락은 무조건 채소류부터! 이후 단백질과 탄수화물 순으로 섭취하여 지방 축적을 최소화하세요.', type:'habit', item:'베지퍼스트', habitId:'h3', checkOnly:true },
-      h4:  { icon:'😮', title:'슬로우 치잉', score:'+2 EXP', guide:'한 입당 20회 이상 천천히 씹는 습관은 소화를 돕고 뇌가 포만감을 느낄 시간을 충분히 부여합니다. 식사 시간을 최소 20분 이상 유지하는 것은 과식 방지의 핵심입니다.', type:'habit', item:'슬로우치잉', habitId:'h4', checkOnly:true },
-      h5:  { icon:'👟', title:'7,000보 달성', score:'+3 EXP', guide:'일상 활동량을 정량적으로 확보하여 기초 대사량을 유지하고 혈당 조절에 기여합니다. 스마트폰 기준으로 7,000보를 달성하며 꾸준한 에너지 소모를 실천해 보세요.', type:'habit', item:'7000보달성', habitId:'h5', checkOnly:false },
-      h6:  { icon:'🪜', title:'스테어 마법', score:'+2 EXP', guide:'3층 이하의 낮은 층수는 계단을 이용함으로써 하체 근력을 강화하고 유산소 효과를 얻습니다. 특히 기록소(아카이브)에 사진 인증을 남기시면 강력한 보너스 점수가 부여됩니다.', type:'habit', item:'스테어마법', habitId:'h6', checkOnly:false },
-      h7:  { icon:'🌙', title:'나이트 컷', score:'+10 EXP', guide:'밤 20시 이후의 금식은 신체가 소화가 아닌 \'지방 연소와 세포 재생\'에 집중하게 만듭니다. 오늘 저녁 나이트 컷을 약속하신다면 아래에서 [체크만 하기]를 누르시거나, [저녁식단 인증하러 가기]를 통해 따뜻한 차나 물 사진을 인증하여 자동으로 나이트 컷을 완료하세요! 🍵', type:'habit', item:'나이트컷', habitId:'h7', checkOnly:false },
-      h8:  { icon:'💤', title:'굿 슬립', score:'+2 EXP', guide:'세포가 재생되고 성장 호르몬이 활발히 분비되는 자정(24:00) 전 취침으로 신체 회복을 최적화하세요. 충분한 수면은 식욕 억제 호르몬인 렙틴의 분비를 도와 다이어트를 수월하게 만듭니다.', type:'habit', item:'굿슬립', habitId:'h8', checkOnly:true },
-      h9:  { icon:'👏', title:'셀프 칭찬', score:'+2 EXP', guide:'오늘 하루도 노력한 나자신을 위해 따뜻한 한마디를 해주며 셀프 허그를 해주세요.\n"오늘도 수고했어 영희야!"\n오아시스 게시판에 셀프칭찬글도 남겨보세요.', type:'habit', item:'셀프칭찬', habitId:'h9', checkOnly:false },
+      // 습관 (h4, h8은 체크 전용, h7은 AI 전용)
+      h1:  { icon:'🍵', title:'모닝 티', score:'+2~5 EXP', guide:'기상 직후 따뜻한 물이나 차 한 잔은 밤새 잠들었던 장기를 깨우고 신진대사의 점화를 유도합니다. 체온보다 약간 높은 온도의 미온수를 권장하며, 이는 대사 촉진 및 독소 배출의 소중한 첫 단계가 됩니다.\n\n🌿 체크 완료 시 +2 EXP\n📸 아침식단(물/음료) AI 판독 성공 시 +5 EXP 동시 지급! 🍵', type:'habit', item:'모닝티', habitId:'h1', checkOnly:false },
+      h2:  { icon:'🧘', title:'모닝 스트레칭', score:'+2 EXP', guide:'기상 후 5분 내외의 가벼운 전신 스트레칭은 신체의 가동 범위를 확보하고 근육에 산소를 공급합니다. 목, 어깨, 허리 위주의 부드러운 이완으로 활기찬 하루를 시작해 보세요.\n\n🌿 체크 완료 시 +2 EXP (체크 전용)', type:'habit', item:'모닝스트레칭', habitId:'h2', checkOnly:true },
+      h3:  { icon:'🥗', title:'베지 퍼스트', score:'+2 EXP', guide:'식사 시 채소를 먼저 섭취하면 인슐린 스파이크(급격한 혈당 상승)를 효과적으로 방지할 수 있습니다. 첫 젓가락은 무조건 채소류부터! 이후 단백질과 탄수화물 순으로 섭취하여 지방 축적을 최소화하세요.\n\n🌿 체크 완료 시 +2 EXP (체크 전용)', type:'habit', item:'베지퍼스트', habitId:'h3', checkOnly:true },
+      h4:  { icon:'😮', title:'슬로우 치잉', score:'+2 EXP', guide:'한 입당 20회 이상 천천히 씹는 습관은 소화를 돕고 뇌가 포만감을 느낄 시간을 충분히 부여합니다. 식사 시간을 최소 20분 이상 유지하는 것은 과식 방지의 핵심입니다.\n\n🌿 체크 완료 시 +2 EXP (체크 전용)', type:'habit', item:'슬로우치잉', habitId:'h4', checkOnly:true },
+      h5:  { icon:'👟', title:'7,000보 달성', score:'+2~5 EXP', guide:'일상 활동량을 정량적으로 확보하여 기초 대사량을 유지하고 혈당 조절에 기여합니다. 스마트폰 기준으로 7,000보를 달성하며 꾸준한 에너지 소모를 실천해 보세요.\n\n🌿 체크 완료 시 +2 EXP\n📸 아카이브 사진 인증 시 추가 +3 EXP 지급!', type:'habit', item:'7000보달성', habitId:'h5', checkOnly:false },
+      h6:  { icon:'🪜', title:'스테어 마법', score:'+2~5 EXP', guide:'3층 이하의 낮은 층수는 계단을 이용함으로써 하체 근력을 강화하고 유산소 효과를 얻습니다. 특히 기록소(아카이브)에 사진 인증을 남기시면 강력한 보너스 점수가 부여됩니다.\n\n🌿 체크 완료 시 +2 EXP\n📸 아카이브 사진 인증 시 추가 +3 EXP 지급!', type:'habit', item:'스테어마법', habitId:'h6', checkOnly:false },
+      h7:  { icon:'🌙', title:'나이트 컷', score:'+5 EXP', guide:'밤 20시 이후의 금식은 신체가 소화가 아닌 \'지방 연소와 세포 재생\'에 집중하게 만듭니다.\n\n🤖 [AI 식단 스캔 전용 미션]\n저녁 식단 분석 시 따뜻한 물/차(단식)로 AI 판독(Tier S) 완료 시 자동으로 연계 완료 처리되어 +5 EXP를 획득합니다! 🍵\n(중복 방지를 위해 수동 체크 및 아카이브 인증은 지원하지 않습니다.)', type:'habit', item:'나이트컷', habitId:'h7', checkOnly:false },
+      h8:  { icon:'💤', title:'굿 슬립', score:'+2 EXP', guide:'세포가 재생되고 성장 호르몬이 활발히 분비되는 자정(24:00) 전 취침으로 신체 회복을 최적화하세요. 충분한 수면은 식욕 억제 호르몬인 렙틴의 분비를 도와 다이어트를 수월하게 만듭니다.\n\n🌿 체크 완료 시 +2 EXP (체크 전용)', type:'habit', item:'굿슬립', habitId:'h8', checkOnly:true },
+      h9:  { icon:'👏', title:'셀프 칭찬', score:'+2~5 EXP', guide:'오늘 하루도 노력한 나자신을 위해 따뜻한 한마디를 해주며 셀프 허그를 해주세요.\n"오늘도 수고했어 영희야!"\n\n🌿 체크 완료 시 +2 EXP\n📸 게시판/아카이브 글/사진 인증 시 추가 +3 EXP 지급!', type:'habit', item:'셀프칭찬', habitId:'h9', checkOnly:false },
       // 미라클 플러스
-      miracle_dawn: { icon:'☀️', title:'새벽 기상', score:'+5 EXP', guide:'새벽 기상의 위대한 사소한 승리를 인증해 주세요!\n인증 사진(시계, 창밖 새벽 하늘 등)을 남기시면 +5 EXP가 지급됩니다.', type:'miracle', item:'새벽기상' },
-      miracle_read: { icon:'📚', title:'독서 인증', score:'+5 EXP', guide:'오늘 읽은 책의 한 페이지 또는 독서 중인 사진을 인증해 주세요!\n+5 EXP가 지급됩니다.', type:'miracle', item:'독서인증' },
-      miracle_eco:  { icon:'🌍', title:'환경 사랑', score:'+5 EXP', guide:'플로깅, 분리수거, 텀블러 사용 등 환경을 사랑하는 사소한 행동을 인증해 주세요!\n+5 EXP가 지급됩니다.', type:'miracle', item:'환경사랑' },
-      miracle_etc:  { icon:'🏆', title:'기타 소소한 성취', score:'+5 EXP', guide:'오늘 나를 기쁘게 만든 사소하지만 위대한 성취를 인증해 주세요!\n+5 EXP가 지급됩니다.', type:'miracle', item:'기타성취' },
+      miracle_dawn: { icon:'☀️', title:'새벽 기상', score:'+3 EXP', guide:'새벽 기상의 위대한 사소한 승리를 인증해 주세요!\n인증 사진(시계, 창밖 새벽 하늘 등)을 남기시면 +3 EXP가 지급됩니다.', type:'miracle', item:'새벽기상' },
+      miracle_read: { icon:'📚', title:'독서 인증', score:'+3 EXP', guide:'오늘 읽은 책의 한 페이지 또는 독서 중인 사진을 인증해 주세요!\n+3 EXP가 지급됩니다.', type:'miracle', item:'독서인증' },
+      miracle_eco:  { icon:'🌍', title:'환경 사랑', score:'+3 EXP', guide:'플로깅, 분리수거, 텀블러 사용 등 환경을 사랑하는 사소한 행동을 인증해 주세요!\n+3 EXP가 지급됩니다.', type:'miracle', item:'환경사랑' },
+      miracle_etc:  { icon:'🏆', title:'기타 소소한 성취', score:'+3 EXP', guide:'오늘 나를 기쁘게 만든 사소하지만 위대한 성취를 인증해 주세요!\n+3 EXP가 지급됩니다.', type:'miracle', item:'기타성취' },
     };
 
     // 현재 선택된 항목 키
@@ -1885,19 +1885,19 @@
       let guideText = d.guide;
 
       if (d.type === 'habit') {
-        const base = (key === 'h5') ? 3 : (key === 'h7') ? 10 : 2;
+        const base = 2;
         if (d.checkOnly) {
           scoreText = `+${base} EXP`;
           guideText += `\n\n🌿 수호 완료 시 ${base}점 지급`;
         } else if (key === 'h7') {
-          scoreText = `+${base} EXP`;
-          guideText += `\n\n🌿 수호 완료 시 ${base}점 지급\n🍵 저녁 단식(물/차) AI 인증 시 10점 자동 연계 지급`;
+          scoreText = `+5 EXP`;
+          guideText += `\n\n🌙 저녁 단식 AI 판독 시 5점 연계 지급\n(수동 완료 및 아카이브 인증은 지원하지 않습니다.)`;
         } else if (key === 'h9') {
-          scoreText = `+${base} EXP`;
-          guideText += `\n\n🌿 수호 완료 시 ${base}점 지급\n👏 셀프칭찬 등록 시 5점 추가`;
+          scoreText = `+2~5 EXP`;
+          guideText += `\n\n🌿 수호 완료 시 ${base}점 지급\n👏 셀프칭찬 등록 시 3점 추가 (총 5점)`;
         } else {
-          scoreText = `+${base} EXP`;
-          guideText += `\n\n🌿 수호 완료 시 ${base}점 지급\n📸 아카이브 인증 시 5점 추가`;
+          scoreText = `+2~5 EXP`;
+          guideText += `\n\n🌿 수호 완료 시 ${base}점 지급\n📸 아카이브 인증 시 3점 추가 (총 5점)`;
         }
       }
 
@@ -1934,7 +1934,7 @@
       btnsEl.appendChild(cancelBtn);
 
       if (isCompleted) {
-        if (d.type === 'habit' && !d.checkOnly) {
+        if (d.type === 'habit' && !d.checkOnly && key !== 'h7') {
           // 습관이면서 체크온리가 아닌 항목은 이미 완료(체크)되었더라도 인증이 가능하도록 버튼 구성
           const cancelIndicator = document.createElement('button');
           cancelIndicator.className = 'info-btn-cancel';
@@ -1972,21 +1972,33 @@
           checkBtn.onclick = () => { doHabitCheck(key); };
           btnsEl.appendChild(checkBtn);
         } else if (d.type === 'habit') {
-          // 체크 or 인증 선택 가능한 습관
-          const checkBtn = document.createElement('button');
-          checkBtn.className = 'info-btn-check';
-          checkBtn.style.flex = '1';
-          checkBtn.innerText = '✅ 체크만';
-          checkBtn.onclick = () => { doHabitCheck(key); };
+          // 나이트 컷(h7)은 오로지 AI 판독으로만 완결되므로 수동 조작 차단!
+          if (key === 'h7') {
+            const warningBtn = document.createElement('button');
+            warningBtn.className = 'info-btn-cancel';
+            warningBtn.style.background = '#fef3c7';
+            warningBtn.style.color = '#b45309';
+            warningBtn.style.cursor = 'not-allowed';
+            warningBtn.style.flex = '2';
+            warningBtn.innerText = '🤖 AI 식단 스캔 연동 전용';
+            btnsEl.appendChild(warningBtn);
+          } else {
+            // 체크 or 인증 선택 가능한 일반 습관
+            const checkBtn = document.createElement('button');
+            checkBtn.className = 'info-btn-check';
+            checkBtn.style.flex = '1';
+            checkBtn.innerText = '✅ 체크만';
+            checkBtn.onclick = () => { doHabitCheck(key); };
 
-          const authBtn = document.createElement('button');
-          authBtn.className = 'info-btn-auth';
-          authBtn.style.flex = '1.5';
-          authBtn.innerText = '📸 인증하기';
-          authBtn.onclick = () => { closeInfoModal(); openCertModal(key); };
+            const authBtn = document.createElement('button');
+            authBtn.className = 'info-btn-auth';
+            authBtn.style.flex = '1.5';
+            authBtn.innerText = '📸 인증하기';
+            authBtn.onclick = () => { closeInfoModal(); openCertModal(key); };
 
-          btnsEl.appendChild(checkBtn);
-          btnsEl.appendChild(authBtn);
+            btnsEl.appendChild(checkBtn);
+            btnsEl.appendChild(authBtn);
+          }
         } else {
           // 퀘스트 / 미라클: 인증만 가능
           const authBtn = document.createElement('button');
@@ -2135,8 +2147,14 @@
 
       let finalType = '퀘스트';
       let score = 15;
-      if (d.type === 'habit') { finalType = '습관'; score = 5; } // 습관 인증 점수는 5점 부여!
-      if (d.type === 'miracle') { finalType = '습관'; score = 5; }
+      if (d.type === 'habit' || d.type === 'miracle') {
+        finalType = '습관';
+        // [v50.9] 기막힌 밸런싱: 체크를 안 하고 바로 인증하러 왔으면 2점(체크) + 3점(인증) = 총 5점 획득!
+        // 이미 체크 완료된 상태(done-check)라면 오직 인증 보너스인 3점만 지급!
+        const hbtn = d.habitId ? document.getElementById('hbtn-' + d.habitId) : null;
+        const isAlreadyChecked = hbtn && hbtn.classList.contains('done-check');
+        score = isAlreadyChecked ? 3 : 5;
+      }
       if (d.isWater) { score = Math.round(window.currentWaterL * 10) + 15; }
 
       const reader = new FileReader();
