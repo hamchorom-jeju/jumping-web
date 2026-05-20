@@ -194,12 +194,12 @@ const Auth = {
     }
   },
   logout: function() {
-    if (confirm("🔑 로그아웃 하시겠습니까?")) {
+    showAppConfirm("🌌 지니 월드에서 퇴장하시겠습니까?", function() {
       localStorage.removeItem('v44_user_name');
       localStorage.removeItem('v44_user_phone');
       localStorage.removeItem('v44_user_tier');
       window.location.replace('login.html');
-    }
+    }, "🌌");
   }
 };
 
@@ -269,14 +269,14 @@ function showAppAlert(msg, type = "success", customTitle = "") {
 /**
  * [공용] 프리미엄 확인창 (Confirm)
  */
-function showAppConfirm(msg, onConfirm) {
+function showAppConfirm(msg, onConfirm, customIcon = "❓") {
   const modal = document.createElement('div');
   modal.className = 'app-modal-overlay';
   modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center; z-index:10000; opacity:0; transition:opacity 0.3s;";
   
   modal.innerHTML = `
     <div style="background:#fff; width:90%; max-width:380px; border-radius:24px; padding:40px 30px; text-align:center; transform:scale(0.8); transition:transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow:0 20px 40px rgba(0,0,0,0.3); border-top: 6px solid #6b46c1;">
-      <div style="font-size:4.5rem; margin-bottom:20px; animation: modalBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);">❓</div>
+      <div style="font-size:4.5rem; margin-bottom:20px; animation: modalBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);">${customIcon}</div>
       <h2 style="font-size:1.6rem; margin-bottom:12px; color:#1a202c; font-weight:800; font-family: sans-serif;">확인해주세요</h2>
       <p style="font-size:1.05rem; color:#4a5568; margin-bottom:30px; line-height:1.6; word-break:keep-all; font-family: sans-serif;">${msg}</p>
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
