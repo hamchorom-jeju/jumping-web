@@ -1307,15 +1307,27 @@
 
             if (typeof google === 'undefined') {
                 loader.style.display = 'none';
+                console.warn("⚠️ [Local Environment] getArchivePhotos skipped.");
                 return;
             }
 
             google.script.run
                 .withSuccessHandler(res => {
                     loader.style.display = 'none';
+                    console.log("[Gallery Debug] Raw Response Received:", res);
                     if (res && res.success && res.data) {
                         renderGalleryGrid(res.data);
+                    } else {
+                        const errMsg = res ? (res.error || "알 수 없는 에러") : "서버 응답 빈값";
+                        feedEl.innerHTML = `<div style="text-align:center; padding:20px; color:#e11d48; font-size:0.75rem; font-weight:900;">⚠️ 갤러리 로딩 에러: ${errMsg}</div>`;
+                        console.error("[Gallery Error]", errMsg);
                     }
+                })
+                .withFailureHandler(err => {
+                    loader.style.display = 'none';
+                    const failureMsg = err ? (err.message || String(err)) : "네트워크 통신 불안정";
+                    feedEl.innerHTML = `<div style="text-align:center; padding:20px; color:#e11d48; font-size:0.75rem; font-weight:900;">🚨 서버 통신 실패: ${failureMsg}</div>`;
+                    console.error("[Gallery Failure]", err);
                 })
                 .getArchivePhotos({ page: currentPage, limit: 12 });
         }
