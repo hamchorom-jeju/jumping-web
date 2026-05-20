@@ -68,13 +68,10 @@ const Village = {
     },
 
     showLoading(msg) {
+        console.log("⏳ [Silent Sync] " + (msg || "기록을 동기화 중..."));
+        // [v50.9] 원장님 지침에 따라 대시보드 조작을 방해하는 어두운 장막(로딩 마스크)을 완벽하게 영구 무력화합니다!
         const overlay = document.getElementById('v-loading');
-        const msgEl = document.getElementById('v-loading-msg');
-        if (overlay && msgEl) {
-            // [v44.229] If already showing, just update message to prevent flicker
-            msgEl.innerText = msg || "기록을 동기화 중...";
-            overlay.style.display = 'flex';
-        }
+        if (overlay) overlay.style.display = 'none';
     },
     hideLoading() {
         const overlay = document.getElementById('v-loading');

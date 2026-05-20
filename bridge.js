@@ -382,12 +382,10 @@ function closeAppModal(btn) {
  * [v44.218] 글로벌 로딩 시스템
  */
 function showLoading(msg) {
+  console.log("⏳ [Silent Sync] " + (msg || "기록을 동기화 중..."));
+  // [v50.9] 원장님 지침에 따라 대시보드 및 아카이브 조작을 방해하는 어두운 장막(로딩 마스크)을 완벽하게 영구 무력화합니다!
   const overlay = document.getElementById('v-loading');
-  const msgEl = document.getElementById('v-loading-msg');
-  if (overlay && msgEl) {
-    msgEl.innerText = msg || "기록을 동기화 중...";
-    overlay.style.display = 'flex';
-  }
+  if (overlay) overlay.style.display = 'none';
 }
 function hideLoading() {
   const overlay = document.getElementById('v-loading');
