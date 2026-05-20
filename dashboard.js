@@ -915,12 +915,25 @@ const Village = {
         }
         
         const userPlayPreference = localStorage.getItem('v44_bgm_user_play');
-        if (enabled && userPlayPreference === 'true') {
+        const shouldPlay = enabled && userPlayPreference !== 'false';
+        
+        if (shouldPlay) {
+            const startPlay = () => {
+                audio.play().then(() => {
+                    btn.querySelector('i').style.color = '#e74c3c';
+                    btn.style.transform = 'scale(1.1) rotate(15deg)';
+                    document.removeEventListener('click', startPlay);
+                    document.removeEventListener('touchstart', startPlay);
+                }).catch(e => console.log("BGM play failed on interaction:", e));
+            };
+            
             audio.play().then(() => {
                 btn.querySelector('i').style.color = '#e74c3c';
                 btn.style.transform = 'scale(1.1) rotate(15deg)';
             }).catch(e => {
-                console.log("Auto-play blocked by browser; waiting for user interaction.");
+                console.log("Auto-play blocked by browser; registering interaction fallback.");
+                document.addEventListener('click', startPlay);
+                document.addEventListener('touchstart', startPlay);
             });
         } else {
             audio.pause();
