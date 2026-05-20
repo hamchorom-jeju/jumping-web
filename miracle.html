@@ -61,8 +61,18 @@
     .habit-btn { background: var(--v-paper); border: 2px solid var(--v-border); border-radius: 16px; padding: 12px 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s; font-weight: 800; font-size: 0.8rem; color: var(--text-main); }
     .habit-btn:active { transform: scale(0.96); }
     .habit-btn .h-icon { font-size: 1.4rem; flex-shrink: 0; }
-    .habit-btn.done { background: linear-gradient(135deg, #d1fae5, #a7f3d0); border-color: var(--emerald); color: #065f46; }
-    .habit-btn.done::after { content: '✓'; margin-left: auto; font-size: 1rem; color: var(--emerald); font-weight: 900; }
+    /* [v50.6] 습관 완료 상태 세분화 (인증완료 vs 체크완료) */
+    .habit-btn.done-auth { background: linear-gradient(135deg, #d1fae5, #a7f3d0); border-color: var(--emerald); color: #065f46; }
+    .habit-btn.done-auth::after { content: '✓'; margin-left: auto; font-size: 1rem; color: var(--emerald); font-weight: 900; }
+    
+    .habit-btn.done-check { background: linear-gradient(135deg, #fffbeb, #fde68a); border-color: #f59e0b; color: #b45309; }
+    .habit-btn.done-check::after { content: '📸'; margin-left: auto; font-size: 0.9rem; color: #d97706; opacity: 0.8; animation: pulseIcon 1.5s infinite; }
+    
+    @keyframes pulseIcon {
+      0% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.6; }
+    }
     .miracle-btn { background: linear-gradient(135deg, #faf5ff, #ede9fe); border-color: #c4b5fd; }
     .miracle-btn .h-icon { font-size: 1.4rem; }
 
@@ -1101,26 +1111,33 @@
 
       // 2. 습관 인증 상태 동기화 (h1 ~ h9)
       const habits = [
-        { id: 'h1', name: '모닝티' },
-        { id: 'h2', name: '모닝스트레칭' },
-        { id: 'h3', name: '베지퍼스트' },
-        { id: 'h4', name: '슬로우치잉' },
-        { id: 'h5', name: '7000보달성' },
-        { id: 'h6', name: '스테어마법' },
-        { id: 'h7', name: '나이트컷' },
-        { id: 'h8', name: '굿슬립' },
-        { id: 'h9', name: '셀프칭찬' }
+        { id: 'h1', name: '모닝티', checkOnly: false },
+        { id: 'h2', name: '모닝스트레칭', checkOnly: true },
+        { id: 'h3', name: '베지퍼스트', checkOnly: true },
+        { id: 'h4', name: '슬로우치잉', checkOnly: true },
+        { id: 'h5', name: '7000보달성', checkOnly: false },
+        { id: 'h6', name: '스테어마법', checkOnly: false },
+        { id: 'h7', name: '나이트컷', checkOnly: false },
+        { id: 'h8', name: '굿슬립', checkOnly: true },
+        { id: 'h9', name: '셀프칭찬', checkOnly: false }
       ];
 
       habits.forEach(h => {
         const btn = document.getElementById('hbtn-' + h.id);
         if (btn) {
-          const isDone = doneList.some(item => item.includes(h.name));
-          if (isDone) {
-            btn.classList.add('done');
-            btn.style.opacity = '0.7';
+          const matchedRecords = doneList.filter(item => item.includes(h.name));
+          if (matchedRecords.length > 0) {
+            btn.classList.remove('done', 'done-auth', 'done-check');
+            const isFullyCertified = h.checkOnly || matchedRecords.some(r => r.includes('인증') || r.includes('Tier') || r.includes('S'));
+            if (isFullyCertified) {
+              btn.classList.add('done-auth');
+              btn.style.opacity = '0.7';
+            } else {
+              btn.classList.add('done-check');
+              btn.style.opacity = '1';
+            }
           } else {
-            btn.classList.remove('done');
+            btn.classList.remove('done', 'done-auth', 'done-check');
             btn.style.opacity = '1';
           }
         }
