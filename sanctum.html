@@ -425,8 +425,8 @@
         if (settings) {
           activeWeather = settings.weather || 'sun';
           updateWeatherUI();
-          document.getElementById('bgm-enabled-check').checked = settings.bgmEnabled === 'true';
-          document.getElementById('bgm-force-check').checked = settings.bgmForceOverride === 'true';
+          document.getElementById('bgm-enabled-check').checked = settings.bgmEnabled && settings.bgmEnabled.toString().toLowerCase() === 'true';
+          document.getElementById('bgm-force-check').checked = settings.bgmForceOverride && settings.bgmForceOverride.toString().toLowerCase() === 'true';
           document.getElementById('bgm-force-input').value = settings.bgmForceUrl || '';
           
           // 기후별 커스텀 BGM 입력란 바인딩

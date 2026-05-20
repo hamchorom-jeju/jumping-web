@@ -697,7 +697,7 @@ const Village = {
         const windSpeed = weatherDisabled ? 0 : (parseFloat(settings.realJejuWind) || 0);
         this.renderWeatherParticles(weather, windSpeed);
         
-        const bgmEnabled = settings.bgmEnabled === 'true';
+        const bgmEnabled = settings.bgmEnabled && settings.bgmEnabled.toString().toLowerCase() === 'true';
         const bgmUrl = settings.bgmUrl || '';
         this.handleBgm(bgmEnabled, bgmUrl);
 
