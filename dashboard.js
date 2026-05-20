@@ -412,7 +412,10 @@ const Village = {
         this.loadRealData();
     },
 
-    closeModal() { document.getElementById('habit-modal').style.display = 'none'; },
+    closeModal() {
+        const modal = document.getElementById('habit-modal');
+        if (modal) modal.style.display = 'none';
+    },
     openQuestModal(key) { this.openModal(key, 'quest'); },
 
     syncClubRecordActual() {

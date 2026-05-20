@@ -435,13 +435,7 @@
       </div>
     </div>
 
-    <!-- 피드 -->
-    <section class="feed-section">
-      <div class="section-title">✨ 마을의 기적 갤러리</div>
-      <div id="feed-loader" class="loader"></div>
-      <div id="archive-feed"></div>
-      <div class="pagination" id="feed-pagination"></div>
-    </section>
+
   </div>
 
   <!-- [v50.0] 설명 팝업 모달 (바텀시트) -->
@@ -2304,6 +2298,7 @@
     let currentPage = 1;
 
     function loadArchiveFeed(page = 1) {
+      return; // [v50.9] 갤러리가 오아시스로 완전히 이사하여 로딩 속도 최적화를 위해 비활성화 처리!
       currentPage = page;
       const loader = document.getElementById('feed-loader');
       const feed = document.getElementById('archive-feed');
