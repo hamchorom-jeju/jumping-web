@@ -6726,8 +6726,8 @@ function getJejuRealtimeWeather() {
       }
 
       var result = { weather: weather, temp: currentWeather.temperature, wind: windSpeedMs };
-      // 1시간(3600초) 캐싱
-      cache.put("jeju_realtime_weather", JSON.stringify(result), 3600);
+      // 30분(1800초) 캐싱 최적화 반영
+      cache.put("jeju_realtime_weather", JSON.stringify(result), 1800);
       return result;
     }
   } catch (e) {
