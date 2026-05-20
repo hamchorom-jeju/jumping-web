@@ -459,23 +459,35 @@
 
       showLoading("마을에 신비로운 기상 음악 효과를 설정하는 중...");
 
-      google.script.run.withSuccessHandler(res => {
-        hideLoading();
-        if (res.success) {
-          alert(res.message);
-        } else {
-          alert("설정 실패: " + res.error);
-        }
-      }).updateVillageSettings(payload);
+      google.script.run
+        .withSuccessHandler(res => {
+          hideLoading();
+          if (res.success) {
+            alert(res.message);
+          } else {
+            alert("설정 실패: " + res.error);
+          }
+        })
+        .withFailureHandler(err => {
+          hideLoading();
+          alert("구글 서버 통신 에러: " + err.toString());
+        })
+        .updateVillageSettings(payload);
     }
 
     function loadRecentCerts() {
       if (typeof google === 'undefined') return;
-      google.script.run.withSuccessHandler(data => {
-        renderBlessings(data);
-        document.getElementById('v-bless').innerText = data.length;
-        hideLoading();
-      }).getRecentCertifications();
+      google.script.run
+        .withSuccessHandler(data => {
+          renderBlessings(data);
+          document.getElementById('v-bless').innerText = data.length;
+          hideLoading();
+        })
+        .withFailureHandler(err => {
+          hideLoading();
+          console.error("최근 인증 로드 실패:", err);
+        })
+        .getRecentCertifications();
     }
 
     function renderBlessings(data) {
