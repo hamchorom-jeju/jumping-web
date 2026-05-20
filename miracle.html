@@ -336,104 +336,44 @@
           <span class="h-icon">💤</span><span>굿 슬립</span>
         </div>
         <div class="habit-btn" id="hbtn-h9" onclick="showInfoPopup('h9')" style="grid-column: 1 / -1;">
-             <!-- ═══════════════════════════════════════════════ -->
-    <!-- 📊 섹션 5: 지니 AI 인바디 스캐너 -->
-    <!-- ═══════════════════════════════════════════════ -->
-    <div class="arc-section" style="border-top: 4px solid #6366f1;">
-      <div class="arc-section-title" style="color: #4f46e5; margin-bottom: 8px;">📊 지니 AI 인바디 스캐너
-        <span style="font-size:0.7rem; font-weight:700; color:var(--text-dim); margin-left:auto;">AI 스캔 · 인바디 등록</span>
-      </div>
-      <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0; margin-bottom: 15px; font-weight: 700; line-height: 1.45; word-break: keep-all;">
-        인바디 어플 화면이나 결과지 사진을 올리면 지니 AI가 수치를 자동 분석하여 챌린지 기록으로 등록해 드립니다!
-      </p>
-
-      <div id="inbody-upload-placeholder" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:row; gap: 15px; align-items:center; justify-content:center; padding: 15px;">
-        <div onclick="document.getElementById('file-input-inbody-camera').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
-          <span style="font-size:2.2rem; margin-bottom:6px;">📸</span>
-          <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">실시간 촬영</p>
+          <span class="h-icon">👏</span><span>셀프 칭찬</span>
         </div>
-        <div onclick="document.getElementById('file-input-inbody-album').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
-          <span style="font-size:2.2rem; margin-bottom:6px;">🖼️</span>
-          <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">앨범에서 선택</p>
-        </div>
-      </div>
-
-      <div id="inbody-preview-box" style="display: none; margin-top: 10px; position: relative; width: 100%; height: 320px; border-radius: 20px; overflow: hidden; border: 2px solid #6366f1; background: #111827; align-items: center; justify-content: center;">
-        <img id="inbody-preview-img" src="" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-        <div onclick="resetInbodyPreview()" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; backdrop-filter: blur(5px); cursor:pointer; z-index: 10;">다시 선택</div>
-        <!-- 스캔 라인 애니메이션 -->
-        <div id="inbody-scan-line" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(to bottom, rgba(99, 102, 241, 0), rgba(99, 102, 241, 1), rgba(99, 102, 241, 0)); box-shadow: 0 0 10px rgba(99, 102, 241, 0.8); animation: scanAnimation 2s linear infinite; z-index: 5;"></div>
-      </div>
-
-      <input type="file" id="file-input-inbody-camera" hidden accept="image/*" capture="camera" onchange="previewInbodyImage(this)">
-      <input type="file" id="file-input-inbody-album" hidden accept="image/*" onchange="previewInbodyImage(this)">
-
-      <!-- AI 분석된 수치 입력 폼 (스캔 완료 후 표시) -->
-      <div id="inbody-scan-result-form" style="display: none; margin-top: 15px; background: #f3f4f6; padding: 15px; border-radius: 20px; border: 1px solid #e5e7eb;">
-        <div style="font-size: 0.85rem; font-weight: 900; color: #4f46e5; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-          ✨ 지니 AI 분석 완료 (직접 수정 가능)
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
-          <div>
-            <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">체중(kg)</label>
-            <input type="number" id="inbody-scan-weight" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
-          </div>
-          <div>
-            <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">골격근량(kg)</label>
-            <input type="number" id="inbody-scan-muscle" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
-          </div>
-          <div>
-            <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">체지방률(%)</label>
-            <input type="number" id="inbody-scan-fat" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
-          </div>
-        </div>
-        <div style="margin-bottom: 10px;">
-          <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563; display: block; margin-bottom: 3px;">측정 날짜 (결과지 검사일시)</label>
-          <input type="date" id="inbody-scan-date" class="comment-input" style="font-weight: 800; background: #fff; width: 100%; box-sizing: border-box; border: 1.5px solid var(--v-border); padding: 8px 12px; border-radius: 10px; font-size: 0.8rem;">
-        </div>
-        <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; line-height: 1.3;">
-          * AI 판독이 틀렸을 경우 숫자를 수동으로 올바르게 보정하실 수 있습니다.
-        </div>
-      </div>
-
-      <div style="display:flex; gap:10px; margin-top:15px; width: 100%;">
-        <button id="btn-start-inbody-scan" onclick="startInbodyScan()" style="flex:4; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 900; font-size: 1rem; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2); cursor: pointer;">
-          지니 AI 인바디 스캔 시작 📊
-        </button>
-        <button id="btn-reset-inbody-api-key" onclick="resetApiKeyPrompt()" style="flex:2; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; padding: 12px; border-radius: 15px; font-weight: 800; font-size: 0.75rem; cursor: pointer; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 4px;">
-          🔑 키 설정
-        </button>
-        <button id="btn-submit-inbody-scan" onclick="submitInbodyScanData()" style="display: none; flex:4; background: var(--emerald); color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 900; font-size: 1rem; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2); cursor: pointer;">
-          이 수치로 인바디 최종 등록 🏆
-        </button>
       </div>
     </div>
-      <input type="number" id="inbody-scan-muscle" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
-            </div>
-            <div>
-              <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">체지방률(%)</label>
-              <input type="number" id="inbody-scan-fat" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
-            </div>
-          </div>
-          <div style="margin-bottom: 10px;">
-            <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563; display: block; margin-bottom: 3px;">측정 날짜 (결과지 검사일시)</label>
-            <input type="date" id="inbody-scan-date" class="comment-input" style="font-weight: 800; background: #fff; width: 100%; box-sizing: border-box; border: 1.5px solid var(--v-border); padding: 8px 12px; border-radius: 10px; font-size: 0.8rem;">
-          </div>
-          <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; line-height: 1.3;">
-            * AI 판독이 틀렸을 경우 숫자를 수동으로 올바르게 보정하실 수 있습니다.
-          </div>
-        </div>
 
-        <div style="display:flex; gap:10px; margin-top:15px; width: 100%;">
-          <button id="btn-start-inbody-scan" onclick="startInbodyScan()" style="flex:4; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 900; font-size: 1rem; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2); cursor: pointer;">
-            지니 AI 인바디 스캔 시작 📊
-          </button>
-          <button id="btn-reset-inbody-api-key" onclick="resetApiKeyPrompt()" style="flex:2; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; padding: 12px; border-radius: 15px; font-weight: 800; font-size: 0.75rem; cursor: pointer; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 4px;">
-            🔑 키 설정
-          </button>
-          <button id="btn-submit-inbody-scan" onclick="submitInbodyScanData()" style="display: none; flex:4; background: var(--emerald); color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 900; font-size: 1rem; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2); cursor: pointer;">
-            이 수치로 인바디 최종 등록 🏆
-          </button>
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- ✨ 섹션 4: 미라클 플러스 -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="arc-section">
+      <div class="arc-section-title">✨ 미라클 플러스
+        <span style="font-size:0.7rem; font-weight:700; color:var(--text-dim); margin-left:auto;">인증 · 5점</span>
+      </div>
+      <div class="habit-btn-grid">
+        <div class="habit-btn miracle-btn" onclick="showInfoPopup('miracle_dawn')">
+          <span class="h-icon">☀️</span><span>새벽 기상</span>
+        </div>
+        <div class="habit-btn miracle-btn" onclick="showInfoPopup('miracle_read')">
+          <span class="h-icon">📚</span><span>독서 인증</span>
+        </div>
+        <div class="habit-btn miracle-btn" onclick="showInfoPopup('miracle_eco')">
+          <span class="h-icon">🌍</span><span>환경 사랑</span>
+        </div>
+        <div class="habit-btn miracle-btn" onclick="showInfoPopup('miracle_etc')">
+          <span class="h-icon">🏆</span><span>기타 성취</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 📊 섹션 5: 인바디 인증 -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="arc-section" style="border-top: 4px solid #6366f1;">
+      <div class="arc-section-title" style="color: #4f46e5;">📊 인바디 인증
+        <span style="font-size:0.7rem; font-weight:700; color:var(--text-dim); margin-left:auto;">AI 스캔 · 인바디 등록</span>
+      </div>
+      <div class="habit-btn-grid">
+        <div class="habit-btn inbody-btn" onclick="openInbodyModal()" style="grid-column: 1 / -1; border-color: #6366f1;">
+          <span class="h-icon">📊</span><span>지니 AI 인바디 스캔</span>
         </div>
       </div>
     </div>
@@ -497,7 +437,80 @@
     </div>
   </div>
 
-  <!-- 폴라로이드 상세 모달 -->
+  <!-- 📊 [v50.2] 인바디 전용 바텀시트 모달 -->
+  <div id="inbody-modal" class="polaroid-modal" style="display:none; align-items:flex-end;">
+    <div style="background:#fff; border-radius:30px 30px 0 0; width:100%; max-width:500px; padding:25px 20px 40px; box-shadow:0 -8px 40px rgba(0,0,0,0.15); animation:slideUp 0.35s ease-out; text-align: left; box-sizing: border-box;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="font-size:1.1rem; font-weight:900; color:#4f46e5;">📊 지니 AI 인바디 스캐너</div>
+        <button onclick="closeInbodyModal()" style="background:none; border:none; font-size:1.4rem; color:var(--text-dim); cursor:pointer;">✕</button>
+      </div>
+      <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0; margin-bottom: 15px; font-weight: 700; line-height: 1.45; word-break: keep-all;">
+        인바디 어플 화면이나 결과지 사진을 올리면 지니 AI가 수치를 자동 분석하여 챌린지 기록으로 등록해 드립니다!
+      </p>
+
+      <div id="inbody-upload-placeholder" style="width:100%; aspect-ratio:16/9; background:var(--v-paper); border:2px dashed var(--v-border); border-radius:20px; display:flex; flex-direction:row; gap: 15px; align-items:center; justify-content:center; padding: 15px; box-sizing: border-box;">
+        <div onclick="document.getElementById('file-input-inbody-camera').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+          <span style="font-size:2.2rem; margin-bottom:6px;">📸</span>
+          <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">실시간 촬영</p>
+        </div>
+        <div onclick="document.getElementById('file-input-inbody-album').click()" style="flex:1; height: 100%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--v-border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+          <span style="font-size:2.2rem; margin-bottom:6px;">🖼️</span>
+          <p style="font-size:0.8rem; color:var(--v-wood); font-weight:900; margin:0;">앨범에서 선택</p>
+        </div>
+      </div>
+
+      <div id="inbody-preview-box" style="display: none; margin-top: 10px; position: relative; width: 100%; height: 260px; border-radius: 20px; overflow: hidden; border: 2px solid #6366f1; background: #111827; align-items: center; justify-content: center;">
+        <img id="inbody-preview-img" src="" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+        <div onclick="resetInbodyPreview()" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; backdrop-filter: blur(5px); cursor:pointer; z-index: 10;">다시 선택</div>
+        <div id="inbody-scan-line" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(to bottom, rgba(99, 102, 241, 0), rgba(99, 102, 241, 1), rgba(99, 102, 241, 0)); box-shadow: 0 0 10px rgba(99, 102, 241, 0.8); animation: scanAnimation 2s linear infinite; z-index: 5;"></div>
+      </div>
+
+      <input type="file" id="file-input-inbody-camera" hidden accept="image/*" capture="camera" onchange="previewInbodyImage(this)">
+      <input type="file" id="file-input-inbody-album" hidden accept="image/*" onchange="previewInbodyImage(this)">
+
+      <!-- AI 분석된 수치 입력 폼 -->
+      <div id="inbody-scan-result-form" style="display: none; margin-top: 15px; background: #f3f4f6; padding: 15px; border-radius: 20px; border: 1px solid #e5e7eb;">
+        <div style="font-size: 0.85rem; font-weight: 900; color: #4f46e5; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+          ✨ 지니 AI 분석 완료 (직접 수정 가능)
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+          <div>
+            <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">체중(kg)</label>
+            <input type="number" id="inbody-scan-weight" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
+          </div>
+          <div>
+            <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">골격근량(kg)</label>
+            <input type="number" id="inbody-scan-muscle" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
+          </div>
+          <div>
+            <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">체지방률(%)</label>
+            <input type="number" id="inbody-scan-fat" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
+          </div>
+        </div>
+        <div style="margin-bottom: 10px;">
+          <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563; display: block; margin-bottom: 3px;">측정 날짜 (결과지 검사일시)</label>
+          <input type="date" id="inbody-scan-date" class="comment-input" style="font-weight: 800; background: #fff; width: 100%; box-sizing: border-box; border: 1.5px solid var(--v-border); padding: 8px 12px; border-radius: 10px; font-size: 0.8rem;">
+        </div>
+        <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; line-height: 1.3;">
+          * AI 판독이 틀렸을 경우 숫자를 수동으로 올바르게 보정하실 수 있습니다.
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:15px; width: 100%;">
+        <button id="btn-start-inbody-scan" onclick="startInbodyScan()" style="flex:4; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 900; font-size: 1rem; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2); cursor: pointer;">
+          지니 AI 인바디 스캔 시작 📊
+        </button>
+        <button id="btn-reset-inbody-api-key" onclick="resetApiKeyPrompt()" style="flex:2; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; padding: 12px; border-radius: 15px; font-weight: 800; font-size: 0.75rem; cursor: pointer; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 4px;">
+          🔑 키 설정
+        </button>
+        <button id="btn-submit-inbody-scan" onclick="submitInbodyScanData()" style="display: none; flex:4; background: var(--emerald); color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 900; font-size: 1rem; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2); cursor: pointer;">
+          이 수치로 인바디 최종 등록 🏆
+        </button>
+      </div>
+    </div>
+  </div>
+
+    <!-- 폴라로이드 상세 모달 -->
   <div id="polaroid-modal" class="polaroid-modal">
     <div class="polaroid-modal-content">
       <button class="modal-close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
@@ -1352,7 +1365,15 @@
     let inbodyMimeType = 'image/jpeg';
     let inbodyScanResult = null;
 
+    function openInbodyModal() {
+      resetInbodyPreview();
+      document.getElementById('inbody-modal').style.display = 'flex';
+    }
 
+    function closeInbodyModal() {
+      document.getElementById('inbody-modal').style.display = 'none';
+      resetInbodyPreview();
+    }
 
     function previewInbodyImage(input) {
       if (input.files && input.files[0]) {
@@ -1569,8 +1590,7 @@
         .withSuccessHandler(res => {
           if (res.success) {
             showAppAlert(`🎉 인바디 최종 등록 성공!\n웰니스 통합 감량 성적이 반영되어 +${res.score} EXP가 적립되었습니다!`, "success");
-            resetInbodyPreview();
-            switchTab('quest');
+            closeInbodyModal();
           } else {
             showAppAlert("인바디 시트 저장 실패: " + res.error, "error");
             submitBtn.disabled = false;
