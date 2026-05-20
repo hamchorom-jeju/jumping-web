@@ -187,33 +187,55 @@
             padding: 4px;
         }
         
-        /* 📝 고풍스러운 손글씨 공책 스타일 */
+        /* 📝 감성 충만 스프링 제본 노트 스타일 */
         .v-notebook-paper {
-            background-color: #fefdf9 !important;
-            background-image: linear-gradient(rgba(13, 148, 136, 0.05) 1px, transparent 1px) !important;
-            background-size: 100% 1.85rem !important;
-            line-height: 1.85rem !important;
-            padding: 15px 15px 15px 35px !important;
+            background-color: #fefcf8 !important;
             border-radius: 20px !important;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.02) !important;
-            border: 1px solid rgba(13, 148, 136, 0.12) !important;
-            border-left: 4.5px double #f43f5e !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03) !important;
+            border: 1px solid rgba(13, 148, 136, 0.15) !important;
             position: relative !important;
             box-sizing: border-box !important;
-            min-height: 140px !important;
+            min-height: 145px !important;
             display: flex !important;
             flex-direction: column !important;
-            justify-content: space-between !important;
+            justify-content: center !important;
+            align-items: center !important;
+            text-align: center !important;
+            padding: 20px 20px 20px 45px !important; /* 왼쪽 스프링 타공 영역 확보 */
         }
+        /* 스프링 메탈릭 링 (감성 100% 철제 링 관통 비주얼) */
+        .v-notebook-paper::before {
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 17px !important;
+            width: 8px !important;
+            height: 100% !important;
+            background-image: linear-gradient(
+                to bottom,
+                transparent 0px,
+                transparent 8px,
+                #94a3b8 8px,
+                #cbd5e1 12px,
+                #64748b 15px,
+                transparent 15px,
+                transparent 29.6px
+            ) !important;
+            background-size: 100% 29.6px !important;
+            z-index: 2 !important;
+        }
+        /* 스프링 타공 구멍들 */
         .v-notebook-paper::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 2.0rem;
-            height: 100%;
-            width: 1px;
-            background: rgba(244, 63, 94, 0.15);
-            pointer-events: none;
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 11px !important;
+            width: 8px !important;
+            height: 100% !important;
+            background-image: radial-gradient(circle, #334155 40%, transparent 50%) !important;
+            background-size: 100% 29.6px !important;
+            z-index: 1 !important;
+            opacity: 0.15 !important;
         }
 
         .slider-arrow {
@@ -589,7 +611,6 @@
         <div class="v-premium-header-bar">
             <div class="v-premium-header-title">
                 📖 마음 채우기
-                <span>매번 넘겨보는 웰니스 일력</span>
             </div>
             <div style="display:flex; gap:6px;">
                 <button class="v-premium-header-btn" onclick="openPastQuotesModal()">
@@ -617,7 +638,6 @@
         <div class="v-premium-header-bar">
             <div class="v-premium-header-title">
                 ⚡ 한껏 자유롭기
-                <span>일상의 성찰과 돌발 인증</span>
             </div>
             <button class="v-premium-header-btn" onclick="openWriteModal('일반')">
                 <i class="fa-solid fa-pen"></i> 기록
@@ -696,17 +716,26 @@
                 <div class="magic-tag-btn" onclick="applyMagicTemplate('🌟 오늘도 한 걸음 더 나아간 기특한 나를 칭찬해!')">🌟 기특한 나!</div>
             </div>
 
+            <!-- ⚡ 한껏 자유롭기 선택 전용 세련된 세그먼트 카테고리 탭 -->
+            <div id="popup-memo-category-tab" style="display:none; margin-bottom:15px; width:100%; box-sizing:border-box;">
+                <div style="font-size:0.68rem; font-weight:800; color:var(--oasis-emerald); margin-bottom:6px;">카테고리 선택</div>
+                <div style="display:flex; background:#f1f5f9; border-radius:12px; padding:3px; gap:4px;">
+                    <button id="tab-cat-general" onclick="selectMemoCategoryTab('일반')" style="flex:1; border:none; padding:8px; border-radius:9px; font-size:0.72rem; font-weight:900; cursor:pointer; transition:all 0.2s;" type="button">💬 자유롭게 쓰기</button>
+                    <button id="tab-cat-sudden" onclick="selectMemoCategoryTab('돌발')" style="flex:1; border:none; padding:8px; border-radius:9px; font-size:0.72rem; font-weight:900; cursor:pointer; transition:all 0.2s;" type="button">⚡ 돌발인증</button>
+                </div>
+            </div>
+
             <input type="text" id="post-title" class="oasis-title-input" placeholder="한줄 제목을 입력하세요">
             <textarea id="post-content" class="oasis-textarea" placeholder="이곳에 소중한 하루 기록을 남겨보세요..."></textarea>
             
             <!-- ⚡ 돌발 퀘스트 연계 체크박스 -->
-            <div class="oasis-checkbox-container" id="sudden-quest-link-box" style="display: none; width:100%; box-sizing:border-box; margin-top: 12px;">
+            <div class="oasis-checkbox-container" id="sudden-quest-link-box" style="display: none; width:100%; box-sizing:border-box; margin-top: 12px; background: rgba(225, 29, 72, 0.05); padding:10px; border-radius:12px; border:1px solid rgba(225, 29, 72, 0.12);">
                 <input type="checkbox" id="sudden-quest-check" onchange="toggleSuddenLabel()">
-                <span id="sudden-quest-label" style="font-size:0.72rem; font-weight:800; color:var(--oasis-emerald);">⚡ [오늘의 돌발 퀘스트] 인증 완료하기 (+15 EXP)</span>
+                <span id="sudden-quest-label" style="font-size:0.72rem; font-weight:900; color:#e11d48; margin-left:6px; cursor:pointer;">⚡ [오늘의 돌발 퀘스트] 연동하기 (+15 EXP)</span>
             </div>
             
             <button class="oasis-submit-btn" style="margin-top: 18px;" onclick="submitPost()">
-                <i class="fa-solid fa-paper-plane"></i> 다짐샘에 기록하기
+                <i class="fa-solid fa-paper-plane"></i> 기록하기
             </button>
         </div>
     </div>
@@ -831,6 +860,7 @@
             const titleEl = document.getElementById('write-popup-title');
             
             document.getElementById('popup-self-magic-box').style.display = 'none';
+            document.getElementById('popup-memo-category-tab').style.display = 'none';
             document.getElementById('sudden-quest-link-box').style.display = 'none';
             
             document.getElementById('post-title').value = '';
@@ -841,21 +871,55 @@
                 titleEl.innerHTML = '<i class="fa-solid fa-face-smile"></i> 🌸 나를 사랑하기 기록';
                 document.getElementById('popup-self-magic-box').style.display = 'flex';
                 document.getElementById('post-title').value = "🌸 나를 위한 1초 칭찬";
-                document.getElementById('post-content').placeholder = "아래 템플릿 태그를 누르거나, 오늘 나를 격려하는 한마디를 적어보세요 (+3 EXP)...";
+                document.getElementById('post-content').placeholder = "상단의 템플릿 태그를 누르거나, 오늘 나를 격려하는 한마디를 적어보세요 (+3 EXP)...";
             } else if (category === '명언') {
                 titleEl.innerHTML = '<i class="fa-solid fa-book-open"></i> 📖 마음 채우기 한 줄 공유';
                 document.getElementById('post-title').placeholder = "마음 채우기 요약 (예: 용기를 주는 구절)";
                 document.getElementById('post-content').placeholder = "줄공책 템플릿에 들어차도록 약 120자 내외로 마음을 채우는 주옥같은 격언을 적어보세요 (+10 EXP)...";
             } else if (category === '일반') {
                 titleEl.innerHTML = '<i class="fa-solid fa-pencil"></i> ⚡ 한껏 자유롭기 기록';
-                document.getElementById('post-title').placeholder = "자유 다짐 제목 (예: 오늘의 수호성찰 🌟)";
-                document.getElementById('post-content').placeholder = "돌발 인증 혹은 자유로운 다짐, 일상의 메모를 편안하게 적어보세요...";
-                if (activeSuddenQuest) {
-                    document.getElementById('sudden-quest-link-box').style.display = 'block';
-                }
+                document.getElementById('popup-memo-category-tab').style.display = 'block';
+                selectMemoCategoryTab('일반'); // 기본값: 자유메모
             }
             
             modal.style.display = 'flex';
+        }
+
+        // 자유롭기 카테고리 탭 선택 리스너
+        function selectMemoCategoryTab(cat) {
+            selectedCategoryVal = cat;
+            const btnGeneral = document.getElementById('tab-cat-general');
+            const btnSudden = document.getElementById('tab-cat-sudden');
+            const linkBox = document.getElementById('sudden-quest-link-box');
+            
+            document.getElementById('sudden-quest-check').checked = false;
+            
+            if (cat === '일반') {
+                btnGeneral.style.background = '#0d9488';
+                btnGeneral.style.color = '#fff';
+                btnSudden.style.background = '#e2e8f0';
+                btnSudden.style.color = '#475569';
+                linkBox.style.display = 'none';
+                
+                document.getElementById('post-title').placeholder = "자유 다짐 제목 (예: 오늘의 수호성찰 🌟)";
+                document.getElementById('post-content').placeholder = "오늘 하루의 성찰이나 자유로운 다짐, 일상의 메모를 적어보세요...";
+            } else {
+                btnGeneral.style.background = '#e2e8f0';
+                btnGeneral.style.color = '#475569';
+                btnSudden.style.background = '#e11d48';
+                btnSudden.style.color = '#fff';
+                
+                if (activeSuddenQuest) {
+                    linkBox.style.display = 'block';
+                    document.getElementById('sudden-quest-check').checked = true;
+                    toggleSuddenLabel();
+                } else {
+                    linkBox.style.display = 'none';
+                }
+                
+                document.getElementById('post-title').placeholder = "돌발 퀘스트 인증 제목 (예: 돌발 퀘스트 수행 완료! 🏃‍♂️)";
+                document.getElementById('post-content').placeholder = "돌발 퀘스트 인증 내용이나 돌발 소감을 입력하세요 (+15 EXP)...";
+            }
         }
 
         function closeWriteModal() {
@@ -1157,13 +1221,13 @@
                 }
 
                 slide.innerHTML = `
-                    <div class="v-notebook-paper" style="line-height: ${autoLineHeight}; background-size: 100% ${autoLineHeight};">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; line-height:1.2;">
+                    <div class="v-notebook-paper">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; line-height:1.2; width:100%; border-bottom: 1.5px solid rgba(13,148,136,0.06); padding-bottom:5px;">
                             <span style="font-weight:900; font-size:0.8rem; color:var(--oasis-emerald);">📖 ${q.title}</span>
                             <span style="font-size:0.62rem; color:var(--text-dim); font-weight:700;">작성: ${q.author}</span>
                         </div>
-                        <div style="font-size: ${autoFontSize}; font-weight:800; color:#334155; line-height: 1.6; white-space:pre-wrap; margin-bottom:10px;">${q.content}</div>
-                        <div style="text-align:right;">
+                        <div style="font-size: ${autoFontSize}; font-weight:800; color:#334155; line-height: 1.6; white-space:pre-wrap; margin-bottom:12px; width:100%; flex-grow:1; display:flex; align-items:center; justify-content:center;">${q.content}</div>
+                        <div style="text-align:center; width:100%;">
                             ${heartHtml}
                         </div>
                     </div>

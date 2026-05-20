@@ -3,61 +3,56 @@
  * v1.0 - Core Routing & Database Setup
  */
 
-function getArchiveFeed(page) {
+function getArchivePhotos(payload) {
   try {
-    var p = parseInt(page) || 1;
+    var p = 1;
     var limit = 12;
+    if (payload) {
+      if (payload.page) p = parseInt(payload.page) || 1;
+      if (payload.limit) limit = parseInt(payload.limit) || 12;
+    }
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("아카이브");
-    if (!sheet) return { error: "'아카이브' 시트를 찾을 수 없습니다." };
+    if (!sheet) return { success: false, error: "'아카이브' 시트를 찾을 수 없습니다." };
     
     var lastRow = sheet.getLastRow();
-    if (lastRow < 2) return { items: [], totalPages: 1, currentPage: 1 };
+    if (lastRow < 2) return { success: true, data: { photos: [], total: 0 } };
     
-    var data = sheet.getRange(2, 1, lastRow - 1, 10).getDisplayValues();
-    
-    var validItems = [];
-    var visualTypes = ["퀘스트", "습관", "식단"];
+    var data = sheet.getRange(2, 1, lastRow - 1, 9).getDisplayValues();
+    var photos = [];
     
     for (var i = 0; i < data.length; i++) {
       var row = data[i];
-      var type = String(row[4] || "");
-      if (visualTypes.indexOf(type) === -1) continue;
+      var photoId = String(row[7] || "").trim();
       
-      var reactions = { cool: [], best: [], cheer: [] };
-      try {
-        if (row[9]) reactions = JSON.parse(row[9]);
-      } catch(e) {}
-      
-      validItems.push({
-        rowIdx: i + 2,
-        date: String(row[0] || ""),
-        time: String(row[1] || ""),
-        name: String(row[2] || ""),
-        type: type,
-        item: String(row[5] || ""),
-        comment: String(row[6] || ""),
-        photoId: String(row[7] || ""),
-        score: row[8],
-        reactions: reactions
-      });
+      // 사진 ID가 실제로 존재하는 유효한 자랑 이미지들만 필터링
+      if (photoId && photoId.length > 5) {
+        var imageUrl = "https://lh3.googleusercontent.com/d/" + photoId;
+        photos.push({
+          url: imageUrl,
+          description: String(row[6] || "소중한 인증의 한 장면 🌟"),
+          author: String(row[2] || "모험가"),
+          date: String(row[0] || "")
+        });
+      }
     }
     
-    validItems.reverse();
+    // 최근 등록 사진이 위로 오도록 정렬
+    photos.reverse();
     
-    var totalPages = Math.ceil(validItems.length / limit) || 1;
-    if (p > totalPages) p = totalPages;
-    
+    var total = photos.length;
     var startIndex = (p - 1) * limit;
-    var slicedItems = validItems.slice(startIndex, startIndex + limit);
+    var slicedPhotos = photos.slice(startIndex, startIndex + limit);
     
     return {
-      items: slicedItems,
-      totalPages: totalPages,
-      currentPage: p
+      success: true,
+      data: {
+        photos: slicedPhotos,
+        total: total
+      }
     };
   } catch (e) {
-    return { error: "피드 로딩 실패: " + e.toString() };
+    return { success: false, error: "사진 피드 로딩 실패: " + e.toString() };
   }
 }
 
