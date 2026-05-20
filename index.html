@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="/club-logo.png">
-    <script src="bridge.js"></script>
+    <script src="bridge.js?v=50.9"></script>
     <style>
         /* [v44.226] 로그아웃 버튼 강제 노출 보장 */
         .v-header-logout {
@@ -115,7 +115,7 @@
 </head>
 <body style="margin:0; padding:0;">
     <!-- [v44.218] 로딩 오버레이 (최우선 표시) -->
-    <div id="v-loading" class="v-loading-overlay" style="display: flex;">
+    <div id="v-loading" class="v-loading-overlay" style="display: none;">
         <div class="v-loading-spinner"></div>
         <div id="v-loading-msg" style="font-weight: 800; color: var(--v-wood); font-size: 0.9rem;">마을 기록을 불러오고 있습니다...</div>
     </div>
@@ -273,6 +273,6 @@
         </a>
     </nav>
 
-    <script src="dashboard.js"></script>
+    <script src="dashboard.js?v=50.9"></script>
 </body>
 </html>
