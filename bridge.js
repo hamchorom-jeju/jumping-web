@@ -393,3 +393,213 @@ function hideLoading() {
   const overlay = document.getElementById('v-loading');
   if (overlay) overlay.style.display = 'none';
 }
+
+/**
+ * ==========================================
+ * 🌌 [v49.0] 노형 빌리지 글로벌 기후 및 BGM 공유 시스템 (Persistent World Engine)
+ * ==========================================
+ */
+window.initVillageEnvironment = function() {
+  // 이미 대시보드 페이지(Village 객체 존재)라면 중복 실행 방지
+  if (typeof Village !== 'undefined' || document.getElementById('user-avatar')) {
+    console.log("🏰 World Engine: Dashboard page detected. Skipping shared init.");
+    return;
+  }
+  
+  if (typeof google === 'undefined' || !google.script || !google.script.run) {
+    console.log("🏰 World Engine: Google Apps Script not active yet.");
+    return;
+  }
+  
+  google.script.run.withSuccessHandler(function(settings) {
+    if (settings) {
+      window.applySharedEnvironment(settings);
+    }
+  }).getVillageSettings();
+};
+
+window.applySharedEnvironment = function(settings) {
+  if (!settings) return;
+  
+  const weatherDisabled = localStorage.getItem('village_weather_disabled') === 'true';
+  const weather = weatherDisabled ? 'sun' : (settings.resolvedWeather || settings.weather || 'sun');
+  const windSpeed = weatherDisabled ? 0 : (parseFloat(settings.realJejuWind) || 0);
+  
+  // 1. 기후 파티클 렌더링
+  window.renderSharedWeatherParticles(weather, windSpeed);
+  
+  // 2. BGM 재생 및 토글 제어
+  const bgmEnabled = settings.bgmEnabled && settings.bgmEnabled.toString().toLowerCase() === 'true';
+  const bgmUrl = settings.bgmUrl || '';
+  window.handleSharedBgm(bgmEnabled, bgmUrl);
+};
+
+window.renderSharedWeatherParticles = function(weather, windSpeed = 0) {
+  const oldWrap = document.getElementById('village-weather-wrapper');
+  if (oldWrap) oldWrap.remove();
+  
+  const isWindy = windSpeed >= 5.0;
+  if (weather === 'sun' && !isWindy) return;
+  
+  const wrapper = document.createElement('div');
+  wrapper.id = 'village-weather-wrapper';
+  wrapper.style = "position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:9999; overflow:hidden;";
+  document.body.appendChild(wrapper);
+  
+  if (isWindy) {
+    const windWispCount = 12;
+    for (let i = 0; i < windWispCount; i++) {
+      const wisp = document.createElement('div');
+      wisp.style.position = 'absolute';
+      wisp.style.top = (Math.random() * 90) + 'vh';
+      wisp.style.left = '-250px';
+      wisp.style.width = (Math.random() * 180 + 100) + 'px';
+      wisp.style.height = '1.2px';
+      wisp.style.background = 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent)';
+      wisp.style.opacity = Math.random() * 0.5 + 0.15;
+      
+      const duration = Math.max(1.2, 5.5 - (windSpeed * 0.35)); 
+      const delay = Math.random() * 5;
+      wisp.style.animation = `blow-wind ${duration}s linear ${delay}s infinite`;
+      wrapper.appendChild(wisp);
+    }
+  }
+  
+  if (weather !== 'sun') {
+    const particleCount = weather === 'rain' ? 80 : weather === 'snow' ? 50 : 32;
+    const chars = {
+      snow: '❄',
+      blossom: '🌸',
+      leaves: '🍁'
+    };
+    
+    for (let i = 0; i < particleCount; i++) {
+      const p = document.createElement('div');
+      p.style.position = 'absolute';
+      p.style.top = '-20px';
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.opacity = Math.random() * 0.7 + 0.3;
+      
+      const size = Math.random() * 15 + 10;
+      p.style.fontSize = size + 'px';
+      
+      let duration = Math.random() * 5 + 5;
+      if (isWindy) duration = duration * 0.45;
+      
+      const delay = Math.random() * 8;
+      
+      if (weather === 'rain') {
+        p.style.width = '1.5px';
+        p.style.height = (Math.random() * 20 + 15) + 'px';
+        p.style.background = 'rgba(174, 219, 255, 0.6)';
+        const angle = isWindy ? 35 : 15;
+        p.style.transform = `rotate(${angle}deg)`;
+      } else {
+        p.innerText = chars[weather] || '';
+      }
+      
+      const animName = isWindy ? `fall-${weather}-windy` : `fall-${weather}`;
+      p.style.animation = `${animName} ${duration}s linear ${delay}s infinite`;
+      wrapper.appendChild(p);
+    }
+  }
+  
+  const styleId = 'weather-keyframes-style';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.innerHTML = `
+      @keyframes blow-wind { 0% { transform: translateX(-250px); } 100% { transform: translateX(110vw); } }
+      @keyframes fall-rain { to { transform: translateY(105vh) rotate(15deg); } }
+      @keyframes fall-rain-windy { to { transform: translateY(105vh) translateX(35vw) rotate(35deg); } }
+      @keyframes fall-snow { 0% { transform: translateY(-20px) translateX(0) rotate(0deg); } 50% { transform: translateY(50vh) translateX(20px) rotate(180deg); } 100% { transform: translateY(105vh) translateX(-10px) rotate(360deg); } }
+      @keyframes fall-snow-windy { 0% { transform: translateY(-20px) translateX(0) rotate(0deg); } 100% { transform: translateY(105vh) translateX(65vw) rotate(720deg); } }
+      @keyframes fall-blossom { 0% { transform: translateY(-20px) translateX(0) rotate(0deg); } 50% { transform: translateY(50vh) translateX(30px) rotate(120deg); } 100% { transform: translateY(105vh) translateX(-20px) rotate(240deg); } }
+      @keyframes fall-blossom-windy { 0% { transform: translateY(-20px) translateX(0) rotate(0deg); } 100% { transform: translateY(105vh) translateX(75vw) rotate(540deg); } }
+      @keyframes fall-leaves { 0% { transform: translateY(-20px) translateX(0) rotate(0deg); } 50% { transform: translateY(50vh) translateX(-20px) rotate(180deg); } 100% { transform: translateY(105vh) translateX(15px) rotate(360deg); } }
+      @keyframes fall-leaves-windy { 0% { transform: translateY(-20px) translateX(0) rotate(0deg); } 100% { transform: translateY(105vh) translateX(70vw) rotate(480deg); } }
+    `;
+    document.head.appendChild(style);
+  }
+};
+
+window.handleSharedBgm = function(enabled, url) {
+  if (!url) return;
+  
+  let audio = document.getElementById('village-bgm-audio');
+  if (!audio) {
+    audio = document.createElement('audio');
+    audio.id = 'village-bgm-audio';
+    audio.loop = true;
+    audio.src = url;
+    document.body.appendChild(audio);
+  } else if (audio.src !== url) {
+    audio.src = url;
+  }
+  
+  let btn = document.getElementById('village-bgm-toggle');
+  if (!enabled) {
+    if (btn) btn.style.display = 'none';
+    audio.pause();
+    return;
+  }
+  
+  if (btn) {
+    btn.style.display = 'flex';
+  } else {
+    btn = document.createElement('div');
+    btn.id = 'village-bgm-toggle';
+    btn.style = "position:fixed; bottom:90px; right:15px; width:45px; height:45px; border-radius:50%; background:rgba(255,255,255,0.85); box-shadow:0 8px 32px rgba(31,38,135,0.15); backdrop-filter:blur(6px); border:1.5px solid rgba(255,255,255,0.18); display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:9998; transition:transform 0.3s ease;";
+    btn.innerHTML = `<i class="fas fa-music" style="color:var(--v-wood); font-size:1.1rem; transition: color 0.3s;"></i>`;
+    document.body.appendChild(btn);
+    
+    btn.onclick = function() {
+      if (audio.paused) {
+        audio.play().then(function() {
+          btn.querySelector('i').style.color = '#e74c3c';
+          btn.style.transform = 'scale(1.1) rotate(15deg)';
+          localStorage.setItem('v44_bgm_user_play', 'true');
+        }).catch(function(e) { console.log("BGM Play error:", e); });
+      } else {
+        audio.pause();
+        btn.querySelector('i').style.color = 'var(--v-wood)';
+        btn.style.transform = 'scale(1) rotate(0deg)';
+        localStorage.setItem('v44_bgm_user_play', 'false');
+      }
+    };
+  }
+  
+  const userPlayPreference = localStorage.getItem('v44_bgm_user_play');
+  const shouldPlay = userPlayPreference !== 'false';
+  
+  if (shouldPlay) {
+    const startPlay = function() {
+      audio.play().then(function() {
+        btn.querySelector('i').style.color = '#e74c3c';
+        btn.style.transform = 'scale(1.1) rotate(15deg)';
+        document.removeEventListener('click', startPlay);
+        document.removeEventListener('touchstart', startPlay);
+      }).catch(function(e) { console.log("BGM play failed on interaction:", e); });
+    };
+    
+    audio.play().then(function() {
+      btn.querySelector('i').style.color = '#e74c3c';
+      btn.style.transform = 'scale(1.1) rotate(15deg)';
+    }).catch(function(e) {
+      console.log("Auto-play blocked by browser; registering interaction fallback.");
+      document.addEventListener('click', startPlay);
+      document.addEventListener('touchstart', startPlay);
+    });
+  } else {
+    audio.pause();
+    btn.querySelector('i').style.color = 'var(--v-wood)';
+    btn.style.transform = 'scale(1) rotate(0deg)';
+  }
+};
+
+// 모든 공용 페이지 로드 시 기후 및 BGM 자동 기동
+window.addEventListener('load', function() {
+  if (window.initVillageEnvironment) {
+    window.initVillageEnvironment();
+  }
+});
