@@ -719,39 +719,38 @@ const Village = {
             // [v51.0] 기상 상태와 무관하게 날씨 배너는 항상 우아하게 노출하여 자리를 채웁니다.
             jejuBar.style.display = 'flex';
                 
-                let weatherEmoji = '☀️';
-                let weatherName = '맑음';
+            let weatherEmoji = '☀️';
+            let weatherName = '맑음';
+            
+            const displayWeather = settings.resolvedWeather || origWeather;
+            
+            if (displayWeather === 'rain') { weatherEmoji = '🌧️'; weatherName = '비'; }
+            else if (displayWeather === 'snow') { weatherEmoji = '❄️'; weatherName = '눈'; }
+            else if (displayWeather === 'blossom') { weatherEmoji = '🌸'; weatherName = '벚꽃 흩날림'; }
+            else if (displayWeather === 'leaves') { weatherEmoji = '🍁'; weatherName = '낙엽 낙하'; }
+            else if (displayWeather === 'sun') { weatherEmoji = '☀️'; weatherName = '맑음'; }
+            
+            if (settings.realJejuTemp !== undefined) {
+                const temp = settings.realJejuTemp;
+                const origWind = parseFloat(settings.realJejuWind) || 0;
                 
-                const displayWeather = settings.resolvedWeather || origWeather;
-                
-                if (displayWeather === 'rain') { weatherEmoji = '🌧️'; weatherName = '비'; }
-                else if (displayWeather === 'snow') { weatherEmoji = '❄️'; weatherName = '눈'; }
-                else if (displayWeather === 'blossom') { weatherEmoji = '🌸'; weatherName = '벚꽃 흩날림'; }
-                else if (displayWeather === 'leaves') { weatherEmoji = '🍁'; weatherName = '낙엽 낙하'; }
-                else if (displayWeather === 'sun') { weatherEmoji = '☀️'; weatherName = '맑음'; }
-                
-                if (settings.realJejuTemp !== undefined) {
-                    const temp = settings.realJejuTemp;
-                    const origWind = parseFloat(settings.realJejuWind) || 0;
-                    
-                    let windStatus = '';
-                    if (origWind >= 14.0) {
-                        windStatus = ` ⚠️ <strong>태풍급 강풍 주의!</strong>`;
-                        jejuBar.classList.add('wind-gale');
-                    } else if (origWind >= 5.0) {
-                        windStatus = ` 🍃 <strong>강한 제주의 바람 부는 중!</strong>`;
-                        jejuBar.classList.add('wind-gale');
-                    } else {
-                        windStatus = ` 🍃 산들바람`;
-                        jejuBar.classList.remove('wind-gale');
-                    }
-                    
-                    jejuText.innerHTML = `현재 제주시 노형동은 <strong>${weatherEmoji} ${weatherName} (${temp}°C)</strong>, 풍속 <strong>${origWind} m/s</strong>${windStatus}`;
+                let windStatus = '';
+                if (origWind >= 14.0) {
+                    windStatus = ` ⚠️ <strong>태풍급 강풍 주의!</strong>`;
+                    jejuBar.classList.add('wind-gale');
+                } else if (origWind >= 5.0) {
+                    windStatus = ` 🍃 <strong>강한 제주의 바람 부는 중!</strong>`;
+                    jejuBar.classList.add('wind-gale');
                 } else {
-                    // 수동 세팅 모드인 경우
+                    windStatus = ` 🍃 산들바람`;
                     jejuBar.classList.remove('wind-gale');
-                    jejuText.innerHTML = `마을 기후 마법 작동 중: <strong>${weatherEmoji} ${weatherName}</strong> (수동 설정)`;
                 }
+                
+                jejuText.innerHTML = `현재 제주시 노형동은 <strong>${weatherEmoji} ${weatherName} (${temp}°C)</strong>, 풍속 <strong>${origWind} m/s</strong>${windStatus}`;
+            } else {
+                // 수동 세팅 모드인 경우
+                jejuBar.classList.remove('wind-gale');
+                jejuText.innerHTML = `마을 기후 마법 작동 중: <strong>${weatherEmoji} ${weatherName}</strong> (수동 설정)`;
             }
         }
     },
