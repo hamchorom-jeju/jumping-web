@@ -6903,10 +6903,11 @@ function updateVillageSettings(payload) {
       }
     }
     
-    // [v48.0] 마을 설정 캐시 강제 무효화 처리 (대시보드 즉시 실시간 동기화 보장!)
+    // [v48.0] 마을 설정 및 제주시 기상 정보 캐시 강제 무효화 처리 (즉시 기후/BGM 매핑 갱신 보장!)
     try {
       var cache = CacheService.getScriptCache();
       cache.remove("global_village_settings");
+      cache.remove("jeju_realtime_weather");
     } catch(err) {}
     
     return { success: true, message: "마을의 기후와 음악 환경이 신비롭게 변화했습니다! 🌌🌦️" };
