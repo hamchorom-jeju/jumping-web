@@ -474,11 +474,20 @@ const Village = {
     },
 
     renderAll() {
-        document.getElementById('user-name').innerText = this.user.name;
-        document.getElementById('user-tier').innerText = this.user.tier; // 칭호 업데이트
-        document.getElementById('total-score').innerText = (this.user.totalScore || 0).toLocaleString();
-        document.getElementById('current-rank').innerText = this.user.rank;
-        document.getElementById('water-val').innerText = `${this.user.water}L / 2.0L`;
+        const nameEl = document.getElementById('user-name');
+        if (nameEl) nameEl.innerText = this.user.name;
+
+        const tierEl = document.getElementById('user-tier');
+        if (tierEl) tierEl.innerText = this.user.tier;
+
+        const scoreEl = document.getElementById('total-score');
+        if (scoreEl) scoreEl.innerText = (this.user.totalScore || 0).toLocaleString();
+
+        const rankEl = document.getElementById('current-rank');
+        if (rankEl) rankEl.innerText = this.user.rank;
+
+        const waterEl = document.getElementById('water-val');
+        if (waterEl) waterEl.innerText = `${this.user.water}L / 2.0L`;
 
         // [v44.228] 3D 성장배지 스프라이트 업데이트
         const badgeEl = document.getElementById('user-badge-sprite');
