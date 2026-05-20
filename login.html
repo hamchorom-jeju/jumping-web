@@ -13,10 +13,12 @@
       --v-border: #e0dacc;
       --emerald: #2ecc71;
       --gold: #d4af37;
-      --dark-bg: #12161a;
+      --dark-bg: #0f1316;
       --glass-bg: rgba(255, 255, 255, 0.08);
       --glass-border: rgba(255, 255, 255, 0.12);
       --text-gold: #f39c12;
+      --popup-dark: rgba(30, 30, 30, 0.88);
+      --popup-border: rgba(255, 255, 255, 0.1);
     }
     
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -35,7 +37,7 @@
     /* 🌌 Full Page Brand Container */
     .brand-landing {
       width: 100%;
-      max-width: 460px;
+      max-width: 440px;
       text-align: center;
       animation: fadeIn 0.8s cubic-bezier(0.25, 1, 0.5, 1);
     }
@@ -74,32 +76,21 @@
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-radius: 32px;
-      padding: 30px 25px;
+      padding: 25px 20px;
       text-align: left;
       box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-      margin-bottom: 30px;
+      margin-bottom: 25px;
       position: relative;
       overflow: hidden;
-    }
-
-    .worldview-card::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(212,175,55,0.05) 0%, transparent 70%);
-      pointer-events: none;
     }
 
     .section-title {
       font-size: 1.1rem;
       font-weight: 900;
       color: #fff;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
       border-bottom: 1px solid var(--glass-border);
-      padding-bottom: 10px;
+      padding-bottom: 8px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -110,54 +101,88 @@
       line-height: 1.6;
       color: #cbd5e1;
       font-weight: 700;
-      margin: 0 0 20px 0;
+      margin: 0 0 15px 0;
       word-break: keep-all;
     }
 
-    .intro-p strong {
-      color: #fff;
-    }
-
-    /* 3대 스탯 설명 보드 */
+    /* 3대 스탯 아코디언 드로워 */
     .stat-desc-list {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       margin-bottom: 20px;
     }
 
     .stat-desc-item {
       display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      background: rgba(0, 0, 0, 0.2);
-      padding: 12px 14px;
-      border-radius: 16px;
+      flex-direction: column;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 14px 16px;
+      border-radius: 18px;
       border: 1px solid rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      transition: all 0.25s ease;
     }
-
-    .stat-desc-item .stat-icon {
-      font-size: 1.3rem;
-      padding-top: 2px;
+    .stat-desc-item:hover {
+      background: rgba(255, 255, 255, 0.03);
+      border-color: rgba(212, 175, 55, 0.2);
     }
-
-    .stat-desc-item .stat-text {
+    
+    .stat-header {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 12px;
+    }
+    .stat-icon {
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.25s;
+    }
+    .stat-desc-item:hover .stat-icon {
+      transform: scale(1.15);
+    }
+    .stat-name {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #fff;
+      flex: 1;
+    }
+    .stat-chevron {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.35);
+      transition: transform 0.3s, color 0.3s;
+    }
+    
+    .stat-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.3s ease;
       font-size: 0.78rem;
-      line-height: 1.5;
+      line-height: 1.55;
       color: #94a3b8;
       font-weight: 700;
+      word-break: keep-all;
     }
-
-    .stat-desc-item .stat-text b {
-      color: #fff;
-      font-size: 0.85rem;
-      display: block;
-      margin-bottom: 2px;
+    
+    .stat-desc-item.active {
+      border-color: rgba(212, 175, 55, 0.4);
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.06);
+    }
+    .stat-desc-item.active .stat-body {
+      max-height: 80px;
+      margin-top: 10px;
+    }
+    .stat-desc-item.active .stat-chevron {
+      transform: rotate(180deg);
+      color: var(--gold);
     }
 
     .active-gate-badge {
-      background: rgba(212, 175, 55, 0.1);
-      border: 1px solid rgba(212, 175, 55, 0.3);
+      background: rgba(212, 175, 55, 0.08);
+      border: 1px solid rgba(212, 175, 55, 0.2);
       border-radius: 14px;
       padding: 10px 15px;
       font-size: 0.78rem;
@@ -199,7 +224,7 @@
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.7);
       backdrop-filter: blur(15px);
       -webkit-backdrop-filter: blur(15px);
       display: flex;
@@ -217,30 +242,44 @@
       pointer-events: auto;
     }
 
-    /* 🎫 Popup Box Styling */
+    /* 🎫 Popup Box Styling (어텐던스 모달과 100% 디자인 싱크) */
     .login-container {
-      width: 100%; max-width: 400px; 
-      background: #fff; color: var(--text-main);
-      border-radius: 40px;
-      padding: 40px 30px; 
-      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
-      border: 1px solid var(--v-border); 
+      width: 100%; max-width: 380px; 
+      background: var(--popup-dark); 
+      color: #fff;
+      border-radius: 28px;
+      padding: 30px 20px; 
+      box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+      border: 1px solid var(--popup-border); 
       text-align: center;
       transform: scale(0.9) translateY(20px);
       transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
       position: relative;
+      box-sizing: border-box;
     }
 
     .login-overlay.active .login-container {
       transform: scale(1) translateY(0);
     }
 
+    .input-group {
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 20px;
+    }
+
+    .input-group input {
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+
     .close-modal-btn {
       position: absolute;
       top: 20px;
       right: 20px;
-      background: var(--v-paper);
-      border: 1px solid var(--v-border);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       width: 36px;
       height: 36px;
       border-radius: 50%;
@@ -249,50 +288,54 @@
       align-items: center;
       justify-content: center;
       font-size: 1rem;
-      color: var(--v-wood);
+      color: #aaa;
       transition: all 0.2s;
+    }
+    .close-modal-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
     }
     .close-modal-btn:active { transform: scale(0.9); }
 
-    .logo-area { font-size: 3.5rem; margin-bottom: 15px; }
-    .login-container h2 { font-size: 1.4rem; font-weight: 900; color: var(--v-wood); margin: 0 0 8px 0; }
-    .login-container p { font-size: 0.85rem; color: var(--text-dim); font-weight: 700; margin-bottom: 25px; }
+    .logo-area { font-size: 3.5rem; margin-bottom: 10px; }
+    .login-container h2 { font-size: 1.5rem; font-weight: 800; color: #fff; margin: 0 0 10px 0; }
+    .login-container p.modal-sub { font-size: 0.85rem; color: #aaa; font-weight: 500; margin-bottom: 25px; line-height: 1.5; }
 
-    /* 🔢 Keypad */
+    /* 🔢 Keypad (어텐던스 키패드와 싱크) */
     .keypad-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+      gap: 12px;
       margin-top: 15px;
     }
     .key-btn {
-      background: var(--v-paper);
-      color: var(--v-wood);
-      border: 1px solid var(--v-border);
-      border-radius: 15px;
-      padding: 14px 0;
-      font-size: 1.25rem;
-      font-weight: 900;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 16px 0;
+      font-size: 1.4rem;
+      font-weight: 700;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: all 0.1s ease;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     .key-btn:active {
       transform: scale(0.92);
-      background: var(--v-border);
+      background: var(--gold);
     }
-    .key-btn.delete { color: #e74c3c; }
+    .key-btn.delete { color: #ff5252; background: rgba(255, 82, 82, 0.05); }
     .key-btn.search {
       background: var(--gold);
       color: #fff;
       border-color: var(--gold);
     }
-    .key-btn.search:active { background: #c29d2f; }
+    .key-btn.search:active { background: #b8860b; }
 
-    /* 👥 Choice Cards for Multiple Matches */
+    /* 👥 Choice Cards for Multiple Matches (노형점핑 지점 주민 싱크) */
     .member-choice-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -300,8 +343,8 @@
       margin-top: 15px;
     }
     .member-choice-card {
-      background: #fff;
-      border: 2px solid var(--v-border);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 20px;
       padding: 18px 12px;
       cursor: pointer;
@@ -311,10 +354,11 @@
       align-items: center;
       justify-content: center;
       gap: 10px;
-      box-shadow: 0 4px 10px rgba(93, 64, 55, 0.03);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
     .member-choice-card:hover, .member-choice-card:active {
       border-color: var(--gold);
+      background: rgba(212, 175, 55, 0.1);
       transform: translateY(-3px);
       box-shadow: 0 8px 24px rgba(212, 175, 55, 0.15);
     }
@@ -322,12 +366,12 @@
       width: 46px;
       height: 46px;
       border-radius: 50%;
-      background: var(--v-paper);
+      background: rgba(255, 255, 255, 0.08);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 1.4rem;
-      border: 2px solid var(--v-border);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       transition: all 0.25s;
     }
     .member-choice-card:hover .avatar, .member-choice-card:active .avatar {
@@ -338,16 +382,17 @@
     }
     .member-choice-card .name {
       font-size: 1.1rem;
-      font-weight: 900;
-      color: var(--v-wood);
+      font-weight: 800;
+      color: #fff;
     }
     .member-choice-card .role {
-      font-size: 0.7rem;
-      color: var(--text-dim);
+      font-size: 0.72rem;
+      color: var(--gold);
       font-weight: 800;
-      background: rgba(93, 64, 55, 0.05);
-      padding: 3px 8px;
+      background: rgba(212, 175, 55, 0.1);
+      padding: 4px 10px;
       border-radius: 8px;
+      letter-spacing: 0.5px;
     }
 
     /* 🏰 Portal Spinner */
@@ -410,6 +455,38 @@
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 25px 16px;
+        max-width: 100%;
+        border-radius: 24px;
+      }
+      .keypad-grid {
+        gap: 8px;
+      }
+      .key-btn {
+        padding: 12px 0;
+        font-size: 1.2rem;
+        border-radius: 12px;
+      }
+      .logo-area {
+        font-size: 2.8rem;
+        margin-bottom: 5px;
+      }
+      .login-container h2 {
+        font-size: 1.3rem;
+      }
+      .login-container p.modal-sub {
+        margin-bottom: 15px;
+        font-size: 0.8rem;
+      }
+      #user-phone {
+        padding: 10px !important;
+        font-size: 1.5rem !important;
+        border-radius: 14px !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -420,47 +497,63 @@
     <h1 class="brand-title">GENIE WORLD</h1>
     <div class="brand-subtitle">Wellness Universe</div>
 
-    <!-- 📜 Worldview Guide Card -->
+    <!-- 📜 Worldview Guide Card (지니 월드란? + 아코디언) -->
     <div class="worldview-card">
-      <div class="section-title"><i class="fas fa-book-open" style="color: var(--gold);"></i> 웰니스 세계관 가이드</div>
+      <div class="section-title"><i class="fas fa-info-circle" style="color: var(--gold);"></i> 지니 월드란?</div>
       <p class="intro-p">
-        지니 월드는 신체의 한계를 돌파하고 일상 속에 조화로운 웰니스(Wellness) 에너지를 일깨우기 위해 설립된 온오프라인 연계형 건강 연맹입니다. 아래 3대 스탯의 성장은 당신을 더 위대한 모험으로 이끌어 줄 것입니다.
+        지니 월드는 우리 몸의 활력을 깨우고 더 건강하고 행복한 일상을 함께 만들어가는 온오프라인 건강 연맹입니다. 아래 3가지 건강 지표를 터치해 안내를 확인해 보세요!
       </p>
 
-      <!-- 3대 스탯 명확한 철학적 정의 -->
+      <!-- 3대 스탯 터치식 아코디언 드로워 -->
       <div class="stat-desc-list">
-        <div class="stat-desc-item">
-          <span class="stat-icon">❤️</span>
-          <div class="stat-text">
-            <b>체력 (Health) | 신체 활력과 근력</b>
+        
+        <!-- 체력 -->
+        <div class="stat-desc-item" onclick="toggleStatDesc(this)">
+          <div class="stat-header">
+            <span class="stat-icon">❤️</span>
+            <span class="stat-name">체력 (Health) | 신체 활력과 근력</span>
+            <i class="fas fa-chevron-down stat-chevron"></i>
+          </div>
+          <div class="stat-body">
             점핑 피트니스 운동과 체성분 분석(인바디 지표 변화)을 통해 피지컬 에너지를 강화합니다.
           </div>
         </div>
-        <div class="stat-desc-item">
-          <span class="stat-icon">🗡️</span>
-          <div class="stat-text">
-            <b>실천력 (Performance) | 일상 속 루틴의 능동적 실행</b>
+
+        <!-- 실천력 -->
+        <div class="stat-desc-item" onclick="toggleStatDesc(this)">
+          <div class="stat-header">
+            <span class="stat-icon">🗡️</span>
+            <span class="stat-name">실천력 (Performance) | 일상 루틴의 능동적 실행</span>
+            <i class="fas fa-chevron-down stat-chevron"></i>
+          </div>
+          <div class="stat-body">
             건강한 식단 유지 및 충분한 수분 섭취 실천, 데일리 퀘스트 및 오프라인 미션 완수 능력을 단련합니다.
           </div>
         </div>
-        <div class="stat-desc-item">
-          <span class="stat-icon">🔮</span>
-          <div class="stat-text">
-            <b>회복력 (Recovery) | 마음 치유와 연대를 통한 에너지 회복</b>
+
+        <!-- 회복력 -->
+        <div class="stat-desc-item" onclick="toggleStatDesc(this)">
+          <div class="stat-header">
+            <span class="stat-icon">🔮</span>
+            <span class="stat-name">회복력 (Recovery) | 마음 치유와 연대</span>
+            <i class="fas fa-chevron-down stat-chevron"></i>
+          </div>
+          <div class="stat-body">
             마음을 치유하는 좋은 습관들을 유지하고, 커뮤니티 활동 및 소통을 통해 지친 심신에 활력을 충전하고 회복력을 높입니다.
           </div>
         </div>
+
       </div>
 
-      <!-- 현재 활성화된 게이트 정보 -->
+      <!-- 현재 연결된 지점 정보 -->
       <div class="active-gate-badge">
-        <i class="fas fa-door-open"></i> 현재 활성화된 게이트 : 노형 빌리지 (노형점핑클럽) 🏡
+        <i class="fas fa-map-marker-alt"></i> 현재 연결된 지점 : 노형점핑클럽 (노형 빌리지) 🏡
       </div>
     </div>
 
     <!-- 🗝️ Gate Connect CTA Button -->
     <button class="connect-gate-btn" onclick="openLoginModal()">
-      <i class="fas fa-key"></i> 노형 빌리지 게이트 접속하기
+      <i class="fas fa-key"></i> 노형점핑클럽 로그인하기
     </button>
   </div>
 
@@ -468,30 +561,30 @@
   <!-- 🔒 Login Overlay Modal -->
   <div class="login-overlay" id="login-overlay-modal">
     
-    <!-- 🏰 Portal Entrance Loader (Hidden initially inside popup) -->
-    <div id="login-loading-wrapper" style="display:none; flex-direction:column; align-items:center; justify-content:center; padding: 40px 0; min-height: 250px; background: #fff; width: 100%; max-width: 400px; border-radius: 40px; border: 1px solid var(--v-border); box-shadow: 0 25px 60px rgba(0,0,0,0.5); text-align: center;">
+    <!-- 🏰 Portal Entrance Loader (어텐던스 모달 다크 글래스 싱크) -->
+    <div id="login-loading-wrapper" style="display:none; flex-direction:column; align-items:center; justify-content:center; padding: 40px 0; min-height: 250px; background: var(--popup-dark); width: 100%; max-width: 400px; border-radius: 28px; border: 1px solid var(--popup-border); box-shadow: 0 25px 60px rgba(0,0,0,0.6); text-align: center;">
       <div class="portal-gate">
         <div class="gate-ring ring-1"></div>
         <div class="gate-ring ring-2"></div>
         <div class="gate-ring ring-3"></div>
         <span class="gate-icon">🏰</span>
       </div>
-      <h2 style="font-size:1.4rem; font-weight:900; color:var(--v-wood); margin: 25px 0 10px 0; letter-spacing:-0.5px;"><span id="welcome-user-name">모험가</span> 님</h2>
-      <p style="font-size:0.85rem; color:var(--text-dim); font-weight:800; line-height:1.5; margin:0; word-break:keep-all;">
-        노형 빌리지 게이트가 열리고 있습니다...<br>
-        <span style="color:var(--gold); font-size:0.75rem; display:block; margin-top:5px; animation: pulse 1.5s infinite;">⚡ 마을 연결 통로 활성화 중</span>
+      <h2 style="font-size:1.4rem; font-weight:800; color:#fff; margin: 25px 0 10px 0; letter-spacing:-0.5px;"><span id="welcome-user-name">모험가</span> 님</h2>
+      <p style="font-size:0.85rem; color:#aaa; font-weight:500; line-height:1.5; margin:0; word-break:keep-all;">
+        노형점핑 지점으로 연결 중입니다...<br>
+        <span style="color:var(--gold); font-size:0.75rem; display:block; margin-top:5px; animation: pulse 1.5s infinite;">⚡ 웰니스 채널 활성화 중</span>
       </p>
     </div>
 
-    <!-- 🎫 Active Form Wrapper Card -->
+    <!-- 🎫 Active Form Wrapper Card (어텐던스 모달 디자인과 완전 통일) -->
     <div class="login-container" id="login-form-wrapper">
       <button class="close-modal-btn" onclick="closeLoginModal()"><i class="fas fa-times"></i></button>
-      <div class="logo-area">🗝️</div>
-      <h2>노형 빌리지 게이트</h2>
-      <p>전화번호 뒷 4자리를 아래 숫자 패드에서 탭하여<br>주민 등록 명단을 활성화해 주세요.</p>
+      <div class="logo-area" style="color: var(--gold);">🗝️</div>
+      <h2 id="modal-title">회원 본인 확인</h2>
+      <p class="modal-sub" id="modal-subtitle">전화번호 뒷 4자리를 아래 숫자 패드에서 탭하여 로그인해 주세요.</p>
 
       <div class="input-group">
-        <input type="tel" id="user-phone" placeholder="4자리 번호" maxlength="4" style="text-align: center; font-size: 1.6rem; letter-spacing: 5px; font-weight:900;" readonly>
+        <input type="tel" id="user-phone" placeholder="••••" maxlength="4" style="text-align: center; font-size: 1.8rem; letter-spacing: 5px; font-weight:900; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); border-radius: 18px; color: #fff; padding: 15px;" readonly>
       </div>
 
       <!-- Compact Keypad Grid -->
@@ -518,13 +611,34 @@
 
   <script src="bridge.js"></script>
   <script>
+    window.onload = function() {
+      const savedName = localStorage.getItem('v44_user_name');
+      const savedPhone = localStorage.getItem('v44_user_phone');
+      if (savedName && savedPhone) {
+        // 자동 로그인 기능 없음 (새로 선택 가능성)
+      }
+    };
+
+    function toggleStatDesc(element) {
+      // 다른 모든 스탯을 닫음 (아코디언 모션 극대화)
+      const allItems = document.querySelectorAll('.stat-desc-item');
+      allItems.forEach(item => {
+        if (item !== element) item.classList.remove('active');
+      });
+      // 현재 선택된 스탯 토글
+      element.classList.toggle('active');
+    }
+
     function openLoginModal() {
       document.getElementById('login-overlay-modal').classList.add('active');
+      // 모달 열 때 타이틀 기본값 리셋
+      document.getElementById('modal-title').innerText = "회원 본인 확인";
+      document.getElementById('modal-subtitle').innerText = "전화번호 뒷 4자리를 아래 숫자 패드에서 탭하여 로그인해 주세요.";
     }
 
     function closeLoginModal() {
       document.getElementById('login-overlay-modal').classList.remove('active');
-      // Reset input on close
+      // 입력 리셋
       document.getElementById('user-phone').value = "";
       document.getElementById('member-selection-list').innerHTML = "";
     }
@@ -539,7 +653,7 @@
         }
       }
       
-      // 4자리가 가득 차면 자동으로 검색 시작
+      // 4자리 차면 자동으로 찾기 시작
       if (input.value.length === 4) {
         startManualSearch();
       }
@@ -559,8 +673,8 @@
 
       // 검색 중 상태 표시
       listDiv.innerHTML = `
-        <div style="padding:20px; background:var(--v-paper); border-radius:20px; border:1px solid var(--v-border);">
-          <p style='font-size:0.85rem; color:var(--text-dim); font-weight:800; margin:0;'>🔄 주민 명단을 조회 중입니다...</p>
+        <div style="padding:20px; background:rgba(255,255,255,0.03); border-radius:20px; border:1px solid var(--popup-border);">
+          <p style='font-size:0.85rem; color:#aaa; font-weight:800; margin:0;'>🔄 주민 명단을 조회 중입니다...</p>
         </div>
       `;
 
@@ -575,6 +689,15 @@
             }
 
             if (members.length > 0) {
+              // 어텐던스 스타일 문구 동기화
+              if (members.length > 1) {
+                document.getElementById('modal-title').innerText = "회원 본인 확인";
+                document.getElementById('modal-subtitle').innerText = "동일한 번호의 회원님이 계십니다. 본인 이름을 선택해 주세요.";
+              } else {
+                document.getElementById('modal-title').innerText = "회원 본인 확인";
+                document.getElementById('modal-subtitle').innerText = "검색된 회원님이 맞는지 확인하시고 선택해 주세요.";
+              }
+
               const grid = document.createElement('div');
               grid.className = 'member-choice-grid';
               
@@ -585,7 +708,7 @@
                 card.innerHTML = `
                   <div class="avatar">👤</div>
                   <div class="name">${m.name}</div>
-                  <div class="role">노형 빌리지 주민</div>
+                  <div class="role">노형점핑 지점</div>
                 `;
                 card.onclick = () => selectMember(m.name, m.phone);
                 grid.appendChild(card);
@@ -593,21 +716,21 @@
               listDiv.appendChild(grid);
             } else {
               listDiv.innerHTML = `
-                <div style="padding:20px; background:#fff5f5; border-radius:20px; border:1px solid #feb2b2;">
-                  <p style='font-size:0.85rem; color:#e74c3c; font-weight:800; margin:0;'>⚠️ 명단에 등록되지 않은 정보입니다.<br><span style="font-size:0.7rem;">번호를 확인해주세요!</span></p>
+                <div style="padding:20px; background:rgba(255, 82, 82, 0.05); border-radius:20px; border:1px solid rgba(255, 82, 82, 0.2);">
+                  <p style='font-size:0.85rem; color:#ff5252; font-weight:800; margin:0;'>⚠️ 명단에 등록되지 않은 정보입니다.<br><span style="font-size:0.7rem; color: #aaa;">번호를 다시 한 번 확인해 주세요!</span></p>
                 </div>
               `;
             }
           })
           .withFailureHandler(err => {
-            listDiv.innerHTML = "<p style='color:red;'>서버 통신 오류가 발생했습니다.</p>";
+            listDiv.innerHTML = "<p style='color:#ff5252;'>서버 통신 오류가 발생했습니다.</p>";
           })
           .searchMembersByDigits({ digits: digits });
       }
     }
 
     function selectMember(name, phone) {
-      // 🏰 Portal transition (hide form, show spinner)
+      // 🏰 Portal transition (hide form wrapper, show loading)
       document.getElementById('login-form-wrapper').style.display = 'none';
       document.getElementById('welcome-user-name').innerText = `${name} 님`;
       document.getElementById('login-loading-wrapper').style.display = 'flex';
@@ -630,7 +753,7 @@
       } else {
         setTimeout(() => {
           navigateTo('index', { name: name, phone: phone });
-        }, 1200); // 로컬 테스트용 가벼운 딜레이로 감성 극대화
+        }, 1200); // 로컬 테스트용 로더 연출용 딜레이
       }
     }
   </script>
