@@ -2001,14 +2001,380 @@ function processKioskCheckout(phoneStr) {
     }
 
     if (success) {
-      // 출석기록 시트에도 '퇴실' 상태 업데이트 (선택 사항이나 관리 일관성을 위해 �// 백엔드 메인 안전 제어 밸브 (true: 초고속 신형 로직 / false: 100% 검증 레거시 로직)
+      // 출석기록 시트에도 '퇴실' 상태 업데이트 (선택 사항이나 관리 일관성을 위해 추천)
+      try {
+        var logSheet = ss.getSheetByName("출석기록");
+        var lData = logSheet.getDataRange().getValues();
+        for (var j = lData.length - 1; j >= 1; j--) {
+          if (String(lData[j][3]).replace(/[^0-9]/g, "") === phoneClean) {
+            logSheet.getRange(j + 1, 12).setValue("귀가");
+            logSheet.getRange(j + 1, 13).setValue(Utilities.formatDate(now, "GMT+9", "HH:mm"));
+            break;
+          }
+        }
+      } catch(e) {}
+      return { success: true, message: memberName + "님, 테라피가 완료되었습니다. 안녕히 가세요!" };
+    } else {
+      return { error: "진행 중인 테라피 내역을 찾을 수 없습니다." };
+    }
+  } catch(e) {
+    return { error: "퇴실 처리 중 오류: " + e.toString() };
+  }
+}
+
+// ──────────────────────────────────────────────
+// 6. 테라피 예약 시스템 백엔드 API
+// ──────────────────────────────────────────────
+function getAnnouncements() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('공지사항');
+    var data = sheet.getDataRange().getValues().slice(1);
+    return data.map(function(row) { return row[2]; }).filter(Boolean);
+  } catch(e) { return ["반갑습니다!"]; }
+}
+
+function getTodaySummary() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('예약DB');
+    var flashSheet = ss.getSheetByName('벙개테라피 및 휴일 설정');
+    var data = sheet.getDataRange().getDisplayValues().slice(1);
+    var flashData = flashSheet.getDataRange().getDisplayValues().slice(1);
+    
+    var now = new Date();
+    var activeDates = [];
+    
+    // 향후 7일 중 영업일(또는 벙개날)만 최대 5일 추출
+    for (var i = 0; i < 7; i++) {
+      var d = new Date();
+      d.setDate(now.getDate() + i);
+      var dStr = Utilities.formatDate(d, "GMT+9", "yyyy-MM-dd");
+      var dayOfWeek = d.getDay(); // 0:일
+      
+      // 휴무 설정 확인
+      var isOff = (dayOfWeek === 0); // 일요일 기본 휴무
+      var isFlash = false;
+      
+      for (var f = 0; f < flashData.length; f++) {
+        var fDate = String(flashData[f][0]);
+        if (fDate === dStr) {
+          if (String(flashData[f][1]) === "휴무") isOff = true;
+          if (String(flashData[f][2]) === "벙개") {
+            isFlash = true;
+            isOff = false; // 벙개면 휴무라도 영업함
+          }
+          break;
+        }
+      }
+      
+      if (!isOff || isFlash) {
+        activeDates.push(dStr);
+        if (activeDates.length >= 5) break; 
+      }
+    }
+
+    var result = {};
+    activeDates.forEach(date => result[date] = []);
+
+    data.forEach(row => {
+      var date = String(row[3]);
+      var status = String(row[9] || "").trim();
+      if (activeDates.indexOf(date) !== -1 && (status.indexOf("취소") === -1 && status !== "")) {
+        var name = String(row[2]).trim();
+        var maskedName = name[0] + "*" + (name.length > 2 ? name[name.length-1] : (name[1] || ""));
+        
+        // 시간 포맷 정규화 (H:mm -> HH:mm)
+        var timeStr = String(row[4]).trim();
+        var timeParts = timeStr.split(':');
+        var time = "";
+        if (timeParts.length >= 2) {
+          var h = timeParts[0].length === 1 ? "0" + timeParts[0] : timeParts[0];
+          var m = timeParts[1].length === 1 ? "0" + timeParts[1] : timeParts[1];
+          time = h + ":" + m;
+        } else {
+          time = timeStr.substring(0, 5);
+        }
+
+        result[date].push({
+          time: time,
+          name: maskedName,
+          room: String(row[7]),
+          status: status
+        });
+      }
+    });
+
+    // 시간순 정렬
+    activeDates.forEach(date => {
+      result[date].sort((a, b) => a.time.localeCompare(b.time));
+    });
+
+    return result;
+  } catch (e) { return {}; }
+}
+
+function getTodayTimetable(targetDate) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var resSheet = ss.getSheetByName('예약DB');
+    var holidaySheet = ss.getSheetByName("벙개테라피 및 휴일 설정");
+    
+    var targetNum = targetDate.replace(/[^0-9]/g, "");
+    var dateObj = new Date(targetDate);
+    var dayOfWeek = dateObj.getDay(); 
+
+    var now = new Date();
+    var todayNum = Utilities.formatDate(now, "GMT+9", "yyyyMMdd");
+    var isToday = (targetNum === todayNum);
+
+    // 기본 시간표 설정 (토요일 3타임, 평일 7타임)
+    var baseTimes = (dayOfWeek === 6) ? ["09:00", "09:50", "10:40"] : ["09:00", "09:50", "10:40", "17:00", "17:50", "18:40", "19:30"];
+    
+    // 일요일 기본값은 휴무 (벙개 설정이 있으면 덮어씌움)
+    if (dayOfWeek === 0) baseTimes = [];
+
+    var isHoliday = false;
+    var holidayMemo = "";
+    var extraTimes = [];
+
+    if (holidaySheet) {
+      var holidayData = holidaySheet.getDataRange().getDisplayValues().slice(1);
+      for (var i = 0; i < holidayData.length; i++) {
+        var hDateNum = String(holidayData[i][0]).replace(/[^0-9]/g, "");
+        if (hDateNum === targetNum) {
+          var hType = String(holidayData[i][1]).trim();
+          var hNote = String(holidayData[i][2]).trim();
+          
+          if (hType === "휴무") {
+            isHoliday = true;
+            holidayMemo = hNote || "센터 휴무일입니다.";
+          } else if (hType === "벙개") {
+            // 벙개인 경우 기존 시간 무시하고 시트의 시간만 사용하거나, 기존 시간에 추가
+            // 원장님 요청: 벙개 시트에 적힌 시간대로 나오게 함
+            if (hNote !== "") {
+              // 콤마나 공백으로 구분된 시간을 쪼개서 추가
+              var splitTimes = hNote.split(/[,/ ]+/);
+              splitTimes.forEach(function(st) {
+                if (st && st.indexOf(":") !== -1) extraTimes.push(st.trim());
+              });
+            }
+          }
+        }
+      }
+    }
+
+    if (isHoliday) {
+      return "휴무:" + (holidayMemo || "오늘은 센터 휴무일입니다.");
+    }
+
+    // 벙개 설정이 있는 경우, 벙개 시간만 보여주거나 기존 시간에 합침
+    // 일요일이거나, 평일인데 특별 시간을 추가하고 싶을 때
+    if (extraTimes.length > 0) {
+      // 만약 일요일이라면 벙개 시간만 보여줌
+      if (dayOfWeek === 0) baseTimes = extraTimes;
+      else {
+        // 평일이면 기존 시간에 벙개 시간을 합침 (중복 제거)
+        extraTimes.forEach(function(et) {
+          if (baseTimes.indexOf(et) === -1) baseTimes.push(et);
+        });
+      }
+    } else if (dayOfWeek === 0) {
+      // 일요일인데 벙개 설정조차 없으면 확실히 휴무
+      return "휴무:일요일은 쉽니다.";
+    }
+
+    // [중요] 오늘 날짜인 경우, 현재 시간보다 이미 지난 타임은 필터링
+    if (isToday) {
+      var currentTimeStr = Utilities.formatDate(now, "GMT+9", "HH:mm");
+      baseTimes = baseTimes.filter(function(time) {
+        // 예약 시간(time)이 현재 시간(currentTimeStr)보다 이후인 것만 남김
+        return time >= currentTimeStr;
+      });
+    }
+
+    baseTimes.sort(); // 시간순 정렬
+
+    if (baseTimes.length === 0) {
+      return "휴무:오늘은 센터 운영 시간이 없습니다.";
+    }
+
+    baseTimes.sort();
+    var resData = resSheet.getDataRange().getDisplayValues().slice(1);
+    var result = [];
+    
+    var formatToTwoDigits = function(timeStr) {
+      return timeStr.split(':').map(function(v) {
+        var clean = v.replace(/[^0-9]/g, "");
+        return clean.length === 1 ? "0" + clean : clean;
+      }).join(':').substring(0, 5);
+    };
+
+    baseTimes.forEach(function(t) {
+      var targetT = formatToTwoDigits(t);
+
+      if (isToday) {
+        var tParts = targetT.split(':');
+        var checkTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), Number(tParts[0]), Number(tParts[1]));
+        var limitTime = new Date(now.getTime() + (20 * 60000));
+        if (checkTime < limitTime) return; 
+      }
+
+      var count = resData.filter(function(row) {
+        var rDateNum = row[3].replace(/[^0-9]/g, "");
+        var rTimeRaw = String(row[4]).trim();
+        if (!rTimeRaw || rTimeRaw === "") return false;
+        var rTimeFormatted = formatToTwoDigits(rTimeRaw);
+        return rDateNum === targetNum && rTimeFormatted === targetT && row[9] !== "취소";
+      }).length;
+
+      if (count >= 3) return; 
+
+      var parts = targetT.split(':');
+      var h = Number(parts[0]);
+      var m = parts[1];
+      var ap = (h < 12) ? "☀️ 오전 " : "🌙 오후 ";
+      var dh = (h > 12) ? (h - 12) : (h === 0 ? 12 : h);
+      var hs = (dh < 10) ? ("0" + dh) : dh;
+      
+      result.push({
+        display: ap + hs + "시 " + m + "분",
+        isFull: false,
+        timeValue: targetT
+      });
+    });
+
+    return result.length > 0 ? result : "휴무:예약 가능한 시간이 모두 마감되었습니다.";
+  } catch(e) { return "에러: " + e.toString(); }
+}
+
+function getRoomStatus(date, time) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('예약DB');
+  var data = sheet.getDataRange().getDisplayValues().slice(1);
+  var targetDateNum = date.replace(/[^0-9]/g, ""); 
+  var targetTime = time.split(':').map(function(v) { return v.length === 1 ? "0" + v : v; }).join(':').substring(0, 5);
+
+  return ["1인실", "2인실 A", "2인실 B"].map(function(r) {
+    var isBooked = data.some(function(row) {
+      var rDateNum = String(row[3]).replace(/[^0-9]/g, "");
+      var rTimeVal = String(row[4]).trim();
+      if (!rTimeVal) return false;
+      var rTimeParts = rTimeVal.split(':');
+      if (rTimeParts.length < 2) return false;
+      var formattedRTime = rTimeParts.slice(0, 2).map(function(v) {
+        var clean = v.replace(/[^0-9]/g, "");
+        return clean.length === 1 ? "0" + clean : clean;
+      }).join(':');
+      var rRoom = row[7];
+      var rStatus = row[9];
+      return rDateNum === targetDateNum && formattedRTime === targetTime && rRoom === r && rStatus !== "취소";
+    });
+    return { name: r, isBooked: isBooked };
+  });
+}
+
+function getMyReservations(phone) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('예약DB');
+  const data = sheet.getDataRange().getDisplayValues().slice(1);
+  const todayNum = Number(Utilities.formatDate(new Date(), "GMT+9", "yyyyMMdd"));
+  const inputPhone = String(phone).replace(/[^0-9]/g, "");
+
+  return data.filter(function(row) {
+    var sheetPhone = String(row[1]).replace(/[^0-9]/g, ""); 
+    var status = String(row[9] || "").replace(/\s/g, ""); 
+    
+    // 날짜 정규화 (YYYYMMDD)
+    var dateParts = String(row[3]).match(/\d+/g);
+    var dateNum = 0;
+    if (dateParts && dateParts.length >= 3) {
+      var y = dateParts[0];
+      var m = dateParts[1].length === 1 ? "0" + dateParts[1] : dateParts[1];
+      var d = dateParts[2].length === 1 ? "0" + dateParts[2] : dateParts[2];
+      dateNum = Number(y + m + d);
+    }
+    
+    return sheetPhone === inputPhone && (status === "예약완료" || status === "테라피중") && dateNum >= todayNum;
+  }).map(function(row) { 
+    return { date: row[3], time: row[4], room: row[7], status: row[9] }; 
+  });
+}
+
+function getMemberIDList(v) { 
+  try {
+    var memberSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('회원명단');
+    if (!memberSheet) return [];
+    var data = memberSheet.getDataRange().getDisplayValues().slice(1);
+    var results = [];
+    var seen = {}; // 중복 체크용
+
+    for (var i=0; i<data.length; i++) {
+      var name = String(data[i][1]).trim();
+      var phoneRaw = String(data[i][2]).trim();
+      var phoneOnly = phoneRaw.replace(/[^0-9]/g, "");
+      var phone4 = phoneOnly.slice(-4);
+      var status = String(data[i][10]).trim(); // K열 상태
+      
+      if (status !== "마감" && status !== "정지" && phone4 === v) {
+        var key = name + "|" + phone4;
+        if (!seen[key]) {
+          results.push({
+            displayName: name + "(" + phone4 + ")",
+            name: name,
+            phone: phoneRaw
+          }); 
+          seen[key] = true;
+        }
+      }
+    }
+    return results;
+  } catch(e) { return []; }
+}
+
+function submitReservation(d) { 
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('예약DB');
+    var addMinutes = function(timeStr, mins) {
+      var parts = timeStr.split(':');
+      var date = new Date(2000, 0, 1, parts[0], parts[1]);
+      date.setMinutes(date.getMinutes() + mins);
+      return Utilities.formatDate(date, "GMT+9", "HH:mm:00");
+    };
+    var formatTime = function(t) {
+      var parts = t.split(':');
+      var h = parts[0].length === 1 ? "0" + parts[0] : parts[0];
+      var m = parts[1].length === 1 ? "0" + parts[1] : parts[1];
+      return h + ":" + m + ":00";
+    };
+
+    var startTime = formatTime(d.time); 
+    var saunaStart = addMinutes(d.time, 30);
+    var saunaEnd = addMinutes(d.time, 80);
+    
+    var rowData = [
+      Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss"), 
+      d.phone, d.nameOnly, d.date, startTime, saunaStart, saunaEnd, d.room, 1, "예약 완료", "", "", ""
+    ];
+    sheet.appendRow(rowData);
+    return "성공";
+  } catch(e) { return "에러: " + e.toString(); }
+}
+
+// ──────────────────────────────────────────────
+// 7. 관리자 모바일 대시보드 백엔드 API (admin.html 연동)
+// ──────────────────────────────────────────────
+
+// 백엔드 메인 안전 제어 밸브 (true: 초고속 신형 로직 / false: 100% 검증 레거시 로직)
 var USE_FAST_DASHBOARD = true;
 
 /**
  * 1. 앞자리 0 잘림을 방지하고 전화번호를 무결하게 통일하는 안전장치
  */
 function formatPhoneSafely(phoneVal) {
-  var numStr = String(phoneVal || "").replace(/[^0-9]/g, "");
+  if (!phoneVal) return "";
+  var numStr = String(phoneVal).replace(/[^0-9]/g, "");
   // 스프레드시트가 010을 10으로 숫자로 삼켜버린 경우 자동 복구
   if (numStr.length === 10 && numStr.indexOf("10") === 0) {
     numStr = "0" + numStr;
@@ -2252,16 +2618,16 @@ function getAdminDashboardData_Fast() {
         var resHour = parseInt(rParts[0], 10);
         var resMinVal = parseInt(rParts[1], 10);
         var resTotalMin = (resHour * 60) + resMinVal;
-
+ 
         var nowKSTStr = Utilities.formatDate(now, "GMT+9", "HH:mm");
         var nowParts = nowKSTStr.split(":");
         var nowTotalMin = (parseInt(nowParts[0], 10) * 60) + parseInt(nowParts[1], 10);
-
+ 
         for (var a=0; a<activeJumping.length; a++) {
           var mPhone = formatPhoneSafely(activeJumping[a].phone);
           var rPhone = formatPhoneSafely(resData[k][1]);
           var isPhoneMatch = (rPhone === mPhone) || (rPhone.length >= 8 && mPhone.length >= 8 && rPhone.slice(-8) === mPhone.slice(-8));
-
+ 
           if (activeJumping[a].name === rName && isPhoneMatch) {
             var inParts = activeJumping[a].inTime.split(":");
             var inTotalMin = (parseInt(inParts[0], 10) * 60) + parseInt(inParts[1], 10);
@@ -2276,7 +2642,7 @@ function getAdminDashboardData_Fast() {
           var mPhoneT = formatPhoneSafely(activeTherapy[b].phone);
           var rPhoneT = formatPhoneSafely(resData[k][1]);
           var isPhoneMatchT = (rPhoneT === mPhoneT) || (rPhoneT.length >= 8 && mPhoneT.length >= 8 && rPhoneT.slice(-8) === mPhoneT.slice(-8));
-
+ 
           if (activeTherapy[b].name === rName && isPhoneMatchT) {
             var inPartsT = activeTherapy[b].inTime.split(":");
             var inTotalMinT = (parseInt(inPartsT[0], 10) * 60) + parseInt(inPartsT[1], 10);
@@ -2313,11 +2679,11 @@ function getAdminDashboardData_Fast() {
       pendingReservations: pendingReservations // 프론트엔드로 전달
     };
     
-  } catch (e) { return { error: "서버 초고속 로직 오류: " + e.toString() }; }
+  } catch (e) { return { error: "서버 오류: " + e.toString() }; }
 }
 
 /**
- * 🏰 [레거시 버전] 100% 안전하지만 느린 대시보드 리더 (원장님의 과거 검증된 오리지널 코드)
+ * 🏰 [🏰 100% 안전 보관 레거시] 기존 getAdminDashboardData() 로직
  */
 function getAdminDashboardData_Legacy() {
   try {
@@ -2468,16 +2834,16 @@ function getAdminDashboardData_Legacy() {
         var resHour = parseInt(rParts[0]);
         var resMinVal = parseInt(rParts[1]);
         var resTotalMin = (resHour * 60) + resMinVal;
-
+ 
         var nowKSTStr = Utilities.formatDate(now, "GMT+9", "HH:mm");
         var nowParts = nowKSTStr.split(":");
         var nowTotalMin = (parseInt(nowParts[0]) * 60) + parseInt(nowParts[1]);
-
+ 
         for (var a=0; a<activeJumping.length; a++) {
           var mPhone = String(activeJumping[a].phone).replace(/[^0-9]/g, "");
           var rPhone = String(resData[k][1]).replace(/[^0-9]/g, "");
           var isPhoneMatch = (rPhone === mPhone) || (rPhone.length >= 8 && mPhone.length >= 8 && rPhone.slice(-8) === mPhone.slice(-8));
-
+ 
           if (activeJumping[a].name === rName && isPhoneMatch) {
             var inParts = activeJumping[a].inTime.split(":");
             var inTotalMin = (parseInt(inParts[0]) * 60) + parseInt(inParts[1]);
@@ -2492,359 +2858,7 @@ function getAdminDashboardData_Legacy() {
           var mPhoneT = String(activeTherapy[b].phone).replace(/[^0-9]/g, "");
           var rPhoneT = String(resData[k][1]).replace(/[^0-9]/g, "");
           var isPhoneMatchT = (rPhoneT === mPhoneT) || (rPhoneT.length >= 8 && mPhoneT.length >= 8 && rPhoneT.slice(-8) === mPhoneT.slice(-8));
-
-          if (activeTherapy[b].name === rName && isPhoneMatchT) {
-            var inPartsT = activeTherapy[b].inTime.split(":");
-            var inTotalMinT = (parseInt(inPartsT[0]) * 60) + parseInt(inPartsT[1]);
-            var matchDiffT = Math.abs(resTotalMin - inTotalMinT);
-            if (matchDiffT <= 90) {
-              activeTherapy[b].therapyTime = rTimeShort;
-              activeTherapy[b].therapyRoom = rRoom;
-            }
-          }
-        }
-        
-        if (!upcomingTherapy) {
-          var diffMin = resTotalMin - nowTotalMin;
-          if (diffMin > 0 && diffMin <= 30) {
-            upcomingTherapy = { time: rTimeShort, name: rName, room: rRoom };
-          }
-        }
-      }
-    }
-    
-    // 예약 명단 시간순 정렬
-    pendingReservations.sort(function(a, b) { return a.sortVal - b.sortVal; });
-    
-    return {
-      success: true,
-      totalCount: totalCount,
-      jumpingCount: jumpingCount,
-      therapyCount: therapyCount,
-      goHomeCount: goHomeCount,
-      activeJumping: activeJumping,
-      activeTherapy: activeTherapy,
-      goHomeList: goHomeList,
-      upcomingTherapy: upcomingTherapy,
-      pendingReservations: pendingReservations // 프론트엔드로 전달
-    };
-    
-  } catch (e) { return { error: "서버 오류: " + e.toString() }; };
-        return rDateNum === targetNum && rTimeFormatted === targetT && row[9] !== "취소";
-      }).length;
-
-      if (count >= 3) return; 
-
-      var parts = targetT.split(':');
-      var h = Number(parts[0]);
-      var m = parts[1];
-      var ap = (h < 12) ? "☀️ 오전 " : "🌙 오후 ";
-      var dh = (h > 12) ? (h - 12) : (h === 0 ? 12 : h);
-      var hs = (dh < 10) ? ("0" + dh) : dh;
-      
-      result.push({
-        display: ap + hs + "시 " + m + "분",
-        isFull: false,
-        timeValue: targetT
-      });
-    });
-
-    return result.length > 0 ? result : "휴무:예약 가능한 시간이 모두 마감되었습니다.";
-  } catch(e) { return "에러: " + e.toString(); }
-}
-
-function getRoomStatus(date, time) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName('예약DB');
-  var data = sheet.getDataRange().getDisplayValues().slice(1);
-  var targetDateNum = date.replace(/[^0-9]/g, ""); 
-  var targetTime = time.split(':').map(function(v) { return v.length === 1 ? "0" + v : v; }).join(':').substring(0, 5);
-
-  return ["1인실", "2인실 A", "2인실 B"].map(function(r) {
-    var isBooked = data.some(function(row) {
-      var rDateNum = String(row[3]).replace(/[^0-9]/g, "");
-      var rTimeVal = String(row[4]).trim();
-      if (!rTimeVal) return false;
-      var rTimeParts = rTimeVal.split(':');
-      if (rTimeParts.length < 2) return false;
-      var formattedRTime = rTimeParts.slice(0, 2).map(function(v) {
-        var clean = v.replace(/[^0-9]/g, "");
-        return clean.length === 1 ? "0" + clean : clean;
-      }).join(':');
-      var rRoom = row[7];
-      var rStatus = row[9];
-      return rDateNum === targetDateNum && formattedRTime === targetTime && rRoom === r && rStatus !== "취소";
-    });
-    return { name: r, isBooked: isBooked };
-  });
-}
-
-function getMyReservations(phone) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName('예약DB');
-  const data = sheet.getDataRange().getDisplayValues().slice(1);
-  const todayNum = Number(Utilities.formatDate(new Date(), "GMT+9", "yyyyMMdd"));
-  const inputPhone = String(phone).replace(/[^0-9]/g, "");
-
-  return data.filter(function(row) {
-    var sheetPhone = String(row[1]).replace(/[^0-9]/g, ""); 
-    var status = String(row[9] || "").replace(/\s/g, ""); 
-    
-    // 날짜 정규화 (YYYYMMDD)
-    var dateParts = String(row[3]).match(/\d+/g);
-    var dateNum = 0;
-    if (dateParts && dateParts.length >= 3) {
-      var y = dateParts[0];
-      var m = dateParts[1].length === 1 ? "0" + dateParts[1] : dateParts[1];
-      var d = dateParts[2].length === 1 ? "0" + dateParts[2] : dateParts[2];
-      dateNum = Number(y + m + d);
-    }
-    
-    return sheetPhone === inputPhone && (status === "예약완료" || status === "테라피중") && dateNum >= todayNum;
-  }).map(function(row) { 
-    return { date: row[3], time: row[4], room: row[7], status: row[9] }; 
-  });
-}
-
-function getMemberIDList(v) { 
-  try {
-    var memberSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('회원명단');
-    if (!memberSheet) return [];
-    var data = memberSheet.getDataRange().getDisplayValues().slice(1);
-    var results = [];
-    var seen = {}; // 중복 체크용
-
-    for (var i=0; i<data.length; i++) {
-      var name = String(data[i][1]).trim();
-      var phoneRaw = String(data[i][2]).trim();
-      var phoneOnly = phoneRaw.replace(/[^0-9]/g, "");
-      var phone4 = phoneOnly.slice(-4);
-      var status = String(data[i][10]).trim(); // K열 상태
-      
-      if (status !== "마감" && status !== "정지" && phone4 === v) {
-        var key = name + "|" + phone4;
-        if (!seen[key]) {
-          results.push({
-            displayName: name + "(" + phone4 + ")",
-            name: name,
-            phone: phoneRaw
-          }); 
-          seen[key] = true;
-        }
-      }
-    }
-    return results;
-  } catch(e) { return []; }
-}
-
-function submitReservation(d) { 
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('예약DB');
-    var addMinutes = function(timeStr, mins) {
-      var parts = timeStr.split(':');
-      var date = new Date(2000, 0, 1, parts[0], parts[1]);
-      date.setMinutes(date.getMinutes() + mins);
-      return Utilities.formatDate(date, "GMT+9", "HH:mm:00");
-    };
-    var formatTime = function(t) {
-      var parts = t.split(':');
-      var h = parts[0].length === 1 ? "0" + parts[0] : parts[0];
-      var m = parts[1].length === 1 ? "0" + parts[1] : parts[1];
-      return h + ":" + m + ":00";
-    };
-
-    var startTime = formatTime(d.time); 
-    var saunaStart = addMinutes(d.time, 30);
-    var saunaEnd = addMinutes(d.time, 80);
-    
-    var rowData = [
-      Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss"), 
-      d.phone, d.nameOnly, d.date, startTime, saunaStart, saunaEnd, d.room, 1, "예약 완료", "", "", ""
-    ];
-    sheet.appendRow(rowData);
-    return "성공";
-  } catch(e) { return "에러: " + e.toString(); }
-}
-
-// ──────────────────────────────────────────────
-// 7. 관리자 모바일 대시보드 백엔드 API (admin.html 연동)
-// ──────────────────────────────────────────────
-
-function getAdminDashboardData() {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var now = new Date();
-    var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
-    
-    var logSheet = ss.getSheetByName("출석기록");
-    var resSheet = ss.getSheetByName("예약DB");
-    
-    if (!logSheet) return { error: "시트 오류: '출석기록' 시트가 없습니다. 시트 이름을 확인해주세요." };
-    if (!resSheet) return { error: "시트 오류: '예약DB' 시트가 없습니다. 시트 이름을 확인해주세요." };
-    
-    var totalCount = 0;
-    var jumpingCount = 0;
-    var therapyCount = 0;
-    var goHomeCount = 0;
-    var activeJumping = [];
-    var activeTherapy = [];
-    var goHomeList = [];
-    
-    // 1. 출석 로그 조회 (정확한 날짜 비교를 위해 Values와 DisplayValues를 병행)
-    var logData = logSheet.getDataRange().getValues();
-    var logDisplayData = logSheet.getDataRange().getDisplayValues();
-    var cols = getAttendanceColumnIndices(logSheet);
-    
-    for (var i = 1; i < logData.length; i++) {
-      var dateRaw = logData[i][cols.date]; // 날짜 열 (객체 또는 문자열)
-      if (!dateRaw) continue;
-      
-      var logDateStr = (dateRaw instanceof Date) ? Utilities.formatDate(dateRaw, "GMT+9", "yyyy-MM-dd") : String(dateRaw).split(" ")[0];
-      
-      if (logDateStr === todayStr) {
-        var memberName = logData[i][cols.name]; 
-        var memberPhone = logData[i][cols.phone];
-        var membership = logData[i][cols.type]; 
-        var status = String(logData[i][cols.status] || "").trim(); 
-        var reason = String(logData[i][cols.reason] || "");
-        
-        // 시간 오차 및 형식 해결: 쌍점(:)을 기준으로 시간과 분만 추출
-        var rawTimeStr = String(logDisplayData[i][cols.inTime] || "시간미정");
-        var timeOnly = rawTimeStr.indexOf(":") !== -1 ? rawTimeStr.split(":").slice(0, 2).join(":") : rawTimeStr;
-        
-        var isCombo = reason.indexOf("복합") !== -1;
-        var isTherapy = (reason.indexOf("테라피") !== -1 || reason.indexOf("보너스") !== -1) && !isCombo;
-        var isJumping = (reason.indexOf("점핑") !== -1 || reason.indexOf("월권") !== -1 || reason.indexOf("운동만") !== -1) && !isTherapy && !isCombo;
-
-        totalCount++; 
-
-        if (isCombo) {
-          jumpingCount++;
-          therapyCount++;
-        } else if (isTherapy) {
-          therapyCount++;
-        } else if (isJumping) {
-          jumpingCount++;
-        }
-
-        var memberObj = {
-          rowIdx: i + 1,
-          name: memberName,
-          phone: memberPhone,
-          membership: membership,
-          inTime: timeOnly,
-          type: isCombo ? "복합" : (isTherapy ? "테라피" : (isJumping ? "점핑" : "보너스")),
-          status: status,
-          classes: String(logData[i][cols.classes] || ""), 
-          timeLog: String(logData[i][cols.workoutTime] || ""), 
-          extraText: String(logData[i][cols.memo] || ""), 
-          reason: reason 
-        };
-
-        // 퇴실/귀가 상태 판별
-        var isGoHome = (status.indexOf("귀가") !== -1 || status === "퇴실" || status === "퇴실완료");
-        
-        if (isGoHome) {
-          goHomeCount++;
-          goHomeList.push(memberObj);
-        } else {
-          if (isCombo || isJumping) {
-            activeJumping.push(memberObj);
-          } else {
-            activeTherapy.push(memberObj);
-          }
-        }
-      }
-    }
-    
-    // 2. 테라피 예약 매칭 및 예열 알림 체크
-    var resData = resSheet.getDataRange().getDisplayValues();
-    var upcomingTherapy = null;
-    var pendingReservations = []; // 오늘 남은 예약 명단 (입실 전)
-    var todayNum = Utilities.formatDate(now, "GMT+9", "yyyyMMdd");
-    
-    // 예약DB 열 인덱스 더 유연하게 찾기
-    function getResCols(sheet) {
-      var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-      var map = { name: 2, date: 3, time: 4, room: 7, status: 9 };
-      for (var i = 0; i < headers.length; i++) {
-        var h = headers[i].toString().trim();
-        if (h.indexOf("이름") !== -1) map.name = i;
-        else if (h.indexOf("날짜") !== -1) map.date = i;
-        else if (h.indexOf("입실시간") !== -1 || h === "시간") map.time = i;
-        else if (h.indexOf("배정방") !== -1 || h.indexOf("룸") !== -1) map.room = i;
-        else if (h.indexOf("상태") !== -1) map.status = i;
-      }
-      return map;
-    }
-    
-    var resCols = getResCols(resSheet);
-    
-    for (var k = 1; k < resData.length; k++) {
-      var rDateRaw = String(resData[k][resCols.date] || "").trim();
-      if (!rDateRaw) continue;
-      
-      // 날짜 비교: 년/월/일 숫자만 뽑아서 비교 (형식 파괴 방지)
-      var rDateNum = rDateRaw.replace(/[^0-9]/g, "");
-      if (rDateNum.length > 8) rDateNum = rDateNum.substring(0, 8);
-      // 만약 2024.5.11 처럼 월/일이 한자리인 경우 20240511 형식으로 맞춤
-      if (rDateNum.length < 8) {
-         var dParts = rDateRaw.split(/[^0-9]/).filter(Boolean);
-         if (dParts.length >= 3) {
-           rDateNum = dParts[0] + (dParts[1].length === 1 ? "0"+dParts[1] : dParts[1]) + (dParts[2].length === 1 ? "0"+dParts[2] : dParts[2]);
-         }
-      }
-      
-      if (rDateNum === todayNum) {
-        var rName = String(resData[k][resCols.name] || "").trim();
-        var rTimeRaw = String(resData[k][resCols.time] || "").trim();
-        if (!rName || !rTimeRaw) continue;
-        
-        var rTimeShort = rTimeRaw.indexOf(":") !== -1 ? rTimeRaw.split(":").slice(0, 2).join(":") : rTimeRaw;
-        var rRoom = String(resData[k][resCols.room] || "").trim();
-        var rStatus = String(resData[k][resCols.status] || "").trim();
-        
-        // '예약' 글자가 포함되어 있고, '취소' 글자가 없어야 함
-        if (rStatus.indexOf("예약") !== -1 && rStatus.indexOf("취소") === -1) {
-          pendingReservations.push({
-            name: rName,
-            time: rTimeShort,
-            room: rRoom,
-            sortVal: rTimeShort.replace(":", "")
-          });
-        }
-        
-        // [스마트 매칭] 입실 시간과 예약 시간이 일정 범위(90분) 내인 경우에만 매칭
-        var rParts = rTimeShort.split(":");
-        var resHour = parseInt(rParts[0]);
-        var resMinVal = parseInt(rParts[1]);
-        var resTotalMin = (resHour * 60) + resMinVal;
-
-        var nowKSTStr = Utilities.formatDate(now, "GMT+9", "HH:mm");
-        var nowParts = nowKSTStr.split(":");
-        var nowTotalMin = (parseInt(nowParts[0]) * 60) + parseInt(nowParts[1]);
-
-        for (var a=0; a<activeJumping.length; a++) {
-          var mPhone = String(activeJumping[a].phone).replace(/[^0-9]/g, "");
-          var rPhone = String(resData[k][1]).replace(/[^0-9]/g, "");
-          var isPhoneMatch = (rPhone === mPhone) || (rPhone.length >= 8 && mPhone.length >= 8 && rPhone.slice(-8) === mPhone.slice(-8));
-
-          if (activeJumping[a].name === rName && isPhoneMatch) {
-            var inParts = activeJumping[a].inTime.split(":");
-            var inTotalMin = (parseInt(inParts[0]) * 60) + parseInt(inParts[1]);
-            var matchDiff = Math.abs(resTotalMin - inTotalMin);
-            if (matchDiff <= 90) {
-              activeJumping[a].therapyTime = rTimeShort;
-              activeJumping[a].therapyRoom = rRoom;
-            }
-          }
-        }
-        for (var b=0; b<activeTherapy.length; b++) {
-          var mPhoneT = String(activeTherapy[b].phone).replace(/[^0-9]/g, "");
-          var rPhoneT = String(resData[k][1]).replace(/[^0-9]/g, "");
-          var isPhoneMatchT = (rPhoneT === mPhoneT) || (rPhoneT.length >= 8 && mPhoneT.length >= 8 && rPhoneT.slice(-8) === mPhoneT.slice(-8));
-
+ 
           if (activeTherapy[b].name === rName && isPhoneMatchT) {
             var inPartsT = activeTherapy[b].inTime.split(":");
             var inTotalMinT = (parseInt(inPartsT[0]) * 60) + parseInt(inPartsT[1]);
@@ -3034,7 +3048,6 @@ function processAdminCheckout(data) {
   }
 }
 
-// 🏰 100% 안전 보존 레거시와 구분하기 위한 여백 및 경계
 function searchMemberByName(nameStr) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
