@@ -1043,8 +1043,8 @@ const Mailbox = {
       // 로컬 Mock 모드 또는 오프라인 테스트용 데이터 바인딩
       console.log("🎮 [Mailbox] Mock data loading...");
       this.notifications = [
-        { id: "MOCK_1", type: "welcome", title: "🎉 오늘 첫 로그인! 웰니스 보너스 지급 완료", content: "모험가님, 오늘 하루도 힘차게 시작해봐요! 로그인 보너스로 +5 EXP(회복력)가 즉시 지급되었습니다. ⚔️", createdAt: "2026-05-22 08:00:00", isRead: false },
-        { id: "MOCK_2", type: "debuff", title: "🚨 연속 미출석 에너지 방전 디버프 발생!", content: "회원님! 클럽 출석을 하지 않으신 지 연속 4일이 경과하여 에너지가 방전되었습니다. 누적 점수에서 -100 EXP가 차감되었습니다. 오늘 출석 즉시 100% 자동 부활합니다!", createdAt: "2026-05-21 07:30:00", isRead: true }
+        { id: "MOCK_1", type: "welcome", title: "오늘 첫 로그인! 웰니스 보너스 지급 완료", content: "점핑님! 오늘 하루도 힘차게 시작해봐요! 로그인 보너스로 +5 EXP(회복력)가 즉시 지급되었습니다. ⚔️", createdAt: "2026-05-22 08:00:00", isRead: false },
+        { id: "MOCK_2", type: "debuff", title: "연속 미출석 에너지 방전 디버프 발생!", content: "김점핑 회원님! 클럽 출석을 하지 않으신 지 연속 4일이 경과하여 에너지가 방전되었습니다. 누적 점수에서 -100 EXP가 차감되었습니다. 오늘 출석 즉시 100% 자동 부활합니다!", createdAt: "2026-05-21 07:30:00", isRead: true }
       ];
       this.render();
       return;

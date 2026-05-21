@@ -717,19 +717,40 @@ function getUserDashboardData(payload) {
 
     // [v59.0] 오늘 첫 로그인 시 알림 쪽지 생성 트리거
     if (isFirstLoginToday) {
+      var rawName = String(memberInfo.name || "회원").replace(/\d{4}$/, "").trim();
+      
+      // 친근한 이름 변환 (예: 문미진 -> 미진, 남궁민 -> 민, 허준 -> 허준)
+      var friendlyName = rawName;
+      if (/^[가-힣]+$/.test(rawName)) {
+        var len = rawName.length;
+        if (len === 3) {
+          friendlyName = rawName.substring(1);
+        } else if (len === 4) {
+          var doubleSurnames = ['남궁', '황보', '제갈', '사공', '선우', '독고', '동방', '서문'];
+          var prefix2 = rawName.substring(0, 2);
+          if (doubleSurnames.indexOf(prefix2) !== -1) {
+            friendlyName = rawName.substring(2);
+          } else {
+            friendlyName = rawName.substring(1);
+          }
+        }
+      }
+
       if (inactivityPenalty > 0) {
+        // 디버프 경고 쪽지는 정확한 전달과 격식을 위해 성을 포함한 전체 이름 사용
         sendPersonalNotification(
           phone,
           "debuff",
           "연속 미출석 에너지 방전 디버프 발생!",
-          "회원님! 클럽 출석을 하지 않으신 지 연속 " + inactiveDays + "일이 경과하여 웰니스 에너지가 방전되었습니다. 누적 점수에서 -" + inactivityPenalty + " EXP가 차감되었습니다. 💡 오늘 클럽에 출석하시면 즉시 100% 원상 복원됩니다!"
+          rawName + " 회원님! 클럽 출석을 하지 않으신 지 연속 " + inactiveDays + "일이 경과하여 웰니스 에너지가 방전되었습니다. 누적 점수에서 -" + inactivityPenalty + " EXP가 차감되었습니다. 💡 오늘 클럽에 출석하시면 즉시 100% 원상 복원됩니다!"
         );
       } else {
+        // 일상 웰컴 쪽지는 친근함을 극대화하기 위해 성을 뗀 이름(예: 미진님) 사용
         sendPersonalNotification(
           phone,
           "welcome",
           "오늘 첫 로그인! 웰니스 보너스 지급 완료",
-          "회원님, 오늘 하루도 힘차게 시작해봐요! 로그인 보너스로 +5 EXP(회복력)가 즉시 지급되었습니다. ⚔️"
+          friendlyName + "님! 오늘 하루도 힘차게 시작해봐요! 로그인 보너스로 +5 EXP(회복력)가 즉시 지급되었습니다. ⚔️"
         );
       }
     }
