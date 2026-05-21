@@ -3064,6 +3064,30 @@ function processAdminCheckout(data) {
       }
     }
     
+    // 4. 퇴실 시 대기 문자 자동 취소 처리 (상태: 대기 -> 완료(출석))
+    try {
+      var smsSheet = ss.getSheetByName("문자발송");
+      if (smsSheet) {
+        var smsData = smsSheet.getDataRange().getDisplayValues();
+        for (var j = 1; j < smsData.length; j++) {
+          var sPhone = String(smsData[j][2] || "").replace(/[^0-9]/g, "");
+          var sStatus = smsData[j][5];
+          if (sPhone === phoneStr && sStatus === "대기") {
+            smsSheet.getRange(j + 1, 6).setValue("완료(출석)");
+          }
+        }
+      }
+    } catch (smsErr) {
+      Logger.log("체크아웃 대기 문자 취소 중 오류: " + smsErr.toString());
+    }
+    
+    // 5. 글리코겐 방패 실시간 진도 계산 및 쪽지 발송 강제 유도
+    try {
+      getActiveQuestStatus(phoneStr, ss, null, memberName);
+    } catch (qErr) {
+      Logger.log("체크아웃 글리코겐 퀘스트 강제 업데이트 오류: " + qErr.toString());
+    }
+    
     return { success: true, message: "수정 및 퇴실 처리가 완료되었습니다." };
   } catch (e) {
     return { error: "수정 처리 오류: " + e.toString() };
@@ -5233,18 +5257,28 @@ function checkLongTermAbsentees() {
       }
     }
     
-    // 2. 이미 발송 대기 중인 목록 확인 (중복 생성 방지)
-    var existingSmsMap = {};
+    // 2. 이미 발송 대기 중이거나 완료된 목록 확인 (중복 방지 및 7일 주기 재발송용)
+    var hasPendingSmsMap = {};
+    var lastSentSmsDateMap = {};
     for (var j = 1; j < smsData.length; j++) {
       var sPhone = String(smsData[j][2] || "").replace(/[^0-9]/g, "");
       var sCategory = smsData[j][3];
       var sStatus = smsData[j][5];
-      if (sCategory === "장기미방문" && (sStatus === "대기" || sStatus === "완료")) {
-        existingSmsMap[sPhone] = true;
+      var sDateStr = smsData[j][0]; // "기록시간"
+      
+      if (sCategory === "장기미방문") {
+        if (sStatus === "대기") {
+          hasPendingSmsMap[sPhone] = true;
+        } else if (sStatus === "완료") {
+          var sDate = new Date(sDateStr);
+          if (!lastSentSmsDateMap[sPhone] || sDate > lastSentSmsDateMap[sPhone]) {
+            lastSentSmsDateMap[sPhone] = sDate;
+          }
+        }
       }
     }
     
-    // 3. 미방문자 추출 및 문자 생성
+    // 3. 미방문자 추출 및 문자/쪽지 생성 (양동작전)
     var count = 0;
     var addedNames = [];
     
@@ -5257,19 +5291,64 @@ function checkLongTermAbsentees() {
       if (!phone) continue;
       
       var lastDate = lastAttendanceMap[phone];
+      var cleanName = name.replace(/\d{4}$/, ""); // 이름 뒤 번호 제거
       
       // 마지막 출석일이 없거나(한번도 안옴), 7일 이상 지난 경우
       if (!lastDate || lastDate < sevenDaysAgo) {
-        // 이미 보냈거나 대기 중이면 패스
-        if (existingSmsMap[phone]) continue;
+        // 이미 대기 중인 문자가 있으면 패스
+        if (hasPendingSmsMap[phone]) continue;
         
-        var cleanName = name.replace(/\d{4}$/, ""); // 이름 뒤 번호 제거
-        var msg = cleanName + "회원님, 노형 점핑클럽입니다. 😊 클럽에서 뵙지 못한 지 너무 오래된 것 같아요. 😢 혹시 어디 불편하신 건 아니시죠? 바쁜 일상 속에서도 건강만큼은 꼭 챙기셨으면 하는 마음에 연락드렸습니다. ❤️ 잠시 짬을 내어 신나게 뛰러 오시는 건 어때요? 🏃‍♀️ 아니면 편안하게 테라피를 하러 오셔도 좋고요. 🔥 이번 주는 꼭 얼굴 뵀으면 좋겠어요! 😊";
+        // 마지막 발송 정보 검사
+        var lastSentSmsDate = lastSentSmsDateMap[phone];
+        if (lastSentSmsDate) {
+          // 출석 기록이 마지막 발송일보다 최신인 경우 -> 정상 재생성 대상
+          // 출석 기록이 마지막 발송일보다 이전인 경우 -> 7일간 미방문이 지속되었는지 검사
+          if (lastDate && lastDate <= lastSentSmsDate) {
+            var diffMs = now.getTime() - lastSentSmsDate.getTime();
+            var daysSinceLastSms = diffMs / (1000 * 60 * 60 * 24);
+            if (daysSinceLastSms < 7) {
+              continue; // 아직 7일이 지나지 않았으므로 건너뜀 (스팸 방지)
+            }
+          }
+        }
         
-        // 휴대폰 번호 보정 (0 누락 방지)
+        // 결석 일수 계산
+        var absentDays = 999; // 기록 없음
+        if (lastDate) {
+          absentDays = Math.floor((now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+        }
+        
+        // 회원권 정보 추출
+        var membership = regData[k][regCols.membership] || "회원권";
+        var expire = regData[k][regCols.expire] || "미정";
+        var remain = regData[k][regCols.remain] || "0";
+        var expWarn = "\n🎫 회원님의 [" + membership + "] 만료일은 " + expire + "까지이며, 현재 잔여 횟수가 " + remain + "회 남아있습니다. 소중한 이용권이 마감되어 소멸되기 전에 꼭 오셔서 알차게 사용하시길 바랄게요! 😊";
+        
+        var msg = "";
+        var notiTitle = "";
+        var notiContent = "";
+        
+        if (absentDays >= 7 && absentDays <= 13) {
+          notiTitle = "🏃‍♀️ 모험가님, 가벼운 시작으로 에너지를 찾아보세요! 🏃‍♀️";
+          notiContent = cleanName + "회원님, 점핑클럽입니다! 😊 클럽에서 뵙지 못한 지 벌써 일주일이 지났네요! 😢 많이 바쁘시더라도 가벼운 점핑 운동이나 따뜻한 테라피로 다시 건강 리듬을 회복해보시는 건 어떨까요?\n\n모바일 앱에 매일 로그인하셔서 소중한 일상 건강 기록을 남겨보시는 것도 큰 도움이 됩니다. 오늘 꼭 앱 접속이나 클럽 방문으로 건강 충전을 위한 첫 걸음을 내딛어 보세요! 화이팅! ❤️" + expWarn;
+          
+          msg = cleanName + "회원님, 노형 점핑클럽입니다. 😊 클럽에서 뵙지 못한 지 벌써 일주일이 지났네요! 😢 많이 바쁘시더라도 가벼운 점핑 운동이나 테라피로 다시 건강 리듬을 회복해보시는 건 어떨까요? 모바일 앱에 매일 로그인하셔서 일상 건강 기록을 남겨보시는 것도 큰 도움이 됩니다. 오늘 꼭 앱 접속이나 클럽 방문으로 첫 걸음을 내딛어 보세요! 🏃‍♀️" + expWarn;
+        } else if (absentDays >= 14 && absentDays <= 29) {
+          notiTitle = "💆‍♀️ 회원님의 신나는 에너지가 너무나도 그립습니다. 💆‍♀️";
+          notiContent = cleanName + "회원님, 점핑클럽입니다! 😊 회원님의 활기차고 건강한 에너지가 클럽에서 너무나도 그립습니다. 😢\n\n몸과 마음의 피로를 사르르 녹여줄 편안한 원적외선 테라피라도 받으러 클럽에 들러주세요. 운동하기 부쩍 망설여지신다면 따뜻한 차 한 잔 나누러 오셔도 대환영입니다! 이번 주에는 꼭 클럽에서 소중한 회원님의 얼굴을 뵈었으면 좋겠습니다. ❤️" + expWarn;
+          
+          msg = cleanName + "회원님, 노형 점핑클럽입니다. 😊 회원님의 활기차고 건강한 에너지가 클럽에서 너무나도 그립습니다. 😢 몸과 마음의 피로를 사르르 녹여줄 편안한 원적외선 테라피라도 받으러 가볍게 들러주세요. 운동이 망설여지신다면 따뜻한 차 한 잔 나누러 오셔도 대환영입니다! 이번 주에는 꼭 얼굴 뵀으면 좋겠어요. ❤️" + expWarn;
+        } else {
+          // 30일 이상 또는 기록 없음
+          notiTitle = "💌 모험가님, 건강한 습관을 끝까지 지키시길 응원합니다! 💌";
+          notiContent = cleanName + "회원님, 점핑클럽입니다! 😊 오랫동안 뵙지 못해 회원님의 건강과 일상이 늘 궁금하고 걱정됩니다. 😢\n\n비록 바쁜 일상 때문에 클럽 출석은 잠시 뜸하시더라도, 웰니스 다이어리에 하루 건강을 차근차근 기록하면서 건강한 마인드와 습관을 놓지 않으시길 진심으로 응원합니다. 언제든 저희 클럽 문은 활짝 열려있으니 다시 웃는 얼굴로 뛸 날을 손꼽아 기다리겠습니다. 늘 건강하고 행복하세요! ❤️" + expWarn;
+          
+          msg = cleanName + "회원님, 노형 점핑클럽입니다. 😊 오랫동안 뵙지 못해 회원님의 건강과 일상이 늘 궁금하고 걱정됩니다. 😢 비록 바쁜 시기라 클럽 출석은 어렵더라도, 언제 어디서나 건강만큼은 웰니스 다이어리에 꾸준히 기록하면서 건강한 습관을 유지해 나가시길 진심으로 응원합니다. 다시 함께 신나게 뛸 날을 기다리겠습니다. 늘 건강하세요! ❤️" + expWarn;
+        }
+        
         var formattedPhone = formatPhoneForSms(regData[k][regCols.phone]);
-
-        // 문자발송 시트에 추가
+        
+        // A. 오프라인 문자 적재
         smsSheet.appendRow([
           Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm"),
           cleanName,
@@ -5279,9 +5358,75 @@ function checkLongTermAbsentees() {
           "대기"
         ]);
         
+        // B. 인앱 쪽지 실시간 동시 전송 (양동작전)
+        try {
+          if (!hasSentNotificationToday(phone, "안부", notiTitle)) {
+            sendPersonalNotification(phone, "안부", notiTitle, notiContent);
+          }
+        } catch (notiErr) {
+          Logger.log("장기미방문 인앱 쪽지 생성 실패 (" + cleanName + "): " + notiErr.toString());
+        }
+        
         count++;
         addedNames.push(cleanName);
       }
+    }
+    
+    // 4. 진행 중인 글리코겐 퀘스트 미출석 복구 독려 검사 엔진
+    try {
+      var questSheet = ss.getSheetByName("돌발퀘스트_목록");
+      if (questSheet) {
+        var questData = questSheet.getDataRange().getDisplayValues();
+        var todayMidnight = new Date();
+        todayMidnight.setHours(0,0,0,0);
+        
+        var localLogData = logData; // logData 공유
+        
+        for (var q = 1; q < questData.length; q++) {
+          var qType = questData[q][2];
+          var qStatus = questData[q][7];
+          
+          if (qType === "글리코겐" && qStatus === "진행중") {
+            var qPhone = String(questData[q][6]).replace(/[^0-9]/g, "");
+            var qStartStr = questData[q][1];
+            
+            // 경과 일수 계산 (시행일 기준)
+            var qStartDate = new Date(qStartStr);
+            qStartDate.setHours(0,0,0,0);
+            var elapsedDays = Math.floor((todayMidnight.getTime() - qStartDate.getTime()) / (1000 * 60 * 60 * 24));
+            
+            // 현재 출석 진척도 획득
+            var qStatusObj = getActiveQuestStatus(qPhone, ss, localLogData);
+            if (qStatusObj && qStatusObj.glycogenQuest) {
+              var qProgress = qStatusObj.glycogenQuest.progress;
+              
+              if (elapsedDays === 1 && qProgress === 0) {
+                // 1일차 미출석 경고 쪽지 발송
+                if (!hasSentNotificationToday(qPhone, "방어", "1일차 경고")) {
+                  sendPersonalNotification(
+                    qPhone,
+                    "방어",
+                    "🚨 글리코겐 방패 1일차 경고! 내일부터 2배 빡세게! 🔥",
+                    "회원님, 어제 출석을 못 하셨네요! 😢 글리코겐이 몸의 지방으로 굳어버리기 전에 남은 이틀 동안 2배 더 빡세게 운동하셔야 합니다! 내일은 꼭 클럽에 나오셔서 활기차게 뛰고 글리코겐 방패를 채워보세요. 원장님이 기다리고 있습니다! 화이팅! 🏃‍♀️"
+                  );
+                }
+              } else if (elapsedDays === 2 && qProgress <= 1) {
+                // 2일차 미출석 비상 상황 쪽지 발송
+                if (!hasSentNotificationToday(qPhone, "방어", "비상 상황")) {
+                  sendPersonalNotification(
+                    qPhone,
+                    "방어",
+                    "🚨 글리코겐 방패 비상 상황! 마지막 조각 충전 기회! 🛡️",
+                    "비상 상황입니다, 회원님! 🚨 벌써 글리코겐 방패 제한 시간의 마지막 날입니다. 아직 방패가 완성되지 않았어요! 오늘이 지방 축적을 막을 수 있는 마지막 골든타임입니다. 오늘 꼭 클럽에 오셔서 운동을 완수하고 요요 방어 방패를 꼭 완성하세요! 🔥"
+                  );
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (qErr) {
+      Logger.log("글리코겐 미출석 복구 독려 스캔 중 에러: " + qErr.toString());
     }
     
     return { 
@@ -5450,14 +5595,24 @@ function checkInactivityDebuffAbsentees() {
       }
     }
     
-    // 2. 이미 발송 대기 중인 목록 확인 (중복 생성 방지)
-    var existingSmsMap = {};
+    // 2. 이미 발송 대기 중이거나 완료된 목록 확인 (중복 생성 방지 및 7일 주기 재발송용)
+    var hasPendingSmsMap = {};
+    var lastSentSmsDateMap = {};
     for (var j = 1; j < smsData.length; j++) {
       var sPhone = String(smsData[j][2] || "").replace(/[^0-9]/g, "");
       var sCategory = smsData[j][3];
       var sStatus = smsData[j][5];
-      if (sCategory === "출석디버프" && (sStatus === "대기" || sStatus === "완료")) {
-        existingSmsMap[sPhone] = true;
+      var sDateStr = smsData[j][0]; // "기록시간"
+      
+      if (sCategory === "출석디버프") {
+        if (sStatus === "대기") {
+          hasPendingSmsMap[sPhone] = true;
+        } else if (sStatus === "완료") {
+          var sDate = new Date(sDateStr);
+          if (!lastSentSmsDateMap[sPhone] || sDate > lastSentSmsDateMap[sPhone]) {
+            lastSentSmsDateMap[sPhone] = sDate;
+          }
+        }
       }
     }
     
@@ -5487,10 +5642,40 @@ function checkInactivityDebuffAbsentees() {
       
       // 4~6일 결석일 때 문자 생성 (디버프 경고 전송 적기)
       if (inactiveDays >= 4 && inactiveDays <= 6) {
-        if (existingSmsMap[phone]) continue;
+        if (hasPendingSmsMap[phone]) continue;
+        
+        var lastSentSmsDate = lastSentSmsDateMap[phone];
+        if (lastSentSmsDate) {
+          if (lastDate && lastDate <= lastSentSmsDate) {
+            var diffMs = now.getTime() - lastSentSmsDate.getTime();
+            var daysSinceLastSms = diffMs / (1000 * 60 * 60 * 24);
+            if (daysSinceLastSms < 7) {
+              continue; // 아직 7일이 지나지 않았으므로 건너뜀
+            }
+          }
+        }
         
         var cleanName = name.replace(/\d{4}$/, ""); // 이름 뒤 번호 제거
         var penaltyVal = (inactiveDays - 3) * 100;
+        
+        var notiTitle = "🚨 웰니스 점수 방전 경고! 홈 케어 미션 🔥";
+        var notiContent = cleanName + " 회원님! 운동을 쉬신 지 벌써 " + inactiveDays + "일이 지나, 아쉽게도 웰니스 누적 점수가 매일 100 EXP씩 방전(감점)되기 시작했어요! 😭 누적 -" + penaltyVal + " EXP 상태입니다.\n\n하지만 걱정 마세요! 오늘 클럽에 오셔서 신나게 점핑 뛰고 출석체크만 쾅! 하시면 깎였던 모든 점수와 순위가 즉시 100% 마법처럼 전부 복구(부활)됩니다! ✨\n\n만약 방문이 어려우시다면 홈 케어로 가벼운 스트레칭이나 물 2L 마시기 미션이라도 실천해보시는 건 어떨까요? 오늘 꼭 앱에서 일상 기록을 남겨 에너지를 지키세요! ❤️";
+        
+        var isActive = isAppActiveDuringAbsence(phone, lastDate, now);
+        
+        // A. 인앱 쪽지 발송 (오늘 이미 안 보낸 경우)
+        try {
+          if (!hasSentNotificationToday(phone, "디버프", "웰니스 점수 방전 경고")) {
+            sendPersonalNotification(phone, "디버프", notiTitle, notiContent);
+          }
+        } catch (notiErr) {
+          Logger.log("디버프 인앱 쪽지 생성 실패 (" + cleanName + "): " + notiErr.toString());
+        }
+        
+        // B. 앱 활성 상태인 경우 SMS 발송 스킵
+        if (isActive) {
+          continue; 
+        }
         
         var msg = "🚨 [노형점핑] " + cleanName + " 회원님! 운동을 쉬신 지 벌써 " + inactiveDays + "일이 지나, 아쉽게도 웰니스 누적 점수가 매일 100 EXP씩 방전(감점)되기 시작했어요! 😭 누적 -" + penaltyVal + " EXP 상태입니다. 하지만 걱정 마세요! 오늘 클럽에 오셔서 신나게 점핑 뛰고 출석체크만 쾅! 하시면 깎였던 모든 점수와 순위가 즉시 100% 마법처럼 전부 복구(부활)됩니다! ✨ 오늘 꼭 오셔서 건강 충전해 가세요! ❤️";
         
@@ -6369,6 +6554,36 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
         if (status === "진행중") {
           if (now > limitTime) {
             sheet.getRange(i + 1, 8).setValue("실패");
+            
+            // 😢 글리코겐 방패 실패 위로 쪽지 전송 (1회)
+            try {
+              var mName = memberName;
+              if (!mName) {
+                var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+                if (regSheet) {
+                  var regData = regSheet.getDataRange().getDisplayValues();
+                  var regCols = getRegColumnIndices(regSheet);
+                  for (var r = 1; r < regData.length; r++) {
+                    var rPhone = String(regData[r][regCols.phone]).replace(/[^0-9]/g, "");
+                    if (rPhone === cleanPhone) {
+                      mName = regData[r][regCols.name];
+                      break;
+                    }
+                  }
+                }
+              }
+              if (!mName) mName = "모험가";
+              mName = String(mName).replace(/\d{4}$/, ""); // 이름 뒤 숫자 제거
+              
+              sendPersonalNotification(
+                cleanPhone,
+                "방어",
+                "😢 아쉽습니다! 글리코겐 방패 충전 실패",
+                mName + "님, 아쉽게도 3일 제한 시간 내에 미션을 완수하지 못해 글리코겐 방패 충전에 실패하셨습니다. 😢\n\n비록 이번 방패는 충전하지 못했지만 낙담하지 마세요! 건강한 습관을 다시 채우는 것이 중요합니다. 오늘부터 다시 가볍고 건강한 식단과 함께 클럽에서 땀 흘려보아요. 언제나 회원님의 도전을 응원합니다! ❤️"
+              );
+            } catch (errFailNoti) {
+              console.error("Error sending shield fail notification: " + errFailNoti.toString());
+            }
           } else {
             activeGlycogenRowIdx = i + 1;
             latestGlycogenQuest = {
@@ -6473,10 +6688,69 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
           ]);
         }
         
+        // 🛡️ 3일차 성공 쪽지 발송 (중복 방지)
+        try {
+          var cleanPhoneName = mName || "모험가";
+          cleanPhoneName = String(cleanPhoneName).replace(/\d{4}$/, ""); // 이름 뒤 숫자 제거
+          if (!hasSentNotificationToday(cleanPhone, "방어", "방패 완성")) {
+            sendPersonalNotification(
+              cleanPhone,
+              "방어",
+              "🛡️ 요요 방어 방패 완성! 🎉",
+              cleanPhoneName + "님, 축하합니다! 3일 연속 지옥의 미션 출석을 완수하여 치팅데이를 완전히 극복하고 '요요 방어 방패'를 완성하셨습니다! 🛡️\n\n앞으로 7일 동안 요요와 글리코겐의 공격으로부터 완벽하게 보호됩니다! 이 기세를 몰아 건강한 습관을 계속 유지해보아요! 화이팅! ❤️"
+            );
+          }
+        } catch (errNoti) {
+          console.error("Error sending shield success notification: " + errNoti.toString());
+        }
+
         result.glycogenQuest = null;
         result.shield.active = true;
         result.shield.expireStr = Utilities.formatDate(shieldExpire, "GMT+9", "yyyy-MM-dd HH:mm:ss");
       } else {
+        // 🛡️ 1, 2일차 진행도 쪽지 발송 (중복 방지)
+        try {
+          var mName = memberName;
+          if (!mName) {
+            var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+            if (regSheet) {
+              var regData = regSheet.getDataRange().getDisplayValues();
+              var regCols = getRegColumnIndices(regSheet);
+              for (var r = 1; r < regData.length; r++) {
+                var rPhone = String(regData[r][regCols.phone]).replace(/[^0-9]/g, "");
+                if (rPhone === cleanPhone) {
+                  mName = regData[r][regCols.name];
+                  break;
+                }
+              }
+            }
+          }
+          if (!mName) mName = "모험가";
+          mName = String(mName).replace(/\d{4}$/, ""); // 이름 뒤 숫자 제거
+
+          if (attendCount === 1) {
+            if (!hasSentNotificationToday(cleanPhone, "방어", "1일차 완성")) {
+              sendPersonalNotification(
+                cleanPhone,
+                "방어",
+                "🛡️ 글리코겐 방패 1일차 조각 완성!",
+                mName + "님, 치팅 극복을 위한 위대한 첫 걸음을 내딛으셨습니다! 🏃‍♀️\n\n1일차 글리코겐 방패 조각이 완성되었습니다. 🛡️ 치팅 데이의 흔적을 깨끗이 날려버릴 수 있도록 내일도 꼭 출석하셔서 2일차 조각을 완성해보세요! 클럽에서 기다리고 있겠습니다! 화이팅! ❤️"
+              );
+            }
+          } else if (attendCount === 2) {
+            if (!hasSentNotificationToday(cleanPhone, "방어", "2일차 완성")) {
+              sendPersonalNotification(
+                cleanPhone,
+                "방어",
+                "🛡️ 글리코겐 방패 2일차 조각 완성!",
+                "와우, 대단하십니다, " + mName + "님! 😍\n\n벌써 2일차 방패 조각까지 완성되었습니다! 🛡️ 이제 단 하루만 더 출석하시면 치팅을 완벽하게 진압하고 요요로부터 지켜줄 강력한 '요요 방어 방패'가 완성됩니다. 마지막 조각을 완성하러 내일 꼭 클럽에서 만나요! 🔥"
+              );
+            }
+          }
+        } catch (errProgressNoti) {
+          console.error("Error sending shield progress notification: " + errProgressNoti.toString());
+        }
+
         result.glycogenQuest = {
           progress: attendCount,
           deadlineStr: latestGlycogenQuest.deadlineStr,
@@ -6523,6 +6797,23 @@ function triggerGlycogenQuest(phone, name) {
       "'" + cleanPhone,
       "진행중"
     ]);
+
+    // 🛡️ 글리코겐 방패 최초 발동 쪽지 즉시 발송
+    try {
+      var mName = name;
+      if (!mName) mName = "모험가";
+      mName = String(mName).replace(/\d{4}$/, ""); // 이름 뒤 숫자 제거
+
+      sendPersonalNotification(
+        cleanPhone,
+        "방어",
+        "🚨 글리코겐 방패 긴급 발동! 3일 연속 출석 미션! 🛡️",
+        mName + "님, 저녁을 무겁게 드셨거나 치팅이 감지되어 글리코겐 방패가 긴급 발동되었습니다! 🚨\n\n글리코겐이 지방으로 축적되기 전에 3일 안에 꼭 출석하셔서 운동으로 완전히 연소시켜야 합니다! 내일부터 3일간 꼭 출석하셔서 요요 방어 방패를 완성해보세요. 화이팅! 🏃‍♀️"
+      );
+    } catch (notiErr) {
+      Logger.log("글리코겐 최초 발동 알림 생성 실패: " + notiErr.toString());
+    }
+
     Logger.log("글리코겐 퀘스트 성공적으로 발동됨!");
   } catch(e) {
     Logger.log("triggerGlycogenQuest 에러: " + e.toString());
@@ -8077,6 +8368,88 @@ function markNotificationsAsRead(payload) {
     Logger.log("알림 읽음 처리 실패: " + e.toString());
     return { success: false, error: e.toString() };
   }
+}
+
+/**
+ * 오늘 특정 유형의 쪽지가 이미 해당 회원에게 발송되었는지 여부를 확인합니다.
+ */
+function hasSentNotificationToday(phone, type, titleKeyword) {
+  try {
+    var sheet = checkAndCreatePersonalNotificationSheet();
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return false;
+    
+    var data = sheet.getRange(2, 1, lastRow - 1, 8).getDisplayValues();
+    var cleanPhone = phone.replace(/[^0-9]/g, "");
+    var todayStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
+    
+    for (var i = 0; i < data.length; i++) {
+      var rowPhone = String(data[i][1] || "").replace(/[^0-9]/g, "");
+      var rowType = data[i][3];
+      var rowTitle = data[i][4];
+      var rowDate = data[i][6].substring(0, 10); // "yyyy-MM-dd HH:mm:ss" -> "yyyy-MM-dd"
+      
+      if (rowPhone === cleanPhone && rowType === type && rowDate === todayStr) {
+        if (!titleKeyword || rowTitle.indexOf(titleKeyword) !== -1) {
+          return true;
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Error in hasSentNotificationToday: " + e.toString());
+  }
+  return false;
+}
+
+/**
+ * 결석 기간 동안 회원이 앱을 사용했는지(앱 활성 상태인지) 판별합니다.
+ * @param {string} phone 폰번호
+ * @param {Date} lastAttendanceDate 마지막 출석일 (Date 객체)
+ * @param {Date} now 오늘 날짜
+ * @return {boolean} 앱 활성 여부
+ */
+function isAppActiveDuringAbsence(phone, lastAttendanceDate, now) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("일일_활동_기록");
+    if (!sheet) return false;
+    
+    var data = sheet.getDataRange().getValues();
+    var normalizedPhone = phone.replace(/[^0-9]/g, "");
+    
+    // 결석 시작일은 마지막 출석일의 다음 날
+    var startDate = new Date(lastAttendanceDate.getTime());
+    startDate.setDate(startDate.getDate() + 1);
+    startDate.setHours(0, 0, 0, 0);
+    
+    var endDate = new Date(now.getTime());
+    endDate.setHours(23, 59, 59, 999);
+    
+    for (var i = 1; i < data.length; i++) {
+      var rowDateVal = data[i][0];
+      if (!rowDateVal) continue;
+      
+      var rowDate = new Date(rowDateVal);
+      rowDate.setHours(0, 0, 0, 0);
+      
+      if (rowDate >= startDate && rowDate <= endDate) {
+        var rowPhone = String(data[i][1] || "").replace(/[^0-9]/g, "");
+        if (rowPhone === normalizedPhone) {
+          // 단순 오프라인 출석 기록인지 확인하기 위해 완료내역(I열, Index 8)을 검사
+          var detail = String(data[i][8] || "");
+          var isOnlyOffline = (detail.indexOf("센터방문") !== -1 || detail.indexOf("퇴실") !== -1 || detail.indexOf("테라피") !== -1) && 
+                              (detail.indexOf("로그인") === -1 && detail.indexOf("체크") === -1 && detail.indexOf("식단") === -1 && detail.indexOf("인증") === -1 && detail.indexOf("오아시스") === -1 && detail.indexOf("방어") === -1);
+          
+          if (!isOnlyOffline) {
+            return true; // 앱 활성 상태
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Error in isAppActiveDuringAbsence: " + e.toString());
+  }
+  return false;
 }
 
 
