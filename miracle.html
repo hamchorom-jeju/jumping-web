@@ -500,8 +500,8 @@
         </div>
         <button onclick="closeMyInbodyHistoryModal()" style="background:none; border:none; font-size:1.4rem; color:var(--text-dim); cursor:pointer;">✕</button>
       </div>
-      <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0; margin-bottom: 20px; font-weight: 700; line-height: 1.4;">
-        지금까지 등록된 인바디 기록 목록입니다. 가장 최신 기록이 맨 위에 보여집니다.
+      <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: -5px; margin-bottom: 15px; font-weight: 800;">
+        ⏱️ 최신기록 순서 배열
       </p>
 
       <div id="my-inbody-history-list" style="max-height:350px; overflow-y:auto; padding-right:5px; box-sizing:border-box;">
@@ -1621,15 +1621,15 @@
           }
 
           let html = `
-            <div style="overflow-x:auto; border-radius:18px; border:1.5px solid #edf2f7; background:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
-              <table style="width:100%; border-collapse:collapse; font-size:0.75rem; text-align:center; min-width:320px;">
+            <div style="overflow-x:auto; border-radius:18px; border:1.5px solid #edf2f7; background:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.02); width:100%;">
+              <table style="width:100%; border-collapse:collapse; font-size:0.75rem; text-align:center;">
                 <thead>
                   <tr style="background:#f7fafc; border-bottom:1.5px solid #e2e8f0; color:#4a5568; font-weight:900;">
-                    <th style="padding:10px 4px; font-size:0.7rem;">측정일</th>
-                    <th style="padding:10px 4px; font-size:0.7rem;">체중</th>
-                    <th style="padding:10px 4px; font-size:0.7rem;">골격근</th>
-                    <th style="padding:10px 4px; font-size:0.7rem;">체지방</th>
-                    <th style="padding:10px 4px; font-size:0.7rem;">변화</th>
+                    <th style="padding:10px 2px; font-size:0.68rem; line-height:1.3;">측정일</th>
+                    <th style="padding:10px 2px; font-size:0.68rem; line-height:1.3;">체중<br><span style="font-size:0.55rem; color:#a0aec0; font-weight:700;">(kg)</span></th>
+                    <th style="padding:10px 2px; font-size:0.68rem; line-height:1.3;">골격근<br><span style="font-size:0.55rem; color:#a0aec0; font-weight:700;">(kg)</span></th>
+                    <th style="padding:10px 2px; font-size:0.68rem; line-height:1.3;">체지방<br><span style="font-size:0.55rem; color:#a0aec0; font-weight:700;">(%)</span></th>
+                    <th style="padding:10px 2px; font-size:0.68rem; line-height:1.3;">변화</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1648,22 +1648,22 @@
             // 점수 색상 디자인 강조
             let scoreBadge = '';
             if (Number(r.score) > 0) {
-              scoreBadge = `<span style="background:#e0f2fe; color:#0369a1; border-radius:4px; padding:2px 5px; font-weight:900; font-size:0.68rem;">+${r.score}</span>`;
+              scoreBadge = `<span style="background:#e0f2fe; color:#0369a1; border-radius:4px; padding:2px 4px; font-weight:900; font-size:0.65rem;">+${r.score}</span>`;
             } else if (isFirst) {
-              scoreBadge = `<span style="background:#dbffe6; color:#15803d; border-radius:4px; padding:2px 5px; font-weight:900; font-size:0.65rem;">🌱 최초</span>`;
+              scoreBadge = `<span style="background:#dbffe6; color:#15803d; border-radius:4px; padding:2px 4px; font-weight:900; font-size:0.62rem;">🌱 최초</span>`;
             } else {
               scoreBadge = `<span style="color:#a0aec0; font-weight:800;">-</span>`;
             }
 
             html += `
               <tr style="background:${rowBg}; border-bottom:1px solid #edf2f7; font-weight:800; color:#4a5568;">
-                <td style="padding:11px 4px; font-weight:900; color:#1a202c; font-size:0.72rem;">
+                <td style="padding:11px 2px; font-weight:900; color:#1a202c; font-size:0.7rem;">
                   ${dateStr}
                 </td>
-                <td style="padding:11px 4px; font-size:0.75rem; color:#2d3748;">${r.weight}<span style="font-size:0.6rem; color:#a0aec0; font-weight:700;">kg</span></td>
-                <td style="padding:11px 4px; font-size:0.75rem; color:#3182ce; font-weight:900;">${r.muscle}<span style="font-size:0.6rem; color:#90cdf4; font-weight:800;">kg</span></td>
-                <td style="padding:11px 4px; font-size:0.75rem; color:#e53e3e; font-weight:900;">${r.fat}<span style="font-size:0.6rem; color:#feb2b2; font-weight:800;">%</span></td>
-                <td style="padding:11px 4px;">${scoreBadge}</td>
+                <td style="padding:11px 2px; font-size:0.75rem; color:#2d3748;">${r.weight}</td>
+                <td style="padding:11px 2px; font-size:0.75rem; color:#16a34a; font-weight:900;">${r.muscle}</td>
+                <td style="padding:11px 2px; font-size:0.75rem; color:#8b5cf6; font-weight:900;">${r.fat}</td>
+                <td style="padding:11px 2px;">${scoreBadge}</td>
               </tr>
             `;
           });
