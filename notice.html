@@ -9,30 +9,32 @@
   <style>
     :root {
       --scroll-gold: #d4af37;
+      --scroll-gold-light: #f7e7c4;
       --scroll-gold-dark: #aa7c11;
-      --scroll-bg: #110d05;
-      --scroll-paper: #fcf8ee;
-      --scroll-border: rgba(170, 124, 17, 0.25);
+      --scroll-bg: #0c0904;
+      --scroll-paper: #fdfaf2;
+      --scroll-border: rgba(170, 124, 17, 0.35);
       --text-gold: #f7e7c4;
-      --text-wood: #2c1a04;
+      --text-wood: #221402;
     }
 
     body {
       font-family: 'Outfit', 'Noto Sans KR', sans-serif;
       background-color: var(--scroll-bg) !important;
       background-image: 
-        radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.15) 0%, transparent 60%),
+        radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.2) 0%, transparent 60%),
         url('https://www.transparenttextures.com/patterns/dark-matter.png');
       color: var(--text-gold);
       margin: 0;
       padding: 0;
       min-height: 100vh;
+      overflow-x: hidden;
     }
 
     .container {
       max-width: 500px;
       margin: 0 auto;
-      padding: 30px 15px 120px 15px;
+      padding: 30px 16px 120px 16px;
       position: relative;
     }
 
@@ -40,10 +42,10 @@
     .top-close-btn {
       position: absolute;
       top: 30px;
-      right: 15px;
-      width: 40px;
-      height: 40px;
-      background: rgba(212, 175, 55, 0.15);
+      right: 16px;
+      width: 44px;
+      height: 44px;
+      background: rgba(212, 175, 55, 0.1);
       border: 2px solid var(--scroll-gold);
       border-radius: 50%;
       color: var(--scroll-gold);
@@ -51,52 +53,75 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 1.1rem;
-      transition: all 0.3s;
+      font-size: 1.2rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       z-index: 100;
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
     }
     .top-close-btn:hover {
       background: var(--scroll-gold);
       color: var(--scroll-bg);
-      transform: rotate(90deg);
+      transform: rotate(90deg) scale(1.1);
+      box-shadow: 0 0 25px rgba(212, 175, 55, 0.5);
+    }
+    .top-close-btn:active {
+      transform: rotate(90deg) scale(0.95);
     }
 
     header {
       text-align: center;
-      margin-bottom: 40px;
-      padding-top: 10px;
+      margin-bottom: 45px;
+      padding-top: 15px;
     }
     header h1 {
-      font-size: 1.8rem;
+      font-size: 2rem;
       font-weight: 900;
       color: var(--scroll-gold);
-      margin-bottom: 8px;
-      letter-spacing: 1px;
+      margin-bottom: 10px;
+      letter-spacing: 1.5px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 12px;
+      text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
     }
     header p {
       color: #9c8e7a;
-      font-weight: 700;
-      font-size: 0.8rem;
+      font-weight: 800;
+      font-size: 0.85rem;
       margin: 0;
       text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     /* 📜 황금 두루마리 (Golden Scroll) 메타포 */
     .scroll-card {
       background: var(--scroll-paper);
       border: 3px solid var(--scroll-gold-dark);
-      border-radius: 25px;
-      padding: 25px;
-      margin-bottom: 25px;
-      box-shadow: 0 15px 35px rgba(212, 175, 55, 0.12);
+      outline: 1px solid rgba(212, 175, 55, 0.25);
+      outline-offset: -6px;
+      border-radius: 20px;
+      padding: 30px 25px 25px 35px;
+      margin-bottom: 30px;
+      box-shadow: 
+        0 15px 35px rgba(0, 0, 0, 0.5),
+        0 5px 15px rgba(212, 175, 55, 0.08);
       position: relative;
       overflow: hidden;
       color: var(--text-wood);
-      background-image: url('https://www.transparenttextures.com/patterns/lined-paper-2.png');
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        url('https://www.transparenttextures.com/patterns/lined-paper-2.png');
+      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    .scroll-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.7),
+        0 0 30px rgba(212, 175, 55, 0.25),
+        inset 0 0 40px rgba(170, 124, 17, 0.25);
+      border-color: var(--scroll-gold);
     }
 
     /* 두루마리 원통 효과 상하 장식 */
@@ -106,8 +131,9 @@
       top: 0;
       left: 0;
       width: 100%;
-      height: 8px;
-      background: linear-gradient(to right, var(--scroll-gold-dark), var(--scroll-gold), var(--scroll-gold-dark));
+      height: 10px;
+      background: linear-gradient(to right, var(--scroll-gold-dark) 0%, var(--scroll-gold) 50%, var(--scroll-gold-dark) 100%);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
     }
     .scroll-card::after {
       content: '';
@@ -115,62 +141,82 @@
       bottom: 0;
       left: 0;
       width: 100%;
-      height: 8px;
-      background: linear-gradient(to right, var(--scroll-gold-dark), var(--scroll-gold), var(--scroll-gold-dark));
+      height: 10px;
+      background: linear-gradient(to right, var(--scroll-gold-dark) 0%, var(--scroll-gold) 50%, var(--scroll-gold-dark) 100%);
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.15);
     }
 
+    /* 왼쪽 황금 축 장식 */
     .scroll-handle-left {
       position: absolute;
-      left: 10px;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: linear-gradient(to bottom, var(--scroll-gold-dark), var(--scroll-gold), var(--scroll-gold-dark));
-      opacity: 0.5;
+      left: 8px;
+      top: 10px;
+      bottom: 10px;
+      width: 6px;
+      background: linear-gradient(to right, var(--scroll-gold-dark), var(--scroll-gold), var(--scroll-gold-dark));
+      border-radius: 3px;
+      box-shadow: 1px 0 5px rgba(0,0,0,0.2);
     }
 
     .category {
-      display: inline-block;
-      padding: 5px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 14px;
       border-radius: 20px;
-      font-size: 0.68rem;
+      font-size: 0.7rem;
       font-weight: 900;
       background: rgba(170, 124, 17, 0.15);
-      color: var(--scroll-gold-dark);
-      margin-bottom: 12px;
+      color: #795548;
+      margin-bottom: 15px;
       border: 1px solid var(--scroll-border);
+      letter-spacing: 0.5px;
       text-transform: uppercase;
+      box-shadow: inset 0 0 5px rgba(170, 124, 17, 0.05);
     }
 
     .title {
-      font-size: 1.05rem;
+      font-size: 1.15rem;
       font-weight: 900;
       color: var(--text-wood);
-      margin-bottom: 15px;
-      line-height: 1.4;
-      border-bottom: 1.5px dashed rgba(170, 124, 17, 0.2);
-      padding-bottom: 10px;
+      margin-bottom: 16px;
+      line-height: 1.45;
+      border-bottom: 2px dashed rgba(170, 124, 17, 0.15);
+      padding-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    
+    .title::before {
+      content: '✦';
+      color: var(--scroll-gold-dark);
+      font-size: 0.95rem;
+      margin-top: 2px;
     }
 
     .content {
-      font-size: 0.85rem;
+      font-size: 0.88rem;
       font-weight: 700;
-      color: #3e2d1d;
-      line-height: 1.7;
+      color: #3e2c1a;
+      line-height: 1.8;
       white-space: pre-wrap;
       word-break: keep-all;
+      letter-spacing: -0.01em;
     }
 
     .date {
-      font-size: 0.72rem;
-      color: #7a6853;
-      margin-top: 20px;
+      font-size: 0.75rem;
+      color: #8c765c;
+      margin-top: 22px;
       text-align: right;
       font-weight: 800;
       display: flex;
       justify-content: flex-end;
       align-items: center;
       gap: 6px;
+      border-top: 1px solid rgba(170, 124, 17, 0.08);
+      padding-top: 12px;
     }
 
     /* 🚪 초대형 마을 광장으로 돌아가기 버튼 */
@@ -179,31 +225,64 @@
       background: linear-gradient(135deg, var(--scroll-gold) 0%, var(--scroll-gold-dark) 100%);
       color: var(--scroll-bg);
       border: none;
-      padding: 20px;
-      border-radius: 25px;
+      padding: 18px;
+      border-radius: 20px;
       font-size: 1.05rem;
       font-weight: 900;
       cursor: pointer;
-      box-shadow: 0 10px 30px rgba(212, 175, 55, 0.25);
-      transition: all 0.2s;
+      box-shadow: 0 10px 25px rgba(212, 175, 55, 0.25);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 12px;
-      margin-top: 40px;
+      margin-top: 45px;
       text-decoration: none;
+    }
+    .huge-return-btn:hover {
+      box-shadow: 0 15px 35px rgba(212, 175, 55, 0.4);
+      transform: translateY(-2px);
     }
     .huge-return-btn:active {
       transform: scale(0.97);
     }
+
+    /* 🏺 전용 프리미엄 로딩 오버레이 */
+    .v-loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(12, 9, 4, 0.94);
+      backdrop-filter: blur(12px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      animation: vFadeIn 0.3s ease-out;
+    }
+    .v-loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px dashed rgba(212, 175, 55, 0.2);
+      border-top: 4px solid var(--scroll-gold);
+      border-radius: 50%;
+      animation: vSpin 1.2s linear infinite;
+      margin-bottom: 20px;
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+    }
+    @keyframes vSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes vFadeIn { from { opacity: 0; } to { opacity: 1; } }
   </style>
 </head>
 <body>
 
-  <!-- [v44.218] 로딩 오버레이 -->
+  <!-- 🏺 로딩 오버레이 -->
   <div id="v-loading" class="v-loading-overlay" style="display: flex;">
       <div class="v-loading-spinner"></div>
-      <div id="v-loading-msg" style="font-weight: 800; color: var(--scroll-gold); font-size: 0.9rem;">마을의 중대사 문서를 펼치고 있습니다...</div>
+      <div id="v-loading-msg" style="font-weight: 800; color: var(--scroll-gold); font-size: 0.95rem; text-shadow: 0 0 10px rgba(212,175,55,0.2);">마을 사료 보관소를 열고 있습니다...</div>
   </div>
 
   <div class="container">
@@ -251,24 +330,36 @@
       const container = document.getElementById('noticeList');
       if (!list || list.length === 0) {
         container.innerHTML = `
-          <div class="scroll-card" style="text-align:center; padding:40px;">
-            <div style="font-size: 2.5rem; margin-bottom: 15px;">🏺</div>
-            <div class="title" style="border:none; text-align:center;">보관된 중대사가 없습니다</div>
-            <div class="content" style="text-align:center;">마을이 평화롭고 조용하여 기록에 남을 특별한 소식이 없습니다.</div>
+          <div class="scroll-card" style="text-align:center; padding:45px 30px; border-style: double;">
+            <div style="font-size: 3rem; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(212,175,55,0.3));">🏺</div>
+            <div class="title" style="border:none; justify-content:center; text-align:center; padding:0;">보관된 중대사가 없습니다</div>
+            <div class="content" style="text-align:center; color:#6d5945;">마을이 평화롭고 조용하여 역사에 남을 소식이 아직 보관되지 않았습니다.</div>
           </div>
         `;
         return;
       }
 
-      container.innerHTML = list.map(n => `
-        <div class="scroll-card">
-          <div class="scroll-handle-left"></div>
-          <span class="category">📜 ${n.category || '공지'}</span>
-          <div class="title">${n.content.split('|')[0] || n.content}</div>
-          <div class="content">${n.content.split('|')[1] || n.content}</div>
-          <div class="date"><i class="fa-regular fa-clock"></i> 선포일: ${n.date}</div>
-        </div>
-      `).join('');
+      container.innerHTML = list.map(n => {
+        const parts = n.content.split('|');
+        const title = parts[0] ? parts[0].trim() : '무제 공지';
+        const body = parts[1] ? parts[1].trim() : '';
+
+        // 카테고리별 데코레이션 이모지 설정
+        let catEmoji = '📜';
+        if (n.category === '선포' || n.category === '중대사') catEmoji = '🏰';
+        else if (n.category === '퀘스트') catEmoji = '⚔️';
+        else if (n.category === '이벤트') catEmoji = '🎁';
+
+        return `
+          <div class="scroll-card">
+            <div class="scroll-handle-left"></div>
+            <span class="category">${catEmoji} ${n.category || '공지'}</span>
+            <div class="title">${title}</div>
+            ${body ? `<div class="content">${body}</div>` : ''}
+            <div class="date"><i class="fa-regular fa-clock"></i> 선포일: ${n.date}</div>
+          </div>
+        `;
+      }).join('');
     }
 
     function showLoading(msg) {

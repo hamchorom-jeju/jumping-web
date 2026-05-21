@@ -222,7 +222,9 @@ const Village = {
                         if (res.pillarNotice) {
                             const noticeEl = document.getElementById('village-notice-banner');
                             if (noticeEl) {
-                                noticeEl.innerHTML = `📢 [마을 공지] ${res.pillarNotice.content}`;
+                                // 파이프라인(|) 기호 기준 앞의 간단한 내용(제목)만 분리하여 배너에 표시
+                                const simpleContent = res.pillarNotice.content.split('|')[0].trim();
+                                noticeEl.innerHTML = `📢 [마을 공지] ${simpleContent}`;
                             }
                         }
                     }

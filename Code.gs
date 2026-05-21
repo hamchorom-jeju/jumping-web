@@ -5826,41 +5826,7 @@ function submit33Action(data) {
   }
 }
 
-/**
- * 📜 전령의 기둥 (실시간 공지) 관련 로직
- */
-function getPillarNotice() {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("마을_공지") || ss.insertSheet("마을_공지");
-    if (sheet.getLastRow() < 1) return { content: "오늘도 건강한 하루 되세요! 지니 월드에 오신 것을 환영합니다." };
-    
-    var data = sheet.getDataRange().getValues();
-    // 가장 마지막(최신) 활성화된 공지 가져오기
-    for (var i = data.length - 1; i >= 1; i--) {
-      if (data[i][3] === true || data[i][3] === "TRUE") {
-        return { content: data[i][1], category: data[i][2] };
-      }
-    }
-    return { content: "특별한 계시가 없는 평화로운 날입니다." };
-  } catch(e) { return { content: "전령의 기둥이 흔들리고 있습니다..." }; }
-}
-
-function updatePillarNotice(data) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("마을_공지") || ss.insertSheet("마을_공지");
-    
-    // 기존 공지 비활성화 (선택 사항)
-    var lastRow = sheet.getLastRow();
-    if (lastRow > 1) {
-      // 모든 공지 비활성화 처리 로직 생략 가능 (최신순으로 가져오므로)
-    }
-    
-    sheet.appendRow([new Date(), data.content, data.category || "일반", true]);
-    return { success: true };
-  } catch(e) { return { success: false, error: e.toString() }; }
-}
+// [v58.5] 중복 정의된 getPillarNotice 및 updatePillarNotice 함수는 백엔드 무결성을 위해 하단의 최신 공용 함수군으로 통합 단일화되었습니다.
 
 /**
  * ✍️ 지혜의 보물고 (집필실) 관련 로직
@@ -6548,20 +6514,31 @@ function triggerGlycogenQuest(phone, name) {
  */
 
 /**
- * 1. 실시간 전령의 기둥(공지) 내용 조회
+ * 1. 실시간 전령의 기둥(공지) 내용 조회 (마을_공지 시트 단일 소스 최적화)
  */
 function getPillarNotice() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("설정");
+    var sheet = ss.getSheetByName("마을_공지");
     if (!sheet) {
-      sheet = ss.insertSheet("설정");
-      sheet.appendRow(["공지사항", "내용", "상태"]);
-      sheet.appendRow(["전령의기둥", "📢 [마을 공지] 20시 이후 금식 엄수! 오늘도 수고하셨습니다. ✨", "진행중"]);
+      sheet = ss.insertSheet("마을_공지");
+      sheet.appendRow(["선포일", "공지내용", "카테고리", "활성화"]);
+      var todayStr = Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd");
+      sheet.appendRow([
+        todayStr,
+        "노형 빌리지 대광장 리뉴얼 선포! | 노형 빌리지의 광장과 웰니스 센터가 새롭게 태어났습니다. 이제 마을 공지 배너를 누르면 이 황금 두루마리를 통해 언제든 마을의 중대사 역사와 공지 기록을 확인할 수 있습니다. ✨",
+        "선포",
+        "TRUE"
+      ]);
     }
+    
     var data = sheet.getDataRange().getValues();
-    for (var i = 1; i < data.length; i++) {
-      if (data[i][0] === "전령의기둥") {
+    if (data.length < 2) return { content: "📢 오늘도 건강한 하루 되세요!" };
+    
+    // 가장 마지막(최신) 활성화된 공지 가져오기
+    for (var i = data.length - 1; i >= 1; i--) {
+      var activeVal = String(data[i][3]).toUpperCase();
+      if (activeVal === "TRUE" || activeVal === "ACTIVATED") {
         return { content: data[i][1] };
       }
     }
@@ -6572,30 +6549,23 @@ function getPillarNotice() {
 }
 
 /**
- * 2. 실시간 전령의 기둥(공지) 내용 업데이트
+ * 2. 실시간 전령의 기둥(공지) 내용 업데이트 (마을_공지 시트 단일 소스 최적화)
  */
 function updatePillarNotice(payload) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("설정");
+    var sheet = ss.getSheetByName("마을_공지");
     if (!sheet) {
-      sheet = ss.insertSheet("설정");
-      sheet.appendRow(["공지사항", "내용", "상태"]);
+      sheet = ss.insertSheet("마을_공지");
+      sheet.appendRow(["선포일", "공지내용", "카테고리", "활성화"]);
     }
+    
     var content = payload.content || "";
-    var data = sheet.getDataRange().getValues();
-    var foundIdx = -1;
-    for (var i = 1; i < data.length; i++) {
-      if (data[i][0] === "전령의기둥") {
-        foundIdx = i + 1;
-        break;
-      }
-    }
-    if (foundIdx > -1) {
-      sheet.getRange(foundIdx, 2).setValue(content);
-    } else {
-      sheet.appendRow(["전령의기둥", content, "진행중"]);
-    }
+    var todayStr = Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd");
+    var category = payload.category || "공지";
+    
+    sheet.appendRow([todayStr, content, category, "TRUE"]);
+    
     return { success: true };
   } catch (e) {
     return { success: false, error: e.toString() };
@@ -7650,8 +7620,19 @@ function deleteScheduledQuest(rowIdx) {
 function getVillageNotices() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("마을_공지") || ss.insertSheet("마을_공지");
-    if (sheet.getLastRow() < 1) return [];
+    var sheet = ss.getSheetByName("마을_공지");
+    if (!sheet) {
+      sheet = ss.insertSheet("마을_공지");
+      sheet.appendRow(["선포일", "공지내용", "카테고리", "활성화"]);
+      var todayStr = Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd");
+      sheet.appendRow([
+        todayStr,
+        "노형 빌리지 대광장 리뉴얼 선포! | 노형 빌리지의 광장과 웰니스 센터가 새롭게 태어났습니다. 이제 마을 공지 배너를 누르면 이 황금 두루마리를 통해 언제든 마을의 중대사 역사와 공지 기록을 확인할 수 있습니다. ✨",
+        "선포",
+        "TRUE"
+      ]);
+    }
+    if (sheet.getLastRow() < 2) return [];
     var data = sheet.getDataRange().getDisplayValues();
     var list = [];
     for (var i = 1; i < data.length; i++) {
