@@ -7423,40 +7423,14 @@ function getMyInbodyHistory(phone) {
     if (!cleanPhone) return { error: "올바른 연락처 정보가 없습니다." };
 
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("33챌_인바디");
-    if (!sheet) return { records: [] };
+    var sheet = ss.getSheetByName("33챌린지_인바디");
+    if (!sheet) return { success: false, error: "'33챌린지_인바디' 시트를 찾을 수 없습니다." };
 
     var data = sheet.getDataRange().getValues();
     var records = [];
 
-    // [v46.40] 인바디 성적 계산용 임시 헬퍼 함수
-    function calculateInbodyScoreHelper(first, current) {
-      if (!first || !current) return 0;
-      var diffW = Number((first.weight - current.weight).toFixed(2));
-      var diffM = Number((current.muscle - first.muscle).toFixed(2));
-      var score = diffW + diffM;
-      if (score < 0) score = 0;
-      return Number(score.toFixed(2));
-    }
-
-    // 최초 인바디 데이터 찾기 (누적 점수 계산용)
-    var firstEver = null;
-    for (var i = 1; i < data.length; i++) {
-      var rowPhone = String(data[i][2]).replace(/[^0-9]/g, "");
-      if (rowPhone === cleanPhone) {
-        var record = {
-          date: data[i][0],
-          weight: Number(data[i][3]) || 0,
-          muscle: Number(data[i][4]) || 0,
-          fat: Number(data[i][5]) || 0
-        };
-        if (!firstEver || new Date(record.date) < new Date(firstEver.date)) {
-          firstEver = record;
-        }
-      }
-    }
-
-    // 모든 매칭되는 내역 취합
+    // 칼럼 매핑 순서:
+    // 0: 측정일 | 1: 회원명 | 2: 연락처 | 3: 체중 | 4: 골격근량 | 5: 체지방률 | 6: 변화점수 | 7: 비고 | 8: 등록일
     for (var i = 1; i < data.length; i++) {
       var rowPhone = String(data[i][2]).replace(/[^0-9]/g, "");
       if (rowPhone === cleanPhone) {
@@ -7475,22 +7449,13 @@ function getMyInbodyHistory(phone) {
           formattedDate = String(data[i][0]);
         }
 
-        var currRecord = {
+        records.push({
           date: formattedDate,
           weight: Number(data[i][3]) || 0,
           muscle: Number(data[i][4]) || 0,
-          fat: Number(data[i][5]) || 0
-        };
-
-        var score = calculateInbodyScoreHelper(firstEver, currRecord);
-
-        records.push({
-          date: formattedDate,
-          weight: currRecord.weight,
-          muscle: currRecord.muscle,
-          fat: currRecord.fat,
-          score: score,
-          memo: String(data[i][6] || "")
+          fat: Number(data[i][5]) || 0,
+          score: Number(data[i][6]) || 0, // 변화점수
+          memo: String(data[i][7] || "") // 비고
         });
       }
     }

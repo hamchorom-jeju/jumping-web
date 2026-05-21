@@ -1653,7 +1653,11 @@
             `;
           });
           listContainer.innerHTML = html;
-        }).getMyInbodyHistory(phone);
+        })
+        .withFailureHandler(function(err) {
+          listContainer.innerHTML = `<div style="text-align:center; padding:30px; color:#e53e3e; font-weight:800;">🚨 서버 응답 에러: ${err.message || err}</div>`;
+        })
+        .getMyInbodyHistory(phone);
       } else {
         listContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#e53e3e; font-weight:800;">🚨 구글 서비스 연결 실패</div>';
       }
