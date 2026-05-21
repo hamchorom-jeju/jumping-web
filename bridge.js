@@ -659,9 +659,6 @@ window.addEventListener('popstate', function(e) {
     // 열려있는 모달이 하나도 없을 때, 현재 화면에 알맞게 안전 퇴장 컨펌 작동!
     history.pushState(null, null, location.href); // 히스토리 밀림 복구
     
-    const path = window.location.pathname;
-    const pageName = path.substring(path.lastIndexOf('/') + 1) || 'index.html';
-
     if (pageName === 'oasis.html') {
       showAppConfirm("🌴 오아시스에서 퇴장하여 메인 광장으로 이동하시겠습니까?", function() {
         window.location.replace('index.html');
