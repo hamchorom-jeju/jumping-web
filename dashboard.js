@@ -222,9 +222,34 @@ const Village = {
                         if (res.pillarNotice) {
                             const noticeEl = document.getElementById('village-notice-banner');
                             if (noticeEl) {
-                                // 새 5대 컬럼 아키텍처에 맞추어 제목(title) 필드를 직접 배너에 표시
-                                const simpleContent = res.pillarNotice.title ? res.pillarNotice.title.trim() : '';
-                                noticeEl.innerHTML = `📢 [마을 공지] ${simpleContent}`;
+                                // 만약 여러 활성화된 공지가 배열로 반환되면 5초 간격으로 롤링 가동!
+                                if (Array.isArray(res.pillarNotice)) {
+                                    if (res.pillarNotice.length === 0) {
+                                        noticeEl.innerHTML = `📢 [마을 공지] 오늘도 건강한 하루 되세요!`;
+                                    } else if (res.pillarNotice.length === 1) {
+                                        const title = res.pillarNotice[0].title || res.pillarNotice[0].content || '';
+                                        noticeEl.innerHTML = `📢 [마을 공지] ${title.trim()}`;
+                                    } else {
+                                        let notices = res.pillarNotice;
+                                        let curIdx = 0;
+                                        const updateNotice = () => {
+                                            const title = notices[curIdx].title || notices[curIdx].content || '';
+                                            noticeEl.style.opacity = '0';
+                                            setTimeout(() => {
+                                                noticeEl.innerHTML = `📢 [마을 공지] ${title.trim()}`;
+                                                noticeEl.style.opacity = '1';
+                                            }, 300);
+                                            curIdx = (curIdx + 1) % notices.length;
+                                        };
+                                        updateNotice();
+                                        if (window.noticeInterval) clearInterval(window.noticeInterval);
+                                        window.noticeInterval = setInterval(updateNotice, 5000);
+                                    }
+                                } else {
+                                    // 단일 객체 구조의 구버전 하위 호환성 유지
+                                    const title = res.pillarNotice.title || res.pillarNotice.content || '';
+                                    noticeEl.innerHTML = `📢 [마을 공지] ${title.trim()}`;
+                                }
                             }
                         }
                     }

@@ -69,9 +69,11 @@ if (typeof google === 'undefined' || !google.script) {
                       bgmEnabled: "true",
                       bgmUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
                     },
-                    pillarNotice: {
-                      content: "노형 빌리지 리뉴얼 완공! 🏰 따사로운 봄바람과 함께 벚꽃 마법이 시작되었습니다. 🌸 우측 하단의 BGM 플레이어를 켜고 낭만 넘치는 음악을 감상해 보세요!"
-                    }
+                    pillarNotice: [
+                      { title: "노형 빌리지 리뉴얼 완공! 🏰", content: "따사로운 봄바람과 함께 벚꽃 마법이 시작되었습니다. 🌸 우측 하단의 BGM 플레이어를 켜고 낭만 넘치는 음악을 감상해 보세요!" },
+                      { title: "33 챌린지 시즌 4주차 결산 안내 🎁", content: "모든 모험가 여러분의 노고를 기리며, 오늘 밤 특별 보상이 지급될 예정입니다!" },
+                      { title: "20시 이후 금식 엄수! 🍳", content: "완벽한 성취를 위해 마지막 식단 원칙을 지켜주세요." }
+                    ]
                   };
                 } else if (prop === 'getArchiveFeed') {
                   let stored = sessionStorage.getItem("mock_feed");

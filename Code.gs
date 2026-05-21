@@ -6551,21 +6551,26 @@ function getPillarNotice() {
     var sheet = checkAndInitNoticeSheet(ss);
     
     var data = sheet.getDataRange().getValues();
-    if (data.length < 2) return { title: "오늘도 건강한 하루 되세요! 📢", content: "" };
+    if (data.length < 2) return [{ title: "오늘도 건강한 하루 되세요! 📢", content: "" }];
     
-    // 가장 마지막(최신) 활성화된 공지 가져오기
+    var activeNotices = [];
+    // 모든 활성화된 공지 가져오기 (가장 최신 공지부터 역순으로 수집)
     for (var i = data.length - 1; i >= 1; i--) {
-      var activeVal = String(data[i][4]).toUpperCase(); // E열 활성화 (index 4)
+      var activeVal = String(data[i][4]).toUpperCase().trim();
       if (activeVal === "TRUE" || activeVal === "ACTIVATED") {
-        return { 
+        activeNotices.push({ 
           title: data[i][2],   // C열 제목 (index 2)
           content: data[i][3]  // D열 내용 (index 3)
-        };
+        });
       }
     }
-    return { title: "오늘도 건강한 하루 되세요! 📢", content: "" };
+    
+    if (activeNotices.length === 0) {
+      return [{ title: "오늘도 건강한 하루 되세요! 📢", content: "" }];
+    }
+    return activeNotices;
   } catch (e) {
-    return { title: "오늘도 건강한 하루 되세요! 📢", content: "" };
+    return [{ title: "오늘도 건강한 하루 되세요! 📢", content: "" }];
   }
 }
 
