@@ -473,24 +473,32 @@
           }
           
           if (matched.length > 0) {
-            console.log("⚡ [PWA Cache] 로컬 회원 정보 검색 매칭 완료!");
-            clearAll();
+            // [연장 대응 결계] 로컬 캐시에 등록된 매칭 회원이 전부 "만료/마감" 상태인 경우,
+            // 방금 재등록/연장했을 가능성이 있으므로 로컬 캐시를 즉각 신뢰하지 않고 구글 서버에 실시간 재조회를 보냅니다!
+            const allExpired = matched.every(function(m) { return m.isExpired; });
             
-            if (matched.length > 1) {
-              showUserSelection(matched);
+            if (!allExpired) {
+              console.log("⚡ [PWA Cache] 로컬 회원 정보 검색 매칭 완료!");
+              clearAll();
+              
+              if (matched.length > 1) {
+                showUserSelection(matched);
+              } else {
+                selectUser(matched[0]);
+              }
+              
+              // 예약 연동 상태(테라피 진행중)는 UI 표시 완료 후 백그라운드로 조용히 갱신 처리
+              if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run.withSuccessHandler(function(res) {
+                  if (res && res.success && res.isTherapyActive) {
+                    // 혹시 예약이 활성화되어 있다면 백그라운드 갱신
+                  }
+                }).searchMemberByPin(pin);
+              }
+              return;
             } else {
-              selectUser(matched[0]);
+              console.log("⚡ [PWA Cache] 캐시된 정보는 마감 상태이므로 최신 연장 여부를 서버에서 재검증합니다.");
             }
-            
-            // 예약 연동 상태(테라피 진행중)는 UI 표시 완료 후 백그라운드로 조용히 갱신 처리
-            if (typeof google !== 'undefined' && google.script && google.script.run) {
-              google.script.run.withSuccessHandler(function(res) {
-                if (res && res.success && res.isTherapyActive) {
-                  // 혹시 예약이 활성화되어 있다면 백그라운드 갱신
-                }
-              }).searchMemberByPin(pin);
-            }
-            return;
           }
         } catch (e) {
           console.error("로컬 검색 파싱 에러:", e);
@@ -515,6 +523,29 @@
           return;
         }
         
+        // [백그라운드 캐시 최신화] 서버에서 직접 받아온 신선한 정보를 로컬 캐시에 즉시 업데이트합니다.
+        if (res.members && res.members.length > 0) {
+          try {
+            const cachedReg = localStorage.getItem('v45_attendance_registry');
+            if (cachedReg) {
+              const registry = JSON.parse(cachedReg);
+              res.members.forEach(function(m) {
+                const idx = registry.findIndex(function(r) { return r.phoneClean === m.phoneClean; });
+                if (idx !== -1) {
+                  registry[idx] = m; // 정보 덮어쓰기
+                } else {
+                  registry.push(m);
+                }
+              });
+              localStorage.setItem('v45_attendance_registry', JSON.stringify(registry));
+              console.log("⚡ [PWA Cache] 실시간 검색된 정보를 로컬 캐시에 갱신 완료!");
+            }
+          } catch(cacheErr) {
+            console.error("실시간 검색 캐시 반영 오류:", cacheErr);
+          }
+        }
+
+        clearAll();
         // 검색 결과 처리
         if (res.members.length > 1) {
           showUserSelection(res.members);

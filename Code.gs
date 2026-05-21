@@ -3352,6 +3352,14 @@ function submitRegistration(data) {
       console.error("문자발송 기록 실패: " + smsErr.toString());
     }
 
+    // [캐시 갱신] 태블릿 PWA 출석기에서 실시간으로 연장된 정보가 노출되도록 구글 서버 캐시 강제 무효화
+    try {
+      var cache = CacheService.getScriptCache();
+      cache.remove("v45_member_registry");
+    } catch(cacheErr) {
+      console.error("회원 레지스트리 캐시 삭제 실패: " + cacheErr.toString());
+    }
+
     return { success: true, message: (existingRowIdx !== -1 ? "재등록 및 장부 기록이 완료되었습니다!" : "신규 가입 및 장부 기록이 완료되었습니다!") };
   } catch (e) {
     return { error: "처리 중 오류가 발생했습니다: " + e.toString() };
@@ -7547,6 +7555,24 @@ function getUserWellnessActivityHistory(phone) {
     };
   } catch (e) {
     return { error: e.toString() };
+  }
+}
+
+/**
+ * [자동 트리거] 원장님이 스프레드시트에서 수동으로 "등록 현황" 또는 "회원명단" 시트를 고쳤을 때
+ * 구글 서버 캐시를 강제로 비워 태블릿 출석 앱에 즉각 반영되도록 처리합니다.
+ */
+function onEdit(e) {
+  try {
+    var sheet = e.range.getSheet();
+    var sheetName = sheet.getName();
+    if (sheetName === "등록 현황" || sheetName === "등록현황" || sheetName === "회원명단") {
+      var cache = CacheService.getScriptCache();
+      cache.remove("v45_member_registry");
+      console.log("⚡ [onEdit] 시트 수정으로 인한 회원 명단 캐시 초기화 성공!");
+    }
+  } catch(err) {
+    console.error("onEdit 캐시 제거 실패: " + err.toString());
   }
 }
 
