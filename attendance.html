@@ -389,6 +389,15 @@
   </div>
 
   <script>
+    // [v58.0] 모바일 뒤로가기 완벽 이탈 방지 결계 가동! (출석 키오스크 잠금 - index.html 이탈 절대 방어)
+    history.pushState(null, null, location.href);
+    window.addEventListener('popstate', function() {
+      // 닫을 모달이 스택에 있다면 글로벌 매니저가 처리하도록 위임하되, 비어있다면 완전히 무시하여 화면 잠금 유지
+      if (!window.globalModalHistoryStack || window.globalModalHistoryStack.length === 0) {
+        history.pushState(null, null, location.href); // 히스토리 잠금
+      }
+    });
+
     // [perf] 태블릿에 전체 활성 회원 정보를 로컬에 저장하여 0.001초 만에 검색하는 초고속 동기화 로직
     function syncRegistry() {
       if (typeof google !== 'undefined' && google.script && google.script.run) {
@@ -531,10 +540,13 @@
       });
       
       document.getElementById('multiUserModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeMultiModal);
+      }
     }
 
     function selectUserFromList(idx) {
-      document.getElementById('multiUserModal').classList.remove('show');
+      closeMultiModal(false);
       selectUser(allFoundMembers[idx]);
     }
 
@@ -627,13 +639,19 @@
       }
 
       document.getElementById('userModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeModal);
+      }
     }
 
-    function closeModal() {
+    function closeModal(isPopstate) {
       document.getElementById('userModal').classList.remove('show');
       resetButtons(); 
       clearAll();
       selectedMemberPhone = "";
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeModal);
+      }
     }
 
     function resetButtons() {
@@ -655,9 +673,12 @@
       if (btnCancel) { btnCancel.innerText = '아니오, 잘못 눌렀습니다'; }
     }
 
-    function closeMultiModal() {
+    function closeMultiModal(isPopstate) {
       document.getElementById('multiUserModal').classList.remove('show');
       clearAll();
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeMultiModal);
+      }
     }
 
     function submitLog(type, isBonus) {

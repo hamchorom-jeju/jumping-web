@@ -1345,7 +1345,6 @@
                 })
                 .getArchiveFeed({ page: currentPage, limit: 12 });
         }
-
         function renderGalleryGrid(data) {
             const feedEl = document.getElementById('archive-feed');
             const paginationEl = document.getElementById('feed-pagination');
@@ -1369,13 +1368,48 @@
 
                 const cleanAuthor = String(p.author).replace(/[^ㄱ-ㅎ가-힣a-zA-Z0-9]/g, "");
 
-                card.onclick = () => openModal(p.url, p.description, cleanAuthor, p.date);
+                // 타입별 아이콘 분기
+                let icon = "✨";
+                if (p.type.includes("식단")) icon = "🍱";
+                else if (p.type.includes("퀘스트")) icon = "⚔️";
+                else if (p.type.includes("습관")) icon = "🌿";
+
+                // 아이템 및 티어 가공
+                const rawItem = p.item || '기록';
+                let cleanItem = rawItem.replace(/\s*\(Tier\s+[SABC]\)/i, '').trim();
+                if (cleanItem.length > 6) cleanItem = cleanItem.substring(0, 5) + '..';
+
+                let tinyBadgeHtml = "";
+                const tierMatch = rawItem.match(/Tier\s+([SABC])/i);
+                if (tierMatch) {
+                    const tierLetter = tierMatch[1].toUpperCase();
+                    let badgeBg = "linear-gradient(135deg, #fbcfe8 0%, #ec4899 100%)"; // S
+                    if (tierLetter === 'A') badgeBg = "linear-gradient(135deg, #a7f3d0 0%, #10b981 100%)";
+                    else if (tierLetter === 'B') badgeBg = "linear-gradient(135deg, #fef3c7 0%, #d97706 100%)";
+                    else if (tierLetter === 'C') badgeBg = "linear-gradient(135deg, #fee2e2 0%, #ef4444 100%)";
+                    
+                    tinyBadgeHtml = `<span style="background: ${badgeBg}; color: white; border-radius: 4px; padding: 1px 3px; font-size: 0.52rem; font-weight: 900; margin-left: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); vertical-align: middle;">${tierLetter}</span>`;
+                }
+
+                // 점수 표시
+                let scoreHtml = "";
+                if (p.score && parseInt(p.score) > 0) {
+                    scoreHtml = `<span style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 4px; padding: 1px 3px; font-size: 0.52rem; font-weight: 800; margin-left: 2px;">+${p.score}</span>`;
+                }
+
+                card.onclick = () => openModal(p.url, p.description, cleanAuthor, p.date, p.time, p.type, rawItem, p.score, tinyBadgeHtml);
+
                 card.innerHTML = `
-                    <div class="polaroid-badge"><i class="fa-solid fa-heart"></i></div>
+                    <div class="polaroid-badge">${icon}</div>
                     <div class="polaroid-img-wrapper">
                         <img src="${p.url}" class="polaroid-img" alt="Polaroid Picture" onerror="this.src='therapy-icon.png';">
                     </div>
-                    <div class="polaroid-author">📷 ${cleanAuthor}</div>
+                    <div class="polaroid-author" style="display:flex; flex-direction:column; align-items:center; gap:2px; font-size:0.75rem; padding: 6px 3px 2px 3px;">
+                        <span style="font-weight:900; color:#1e293b;">📷 ${cleanAuthor}</span>
+                        <div style="font-size:0.6rem; color:#64748b; font-weight:800; display:flex; align-items:center; justify-content:center; gap:1px; flex-wrap:nowrap;">
+                            <span>${cleanItem}</span>${tinyBadgeHtml}${scoreHtml}
+                        </div>
+                    </div>
                 `;
                 grid.appendChild(card);
             });
@@ -1395,12 +1429,25 @@
             }
         }
 
-        function openModal(url, desc, author, date) {
+        function openModal(url, desc, author, date, time, type, item, score, tinyBadgeHtml) {
             const modal = document.getElementById('polaroid-modal');
             document.getElementById('modal-img').src = url;
-            document.getElementById('modal-text').innerText = desc || "인증 사진의 한 장면 🌟";
+            
+            const formattedTime = time ? ` ${time.substring(0, 5)}` : '';
+            const typeLabel = type ? `[${type}] ` : '';
+            const scoreLabel = (score && parseInt(score) > 0) ? ` (+${score}점)` : '';
+            
+            document.getElementById('modal-text').innerHTML = `
+                <div style="margin-bottom: 8px; font-size: 0.72rem; display: flex; align-items: center; gap: 4px; color: var(--oasis-emerald); font-weight: 800;">
+                    <span>${typeLabel}</span> 
+                    <span style="color:#64748b; font-weight:600;">${item || ''}</span>
+                    ${scoreLabel}
+                </div>
+                <div style="font-weight: 700; color: #334155; line-height: 1.4;">${desc || "인증 사진의 한 장면 🌟"}</div>
+            `;
+            
             document.getElementById('modal-author').innerText = `📷 ${author}`;
-            document.getElementById('modal-date').innerText = date || "";
+            document.getElementById('modal-date').innerText = `${date}${formattedTime}`;
             modal.style.display = 'flex';
             window.registerModalOpen(closeModal);
         }

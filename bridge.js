@@ -646,6 +646,16 @@ window.addEventListener('popstate', function(e) {
       closeFn(true); // popstate를 통한 물리적 닫힘으로 호출
     }
   } else {
+    const path = window.location.pathname;
+    const pageName = path.substring(path.lastIndexOf('/') + 1) || 'index.html';
+
+    // 💡 [특수 설계] 예약, 출석, 가입, 관리자 화면 등 자체 히스토리 흐름을 관리하는 페이지는
+    // 로컬 history state가 남아있으면 글로벌 퇴장 방지 결계의 가동을 일시 유예합니다!
+    if (pageName === 'reservation.html' || pageName === 'attendance.html' || pageName === 'registration.html' || pageName === 'admin.html') {
+      // 로컬 popstate 리스너가 흐름을 자연스럽게 되돌리도록 통제권을 양보함
+      return;
+    }
+
     // 열려있는 모달이 하나도 없을 때, 현재 화면에 알맞게 안전 퇴장 컨펌 작동!
     history.pushState(null, null, location.href); // 히스토리 밀림 복구
     

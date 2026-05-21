@@ -354,8 +354,17 @@
       isHistoryNavigating = true;
       
       if (!state) {
-        // 처음 상태(메인 화면)로 돌아가기
-        goBackToMain();
+        // 이미 메인 화면에 있다면, 광장 퇴장 컨펌창 가동!
+        const isMainVisible = document.getElementById('main-screen').style.display !== 'none';
+        if (isMainVisible) {
+          history.pushState(null, null, location.href); // 히스토리 유지
+          showAppConfirm("🌿 테라피 예약에서 퇴장하여 메인 광장으로 이동하시겠습니까?", function() {
+            window.location.replace('index.html');
+          }, "🌿");
+        } else {
+          // 처음 상태(메인 화면)로 돌아가기
+          goBackToMain();
+        }
       } else if (state.screen === 'lookup') {
         startLookup();
       } else if (state.screen === 'booking') {

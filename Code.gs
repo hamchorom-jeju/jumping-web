@@ -32,7 +32,11 @@ function getArchiveFeed(payload) {
           url: imageUrl,
           description: String(row[6] || "소중한 인증의 한 장면 🌟"),
           author: String(row[2] || "모험가"),
-          date: String(row[0] || "")
+          date: String(row[0] || ""),
+          time: String(row[1] || ""),
+          type: String(row[4] || "기록"),
+          item: String(row[5] || ""),
+          score: String(row[8] || "0")
         });
       }
     }
@@ -7410,6 +7414,102 @@ function getAllMemberNames() {
   } catch (e) {
     return [];
   }
+}
+
+function getMyInbodyHistory(phone) {
+  try {
+    if (!phone) return { error: "로그인이 필요합니다." };
+    var cleanPhone = String(phone).replace(/[^0-9]/g, "");
+    if (!cleanPhone) return { error: "올바른 연락처 정보가 없습니다." };
+
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("33챌_인바디");
+    if (!sheet) return { records: [] };
+
+    var data = sheet.getDataRange().getValues();
+    var records = [];
+
+    // [v46.40] 인바디 성적 계산용 임시 헬퍼 함수
+    function calculateInbodyScoreHelper(first, current) {
+      if (!first || !current) return 0;
+      var diffW = Number((first.weight - current.weight).toFixed(2));
+      var diffM = Number((current.muscle - first.muscle).toFixed(2));
+      var score = diffW + diffM;
+      if (score < 0) score = 0;
+      return Number(score.toFixed(2));
+    }
+
+    // 최초 인바디 데이터 찾기 (누적 점수 계산용)
+    var firstEver = null;
+    for (var i = 1; i < data.length; i++) {
+      var rowPhone = String(data[i][2]).replace(/[^0-9]/g, "");
+      if (rowPhone === cleanPhone) {
+        var record = {
+          date: data[i][0],
+          weight: Number(data[i][3]) || 0,
+          muscle: Number(data[i][4]) || 0,
+          fat: Number(data[i][5]) || 0
+        };
+        if (!firstEver || new Date(record.date) < new Date(firstEver.date)) {
+          firstEver = record;
+        }
+      }
+    }
+
+    // 모든 매칭되는 내역 취합
+    for (var i = 1; i < data.length; i++) {
+      var rowPhone = String(data[i][2]).replace(/[^0-9]/g, "");
+      if (rowPhone === cleanPhone) {
+        var formattedDate = "";
+        try {
+          var rawDate = data[i][0];
+          if (rawDate instanceof Date) {
+            var y = rawDate.getFullYear();
+            var m = (rawDate.getMonth() + 1).toString().padStart(2, '0');
+            var d = rawDate.getDate().toString().padStart(2, '0');
+            formattedDate = y + "-" + m + "-" + d;
+          } else {
+            formattedDate = String(rawDate).split("T")[0];
+          }
+        } catch (e) {
+          formattedDate = String(data[i][0]);
+        }
+
+        var currRecord = {
+          date: formattedDate,
+          weight: Number(data[i][3]) || 0,
+          muscle: Number(data[i][4]) || 0,
+          fat: Number(data[i][5]) || 0
+        };
+
+        var score = calculateInbodyScoreHelper(firstEver, currRecord);
+
+        records.push({
+          date: formattedDate,
+          weight: currRecord.weight,
+          muscle: currRecord.muscle,
+          fat: currRecord.fat,
+          score: score,
+          memo: String(data[i][6] || "")
+        });
+      }
+    }
+
+    // 최신 순서(날짜 역순)로 정렬
+    records.sort(function(a, b) {
+      return new Date(b.date) - new Date(a.date);
+    });
+
+    return { success: true, records: records };
+  } catch (e) {
+    return { error: e.toString() };
+  }
+}
+
+// [v58.1] 갤러리 피드 로딩의 완벽한 구버전 하위호환(가교) 함수 주입
+// 옛날 잔재 캐시나 웹앱 구버전에서 getActivePhotos를 쏘더라도 백엔드가 당황하지 않고 척척 응답해 줍니다!
+function getActivePhotos(payload) {
+  return getArchiveFeed(payload);
 }
 
 

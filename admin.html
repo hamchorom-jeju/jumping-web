@@ -882,6 +882,19 @@
   </div>
 
   <script>
+    // [v58.0] 모바일 뒤로가기 완벽 이탈 방지 결계 가동! (메인 이탈 금지 - 대시보드 새로고침 적용)
+    history.pushState(null, null, location.href);
+    window.addEventListener('popstate', function() {
+      history.pushState(null, null, location.href); // 히스토리 밀림 긴급 방어
+      showAppConfirm("🏰 관리자 대시보드 데이터를 새로고침하시겠습니까?", function() {
+        if (typeof refreshDashboard === 'function') {
+          refreshDashboard();
+        } else {
+          window.location.reload();
+        }
+      }, "🏰");
+    });
+
     let currentCheckoutRowIdx = null;
 
     window.onload = function () {
@@ -1355,6 +1368,9 @@
       document.getElementById('extraDeduct').checked = false;
       document.querySelector('#checkoutModal .btn-submit').innerText = "퇴실 및 기록 완료";
       document.getElementById('checkoutModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeCheckout);
+      }
     }
 
     function openEditCheckout(name, rowIdx, timeLog, classes, extraChecked) {
@@ -1384,10 +1400,16 @@
 
       document.querySelector('#checkoutModal .btn-submit').innerText = "수정 내용 저장";
       document.getElementById('checkoutModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeCheckout);
+      }
     }
 
-    function closeCheckout() {
+    function closeCheckout(isPopstate) {
       document.getElementById('checkoutModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeCheckout);
+      }
     }
 
     function selectTime(el) {
@@ -1615,6 +1637,9 @@
       document.getElementById('workLogStats').innerHTML = '<div>통계 불러오는 중...</div>';
       document.getElementById('workLogModal').classList.add('show');
       loadStatsForDate();
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeWorkLogModal);
+      }
     }
 
     function loadStatsForDate() {
@@ -1672,8 +1697,11 @@
       }
     }
 
-    function closeWorkLogModal() {
+    function closeWorkLogModal(isPopstate) {
       document.getElementById('workLogModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeWorkLogModal);
+      }
     }
 
     let lastWorkLogs = [];
@@ -1738,6 +1766,9 @@
 
       document.getElementById('workLogDetailContent').innerHTML = contentHtml;
       document.getElementById('workLogDetailModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeWorkLogDetailModal);
+      }
 
       // 매출 데이터 로딩
       if (typeof google !== 'undefined' && google.script) {
@@ -1754,7 +1785,7 @@
               salesHtml += '<div style="font-size:0.85rem; margin-top:4px;">• ' + s.category + ': ' + Number(s.amount).toLocaleString() + '원</div>';
             });
             salesRes.sales.forEach(function (s) {
-              salesHtml += '<div style="font-size:0.8rem; color:#4a5568; margin-top:3px; padding-left:10px;">└ ' + s.buyer + ' - ' + s.itemName + ' (' + Number(s.amount).toLocaleString() + '원)</div>';
+              salesHtml += '<div style="font-size:0.8rem; color:#4a5568; margin-top:3px; padding-left:10px;">└ ' + s.buyer + ' - ' + s.itemName + ' (' + Number(salesRes.totalAmount).toLocaleString() + '원)</div>';
             });
             el.innerHTML = salesHtml;
           })
@@ -1762,13 +1793,19 @@
       }
     }
 
-    function closeWorkLogDetailModal() {
+    function closeWorkLogDetailModal(isPopstate) {
       document.getElementById('workLogDetailModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeWorkLogDetailModal);
+      }
     }
 
     function openWorkLogHistoryModal() {
       document.getElementById('workLogHistoryList').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-sub);">기록 불러오는 중...</div>';
       document.getElementById('workLogHistoryModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeWorkLogHistoryModal);
+      }
 
       if (typeof google !== 'undefined' && google.script) {
         google.script.run
@@ -1910,6 +1947,9 @@
       let dateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
       document.getElementById('resViewDate').value = dateStr;
       loadReservationData();
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeReservationModal);
+      }
     }
 
     function loadReservationData() {
@@ -1985,12 +2025,18 @@
       }
     }
 
-    function closeReservationModal() {
+    function closeReservationModal(isPopstate) {
       document.getElementById('reservationModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeReservationModal);
+      }
     }
 
-    function closeWorkLogHistoryModal() {
+    function closeWorkLogHistoryModal(isPopstate) {
       document.getElementById('workLogHistoryModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeWorkLogHistoryModal);
+      }
     }
 
     // --- 33 챌린지 관련 함수 ---
@@ -2003,8 +2049,16 @@
       document.getElementById('ibFat').value = '';
       document.getElementById('ibMemo').value = '';
       document.getElementById('inBodyRegModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeInBodyRegModal);
+      }
     }
-    function closeInBodyRegModal() { document.getElementById('inBodyRegModal').classList.remove('show'); }
+    function closeInBodyRegModal(isPopstate) {
+      document.getElementById('inBodyRegModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeInBodyRegModal);
+      }
+    }
 
     function searchInBodyMember(name) {
       if (!name || name.length < 2) {
@@ -2070,6 +2124,9 @@
     function openInBodyHistoryModal() {
       document.getElementById('inBodyHistoryList').innerHTML = '<div style="text-align:center; padding:20px; color:#718096;">기록 불러오는 중...</div>';
       document.getElementById('inBodyHistoryModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeInBodyHistoryModal);
+      }
 
       google.script.run.withSuccessHandler(function (res) {
         if (res.error || !res.records || res.records.length === 0) {
@@ -2096,11 +2153,19 @@
         document.getElementById('inBodyHistoryList').innerHTML = html;
       }).getInBodyHistory();
     }
-    function closeInBodyHistoryModal() { document.getElementById('inBodyHistoryModal').classList.remove('show'); }
+    function closeInBodyHistoryModal(isPopstate) {
+      document.getElementById('inBodyHistoryModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeInBodyHistoryModal);
+      }
+    }
 
     function openChallengeRanking() {
       document.getElementById('challengeRankingList').innerHTML = '<div style="text-align:center; padding:20px; color:#718096;">성적 계산 중...</div>';
       document.getElementById('challengeRankingModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeChallengeRankingModal);
+      }
 
       google.script.run.withSuccessHandler(function (res) {
         if (res.error || !res.rankings || res.rankings.length === 0) {
@@ -2123,7 +2188,12 @@
         document.getElementById('challengeRankingList').innerHTML = html;
       }).getChallengeRanking();
     }
-    function closeChallengeRankingModal() { document.getElementById('challengeRankingModal').classList.remove('show'); }
+    function closeChallengeRankingModal(isPopstate) {
+      document.getElementById('challengeRankingModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeChallengeRankingModal);
+      }
+    }
 
     // --- 매출등록 ---
     function openSalesModal() {
@@ -2136,10 +2206,16 @@
       document.querySelectorAll('#payMethodGrid .select-btn').forEach(function (btn) { btn.classList.remove('active'); });
       document.querySelectorAll('#payMethodGrid .select-btn')[0].classList.add('active');
       document.getElementById('salesModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeSalesModal);
+      }
     }
 
-    function closeSalesModal() {
+    function closeSalesModal(isPopstate) {
       document.getElementById('salesModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeSalesModal);
+      }
     }
 
     function selectPayMethod(el) {
@@ -2488,10 +2564,16 @@
     function openSmsLogModal() {
       document.getElementById('smsLogModal').classList.add('show');
       loadSmsLogData();
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeSmsLogModal);
+      }
     }
 
-    function closeSmsLogModal() {
+    function closeSmsLogModal(isPopstate) {
       document.getElementById('smsLogModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeSmsLogModal);
+      }
     }
 
     let allSmsLogs = [];

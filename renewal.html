@@ -98,6 +98,15 @@
   </div>
 
   <script>
+    // [v58.0] 모바일 뒤로가기 완벽 이탈 방지 결계 가동! (메인 이탈 금지 - 폼 초기화 리셋 적용)
+    history.pushState(null, null, location.href);
+    window.addEventListener('popstate', function() {
+      history.pushState(null, null, location.href); // 히스토리 밀림 긴급 방어
+      showAppConfirm("💳 결제 입력을 취소하고 처음 화면으로 리셋하시겠습니까?\n(입력 중인 모든 내용이 초기화됩니다!)", function() {
+        window.location.reload();
+      }, "💳");
+    });
+
     const urlParams = new URLSearchParams(window.location.search);
     let phoneParam = urlParams.get('phone') || "<?!= targetPhone ?>";
     let nameParam = urlParams.get('name') || "<?!= targetName ?>";
