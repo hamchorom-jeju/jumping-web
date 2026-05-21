@@ -86,8 +86,8 @@ body {
 .v-banner-notice {
     background: #4e342e;
     color: #fff;
-    border-radius: 20px; /* matched to ranking container */
-    height: 70px; /* matched to ranking container */
+    border-radius: 18px; /* matched to ranking container */
+    height: 55px; /* matched to ranking container */
     padding: 0 15px;
     border-left: 5px solid var(--gold);
     position: relative;
@@ -132,7 +132,7 @@ body {
     font-weight: 800;
     color: #ffffff;
     word-break: keep-all;
-    line-height: 1.4;
+    line-height: 1.35;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -359,8 +359,8 @@ body {
 .v-banner-ranking-container {
     background: var(--v-paper);
     border: 2px solid var(--v-border);
-    border-radius: 20px;
-    height: 70px;
+    border-radius: 18px; /* matched to notice/weather */
+    height: 55px; /* matched to notice */
     margin-bottom: 0px !important;
     overflow: hidden;
     position: relative;
