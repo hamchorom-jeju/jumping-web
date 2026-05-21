@@ -167,6 +167,14 @@ if (typeof google === 'undefined' || !google.script) {
                     photoId: "MOCK_PHOTO_ID_" + Date.now(),
                     debugInfo: "MOCK_SAVE_OK"
                   };
+                } else if (prop === 'getMyInbodyHistory') {
+                  mockResult = {
+                    success: true,
+                    records: [
+                      { date: "2026-05-20", weight: 68.5, muscle: 31.2, fat: 22.4, score: 5.5, memo: "식단 우수 회원! 🌟" },
+                      { date: "2026-05-01", weight: 71.0, muscle: 29.5, fat: 25.5, score: 0, memo: "최초 측정일 📊" }
+                    ]
+                  };
                 }
                 
                 if (sHandler) sHandler(mockResult);
