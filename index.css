@@ -86,7 +86,7 @@ body {
 .v-banner-notice {
     background: #4e342e;
     color: #fff;
-    padding: 10px 35px 10px 15px; /* 우측 화살표 공간 확보 */
+    padding: 10px 85px 10px 15px; /* 우측 배지 공간 85px 확보 */
     border-radius: 12px;
     font-size: 0.75rem;
     font-weight: 800;
@@ -95,19 +95,30 @@ body {
     cursor: pointer;
     user-select: none;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.v-banner-notice::after {
-    content: '\f054'; /* FontAwesome Chevron-Right */
-    font-family: 'Font Awesome 6 Free';
-    font-weight: 900;
+/* 🏆 프리미엄 공지 전체보기 배지 */
+.v-banner-badge {
     position: absolute;
-    right: 15px;
+    right: 12px;
     top: 50%;
     transform: translateY(-50%);
-    opacity: 0.6;
-    transition: all 0.3s ease;
-    font-size: 0.7rem;
+    background: rgba(217, 119, 6, 0.2);
+    border: 1px solid var(--gold);
+    color: #f59e0b;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 0.6rem;
+    font-weight: 900;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 0 10px rgba(217, 119, 6, 0.25);
+    transition: all 0.2s ease;
 }
 
 .v-banner-notice:hover {
@@ -116,9 +127,11 @@ body {
     box-shadow: 0 6px 20px rgba(241, 196, 15, 0.18);
 }
 
-.v-banner-notice:hover::after {
-    opacity: 1;
-    transform: translate(3px, -50%); /* 우측으로 살짝 이동하는 깜찍한 튕김 애니메이션 */
+.v-banner-notice:hover .v-banner-badge {
+    background: var(--gold);
+    color: #fff;
+    box-shadow: 0 0 15px rgba(217, 119, 6, 0.5);
+    transform: translateY(-50%) scale(1.05);
 }
 
 .v-banner-notice:active {

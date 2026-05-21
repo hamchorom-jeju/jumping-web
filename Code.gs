@@ -6589,6 +6589,11 @@ function updatePillarNotice(payload) {
     
     sheet.appendRow([todayStr, category, title, content, "TRUE"]);
     
+    // ⚡ [공지 캐시 초기화] 새 공지가 작성되면 서버 캐시를 즉각 비워 실시간 반영 보장!
+    var cache = CacheService.getScriptCache();
+    cache.remove("v58_village_notices");
+    cache.remove("v58_pillar_notices");
+    
     return { success: true };
   } catch (e) {
     return { success: false, error: e.toString() };
@@ -7641,6 +7646,16 @@ function deleteScheduledQuest(rowIdx) {
 }
 
 function getVillageNotices() {
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get("v58_village_notices");
+  if (cached) {
+    try {
+      return JSON.parse(cached);
+    } catch (e) {
+      cache.remove("v58_village_notices");
+    }
+  }
+
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = checkAndInitNoticeSheet(ss);
@@ -7659,7 +7674,11 @@ function getVillageNotices() {
         active: (activeVal === "TRUE" || activeVal === "ACTIVATED" || activeVal === "")
       });
     }
-    return list.reverse(); // 최신 공지 순
+    var result = list.reverse(); // 최신 공지 순
+    
+    // 30분(1800초) 캐시 저장
+    cache.put("v58_village_notices", JSON.stringify(result), 1800);
+    return result;
   } catch (e) {
     return [];
   }
@@ -7823,8 +7842,8 @@ function getUserWellnessActivityHistory(phone) {
 }
 
 /**
- * [자동 트리거] 원장님이 스프레드시트에서 수동으로 "등록 현황" 또는 "회원명단" 시트를 고쳤을 때
- * 구글 서버 캐시를 강제로 비워 태블릿 출석 앱에 즉각 반영되도록 처리합니다.
+ * [자동 트리거] 원장님이 스프레드시트에서 수동으로 "등록 현황", "회원명단" 또는 "마을_공지" 시트를 고쳤을 때
+ * 구글 서버 캐시를 강제로 비워 즉각 반영되도록 처리합니다.
  */
 function onEdit(e) {
   try {
@@ -7834,6 +7853,11 @@ function onEdit(e) {
       var cache = CacheService.getScriptCache();
       cache.remove("v45_member_registry");
       console.log("⚡ [onEdit] 시트 수정으로 인한 회원 명단 캐시 초기화 성공!");
+    } else if (sheetName === "마을_공지" || sheetName === "마을공지") {
+      var cache = CacheService.getScriptCache();
+      cache.remove("v58_village_notices");
+      cache.remove("v58_pillar_notices");
+      console.log("⚡ [onEdit] 시트 수정으로 인한 공지 사항 캐시 초기화 성공!");
     }
   } catch(err) {
     console.error("onEdit 캐시 제거 실패: " + err.toString());
