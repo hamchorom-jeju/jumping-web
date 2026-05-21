@@ -718,24 +718,8 @@ function getUserDashboardData(payload) {
     // [v59.0] 오늘 첫 로그인 시 알림 쪽지 생성 트리거
     if (isFirstLoginToday) {
       var rawName = String(memberInfo.name || "회원").replace(/\d{4}$/, "").trim();
+      var friendlyName = getFriendlyName(memberInfo.name);
       
-      // 친근한 이름 변환 (예: 문미진 -> 미진, 남궁민 -> 민, 허준 -> 허준)
-      var friendlyName = rawName;
-      if (/^[가-힣]+$/.test(rawName)) {
-        var len = rawName.length;
-        if (len === 3) {
-          friendlyName = rawName.substring(1);
-        } else if (len === 4) {
-          var doubleSurnames = ['남궁', '황보', '제갈', '사공', '선우', '독고', '동방', '서문'];
-          var prefix2 = rawName.substring(0, 2);
-          if (doubleSurnames.indexOf(prefix2) !== -1) {
-            friendlyName = rawName.substring(2);
-          } else {
-            friendlyName = rawName.substring(1);
-          }
-        }
-      }
-
       if (inactivityPenalty > 0) {
         // 디버프 경고 쪽지는 정확한 전달과 격식을 위해 성을 포함한 전체 이름 사용
         sendPersonalNotification(
@@ -7137,6 +7121,8 @@ function checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName) {
       }
     }
     
+    var friendlyName = getFriendlyName(memberName);
+    
     // 3일 출석: +100 EXP 하사 (누적 100)
     if (attendDaysThisWeek === 3 && !hasBonus3) {
       recordActivityLog({
@@ -7150,6 +7136,12 @@ function checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName) {
       });
       Logger.log("🎉 [" + memberName + "] 주간 3회 출석 달성! 체력 보너스 +100 EXP 하사 완료!");
       sendWeeklyBonusSms(phoneStr, memberName, 3);
+      sendPersonalNotification(
+        phoneStr,
+        "welcome",
+        "주간 3회 출석 보너스 달성! 🎉",
+        friendlyName + "님, 축하합니다! 금주 3회째 출석 마일스톤을 달성하여 '체력보너스' 스탯이 활성화되고 추가 보너스 +100 EXP가 전격 지급되었습니다! 오늘도 신나고 건강하게 점핑! 🔥🤸‍♂️"
+      );
     }
     // 4일 출석: +100 EXP 추가 하사 (누적 200)
     else if (attendDaysThisWeek === 4 && !hasBonus4) {
@@ -7164,6 +7156,12 @@ function checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName) {
       });
       Logger.log("🎉 [" + memberName + "] 주간 4회 출석 달성! 체력 보너스 +100 EXP 추가 하사 완료!");
       sendWeeklyBonusSms(phoneStr, memberName, 4);
+      sendPersonalNotification(
+        phoneStr,
+        "welcome",
+        "주간 4회 출석 보너스 달성! 🎉",
+        friendlyName + "님, 정말 대단하십니다! 금주 4회째 출석 마일스톤을 달성하여 체력보너스 추가 +100 EXP가 전격 지급되었습니다! 꾸준함이 모여 기적을 만듭니다. 화이팅! 🏆✨"
+      );
     }
     // 5일 출석: +100 EXP 추가 하사 (누적 300)
     else if (attendDaysThisWeek === 5 && !hasBonus5) {
@@ -7178,6 +7176,12 @@ function checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName) {
       });
       Logger.log("🎉 [" + memberName + "] 주간 5회 출석 달성! 체력 보너스 +100 EXP 추가 하사 완료!");
       sendWeeklyBonusSms(phoneStr, memberName, 5);
+      sendPersonalNotification(
+        phoneStr,
+        "welcome",
+        "주간 5회 출석 보너스 달성! 🎉",
+        friendlyName + "님, 당신은 진정한 웰니스 리더! 금주 5회째 출석 마일스톤을 달성하여 체력보너스 추가 +100 EXP가 전격 지급되었습니다! 오늘 하루도 상쾌하고 에너제틱하게! 💪🔥"
+      );
     }
     // 6일 출석: +100 EXP 추가 하사 (누적 400 EXP!)
     else if (attendDaysThisWeek >= 6 && !hasBonus6) {
@@ -7192,6 +7196,12 @@ function checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName) {
       });
       Logger.log("🎉 [" + memberName + "] 주간 6회 출석 달성! 체력 보너스 +100 EXP 추가 하사 완료!");
       sendWeeklyBonusSms(phoneStr, memberName, 6);
+      sendPersonalNotification(
+        phoneStr,
+        "welcome",
+        "주간 6회 출석 그랜드슬램 달성! 👑",
+        friendlyName + "님, 경이로운 출석 질주! 금주 6회째 출석 그랜드슬램을 달성하여 체력보너스 추가 +100 EXP가 전격 지급되었습니다! 건강한 습관의 끝판왕, 원장님이 진심으로 축하드립니다! ❤️🤸‍♂️"
+      );
     }
   } catch (e) {
     Logger.log("🚨 주간 출석 보너스 정산 오류: " + e.toString());
@@ -8471,6 +8481,30 @@ function isAppActiveDuringAbsence(phone, lastAttendanceDate, now) {
     console.error("Error in isAppActiveDuringAbsence: " + e.toString());
   }
   return false;
+}
+
+/**
+ * [v59.1] 한국인 이름의 특성에 맞춰 성을 지능적으로 제거해주는 친근한 이름 변환기
+ */
+function getFriendlyName(fullName) {
+  if (!fullName) return "회원";
+  var name = String(fullName).replace(/\d{4}$/, "").trim();
+  
+  if (/^[가-힣]+$/.test(name)) {
+    var len = name.length;
+    if (len === 3) {
+      return name.substring(1);
+    } else if (len === 4) {
+      var doubleSurnames = ['남궁', '황보', '제갈', '사공', '선우', '독고', '동방', '서문'];
+      var prefix2 = name.substring(0, 2);
+      if (doubleSurnames.indexOf(prefix2) !== -1) {
+        return name.substring(2);
+      } else {
+        return name.substring(1);
+      }
+    }
+  }
+  return name;
 }
 
 
