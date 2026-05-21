@@ -795,3 +795,422 @@ window.addEventListener('popstate', function(e) {
 window.addEventListener('DOMContentLoaded', function() {
   history.pushState(null, null, location.href);
 });
+
+/**
+ * ==========================================
+ * 📬 [v59.0] 지니의 마을 우편함 & 전령 포털 엔진 (글로벌 렌더링 & 연동)
+ * ==========================================
+ */
+const Mailbox = {
+  notifications: [],
+  initialized: false,
+  
+  init: function() {
+    if (this.initialized) return;
+    
+    // 제외 페이지 필터링
+    const path = window.location.pathname.toLowerCase();
+    if (
+      path.includes('attendance') || 
+      path.includes('registration') || 
+      path.includes('renewal') || 
+      path.includes('admin') ||
+      path.includes('login')
+    ) {
+      console.log("🚫 [Mailbox] Disabled for utility/kiosk page.");
+      return;
+    }
+    
+    const phone = Auth.getPhone();
+    if (!phone) {
+      console.log("🚫 [Mailbox] No session found. Waiting for login.");
+      return;
+    }
+    
+    this.initialized = true;
+    this.injectStyles();
+    this.injectMarkup();
+    this.loadNotifications(phone);
+  },
+  
+  injectStyles: function() {
+    const styleId = 'mailbox-global-styles';
+    if (document.getElementById(styleId)) return;
+    
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.innerHTML = `
+      /* 우편함 FAB 버튼 */
+      .v-mailbox-fab {
+        position: fixed;
+        bottom: 90px;
+        left: 15px;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.88);
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.18);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        border: 1.5px solid rgba(255, 255, 255, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 9998;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        animation: mailbox-breathing 3.5s ease-in-out infinite;
+      }
+      .v-mailbox-fab:hover {
+        transform: scale(1.1);
+        background: #ffffff;
+      }
+      .v-mailbox-fab i {
+        color: #4f46e5;
+        font-size: 1.15rem;
+      }
+      
+      /* 우편함 알림 배지 */
+      .mailbox-badge {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: #ff4757;
+        border: 2px solid #ffffff;
+        box-shadow: 0 0 10px #ff4757;
+        animation: pulse-unread 1.5s infinite ease-in-out;
+      }
+      
+      /* 애니메이션 정의 */
+      @keyframes mailbox-breathing {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-7px); }
+        100% { transform: translateY(0); }
+      }
+      @keyframes pulse-unread {
+        0% { transform: scale(0.9); opacity: 0.5; box-shadow: 0 0 4px #ff4757; }
+        50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 12px #ff4757; }
+        100% { transform: scale(0.9); opacity: 0.5; box-shadow: 0 0 4px #ff4757; }
+      }
+      @keyframes pulse-unread-fab {
+        0% { box-shadow: 0 8px 32px rgba(31, 38, 135, 0.18); }
+        50% { box-shadow: 0 8px 32px rgba(239, 68, 68, 0.25), 0 0 15px rgba(239, 68, 68, 0.35); border-color: rgba(239, 68, 68, 0.4); }
+        100% { box-shadow: 0 8px 32px rgba(31, 38, 135, 0.18); }
+      }
+      
+      /* 우편함 모달 & 리스트 */
+      .mailbox-card {
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 14px 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        border: 1px solid #edf2f7;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        transition: all 0.25s ease;
+        text-align: left;
+        position: relative;
+        overflow: hidden;
+      }
+      .mailbox-card.unread {
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.08);
+      }
+      .mailbox-card.read {
+        opacity: 0.65;
+        filter: grayscale(20%);
+        background: #f8fafc;
+      }
+      .mailbox-card .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .mailbox-card .card-title {
+        font-size: 0.82rem;
+        font-weight: 900;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .mailbox-card .card-time {
+        font-size: 0.62rem;
+        font-weight: 700;
+        color: #94a3b8;
+      }
+      .mailbox-card .card-body {
+        font-size: 0.73rem;
+        font-weight: 700;
+        color: #475569;
+        line-height: 1.45;
+        word-break: keep-all;
+      }
+      
+      /* 유형별 특수 보더 및 배경 효과 */
+      .mailbox-card.type-welcome {
+        border-left: 5px solid #10b981;
+      }
+      .mailbox-card.type-debuff {
+        border-left: 5px solid #ef4444;
+        animation: card-warning-pulse 2.2s infinite ease-in-out;
+      }
+      .mailbox-card.type-quest {
+        border-left: 5px solid #ec4899;
+      }
+      .mailbox-card.type-admin {
+        border-left: 5px solid #3b82f6;
+      }
+      
+      .mailbox-card.read.type-welcome,
+      .mailbox-card.read.type-debuff,
+      .mailbox-card.read.type-quest,
+      .mailbox-card.read.type-admin {
+        border-left-color: #cbd5e1;
+      }
+      
+      @keyframes card-warning-pulse {
+        0% { border-left-color: #ef4444; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.03); }
+        50% { border-left-color: #f87171; box-shadow: 0 4px 20px rgba(239, 68, 68, 0.08); }
+        100% { border-left-color: #ef4444; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.03); }
+      }
+      
+      .new-badge {
+        background: #ef4444;
+        color: #ffffff;
+        font-size: 0.55rem;
+        font-weight: 900;
+        padding: 1.5px 5px;
+        border-radius: 6px;
+        text-transform: uppercase;
+        display: inline-block;
+      }
+    `;
+    document.head.appendChild(style);
+  },
+  
+  injectMarkup: function() {
+    // 1. FAB 생성
+    if (!document.getElementById('mailbox-fab')) {
+      const fab = document.createElement('div');
+      fab.id = 'mailbox-fab';
+      fab.className = 'v-mailbox-fab';
+      fab.innerHTML = `
+        <i class="fa-solid fa-envelope"></i>
+        <span class="mailbox-badge" id="mailbox-unread-badge" style="display: none;"></span>
+      `;
+      fab.onclick = () => this.open();
+      document.body.appendChild(fab);
+    }
+    
+    // 2. 모달 생성
+    if (!document.getElementById('mailbox-modal')) {
+      const modal = document.createElement('div');
+      modal.id = 'mailbox-modal';
+      modal.style = "display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.45); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:99999; align-items:flex-end; justify-content:center;";
+      
+      modal.innerHTML = `
+        <div style="background:#fff; border-radius:30px 30px 0 0; width:100%; max-width:500px; padding:25px 20px 45px; box-shadow:0 -8px 40px rgba(0,0,0,0.15); animation:slideUp 0.35s ease-out; text-align: left; box-sizing: border-box; position: relative;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+            <div style="font-size:1.05rem; font-weight:900; color:#4f46e5; display:flex; align-items:center; gap:6px;">
+              ✉️ 지니의 마을 우편함 <span id="mailbox-count-text" style="font-size:0.68rem; font-weight:800; color:#64748b; background:#f1f5f9; padding:2px 8px; border-radius:10px; display:inline-block;">새 쪽지 0개</span>
+            </div>
+            <button onclick="Mailbox.close()" style="background:none; border:none; font-size:1.3rem; color:#94a3b8; cursor:pointer; font-weight:bold; font-family:inherit;">✕</button>
+          </div>
+          
+          <!-- 리스트 -->
+          <div id="mailbox-list" style="max-height: 330px; overflow-y: auto; padding-right: 4px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px;">
+            <!-- 동적 삽입 -->
+          </div>
+          
+          <!-- 텅 빈 상태 -->
+          <div id="mailbox-empty-view" style="display:none; text-align:center; padding:50px 20px; color:#94a3b8;">
+            <span style="font-size: 2.8rem; display:block; margin-bottom:12px;">✉️</span>
+            <div style="font-size: 0.8rem; font-weight: 900; color:#475569;">우편함이 텅 비어 있습니다.</div>
+            <div style="font-size: 0.65rem; font-weight: 700; color:#94a3b8; margin-top:3px;">안부 편지나 활동 알림이 오면 여기에 쌓입니다.</div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+  },
+  
+  loadNotifications: function(phone) {
+    if (typeof google === 'undefined' || !google.script || !google.script.run) {
+      // 로컬 Mock 모드 또는 오프라인 테스트용 데이터 바인딩
+      console.log("🎮 [Mailbox] Mock data loading...");
+      this.notifications = [
+        { id: "MOCK_1", type: "welcome", title: "🎉 오늘 첫 로그인! 웰니스 보너스 지급 완료", content: "모험가님, 오늘 하루도 힘차게 시작해봐요! 로그인 보너스로 +5 EXP(회복력)가 즉시 지급되었습니다. ⚔️", createdAt: "2026-05-22 08:00:00", isRead: false },
+        { id: "MOCK_2", type: "debuff", title: "🚨 연속 미출석 에너지 방전 디버프 발생!", content: "회원님! 클럽 출석을 하지 않으신 지 연속 4일이 경과하여 에너지가 방전되었습니다. 누적 점수에서 -100 EXP가 차감되었습니다. 오늘 출석 즉시 100% 자동 부활합니다!", createdAt: "2026-05-21 07:30:00", isRead: true }
+      ];
+      this.render();
+      return;
+    }
+    
+    const self = this;
+    google.script.run.withSuccessHandler(function(res) {
+      if (res && res.success) {
+        self.notifications = res.notifications || [];
+        self.render();
+      }
+    }).getPersonalNotifications({ phone: phone });
+  },
+  
+  render: function() {
+    const listContainer = document.getElementById('mailbox-list');
+    const emptyView = document.getElementById('mailbox-empty-view');
+    const badge = document.getElementById('mailbox-unread-badge');
+    const countText = document.getElementById('mailbox-count-text');
+    const fab = document.getElementById('mailbox-fab');
+    
+    if (!listContainer) return;
+    
+    listContainer.innerHTML = "";
+    
+    const unreadCount = this.notifications.filter(n => !n.isRead).length;
+    
+    // FAB 알림 배지 제어 및 흔들림(breathing) 애니메이션 극대화
+    if (unreadCount > 0) {
+      if (badge) badge.style.display = "block";
+      if (fab) {
+        fab.style.animation = "mailbox-breathing 1.8s ease-in-out infinite, pulse-unread-fab 1.8s infinite ease-in-out";
+      }
+    } else {
+      if (badge) badge.style.display = "none";
+      if (fab) {
+        fab.style.animation = "mailbox-breathing 3.5s ease-in-out infinite"; // 차분한 호버
+      }
+    }
+    
+    if (countText) {
+      countText.innerText = `새 쪽지 ${unreadCount}개`;
+      countText.style.background = unreadCount > 0 ? "rgba(239, 68, 68, 0.08)" : "#f1f5f9";
+      countText.style.color = unreadCount > 0 ? "#ef4444" : "#64748b";
+    }
+    
+    if (this.notifications.length === 0) {
+      listContainer.style.display = "none";
+      if (emptyView) emptyView.style.display = "block";
+      return;
+    }
+    
+    listContainer.style.display = "flex";
+    if (emptyView) emptyView.style.display = "none";
+    
+    this.notifications.forEach(noti => {
+      const card = document.createElement('div');
+      card.className = `mailbox-card ${noti.isRead ? 'read' : 'unread'} type-${noti.type}`;
+      
+      const emojiMap = { welcome: "🎉", debuff: "⚠️", quest: "⚡", admin: "✉️" };
+      const emoji = emojiMap[noti.type] || "✉️";
+      
+      const timeStr = this.timeAgo(noti.createdAt);
+      
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-title">
+            <span>${emoji}</span>
+            <span>${noti.title}</span>
+            ${!noti.isRead ? '<span class="new-badge">NEW</span>' : ''}
+          </div>
+          <span class="card-time">${timeStr}</span>
+        </div>
+        <div class="card-body">
+          ${noti.content.replace(/\n/g, '<br>')}
+        </div>
+      `;
+      listContainer.appendChild(card);
+    });
+  },
+  
+  open: function() {
+    const modal = document.getElementById('mailbox-modal');
+    if (!modal) return;
+    
+    modal.style.display = "flex";
+    
+    // 뒤로가기 하드웨어 버튼 연동 등록
+    if (window.registerModalOpen) {
+      window.registerModalOpen((isBack) => {
+        modal.style.display = "none";
+      });
+    }
+    
+    // 열람했으므로 서버 읽음 처리 API 비동기 격발
+    const phone = Auth.getPhone();
+    if (!phone) return;
+    
+    const self = this;
+    const hasUnread = this.notifications.some(n => !n.isRead);
+    if (hasUnread) {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(function(res) {
+          if (res && res.success) {
+            // 로컬 상태 즉각 전부 읽음 처리
+            self.notifications.forEach(n => n.isRead = true);
+            self.render();
+          }
+        }).markNotificationsAsRead({ phone: phone });
+      } else {
+        // Mock 모드 대응
+        setTimeout(() => {
+          self.notifications.forEach(n => n.isRead = true);
+          self.render();
+        }, 300);
+      }
+    }
+  },
+  
+  close: function() {
+    const modal = document.getElementById('mailbox-modal');
+    if (modal) {
+      modal.style.display = "none";
+      if (window.registerModalClose) {
+        window.registerModalClose((isBack) => {
+          modal.style.display = "none";
+        });
+      }
+    }
+  },
+  
+  timeAgo: function(dateStr) {
+    if (!dateStr) return "";
+    try {
+      var parts = dateStr.split(/[ -\:]/);
+      if (parts.length < 6) return dateStr;
+      
+      var createdDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
+      var now = new Date();
+      var diffTime = now.getTime() - createdDate.getTime();
+      
+      var diffMinutes = Math.floor(diffTime / (1000 * 60));
+      if (diffMinutes < 1) return "방금 전";
+      if (diffMinutes < 60) return diffMinutes + "분 전";
+      
+      var diffHours = Math.floor(diffMinutes / 60);
+      if (diffHours < 24) return diffHours + "시간 전";
+      
+      var diffDays = Math.floor(diffHours / 24);
+      if (diffDays === 1) return "어제";
+      return diffDays + "일 전";
+    } catch (e) {
+      return dateStr;
+    }
+  }
+};
+
+// 대시보드 로드 데이터 자동 동기화용 리스너 등록
+window.syncMailboxWithDashboardData = function(res) {
+  if (res && res.success && res.notifications) {
+    Mailbox.notifications = res.notifications;
+    Mailbox.render();
+  }
+};
+
+// 로드 시 우편함 기동
+window.addEventListener('load', function() {
+  Mailbox.init();
+});

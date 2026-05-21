@@ -199,6 +199,12 @@ const Village = {
 
                         this.renderAll();
                         this.updateEvolution();
+                        
+                        // [v59.0] 글로벌 우편함 데이터 실시간 동기화
+                        if (window.syncMailboxWithDashboardData) {
+                            window.syncMailboxWithDashboardData(res);
+                        }
+
                         if (res.quests) {
                             this.renderQuestWidgets(res.quests);
                         }

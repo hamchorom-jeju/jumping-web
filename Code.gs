@@ -715,6 +715,27 @@ function getUserDashboardData(payload) {
       Logger.log("실시간 랭킹 연산 오류: " + err.toString());
     }
 
+    // [v59.0] 오늘 첫 로그인 시 알림 쪽지 생성 트리거
+    if (isFirstLoginToday) {
+      if (inactivityPenalty > 0) {
+        sendPersonalNotification(
+          phone,
+          "debuff",
+          "🚨 연속 미출석 에너지 방전 디버프 발생!",
+          "회원님! 클럽 출석을 하지 않으신 지 연속 " + inactiveDays + "일이 경과하여 웰니스 에너지가 방전되었습니다. 누적 점수에서 -" + inactivityPenalty + " EXP가 차감되었습니다. 💡 오늘 클럽에 출석하시면 즉시 100% 원상 복원됩니다!"
+        );
+      } else {
+        sendPersonalNotification(
+          phone,
+          "welcome",
+          "🎉 오늘 첫 로그인! 웰니스 보너스 지급 완료",
+          "모험가님, 오늘 하루도 힘차게 시작해봐요! 로그인 보너스로 +5 EXP(회복력)가 즉시 지급되었습니다. ⚔️"
+        );
+      }
+    }
+
+    var personalNotiResult = getPersonalNotifications({ phone: phone });
+
     var result = {
       success: true,
       doneList: doneList,
@@ -737,7 +758,8 @@ function getUserDashboardData(payload) {
       praiseNotice: praiseNotice, // 실시간 칭찬 알림 전달!
       praiseBatonSender: praiseBatonSender, // [v55.0] 실시간 칭찬 바톤 연동!
       villageSettings: getVillageSettings(),
-      pillarNotice: getPillarNotice()
+      pillarNotice: getPillarNotice(),
+      notifications: personalNotiResult.success ? personalNotiResult.notifications : []
     };
     
     result.cacheHit = false;
@@ -7861,6 +7883,199 @@ function onEdit(e) {
     }
   } catch(err) {
     console.error("onEdit 캐시 제거 실패: " + err.toString());
+  }
+}
+
+/**
+ * 📬 [v59.0] 개인알림/우편함 데이터베이스 시트 검사 및 자동 생성
+ */
+function checkAndCreatePersonalNotificationSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("개인알림");
+  if (!sheet) {
+    sheet = ss.insertSheet("개인알림");
+    var headers = ["ID", "전화번호", "이름", "유형", "제목", "내용", "생성시각", "읽은시각"];
+    sheet.getRange(1, 1, 1, headers.length)
+         .setValues([headers])
+         .setFontWeight("bold")
+         .setBackground("#edf2f7");
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+/**
+ * 📬 [v59.0] 새로운 개인 알림/쪽지 발송
+ */
+function sendPersonalNotification(phone, type, title, content) {
+  try {
+    var cleanPhone = String(phone || "").replace(/[^0-9]/g, "");
+    if (!cleanPhone) return { success: false, error: "전화번호가 누락되었습니다." };
+    
+    var sheet = checkAndCreatePersonalNotificationSheet();
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    
+    // 이름 찾기 (등록현황 시트에서 이름 매핑)
+    var name = "모험가";
+    var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+    if (regSheet) {
+      var regData = regSheet.getDataRange().getDisplayValues();
+      var regCols = getRegColumnIndices(regSheet);
+      for (var i = 1; i < regData.length; i++) {
+        var sheetPhone = String(regData[i][regCols.phone]).replace(/[^0-9]/g, ""); 
+        if (sheetPhone === cleanPhone || (cleanPhone.length >= 8 && sheetPhone.endsWith(cleanPhone.substring(cleanPhone.length - 8)))) {
+          name = regData[i][regCols.name];
+          break;
+        }
+      }
+    }
+    
+    var now = new Date();
+    var createdAtStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm:ss");
+    var notiId = "NOTI_" + now.getTime() + "_" + Math.floor(Math.random() * 1000);
+    
+    // [ID, 전화번호, 이름, 유형, 제목, 내용, 생성시각, 읽은시각]
+    sheet.appendRow([
+      notiId,
+      "'" + cleanPhone,
+      name,
+      type || "admin",
+      title || "쪽지가 도착했습니다 ✉️",
+      content || "",
+      createdAtStr,
+      "" // 읽은시각은 처음에 빈값
+    ]);
+    
+    // 실시간 UI 갱신을 위해 해당 회원 대시보드 캐시 강제 삭제
+    clearUserDashboardCache(cleanPhone);
+    return { success: true, notiId: notiId };
+  } catch (e) {
+    Logger.log("알림 생성 실패: " + e.toString());
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * 📬 [v59.0] 사용자의 개인 알림 목록 조회 (안 읽은 것 + 오늘 읽은 것만 반환하여 24시간 롤링 소멸 구현)
+ */
+function getPersonalNotifications(payload) {
+  try {
+    var rawPhone = String(payload.phone || "");
+    var phone = rawPhone.replace(/[^0-9]/g, ""); 
+    if (!phone) return { success: false, error: "전화번호가 없습니다." };
+    
+    var sheet = checkAndCreatePersonalNotificationSheet();
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return { success: true, notifications: [] };
+    
+    var data = sheet.getRange(2, 1, lastRow - 1, 8).getDisplayValues();
+    var notifications = [];
+    var now = new Date();
+    
+    for (var i = 0; i < data.length; i++) {
+      var row = data[i];
+      var rowPhone = String(row[1] || "").replace(/[^0-9]/g, "");
+      
+      // 해당 사용자의 전화번호와 매칭되는지 검사
+      if (rowPhone === phone || (phone.length >= 8 && rowPhone.endsWith(phone.substring(phone.length - 8)))) {
+        var notiId = String(row[0] || "");
+        var type = String(row[3] || "admin");
+        var title = String(row[4] || "");
+        var content = String(row[5] || "");
+        var createdAt = String(row[6] || "");
+        var readAt = String(row[7] || "");
+        
+        var isRead = readAt.length > 0;
+        
+        // 라이프사이클 관리: 읽은 쪽지는 24시간 이내인 것만 반환
+        var keepNotification = true;
+        if (isRead) {
+          try {
+            // "yyyy-MM-dd HH:mm:ss" 포맷 파싱
+            var parts = readAt.split(/[ -\:]/);
+            if (parts.length >= 6) {
+              var readDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
+              var diffTime = now.getTime() - readDate.getTime();
+              var diffHours = diffTime / (1000 * 60 * 60);
+              if (diffHours > 24) {
+                keepNotification = false; // 24시간 초과 시 필터링 아웃 (자동 소멸)
+              }
+            } else {
+              keepNotification = false; // 파싱 실패 시 안전하게 감춤
+            }
+          } catch (err) {
+            keepNotification = false;
+          }
+        }
+        
+        if (keepNotification) {
+          notifications.push({
+            id: notiId,
+            type: type,
+            title: title,
+            content: content,
+            createdAt: createdAt,
+            isRead: isRead,
+            readAt: readAt
+          });
+        }
+      }
+    }
+    
+    // 최근 알림이 위로 가도록 역순 정렬
+    notifications.reverse();
+    
+    return { success: true, notifications: notifications };
+  } catch (e) {
+    Logger.log("알림 목록 조회 실패: " + e.toString());
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * 📬 [v59.0] 사용자의 안 읽은 알림 전체 읽음 처리
+ */
+function markNotificationsAsRead(payload) {
+  try {
+    var rawPhone = String(payload.phone || "");
+    var phone = rawPhone.replace(/[^0-9]/g, ""); 
+    if (!phone) return { success: false, error: "전화번호가 없습니다." };
+    
+    var sheet = checkAndCreatePersonalNotificationSheet();
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return { success: true };
+    
+    var range = sheet.getRange(2, 1, lastRow - 1, 8);
+    var data = range.getDisplayValues();
+    var lock = LockService.getScriptLock();
+    lock.waitLock(5000);
+    
+    var now = new Date();
+    var nowStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm:ss");
+    var updated = false;
+    
+    for (var i = 0; i < data.length; i++) {
+      var rowPhone = String(data[i][1] || "").replace(/[^0-9]/g, "");
+      var readAt = String(data[i][7] || "");
+      
+      // 본인 알림 중 안 읽은 알림의 읽은시각 컬럼(H열, index 7) 업데이트
+      if ((rowPhone === phone || (phone.length >= 8 && rowPhone.endsWith(phone.substring(phone.length - 8)))) && readAt.length === 0) {
+        var rowNum = i + 2; // 2-indexed
+        sheet.getRange(rowNum, 8).setValue(nowStr);
+        updated = true;
+      }
+    }
+    
+    lock.releaseLock();
+    
+    if (updated) {
+      clearUserDashboardCache(phone);
+    }
+    
+    return { success: true };
+  } catch (e) {
+    Logger.log("알림 읽음 처리 실패: " + e.toString());
+    return { success: false, error: e.toString() };
   }
 }
 
