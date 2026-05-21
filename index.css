@@ -79,7 +79,7 @@ body {
     padding-bottom: 30px; /* Balanced internal padding */
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 10px;
 }
 
 /* --- 📜 SEPARATED BANNERS --- */
@@ -275,7 +275,7 @@ body {
     border: 2px solid var(--v-border);
     border-radius: 20px;
     height: 70px;
-    margin-bottom: 25px;
+    margin-bottom: 0px !important;
     overflow: hidden;
     position: relative;
     box-shadow: 0 5px 15px rgba(0,0,0,0.03);
