@@ -4753,62 +4753,9 @@ function deleteFlashSettingByRow(rowIdx) {
 }
 
 /**
- * 밤 11시 30분경 자동으로 실행되어 그날의 최종 통계를 업무일지에 업데이트합니다.
- * (트리거 설정 필요: autoCloseDailyLog / 시간 기반 / 일일 타이머 / 오후 11시~자정)
+ * 중복 방지를 위해 밤 11시 30분 자동 마감 함수(autoCloseDailyLog) 구버전 블록을 완전 삭제 및 병합 조치했습니다.
+ * 실제 자동 퇴실 처리가 포함된 최신버전의 autoCloseDailyLog는 4274번 줄에 완벽하게 살아있습니다!
  */
-function autoCloseDailyLog() {
-  try {
-    var now = new Date();
-    var dateStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
-    
-    // 1. 최종 통계 가져오기
-    var statsRes = getTodayWorkLogStats(dateStr);
-    if (statsRes.error) {
-      Logger.log("자동 마감 통계 조회 실패: " + statsRes.error);
-      return;
-    }
-    var stats = statsRes.stats;
-    
-    // 2. 기존 일지가 있는지 확인
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var workLogSheet = ss.getSheetByName("업무일지");
-    if (!workLogSheet) return;
-    
-    var wlData = workLogSheet.getDataRange().getValues();
-    var targetRowIdx = -1;
-    var existingLog = null;
-    
-    for (var i = 1; i < wlData.length; i++) {
-      var rowDateRaw = wlData[i][0];
-      var rowDateStr = (rowDateRaw instanceof Date) ? Utilities.formatDate(rowDateRaw, "GMT+9", "yyyy-MM-dd") : String(rowDateRaw).split(" ")[0];
-      if (rowDateStr === dateStr) {
-        targetRowIdx = i + 1;
-        existingLog = wlData[i];
-        break;
-      }
-    }
-    
-    // 3. 전송용 데이터 조립 (기존 내용 보존)
-    var data = {
-      date: dateStr,
-      author: existingLog ? String(existingLog[1] || "") : "시스템 자동마감",
-      jumpingList: existingLog ? String(existingLog[2] || "") : "(미기입)",
-      muscleList: existingLog ? String(existingLog[3] || "") : "(미기입)",
-      stats: stats,
-      remarks: existingLog ? String(existingLog[13] || "") : "퇴근 전 미작성되어 시스템에 의해 자동 마감되었습니다.",
-      issues: existingLog ? String(existingLog[14] || "") : ""
-    };
-    
-    // 4. 저장 함수 호출
-    var res = submitWorkLog(data);
-    Logger.log(dateStr + " 자동 마감 결과: " + res.message);
-    return res;
-    
-  } catch (e) {
-    Logger.log("자동 마감 치명적 오류: " + e.toString());
-    return { error: e.toString() };
-  }
-}
 /**
  * [관리자 전용] 문자발송 대기 목록 가져오기
  */
@@ -7573,6 +7520,87 @@ function onEdit(e) {
     }
   } catch(err) {
     console.error("onEdit 캐시 제거 실패: " + err.toString());
+  }
+}
+
+/**
+ * [메뉴 리모컨] 스프레드시트가 로드될 때 화면 상단 메뉴바에 관리자용 도구 위젯 메뉴를 생성합니다.
+ */
+function onOpen() {
+  try {
+    var ui = SpreadsheetApp.getUi();
+    ui.createMenu("🏋️ 노형점핑 관리 도구")
+      .addItem("⏰ 4대 자동 알람(트리거) 일괄 복구/재설치", "setupAutoCheckoutTriggers")
+      .addToUi();
+  } catch(e) {
+    console.error("메뉴 생성 실패: " + e.toString());
+  }
+}
+
+/**
+ * [트리거 자동 세팅]
+ * 이 버튼을 클릭하면, 멈추거나 꼬인 4개의 핵심 백그라운드 자동화 스케줄러(트리거)를 
+ * 깨끗이 초기화한 후 최적의 시간 설정으로 구글 서버에 자동 일괄 재등록해 줍니다.
+ */
+function setupAutoCheckoutTriggers() {
+  try {
+    var allTriggers = ScriptApp.getProjectTriggers();
+    var targetFuncs = ["autoCheckoutJob", "autoCloseDailyLog", "autoExpireMemberships", "autoRefreshSmsLists"];
+    
+    // 1. 기존에 충돌이나 오작동을 일으킬 수 있는 구버전 4대 트리거 청소 삭제
+    var deleteCount = 0;
+    for (var i = 0; i < allTriggers.length; i++) {
+      var funcName = allTriggers[i].getHandlerFunction();
+      if (targetFuncs.indexOf(funcName) !== -1) {
+        ScriptApp.deleteTrigger(allTriggers[i]);
+        deleteCount++;
+      }
+    }
+    console.log("🧹 기존 고장 난 트리거 " + deleteCount + "건 청소 완료.");
+    
+    // 2. [엔진 1] 실시간 자동퇴실 감시 엔진 설치 (30분 주기)
+    ScriptApp.newTrigger("autoCheckoutJob")
+      .timeBased()
+      .everyMinutes(30)
+      .create();
+      
+    // 3. [엔진 2] 밤 11시반 일괄 통계 마감 엔진 설치 (매일 23:30경)
+    ScriptApp.newTrigger("autoCloseDailyLog")
+      .timeBased()
+      .everyDays(1)
+      .atHour(23)
+      .nearMinute(30)
+      .create();
+      
+    // 4. [엔진 3] 새벽 회원권 기간 만료 자동 정리 엔진 설치 (매일 새벽 3시)
+    ScriptApp.newTrigger("autoExpireMemberships")
+      .timeBased()
+      .everyDays(1)
+      .atHour(3)
+      .nearMinute(0)
+      .create();
+      
+    // 5. [엔진 4] 매 시간 문자발송 대기 리스트 리프레시 엔진 설치 (매 1시간)
+    ScriptApp.newTrigger("autoRefreshSmsLists")
+      .timeBased()
+      .everyHours(1)
+      .create();
+      
+    var ui = SpreadsheetApp.getUi();
+    ui.alert("✅ [노형점핑 관리 도구]\n\n" +
+             "4대 백그라운드 자동 알람(트리거) 세팅이 완전히 복구되었습니다!\n\n" +
+             "1. 실시간 자동퇴실 (30분 간격 감시)\n" +
+             "2. 밤 11시반 일괄 통계 마감 (매일 밤 11:30)\n" +
+             "3. 새벽 회원권 기한마감 정리 (매일 새벽 03:00)\n" +
+             "4. 문자 리스트 자동 갱신 (1시간 간격)\n\n" +
+             "이제부터 구글 서버가 24시간 동안 완벽하게 시스템을 자동 제어합니다. 😊");
+             
+    return "트리거 세팅 복구 성공!";
+  } catch(e) {
+    try {
+      SpreadsheetApp.getUi().alert("❌ 오류 발생: " + e.toString());
+    } catch(err) {}
+    return "에러: " + e.toString();
   }
 }
 
