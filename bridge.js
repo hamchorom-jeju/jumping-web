@@ -1183,6 +1183,12 @@ const Mailbox = {
       if (parts.length < 6) return dateStr;
       
       var createdDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
+      
+      // [v59.1] 구글 스프레드시트 빈 값/0 입력 시 1899~1900년으로 자동 파싱되어 '46194일전' 등으로 노출되는 현상 방어
+      if (createdDate.getFullYear() < 1905) {
+        return "알 수 없는 날짜";
+      }
+      
       var now = new Date();
       var diffTime = now.getTime() - createdDate.getTime();
       
