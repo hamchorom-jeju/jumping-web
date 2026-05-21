@@ -101,8 +101,12 @@ body {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    -webkit-box-pack: center;
+    justify-content: center;
     overflow: hidden;
     text-overflow: ellipsis;
+    height: 54px;
+    box-sizing: border-box;
 }
 
 /* 🏆 프리미엄 공지 전체보기 배지 */
