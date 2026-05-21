@@ -798,9 +798,6 @@ const Village = {
         // 바람 세기 정의: 5.0 m/s 이상이면 강풍(windy) 비주얼 모드 발동!
         const isWindy = windSpeed >= 5.0;
         
-        // 맑고 바람도 없는 날씨라면 아무것도 그리지 않음
-        if (weather === 'sun' && !isWindy) return;
-        
         const wrapper = document.createElement('div');
         wrapper.id = 'village-weather-wrapper';
         wrapper.style = "position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:9999; overflow:hidden;";
@@ -825,6 +822,44 @@ const Village = {
                 
                 wisp.style.animation = `blow-wind ${duration}s linear ${delay}s infinite`;
                 wrapper.appendChild(wisp);
+            }
+        }
+        
+        // 📢 맑은 날(sun)의 몽환적이고 고선명 무지갯빛 비눗방울 효과 추가 (밝은 화면에서도 선명히 보이도록 최적화)
+        if (weather === 'sun') {
+            const bubbleCount = 15;
+            for (let i = 0; i < bubbleCount; i++) {
+                const b = document.createElement('div');
+                b.style.position = 'absolute';
+                b.style.bottom = '-35px';
+                b.style.left = Math.random() * 100 + 'vw';
+                
+                // 크기를 조금 더 다양하게 (6px ~ 22px) 확대하여 시인성 보장
+                const size = Math.random() * 16 + 6; 
+                b.style.width = size + 'px';
+                b.style.height = size + 'px';
+                b.style.borderRadius = '50%';
+                
+                // 🌈 밝은 화면에서도 빛나는 환상적인 무지갯빛 그라데이션 (Pastel Rainbow Refraction)
+                b.style.background = 'radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 220, 230, 0.5) 20%, rgba(220, 240, 255, 0.45) 50%, rgba(220, 255, 220, 0.4) 75%, rgba(255, 235, 190, 0.55) 100%)';
+                
+                // 테두리를 더 뚜렷하고 입체적인 반투명 화이트로 변경
+                b.style.border = '0.8px solid rgba(255, 255, 255, 0.75)';
+                
+                // 무지갯빛 반사광 효과를 배가해주는 내부 이중 음영 및 은은한 외곽 글로우 추가
+                b.style.boxShadow = 'inset -2px -2px 5px rgba(135, 206, 250, 0.45), inset 2px 2px 5px rgba(255, 182, 193, 0.55), 0 3px 6px rgba(165, 94, 234, 0.12)';
+                
+                // 밝은 화면에서도 보일 수 있게 기본 불투명도 범위를 대폭 상향조정 (0.35 ~ 0.75)
+                b.style.opacity = Math.random() * 0.4 + 0.35; 
+                b.style.pointerEvents = 'none';
+                
+                // 🐢 훨씬 천천히 아지랑이처럼 동실동실 떠오르도록 애니메이션 재생 시간 대폭 연장 (14초 ~ 24초)
+                const duration = Math.random() * 10 + 14; 
+                const delay = Math.random() * 12;
+                
+                const animName = `rise-bubble-${i % 3}`;
+                b.style.animation = `${animName} ${duration}s ease-in-out ${delay}s infinite`;
+                wrapper.appendChild(b);
             }
         }
         
@@ -913,6 +948,27 @@ const Village = {
                 @keyframes fall-leaves-windy {
                     0% { transform: translateY(-20px) translateX(0) rotate(0deg); }
                     100% { transform: translateY(105vh) translateX(70vw) rotate(480deg); }
+                }
+                @keyframes rise-bubble-0 {
+                    0% { transform: translateY(0) translateX(0); opacity: 0; }
+                    10% { opacity: 0.5; }
+                    50% { transform: translateY(-50vh) translateX(15px); }
+                    90% { opacity: 0.5; }
+                    100% { transform: translateY(-110vh) translateX(-10px); opacity: 0; }
+                }
+                @keyframes rise-bubble-1 {
+                    0% { transform: translateY(0) translateX(0); opacity: 0; }
+                    15% { opacity: 0.4; }
+                    50% { transform: translateY(-50vh) translateX(-20px); }
+                    85% { opacity: 0.4; }
+                    100% { transform: translateY(-110vh) translateX(15px); opacity: 0; }
+                }
+                @keyframes rise-bubble-2 {
+                    0% { transform: translateY(0) translateX(0); opacity: 0; }
+                    10% { opacity: 0.6; }
+                    50% { transform: translateY(-50vh) translateX(10px); }
+                    90% { opacity: 0.6; }
+                    100% { transform: translateY(-110vh) translateX(-15px); opacity: 0; }
                 }
             `;
             document.head.appendChild(style);
