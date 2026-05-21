@@ -256,6 +256,12 @@ const Auth = {
       window.location.replace(loginUrl);
     }
   },
+  getPhone: function() {
+    return localStorage.getItem('v44_user_phone') || '';
+  },
+  getName: function() {
+    return localStorage.getItem('v44_user_name') || '';
+  },
   logout: function() {
     showAppConfirm("🌌 지니 월드에서 퇴장하시겠습니까?", function() {
       localStorage.removeItem('v44_user_name');
