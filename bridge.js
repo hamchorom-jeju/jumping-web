@@ -1104,7 +1104,17 @@ const Mailbox = {
       const card = document.createElement('div');
       card.className = `mailbox-card ${noti.isRead ? 'read' : 'unread'} type-${noti.type}`;
       
-      const emojiMap = { welcome: "🎉", debuff: "⚠️", quest: "⚡", admin: "✉️" };
+      const emojiMap = { 
+        welcome: "🎉", 
+        "웰컴": "🎉",
+        debuff: "⚠️", 
+        "디버프": "⚠️",
+        quest: "⚡", 
+        "퀘스트": "⚡",
+        "방어": "🛡️",
+        "안부": "💌",
+        admin: "✉️" 
+      };
       const emoji = emojiMap[noti.type] || "✉️";
       
       const timeStr = this.timeAgo(noti.createdAt);

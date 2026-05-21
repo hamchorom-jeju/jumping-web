@@ -721,15 +721,15 @@ function getUserDashboardData(payload) {
         sendPersonalNotification(
           phone,
           "debuff",
-          "🚨 연속 미출석 에너지 방전 디버프 발생!",
+          "연속 미출석 에너지 방전 디버프 발생!",
           "회원님! 클럽 출석을 하지 않으신 지 연속 " + inactiveDays + "일이 경과하여 웰니스 에너지가 방전되었습니다. 누적 점수에서 -" + inactivityPenalty + " EXP가 차감되었습니다. 💡 오늘 클럽에 출석하시면 즉시 100% 원상 복원됩니다!"
         );
       } else {
         sendPersonalNotification(
           phone,
           "welcome",
-          "🎉 오늘 첫 로그인! 웰니스 보너스 지급 완료",
-          "모험가님, 오늘 하루도 힘차게 시작해봐요! 로그인 보너스로 +5 EXP(회복력)가 즉시 지급되었습니다. ⚔️"
+          "오늘 첫 로그인! 웰니스 보너스 지급 완료",
+          "회원님, 오늘 하루도 힘차게 시작해봐요! 로그인 보너스로 +5 EXP(회복력)가 즉시 지급되었습니다. ⚔️"
         );
       }
     }
@@ -5329,18 +5329,18 @@ function checkLongTermAbsentees() {
         var notiContent = "";
         
         if (absentDays >= 7 && absentDays <= 13) {
-          notiTitle = "🏃‍♀️ 모험가님, 가벼운 시작으로 에너지를 찾아보세요! 🏃‍♀️";
+          notiTitle = "회원님, 가벼운 시작으로 에너지를 찾아보세요!";
           notiContent = cleanName + "회원님, 점핑클럽입니다! 😊 클럽에서 뵙지 못한 지 벌써 일주일이 지났네요! 😢 많이 바쁘시더라도 가벼운 점핑 운동이나 따뜻한 테라피로 다시 건강 리듬을 회복해보시는 건 어떨까요?\n\n모바일 앱에 매일 로그인하셔서 소중한 일상 건강 기록을 남겨보시는 것도 큰 도움이 됩니다. 오늘 꼭 앱 접속이나 클럽 방문으로 건강 충전을 위한 첫 걸음을 내딛어 보세요! 화이팅! ❤️" + expWarn;
           
           msg = cleanName + "회원님, 노형 점핑클럽입니다. 😊 클럽에서 뵙지 못한 지 벌써 일주일이 지났네요! 😢 많이 바쁘시더라도 가벼운 점핑 운동이나 테라피로 다시 건강 리듬을 회복해보시는 건 어떨까요? 모바일 앱에 매일 로그인하셔서 일상 건강 기록을 남겨보시는 것도 큰 도움이 됩니다. 오늘 꼭 앱 접속이나 클럽 방문으로 첫 걸음을 내딛어 보세요! 🏃‍♀️" + expWarn;
         } else if (absentDays >= 14 && absentDays <= 29) {
-          notiTitle = "💆‍♀️ 회원님의 신나는 에너지가 너무나도 그립습니다. 💆‍♀️";
+          notiTitle = "회원님의 신나는 에너지가 너무나도 그립습니다.";
           notiContent = cleanName + "회원님, 점핑클럽입니다! 😊 회원님의 활기차고 건강한 에너지가 클럽에서 너무나도 그립습니다. 😢\n\n몸과 마음의 피로를 사르르 녹여줄 편안한 원적외선 테라피라도 받으러 클럽에 들러주세요. 운동하기 부쩍 망설여지신다면 따뜻한 차 한 잔 나누러 오셔도 대환영입니다! 이번 주에는 꼭 클럽에서 소중한 회원님의 얼굴을 뵈었으면 좋겠습니다. ❤️" + expWarn;
           
           msg = cleanName + "회원님, 노형 점핑클럽입니다. 😊 회원님의 활기차고 건강한 에너지가 클럽에서 너무나도 그립습니다. 😢 몸과 마음의 피로를 사르르 녹여줄 편안한 원적외선 테라피라도 받으러 가볍게 들러주세요. 운동이 망설여지신다면 따뜻한 차 한 잔 나누러 오셔도 대환영입니다! 이번 주에는 꼭 얼굴 뵀으면 좋겠어요. ❤️" + expWarn;
         } else {
           // 30일 이상 또는 기록 없음
-          notiTitle = "💌 모험가님, 건강한 습관을 끝까지 지키시길 응원합니다! 💌";
+          notiTitle = "회원님, 건강한 습관을 끝까지 지키시길 응원합니다!";
           notiContent = cleanName + "회원님, 점핑클럽입니다! 😊 오랫동안 뵙지 못해 회원님의 건강과 일상이 늘 궁금하고 걱정됩니다. 😢\n\n비록 바쁜 일상 때문에 클럽 출석은 잠시 뜸하시더라도, 웰니스 다이어리에 하루 건강을 차근차근 기록하면서 건강한 마인드와 습관을 놓지 않으시길 진심으로 응원합니다. 언제든 저희 클럽 문은 활짝 열려있으니 다시 웃는 얼굴로 뛸 날을 손꼽아 기다리겠습니다. 늘 건강하고 행복하세요! ❤️" + expWarn;
           
           msg = cleanName + "회원님, 노형 점핑클럽입니다. 😊 오랫동안 뵙지 못해 회원님의 건강과 일상이 늘 궁금하고 걱정됩니다. 😢 비록 바쁜 시기라 클럽 출석은 어렵더라도, 언제 어디서나 건강만큼은 웰니스 다이어리에 꾸준히 기록하면서 건강한 습관을 유지해 나가시길 진심으로 응원합니다. 다시 함께 신나게 뛸 날을 기다리겠습니다. 늘 건강하세요! ❤️" + expWarn;
@@ -6572,7 +6572,7 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
                   }
                 }
               }
-              if (!mName) mName = "모험가";
+              if (!mName) mName = "회원";
               mName = String(mName).replace(/\d{4}$/, ""); // 이름 뒤 숫자 제거
               
               sendPersonalNotification(
@@ -6690,7 +6690,7 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
         
         // 🛡️ 3일차 성공 쪽지 발송 (중복 방지)
         try {
-          var cleanPhoneName = mName || "모험가";
+          var cleanPhoneName = mName || "회원";
           cleanPhoneName = String(cleanPhoneName).replace(/\d{4}$/, ""); // 이름 뒤 숫자 제거
           if (!hasSentNotificationToday(cleanPhone, "방어", "방패 완성")) {
             sendPersonalNotification(
@@ -6725,7 +6725,7 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
               }
             }
           }
-          if (!mName) mName = "모험가";
+          if (!mName) mName = "회원";
           mName = String(mName).replace(/\d{4}$/, ""); // 이름 뒤 숫자 제거
 
           if (attendCount === 1) {
@@ -6801,7 +6801,7 @@ function triggerGlycogenQuest(phone, name) {
     // 🛡️ 글리코겐 방패 최초 발동 쪽지 즉시 발송
     try {
       var mName = name;
-      if (!mName) mName = "모험가";
+      if (!mName) mName = "회원";
       mName = String(mName).replace(/\d{4}$/, ""); // 이름 뒤 숫자 제거
 
       sendPersonalNotification(
