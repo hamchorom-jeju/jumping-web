@@ -232,8 +232,8 @@ const Village = {
                                 if (res.quests && res.quests.todayQuest) {
                                     const isCompleted = this.user.doneList && this.user.doneList.some(item => item.indexOf(res.quests.todayQuest.title) > -1);
                                     const titleText = isCompleted 
-                                        ? `🎉 [돌발 완료] 오늘의 돌발 퀘스트를 완수하셨습니다!` 
-                                        : `⚡ [오늘의 돌발] ${res.quests.todayQuest.title} (+15 EXP)`;
+                                        ? `🎉 완수! ${res.quests.todayQuest.title}` 
+                                        : `${res.quests.todayQuest.title} (+15 EXP)`;
                                     
                                     // 돌발 퀘스트를 배열 맨 뒤에 주입 [v58.6]
                                     notices.push({
@@ -252,7 +252,7 @@ const Village = {
                                     const isSudden = !!item.isSuddenQuest;
                                     
                                     const badgeHtml = isSudden
-                                        ? `<span class="v-notice-badge sudden">⚡ 돌발퀘스트</span>`
+                                        ? `<span class="v-notice-badge sudden">⚡ 돌발<br>퀘스트</span>`
                                         : `<span class="v-notice-badge">📢 마을공지</span>`;
                                     
                                     const actionHtml = isSudden
@@ -277,7 +277,7 @@ const Village = {
                                         const isSudden = !!item.isSuddenQuest;
                                         
                                         const badgeHtml = isSudden
-                                            ? `<span class="v-notice-badge sudden">⚡ 돌발퀘스트</span>`
+                                            ? `<span class="v-notice-badge sudden">⚡ 돌발<br>퀘스트</span>`
                                             : `<span class="v-notice-badge">📢 마을공지</span>`;
                                         
                                         const actionHtml = isSudden
@@ -316,7 +316,7 @@ const Village = {
                                             
                                             setTimeout(() => {
                                                 const badgeHtml = nextSudden
-                                                    ? `<span class="v-notice-badge sudden">⚡ 돌발퀘스트</span>`
+                                                    ? `<span class="v-notice-badge sudden">⚡ 돌발<br>퀘스트</span>`
                                                     : `<span class="v-notice-badge">📢 마을공지</span>`;
                                                 
                                                 const actionHtml = nextSudden
