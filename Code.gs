@@ -6514,24 +6514,41 @@ function triggerGlycogenQuest(phone, name) {
  */
 
 /**
+ * 0. 마을_공지 시트의 헤더 무결성 보장 및 강제 초기화 헬퍼 함수
+ */
+function checkAndInitNoticeSheet(ss) {
+  var sheet = ss.getSheetByName("마을_공지");
+  if (!sheet) {
+    sheet = ss.insertSheet("마을_공지");
+  }
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(["작성일", "카테고리", "제목", "내용", "활성화"]);
+    var todayStr = Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd");
+    sheet.appendRow([
+      todayStr,
+      "선포",
+      "노형 빌리지 대광장 리뉴얼 선포!",
+      "노형 빌리지의 광장과 웰니스 센터가 새롭게 태어났습니다. 이제 마을 공지 배너를 누르면 이 황금 두루마리를 통해 언제든 마을의 중대사 역사와 공지 기록을 확인할 수 있습니다. ✨",
+      "TRUE"
+    ]);
+  } else {
+    // 1행 첫 번째 셀이 헤더가 아닌 일반 데이터라면 1행에 헤더를 강제 삽입하고 기존 데이터는 아래로 밀어 복원!
+    var firstCellVal = String(sheet.getRange(1, 1).getValue()).trim();
+    if (firstCellVal !== "작성일" && firstCellVal !== "선포일") {
+      sheet.insertRowBefore(1);
+      sheet.getRange(1, 1, 1, 5).setValues([["작성일", "카테고리", "제목", "내용", "활성화"]]);
+    }
+  }
+  return sheet;
+}
+
+/**
  * 1. 실시간 전령의 기둥(공지) 내용 조회 (마을_공지 시트 단일 소스 최적화)
  */
 function getPillarNotice() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("마을_공지");
-    if (!sheet) {
-      sheet = ss.insertSheet("마을_공지");
-      sheet.appendRow(["작성일", "카테고리", "제목", "내용", "활성화"]);
-      var todayStr = Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd");
-      sheet.appendRow([
-        todayStr,
-        "선포",
-        "노형 빌리지 대광장 리뉴얼 선포!",
-        "노형 빌리지의 광장과 웰니스 센터가 새롭게 태어났습니다. 이제 마을 공지 배너를 누르면 이 황금 두루마리를 통해 언제든 마을의 중대사 역사와 공지 기록을 확인할 수 있습니다. ✨",
-        "TRUE"
-      ]);
-    }
+    var sheet = checkAndInitNoticeSheet(ss);
     
     var data = sheet.getDataRange().getValues();
     if (data.length < 2) return { title: "오늘도 건강한 하루 되세요! 📢", content: "" };
@@ -6558,11 +6575,7 @@ function getPillarNotice() {
 function updatePillarNotice(payload) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("마을_공지");
-    if (!sheet) {
-      sheet = ss.insertSheet("마을_공지");
-      sheet.appendRow(["작성일", "카테고리", "제목", "내용", "활성화"]);
-    }
+    var sheet = checkAndInitNoticeSheet(ss);
     
     var todayStr = Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd");
     var category = payload.category || "공지";
@@ -7625,19 +7638,8 @@ function deleteScheduledQuest(rowIdx) {
 function getVillageNotices() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("마을_공지");
-    if (!sheet) {
-      sheet = ss.insertSheet("마을_공지");
-      sheet.appendRow(["작성일", "카테고리", "제목", "내용", "활성화"]);
-      var todayStr = Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd");
-      sheet.appendRow([
-        todayStr,
-        "선포",
-        "노형 빌리지 대광장 리뉴얼 선포!",
-        "노형 빌리지의 광장과 웰니스 센터가 새롭게 태어났습니다. 이제 마을 공지 배너를 누르면 이 황금 두루마리를 통해 언제든 마을의 중대사 역사와 공지 기록을 확인할 수 있습니다. ✨",
-        "TRUE"
-      ]);
-    }
+    var sheet = checkAndInitNoticeSheet(ss);
+    
     if (sheet.getLastRow() < 2) return [];
     var data = sheet.getDataRange().getDisplayValues();
     var list = [];
