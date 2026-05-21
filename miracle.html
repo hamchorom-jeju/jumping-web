@@ -1620,38 +1620,59 @@
             return;
           }
 
-          let html = '';
+          let html = `
+            <div style="overflow-x:auto; border-radius:18px; border:1.5px solid #edf2f7; background:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+              <table style="width:100%; border-collapse:collapse; font-size:0.75rem; text-align:center; min-width:320px;">
+                <thead>
+                  <tr style="background:#f7fafc; border-bottom:1.5px solid #e2e8f0; color:#4a5568; font-weight:900;">
+                    <th style="padding:10px 4px; font-size:0.7rem;">측정일</th>
+                    <th style="padding:10px 4px; font-size:0.7rem;">체중</th>
+                    <th style="padding:10px 4px; font-size:0.7rem;">골격근</th>
+                    <th style="padding:10px 4px; font-size:0.7rem;">체지방</th>
+                    <th style="padding:10px 4px; font-size:0.7rem;">변화</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+
           res.records.forEach(function(r, idx) {
             const isFirst = (idx === res.records.length - 1); // 가장 처음 등록한 최초 기준점 표시
-            const badgeStyle = isFirst ? 'background:#e0f2fe; color:#0369a1;' : 'background:#eef2ff; color:#4f46e5;';
-            const badgeText = isFirst ? '최초 인바디' : '성장 기록';
+            const rowBg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+            
+            // "2026-05-20" -> "26-05-20" 연도 2자리로 초슬림 정렬!
+            let dateStr = r.date;
+            if (dateStr && dateStr.length >= 10) {
+              dateStr = dateStr.substring(2, 10);
+            }
+            
+            // 점수 색상 디자인 강조
+            let scoreBadge = '';
+            if (Number(r.score) > 0) {
+              scoreBadge = `<span style="background:#e0f2fe; color:#0369a1; border-radius:4px; padding:2px 5px; font-weight:900; font-size:0.68rem;">+${r.score}</span>`;
+            } else if (isFirst) {
+              scoreBadge = `<span style="background:#dbffe6; color:#15803d; border-radius:4px; padding:2px 5px; font-weight:900; font-size:0.65rem;">🌱 최초</span>`;
+            } else {
+              scoreBadge = `<span style="color:#a0aec0; font-weight:800;">-</span>`;
+            }
 
             html += `
-              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:18px; padding:18px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.02); transition:transform 0.2s;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                  <span style="color:#718096; font-size:0.8rem; font-weight:800;">📅 ${r.date}</span>
-                  <span style="font-size:0.7rem; font-weight:800; padding:3px 8px; border-radius:20px; ${badgeStyle}">${badgeText}</span>
-                </div>
-                
-                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; text-align:center; margin-bottom:10px;">
-                  <div style="background:#fff; padding:8px 5px; border-radius:10px; border:1px solid #edf2f7; font-size:0.8rem; color:#4a5568; font-weight:700;">
-                    체중<br><strong style="font-size:0.95rem; color:#1a202c; font-weight:900;">${r.weight} kg</strong>
-                  </div>
-                  <div style="background:#fff; padding:8px 5px; border-radius:10px; border:1px solid #edf2f7; font-size:0.8rem; color:#4a5568; font-weight:700;">
-                    골격근량<br><strong style="font-size:0.95rem; color:#1a202c; font-weight:900;">${r.muscle} kg</strong>
-                  </div>
-                  <div style="background:#fff; padding:8px 5px; border-radius:10px; border:1px solid #edf2f7; font-size:0.8rem; color:#4a5568; font-weight:700;">
-                    체지방률<br><strong style="font-size:0.95rem; color:#1a202c; font-weight:900;">${r.fat} %</strong>
-                  </div>
-                </div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; font-weight:800; color:#2d3748; border-top:1px dashed #edf2f7; padding-top:8px; margin-top:8px;">
-                  <span style="color:#2b6cb0;">🏆 누적 달성: <strong style="color:#4f46e5; font-size:0.95rem;">+${r.score} 점</strong></span>
-                  <span style="color:#718096; font-size:0.75rem; font-weight:700; max-width:50%; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${r.memo || '챌린지'}</span>
-                </div>
-              </div>
+              <tr style="background:${rowBg}; border-bottom:1px solid #edf2f7; font-weight:800; color:#4a5568;">
+                <td style="padding:11px 4px; font-weight:900; color:#1a202c; font-size:0.72rem;">
+                  ${dateStr}
+                </td>
+                <td style="padding:11px 4px; font-size:0.75rem; color:#2d3748;">${r.weight}<span style="font-size:0.6rem; color:#a0aec0; font-weight:700;">kg</span></td>
+                <td style="padding:11px 4px; font-size:0.75rem; color:#3182ce; font-weight:900;">${r.muscle}<span style="font-size:0.6rem; color:#90cdf4; font-weight:800;">kg</span></td>
+                <td style="padding:11px 4px; font-size:0.75rem; color:#e53e3e; font-weight:900;">${r.fat}<span style="font-size:0.6rem; color:#feb2b2; font-weight:800;">%</span></td>
+                <td style="padding:11px 4px;">${scoreBadge}</td>
+              </tr>
             `;
           });
+
+          html += `
+                </tbody>
+              </table>
+            </div>
+          `;
           listContainer.innerHTML = html;
         })
         .withFailureHandler(function(err) {
