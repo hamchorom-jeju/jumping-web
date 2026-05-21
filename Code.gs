@@ -143,7 +143,39 @@ function submitArchive(payload) {
       return { success: false, error: "회원 정보가 누락되었습니다. 다시 로그인해 주세요." };
     }
 
+    // [v44.188] 전화번호 정규화 및 중복 인증 방지 필터링
+    var formattedPhone = formatPhoneNumber(payload.phone);
     var now = new Date();
+    var dateStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    var timeStr = Utilities.formatDate(now, "GMT+9", "HH:mm:ss");
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow >= 2) {
+      var arData = sheet.getRange(Math.max(2, lastRow - 100), 1, Math.min(lastRow - 1, 101), 9).getValues();
+      var isDuplicate = false;
+      var cleanPhone = formattedPhone.replace(/[^0-9]/g, "");
+      for (var i = arData.length - 1; i >= 0; i--) {
+        var rowDate = (arData[i][0] instanceof Date) ? Utilities.formatDate(arData[i][0], "GMT+9", "yyyy-MM-dd") : String(arData[i][0]).split(" ")[0];
+        if (rowDate === dateStr) {
+          var rowPhone = String(arData[i][3]).replace(/[^0-9]/g, "");
+          var rowItem = String(arData[i][5]);
+          if (rowPhone === cleanPhone && rowItem === payload.item) {
+            isDuplicate = true;
+            break;
+          }
+        }
+      }
+      if (isDuplicate) {
+        Logger.log("⚠️ [중복인증 감지] " + payload.name + " (" + formattedPhone + ") - " + payload.item + " 이미 오늘 인증되었습니다.");
+        return { 
+          success: true, 
+          message: "이미 오늘 인증이 완료되었습니다.",
+          debugInfo: "DUP_PREVENTED",
+          serverVersion: "v44.203_optimized"
+        };
+      }
+    }
+
     var photoId = "";
     var photoError = "";
 
@@ -154,13 +186,26 @@ function submitArchive(payload) {
       Logger.log("[v44.196] 경보! 사진 데이터가 누락되어 도착함.");
     }
     
-    // [v44.199] 사진 저장 로직 (더 유연하게 개선)
+    // [v44.199] 사진 저장 로직 (속도 향상을 위한 폴더 ID 캐싱 적용)
     if (payload.image && String(payload.image).length > 100) {
       try {
         var folderName = "GenieWorld_Archive";
-        var folders = DriveApp.getFoldersByName(folderName);
-        var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
-        folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        var scriptProps = PropertiesService.getScriptProperties();
+        var cachedFolderId = scriptProps.getProperty("archive_folder_id");
+        var folder;
+        if (cachedFolderId) {
+          try {
+            folder = DriveApp.getFolderById(cachedFolderId);
+          } catch (e) {
+            Logger.log("캐싱된 폴더 조회 실패, 새로 조회합니다: " + e.toString());
+          }
+        }
+        if (!folder) {
+          var folders = DriveApp.getFoldersByName(folderName);
+          folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+          folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+          scriptProps.setProperty("archive_folder_id", folder.getId());
+        }
         
         var base64Data = payload.image;
         if (base64Data.indexOf(",") > -1) {
@@ -180,13 +225,6 @@ function submitArchive(payload) {
       }
     }
     
-    // [v44.188] 전화번호 정규화 적용
-    var formattedPhone = formatPhoneNumber(payload.phone);
-
-    // [v44.204] 시간 저주 해제: 객체가 아닌 문자열로 직접 기록
-    var dateStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
-    var timeStr = Utilities.formatDate(now, "GMT+9", "HH:mm:ss");
-
     sheet.appendRow([
       dateStr, 
       timeStr,
@@ -4648,6 +4686,44 @@ function autoCloseDailyLog() {
     var dateStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
+    // 0. [v60.0] 휴무일 및 공휴일 감지 (자동 마감 스킵 정책)
+    var dayOfWeek = now.getDay(); // 0: 일요일, 6: 토요일
+    var isOff = (dayOfWeek === 0); // 일요일 기본 휴무
+    
+    // 법정 공휴일 체크
+    if (!isOff && isKoreanPublicHoliday(now)) {
+      isOff = true;
+    }
+    
+    // '벙개테라피 및 휴일 설정' 시트 체크
+    var isFlash = false;
+    try {
+      var flashSheet = ss.getSheetByName('벙개테라피 및 휴일 설정');
+      if (flashSheet) {
+        var flashData = flashSheet.getDataRange().getDisplayValues().slice(1);
+        for (var f = 0; f < flashData.length; f++) {
+          var fDate = String(flashData[f][0]);
+          if (fDate === dateStr) {
+            if (String(flashData[f][1]) === "휴무") {
+              isOff = true;
+            }
+            if (String(flashData[f][2]) === "벙개") {
+              isFlash = true;
+              isOff = false; // 벙개면 휴무라도 영업함
+            }
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      Logger.log("휴일 설정 시트 조회 오류: " + e.toString());
+    }
+    
+    if (isOff && !isFlash) {
+      Logger.log(dateStr + "은 휴무일이므로 자동 마감 일지 작성을 스킵합니다.");
+      return { success: true, message: "휴무일 마감 스킵 완료" };
+    }
+    
     // 1. [자동 퇴실 처리] 미처 퇴실 처리가 안 된 회원들 강제 귀가 처리
     try {
       var resSheet = ss.getSheetByName("예약DB");
@@ -4672,7 +4748,7 @@ function autoCloseDailyLog() {
       }
     } catch (e) { Logger.log("자동 퇴실 오류: " + e.toString()); }
     
-    // 1. 최종 통계 가져오기
+    // 2. 최종 통계 가져오기
     var statsRes = getTodayWorkLogStats(dateStr);
     if (statsRes.error) {
       Logger.log("자동 마감 통계 조회 실패: " + statsRes.error);
@@ -4680,7 +4756,7 @@ function autoCloseDailyLog() {
     }
     var stats = statsRes.stats;
     
-    // 2. 기존 일지가 있는지 확인
+    // 3. 기존 일지가 있는지 확인
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var workLogSheet = ss.getSheetByName("업무일지");
     if (!workLogSheet) return;
@@ -4699,7 +4775,7 @@ function autoCloseDailyLog() {
       }
     }
     
-    // 3. 전송용 데이터 조립 (기존 내용 보존)
+    // 4. 전송용 데이터 조립 (기존 내용 보존하면서 실시간 강제 통계 업데이트 구현)
     var data = {
       date: dateStr,
       author: existingLog ? String(existingLog[1] || "") : "시스템 자동마감",
@@ -4710,7 +4786,7 @@ function autoCloseDailyLog() {
       issues: existingLog ? String(existingLog[14] || "") : ""
     };
     
-    // 4. 저장 함수 호출
+    // 5. 저장 함수 호출 (언제나 최신 통계로 덮어쓰기 완료)
     var res = submitWorkLog(data);
     Logger.log(dateStr + " 자동 마감 결과: " + res.message);
     return res;
@@ -6366,11 +6442,13 @@ function recordActivityLog(payload) {
     // 1. 행 찾기 및 중복 체크
     var data = sheet.getDataRange().getValues();
     var targetRowIdx = -1;
+    var targetRowIdxInArray = -1;
     var completedDetails = "";
     for (var i = 1; i < data.length; i++) {
       var rowDate = (data[i][0] instanceof Date) ? Utilities.formatDate(data[i][0], "GMT+9", "yyyy-MM-dd") : String(data[i][0]);
       if (rowDate === todayStr && String(data[i][1]).replace(/[^0-9]/g, "") === phone) {
         targetRowIdx = i + 1;
+        targetRowIdxInArray = i;
         completedDetails = String(data[i][8] || ""); // I열(9번째)
         break;
       }
@@ -6381,55 +6459,70 @@ function recordActivityLog(payload) {
       return { success: true, message: "이미 기록됨" };
     }
 
-    // 2. 기록 (열 매핑)
-    var colIdx = 6; // 일반수행_합산 기본
-    if (type === "로그인") {
-      colIdx = 7; // 일반방어 (회복력)
-      if (targetRowIdx > -1) {
-        var vD = Number(sheet.getRange(targetRowIdx, 7).getValue() || 0);
-        sheet.getRange(targetRowIdx, 7).setValue(vD + 5);
-      } else {
-        var loginDetails = "[회복] 로그인 체크(5)";
-        sheet.appendRow([todayStr, "'" + phone, payload.name, 0, 0, 0, 5, 0, loginDetails, 5]);
-        clearUserDashboardCache(phone);
-        return { success: true };
-      }
-    } else {
-      // (기존 분기 유지)
-      if (type === "출석") {
-        if (payload.item === "센터방문") colIdx = 4;
-        else if (payload.item === "운동강도") colIdx = 5;
-      } else if (statTag === "[회복]") {
-        colIdx = 7;
-      } else if (statTag === "[실천]") {
-        colIdx = 6;
-      } else if (statTag === "[체력]") {
-        colIdx = 8;
-      }
-
-      if (targetRowIdx > -1) {
-        var cur = Number(sheet.getRange(targetRowIdx, colIdx).getValue() || 0);
-        sheet.getRange(targetRowIdx, colIdx).setValue(cur + score);
-      } else {
-        var newRow = [todayStr, "'" + phone, payload.name, 0, 0, 0, 0, 0, detailInfo, score];
-        newRow[colIdx-1] = score; 
-        sheet.appendRow(newRow);
-        targetRowIdx = sheet.getLastRow();
-      }
-    }
-
-    // 3. 공통 업데이트 (총점 J열)
+    // 2. 기록 (메모리 최적화 일괄 적용)
     if (targetRowIdx > -1) {
-      var currentDetails = sheet.getRange(targetRowIdx, 9).getValue();
-      if (currentDetails.indexOf(detailInfo) === -1) {
-        var newList = currentDetails ? currentDetails + ", " + detailInfo : detailInfo;
-        sheet.getRange(targetRowIdx, 9).setValue(newList);
+      // 기존 행 업데이트 (메모리 버퍼에서 직접 연산 후 단 1회 setValues)
+      var rowValues = data[targetRowIdxInArray];
+      
+      // 혹시라도 array 길이가 부족한 경우 방지
+      while (rowValues.length < 10) {
+        rowValues.push(0);
       }
       
-      var rowVals = sheet.getRange(targetRowIdx, 4, 1, 5).getValues()[0];
-      var total = rowVals.reduce((a, b) => Number(a || 0) + Number(b || 0), 0);
-      sheet.getRange(targetRowIdx, 10).setValue(total);
+      if (type === "로그인") {
+        rowValues[6] = Number(rowValues[6] || 0) + 5; // 일반회복_합산
+      } else {
+        var colIdxInArray = 5; // 일반실천_합산 기본 (0-indexed)
+        if (type === "출석") {
+          if (payload.item === "센터방문") colIdxInArray = 3;
+          else if (payload.item === "운동강도") colIdxInArray = 4;
+        } else if (statTag === "[회복]") {
+          colIdxInArray = 6;
+        } else if (statTag === "[실천]") {
+          colIdxInArray = 5;
+        } else if (statTag === "[체력]") {
+          colIdxInArray = 7;
+        }
+        rowValues[colIdxInArray] = Number(rowValues[colIdxInArray] || 0) + score;
+      }
+      
+      // 완료내역 및 웰니스총점 업데이트
+      var currentDetails = String(rowValues[8] || "");
+      if (currentDetails.indexOf(detailInfo) === -1) {
+        rowValues[8] = currentDetails ? currentDetails + ", " + detailInfo : detailInfo;
+      }
+      
+      // D(3) ~ H(7) 열 합산
+      rowValues[9] = Number(rowValues[3] || 0) + Number(rowValues[4] || 0) + Number(rowValues[5] || 0) + Number(rowValues[6] || 0) + Number(rowValues[7] || 0);
+      
+      // 단 1회의 Sheets 쓰기 호출 (기존 6회에서 1회로 단축!)
+      sheet.getRange(targetRowIdx, 1, 1, 10).setValues([rowValues]);
+    } else {
+      // 새 행 추가 (기존 1회 call 유지)
+      var newRow = [todayStr, "'" + phone, payload.name, 0, 0, 0, 0, 0, "", 0];
+      if (type === "로그인") {
+        newRow[6] = 5;
+        newRow[8] = "[회복] 로그인 체크(5)";
+        newRow[9] = 5;
+      } else {
+        var colIdxInArray = 5;
+        if (type === "출석") {
+          if (payload.item === "센터방문") colIdxInArray = 3;
+          else if (payload.item === "운동강도") colIdxInArray = 4;
+        } else if (statTag === "[회복]") {
+          colIdxInArray = 6;
+        } else if (statTag === "[실천]") {
+          colIdxInArray = 5;
+        } else if (statTag === "[체력]") {
+          colIdxInArray = 7;
+        }
+        newRow[colIdxInArray] = score;
+        newRow[8] = detailInfo;
+        newRow[9] = score;
+      }
+      sheet.appendRow(newRow);
     }
+    
     clearUserDashboardCache(phone);
     return { success: true };
   } catch (e) { return { success: false, error: e.toString() }; }
@@ -7086,10 +7179,10 @@ function checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName) {
     if (!sheet) return;
     
     var now = new Date();
-    // [v46.43] 주간: 매주 목요일 00:00:00 기점 (수요일 자정 마감)
+    // [v46.43] 주간: 매주 월요일 00:00:00 기점 (일요일 자정 마감)
     var day = now.getDay(); // 0(일)~6(토)
-    var diffToThu = (day + 3) % 7; 
-    var startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToThu);
+    var diffToMon = (day === 0) ? 6 : (day - 1); 
+    var startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMon);
     startOfWeek.setHours(0, 0, 0, 0);
     
     var data = sheet.getDataRange().getValues();
@@ -7135,7 +7228,7 @@ function checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName) {
         statType: "health"
       });
       Logger.log("🎉 [" + memberName + "] 주간 3회 출석 달성! 체력 보너스 +100 EXP 하사 완료!");
-      sendWeeklyBonusSms(phoneStr, memberName, 3);
+      // sendWeeklyBonusSms(phoneStr, memberName, 3);
       sendPersonalNotification(
         phoneStr,
         "welcome",
@@ -7155,7 +7248,7 @@ function checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName) {
         statType: "health"
       });
       Logger.log("🎉 [" + memberName + "] 주간 4회 출석 달성! 체력 보너스 +100 EXP 추가 하사 완료!");
-      sendWeeklyBonusSms(phoneStr, memberName, 4);
+      // sendWeeklyBonusSms(phoneStr, memberName, 4);
       sendPersonalNotification(
         phoneStr,
         "welcome",
@@ -7175,7 +7268,7 @@ function checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName) {
         statType: "health"
       });
       Logger.log("🎉 [" + memberName + "] 주간 5회 출석 달성! 체력 보너스 +100 EXP 추가 하사 완료!");
-      sendWeeklyBonusSms(phoneStr, memberName, 5);
+      // sendWeeklyBonusSms(phoneStr, memberName, 5);
       sendPersonalNotification(
         phoneStr,
         "welcome",
@@ -7195,7 +7288,7 @@ function checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName) {
         statType: "health"
       });
       Logger.log("🎉 [" + memberName + "] 주간 6회 출석 달성! 체력 보너스 +100 EXP 추가 하사 완료!");
-      sendWeeklyBonusSms(phoneStr, memberName, 6);
+      // sendWeeklyBonusSms(phoneStr, memberName, 6);
       sendPersonalNotification(
         phoneStr,
         "welcome",
@@ -8505,6 +8598,40 @@ function getFriendlyName(fullName) {
     }
   }
   return name;
+}
+
+/**
+ * [v60.0] 대한민국 공식 법정공휴일 판독기
+ * Google Calendar API 연동 및 고정식 공휴일 하이브리드 자동 판정
+ */
+function isKoreanPublicHoliday(date) {
+  try {
+    var cal = CalendarApp.getCalendarById("ko.south_korea#holiday@group.v.calendar.google.com");
+    if (cal) {
+      var events = cal.getEventsForDay(date);
+      if (events.length > 0) {
+        return true;
+      }
+    }
+  } catch (e) {
+    Logger.log("CalendarApp 조회 실패, 로컬 룰로 검사합니다: " + e.toString());
+  }
+  
+  // 로컬 Fallback: 고정 법정공휴일 패턴 매칭 (신정, 삼일절, 어린이날, 현충일, 광복절, 개천절, 한글날, 성탄절)
+  var mm = date.getMonth() + 1;
+  var dd = date.getDate();
+  var md = mm + "-" + dd;
+  var fixedHolidays = [
+    "1-1",   // 신정
+    "3-1",   // 삼일절
+    "5-5",   // 어린이날
+    "6-6",   // 현충일
+    "8-15",  // 광복절
+    "10-3",  // 개천절
+    "10-9",  // 한글날
+    "12-25"  // 성탄절
+  ];
+  return (fixedHolidays.indexOf(md) > -1);
 }
 
 
