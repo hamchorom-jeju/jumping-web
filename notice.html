@@ -251,8 +251,8 @@
 </head>
 <body>
 
-  <!-- 🏺 로딩 오버레이 -->
-  <div id="v-loading" class="v-loading-overlay" style="display: flex;">
+  <!-- 🏺 로딩 오버레이 (조작 방해 방지를 위해 기본 display: none 처리 및 무력화) -->
+  <div id="v-loading" class="v-loading-overlay" style="display: none;">
       <div class="v-loading-spinner"></div>
       <div id="v-loading-msg" style="font-weight: 800; color: var(--scroll-gold); font-size: 0.95rem; text-shadow: 0 0 10px rgba(212,175,55,0.2);">마을 사료 보관소를 열고 있습니다...</div>
   </div>
@@ -266,7 +266,10 @@
 
     <!-- 📜 공지 목록 -->
     <div id="noticeList">
-      <!-- Dynamic list loaded from sheet -->
+      <div style="text-align:center; padding:60px 20px; color:var(--scroll-gold-dark); font-weight:800;">
+        <i class="fa-solid fa-hourglass-half fa-spin" style="font-size:1.8rem; margin-bottom:15px; display:block; color:var(--scroll-gold);"></i>
+        마을 사료 보관소에서 공지를 호출 중...
+      </div>
     </div>
 
     <!-- 🚪 초대형 하단 돌아가기 버튼 -->
@@ -328,17 +331,12 @@
     }
 
     function showLoading(msg) {
-        const overlay = document.getElementById('v-loading');
-        const msgEl = document.getElementById('v-loading-msg');
-        if (overlay && msgEl) {
-            msgEl.innerText = msg;
-            overlay.style.display = 'flex';
-        }
+        // [UX] 조작 및 시야를 방해하는 전체 화면 검은 장막(로딩 오버레이)을 영구히 무력화합니다.
+        console.log("⏳ [Silent Sync] " + msg);
     }
 
     function hideLoading() {
-        const overlay = document.getElementById('v-loading');
-        if (overlay) overlay.style.display = 'none';
+        // [UX] 전체 화면 검은 장막 무력화로 빈 동작 처리
     }
 
     window.onload = function() {
