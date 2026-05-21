@@ -340,9 +340,8 @@
       }
 
       container.innerHTML = list.map(n => {
-        const parts = n.content.split('|');
-        const title = parts[0] ? parts[0].trim() : '무제 공지';
-        const body = parts[1] ? parts[1].trim() : '';
+        const title = n.title ? n.title.trim() : '무제 공지';
+        const body = n.content ? n.content.trim() : '';
 
         // 카테고리별 데코레이션 이모지 설정
         let catEmoji = '📜';

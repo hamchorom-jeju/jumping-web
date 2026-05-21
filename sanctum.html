@@ -683,9 +683,11 @@
       const titleEl = document.getElementById('scroll-modal-title');
       const categorySelect = document.getElementById('scroll-category-select');
       const submitBtn = document.getElementById('scroll-submit-btn');
+      const titleInput = document.getElementById('scroll-title-input');
+      const contentInput = document.getElementById('scroll-content-input');
 
-      document.getElementById('scroll-title-input').value = '';
-      document.getElementById('scroll-content-input').value = '';
+      titleInput.value = '';
+      contentInput.value = '';
 
       if (type === 'tip') {
         titleEl.innerHTML = `<i class="fa-solid fa-scroll"></i> 황금 두루마리 집필실`;
@@ -696,15 +698,19 @@
           <option value="요요방패">요요방패 🛡️</option>
         `;
         categorySelect.style.display = 'block';
+        titleInput.placeholder = "비법서 제목을 입력하십시오...";
+        contentInput.placeholder = "비법의 상세한 내용을 아낌없이 집필해주십시오...";
         submitBtn.innerText = '보물고에 소장하기 🏺';
       } else {
-        titleEl.innerHTML = `<i class="fa-solid fa-bullhorn"></i> 마을 중대사 선포 (Ticker)`;
+        titleEl.innerHTML = `<i class="fa-solid fa-bullhorn"></i> 마을 중대사 선포`;
         categorySelect.innerHTML = `
           <option value="선포">🏰 중대사 선포</option>
           <option value="공지">📢 일반 마을 공지</option>
           <option value="이벤트">🎁 깜짝 마을 이벤트</option>
         `;
         categorySelect.style.display = 'block';
+        titleInput.placeholder = "전령의 기둥(배너)에 띄울 요약 제목을 입력하십시오...";
+        contentInput.placeholder = "상세한 공지 내용을 집필해주십시오. (제목과 상세 내용은 자동으로 구분되어 공지 기록장에 저장됩니다!)";
         submitBtn.innerText = '전령의 기둥에 새기기 📢';
       }
 
@@ -752,7 +758,8 @@
             alert("선포 실패: " + res.error);
           }
         }).updatePillarNotice({
-          content: title + " | " + content,
+          title: title,
+          content: content,
           category: category
         });
       }

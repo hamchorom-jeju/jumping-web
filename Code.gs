@@ -6522,29 +6522,33 @@ function getPillarNotice() {
     var sheet = ss.getSheetByName("마을_공지");
     if (!sheet) {
       sheet = ss.insertSheet("마을_공지");
-      sheet.appendRow(["선포일", "공지내용", "카테고리", "활성화"]);
+      sheet.appendRow(["작성일", "카테고리", "제목", "내용", "활성화"]);
       var todayStr = Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd");
       sheet.appendRow([
         todayStr,
-        "노형 빌리지 대광장 리뉴얼 선포! | 노형 빌리지의 광장과 웰니스 센터가 새롭게 태어났습니다. 이제 마을 공지 배너를 누르면 이 황금 두루마리를 통해 언제든 마을의 중대사 역사와 공지 기록을 확인할 수 있습니다. ✨",
         "선포",
+        "노형 빌리지 대광장 리뉴얼 선포!",
+        "노형 빌리지의 광장과 웰니스 센터가 새롭게 태어났습니다. 이제 마을 공지 배너를 누르면 이 황금 두루마리를 통해 언제든 마을의 중대사 역사와 공지 기록을 확인할 수 있습니다. ✨",
         "TRUE"
       ]);
     }
     
     var data = sheet.getDataRange().getValues();
-    if (data.length < 2) return { content: "📢 오늘도 건강한 하루 되세요!" };
+    if (data.length < 2) return { title: "오늘도 건강한 하루 되세요! 📢", content: "" };
     
     // 가장 마지막(최신) 활성화된 공지 가져오기
     for (var i = data.length - 1; i >= 1; i--) {
-      var activeVal = String(data[i][3]).toUpperCase();
+      var activeVal = String(data[i][4]).toUpperCase(); // E열 활성화 (index 4)
       if (activeVal === "TRUE" || activeVal === "ACTIVATED") {
-        return { content: data[i][1] };
+        return { 
+          title: data[i][2],   // C열 제목 (index 2)
+          content: data[i][3]  // D열 내용 (index 3)
+        };
       }
     }
-    return { content: "📢 오늘도 건강한 하루 되세요!" };
+    return { title: "오늘도 건강한 하루 되세요! 📢", content: "" };
   } catch (e) {
-    return { content: "📢 오늘도 건강한 하루 되세요!" };
+    return { title: "오늘도 건강한 하루 되세요! 📢", content: "" };
   }
 }
 
@@ -6557,14 +6561,15 @@ function updatePillarNotice(payload) {
     var sheet = ss.getSheetByName("마을_공지");
     if (!sheet) {
       sheet = ss.insertSheet("마을_공지");
-      sheet.appendRow(["선포일", "공지내용", "카테고리", "활성화"]);
+      sheet.appendRow(["작성일", "카테고리", "제목", "내용", "활성화"]);
     }
     
-    var content = payload.content || "";
     var todayStr = Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd");
     var category = payload.category || "공지";
+    var title = payload.title || "";
+    var content = payload.content || "";
     
-    sheet.appendRow([todayStr, content, category, "TRUE"]);
+    sheet.appendRow([todayStr, category, title, content, "TRUE"]);
     
     return { success: true };
   } catch (e) {
@@ -7623,12 +7628,13 @@ function getVillageNotices() {
     var sheet = ss.getSheetByName("마을_공지");
     if (!sheet) {
       sheet = ss.insertSheet("마을_공지");
-      sheet.appendRow(["선포일", "공지내용", "카테고리", "활성화"]);
+      sheet.appendRow(["작성일", "카테고리", "제목", "내용", "활성화"]);
       var todayStr = Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd");
       sheet.appendRow([
         todayStr,
-        "노형 빌리지 대광장 리뉴얼 선포! | 노형 빌리지의 광장과 웰니스 센터가 새롭게 태어났습니다. 이제 마을 공지 배너를 누르면 이 황금 두루마리를 통해 언제든 마을의 중대사 역사와 공지 기록을 확인할 수 있습니다. ✨",
         "선포",
+        "노형 빌리지 대광장 리뉴얼 선포!",
+        "노형 빌리지의 광장과 웰니스 센터가 새롭게 태어났습니다. 이제 마을 공지 배너를 누르면 이 황금 두루마리를 통해 언제든 마을의 중대사 역사와 공지 기록을 확인할 수 있습니다. ✨",
         "TRUE"
       ]);
     }
@@ -7637,10 +7643,11 @@ function getVillageNotices() {
     var list = [];
     for (var i = 1; i < data.length; i++) {
       list.push({
-        date: data[i][0],
-        content: data[i][1],
-        category: data[i][2] || "공지",
-        active: String(data[i][3]).toUpperCase() === "TRUE"
+        date: data[i][0],      // 작성일
+        category: data[i][1],  // 카테고리
+        title: data[i][2],     // 제목
+        content: data[i][3],   // 내용
+        active: String(data[i][4]).toUpperCase() === "TRUE" // 활성화
       });
     }
     return list.reverse(); // 최신 공지 순

@@ -222,8 +222,8 @@ const Village = {
                         if (res.pillarNotice) {
                             const noticeEl = document.getElementById('village-notice-banner');
                             if (noticeEl) {
-                                // 파이프라인(|) 기호 기준 앞의 간단한 내용(제목)만 분리하여 배너에 표시
-                                const simpleContent = res.pillarNotice.content.split('|')[0].trim();
+                                // 새 5대 컬럼 아키텍처에 맞추어 제목(title) 필드를 직접 배너에 표시
+                                const simpleContent = res.pillarNotice.title ? res.pillarNotice.title.trim() : '';
                                 noticeEl.innerHTML = `📢 [마을 공지] ${simpleContent}`;
                             }
                         }
