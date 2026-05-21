@@ -8283,7 +8283,7 @@ function getPersonalNotifications(payload) {
         if (isRead) {
           try {
             // "yyyy-MM-dd HH:mm:ss" 포맷 파싱
-            var parts = readAt.split(/[ -\:]/);
+            var parts = readAt.split(/[ \-:]/);
             if (parts.length >= 6) {
               var readDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
               var diffTime = now.getTime() - readDate.getTime();

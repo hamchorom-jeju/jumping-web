@@ -1179,7 +1179,7 @@ const Mailbox = {
   timeAgo: function(dateStr) {
     if (!dateStr) return "";
     try {
-      var parts = dateStr.split(/[ -\:]/);
+      var parts = dateStr.split(/[ \-:]/);
       if (parts.length < 6) return dateStr;
       
       var createdDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
