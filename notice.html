@@ -129,41 +129,79 @@
       box-shadow: 1px 0 5px rgba(0,0,0,0.2);
     }
 
+    .scroll-card {
+      cursor: pointer;
+      user-select: none;
+    }
+
     .category {
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      padding: 6px 14px;
+      padding: 5px 12px;
       border-radius: 20px;
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       font-weight: 900;
-      background: rgba(170, 124, 17, 0.15);
+      background: rgba(170, 124, 17, 0.12);
       color: #795548;
-      margin-bottom: 15px;
       border: 1px solid var(--scroll-border);
       letter-spacing: 0.5px;
       text-transform: uppercase;
-      box-shadow: inset 0 0 5px rgba(170, 124, 17, 0.05);
     }
 
     .title {
       font-size: 1.15rem;
       font-weight: 900;
       color: var(--text-wood);
-      margin-bottom: 16px;
+      margin: 0;
       line-height: 1.45;
-      border-bottom: 2px dashed rgba(170, 124, 17, 0.15);
-      padding-bottom: 12px;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
+      justify-content: space-between;
       gap: 8px;
+      width: 100%;
     }
     
-    .title::before {
+    .title-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      word-break: keep-all;
+    }
+    
+    .title-text::before {
       content: '✦';
       color: var(--scroll-gold-dark);
       font-size: 0.95rem;
-      margin-top: 2px;
+    }
+
+    .toggle-icon {
+      font-size: 0.9rem;
+      color: var(--scroll-gold-dark);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      margin-left: auto;
+      padding-right: 2px;
+    }
+
+    .scroll-card.open .toggle-icon {
+      transform: rotate(180deg);
+      color: var(--scroll-gold);
+    }
+
+    .content-wrapper {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.35s ease;
+      opacity: 0;
+    }
+
+    .scroll-card.open .content-wrapper {
+      max-height: 1200px;
+      opacity: 1;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 2px dashed rgba(170, 124, 17, 0.15);
     }
 
     .content {
@@ -177,17 +215,12 @@
     }
 
     .date {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       color: #8c765c;
-      margin-top: 22px;
-      text-align: right;
       font-weight: 800;
       display: flex;
-      justify-content: flex-end;
       align-items: center;
-      gap: 6px;
-      border-top: 1px solid rgba(170, 124, 17, 0.08);
-      padding-top: 12px;
+      gap: 5px;
     }
 
     /* 🚪 초대형 마을 광장으로 돌아가기 버튼 */
@@ -302,14 +335,14 @@
         container.innerHTML = `
           <div class="scroll-card" style="text-align:center; padding:45px 30px; border-style: double;">
             <div style="font-size: 3rem; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(212,175,55,0.3));">🏺</div>
-            <div class="title" style="border:none; justify-content:center; text-align:center; padding:0;">보관된 중대사가 없습니다</div>
-            <div class="content" style="text-align:center; color:#6d5945;">마을이 평화롭고 조용하여 역사에 남을 소식이 아직 보관되지 않았습니다.</div>
+            <div class="title" style="border:none; justify-content:center; text-align:center; padding:0; display:block;">보관된 중대사가 없습니다</div>
+            <div class="content" style="text-align:center; color:#6d5945; margin-top: 15px;">마을이 평화롭고 조용하여 역사에 남을 소식이 아직 보관되지 않았습니다.</div>
           </div>
         `;
         return;
       }
 
-      container.innerHTML = list.map(n => {
+      container.innerHTML = list.map((n, idx) => {
         const title = n.title ? n.title.trim() : '무제 공지';
         const body = n.content ? n.content.trim() : '';
 
@@ -318,16 +351,39 @@
         if (n.category === '선포' || n.category === '중대사') catEmoji = '🏰';
         else if (n.category === '이벤트') catEmoji = '🎁';
 
+        // 가장 첫 번째 최신 공지는 기본으로 펼쳐져(open) 있도록 설계해 접근성 보장
+        const isOpen = idx === 0 ? 'open' : '';
+
         return `
-          <div class="scroll-card">
+          <div class="scroll-card ${isOpen}" onclick="toggleNotice(this)">
             <div class="scroll-handle-left"></div>
-            <span class="category">${catEmoji} ${n.category || '공지'}</span>
-            <div class="title">${title}</div>
-            ${body ? `<div class="content">${body}</div>` : ''}
-            <div class="date"><i class="fa-regular fa-clock"></i> 선포일: ${n.date}</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+              <span class="category">${catEmoji} ${n.category || '공지'}</span>
+              <div class="date"><i class="fa-regular fa-clock"></i> 선포일: ${n.date}</div>
+            </div>
+            <div class="title">
+              <span class="title-text">${title}</span>
+              <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="content-wrapper">
+              ${body ? `<div class="content">${body}</div>` : ''}
+            </div>
           </div>
         `;
       }).join('');
+    }
+
+    function toggleNotice(card) {
+      const isOpen = card.classList.contains('open');
+      
+      // 다른 모든 아코디언은 부드럽게 접고 클릭한 항목만 열기 (목록성 강화)
+      document.querySelectorAll('.scroll-card').forEach(c => {
+        c.classList.remove('open');
+      });
+      
+      if (!isOpen) {
+        card.classList.add('open');
+      }
     }
 
     function showLoading(msg) {
