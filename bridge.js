@@ -504,7 +504,6 @@ window.renderSharedWeatherParticles = function(weather, windSpeed = 0) {
   if (oldWrap) oldWrap.remove();
   
   const isWindy = windSpeed >= 5.0;
-  if (weather === 'sun' && !isWindy) return;
   
   const wrapper = document.createElement('div');
   wrapper.id = 'village-weather-wrapper';
@@ -527,6 +526,35 @@ window.renderSharedWeatherParticles = function(weather, windSpeed = 0) {
       const delay = Math.random() * 5;
       wisp.style.animation = `blow-wind ${duration}s linear ${delay}s infinite`;
       wrapper.appendChild(wisp);
+    }
+  }
+  
+  // 📢 맑은 날(sun)의 몽환적이고 은은한 비눗방울 효과 추가
+  if (weather === 'sun') {
+    const bubbleCount = 15;
+    for (let i = 0; i < bubbleCount; i++) {
+      const b = document.createElement('div');
+      b.style.position = 'absolute';
+      b.style.bottom = '-30px';
+      b.style.left = Math.random() * 100 + 'vw';
+      
+      const size = Math.random() * 12 + 6; // 6px ~ 18px 크기
+      b.style.width = size + 'px';
+      b.style.height = size + 'px';
+      b.style.borderRadius = '50%';
+      // 몽환적인 펄 광택의 그라데이션 적용
+      b.style.background = 'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.25), rgba(174, 219, 255, 0.08) 60%, rgba(255, 182, 193, 0.15) 90%)';
+      b.style.border = '0.5px solid rgba(255, 255, 255, 0.35)';
+      b.style.boxShadow = 'inset -1px -1px 3px rgba(255, 255, 255, 0.1), inset 1px 1px 3px rgba(255, 255, 255, 0.2)';
+      b.style.opacity = Math.random() * 0.35 + 0.15; // 투명도 높게 설정
+      b.style.pointerEvents = 'none';
+      
+      const duration = Math.random() * 6 + 8; // 8초~14초로 매우 우아하고 차분하게 상승
+      const delay = Math.random() * 10;
+      
+      const animName = `rise-bubble-${i % 3}`;
+      b.style.animation = `${animName} ${duration}s ease-in-out ${delay}s infinite`;
+      wrapper.appendChild(b);
     }
   }
   
@@ -583,6 +611,27 @@ window.renderSharedWeatherParticles = function(weather, windSpeed = 0) {
       @keyframes fall-blossom-windy { 0% { transform: translateY(-20px) translateX(0) rotate(0deg); } 100% { transform: translateY(105vh) translateX(75vw) rotate(540deg); } }
       @keyframes fall-leaves { 0% { transform: translateY(-20px) translateX(0) rotate(0deg); } 50% { transform: translateY(50vh) translateX(-20px) rotate(180deg); } 100% { transform: translateY(105vh) translateX(15px) rotate(360deg); } }
       @keyframes fall-leaves-windy { 0% { transform: translateY(-20px) translateX(0) rotate(0deg); } 100% { transform: translateY(105vh) translateX(70vw) rotate(480deg); } }
+      @keyframes rise-bubble-0 {
+        0% { transform: translateY(0) translateX(0); opacity: 0; }
+        10% { opacity: 0.5; }
+        50% { transform: translateY(-50vh) translateX(15px); }
+        90% { opacity: 0.5; }
+        100% { transform: translateY(-110vh) translateX(-10px); opacity: 0; }
+      }
+      @keyframes rise-bubble-1 {
+        0% { transform: translateY(0) translateX(0); opacity: 0; }
+        15% { opacity: 0.4; }
+        50% { transform: translateY(-50vh) translateX(-20px); }
+        85% { opacity: 0.4; }
+        100% { transform: translateY(-110vh) translateX(15px); opacity: 0; }
+      }
+      @keyframes rise-bubble-2 {
+        0% { transform: translateY(0) translateX(0); opacity: 0; }
+        10% { opacity: 0.6; }
+        50% { transform: translateY(-50vh) translateX(10px); }
+        90% { opacity: 0.6; }
+        100% { transform: translateY(-110vh) translateX(-15px); opacity: 0; }
+      }
     `;
     document.head.appendChild(style);
   }
