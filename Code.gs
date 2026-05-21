@@ -7477,4 +7477,77 @@ function getActivePhotos(payload) {
   return getArchiveFeed(payload);
 }
 
+// [v58.4] 회원의 오늘 상세 모험 로그 및 과거 성취도가 있는 7일 히스토리를 솎아오는 명품 데이터 함수 신규 구현
+function getUserWellnessActivityHistory(phone) {
+  try {
+    if (!phone) return { error: "로그인이 필요합니다." };
+    var cleanPhone = String(phone).replace(/[^0-9]/g, "");
+    if (!cleanPhone) return { error: "올바른 연락처 정보가 없습니다." };
+
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("일일_활동_기록");
+    if (!sheet) return { success: false, error: "'일일_활동_기록' 시트를 찾을 수 없습니다." };
+
+    var data = sheet.getDataRange().getValues();
+    var todayStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
+    
+    var todayLogs = [];
+    var historyLogs = [];
+
+    // 최신 일지가 보통 아래 행에 있으므로 역순으로 탐색합니다.
+    for (var i = data.length - 1; i >= 1; i--) {
+      var rowPhone = String(data[i][1]).replace(/[^0-9]/g, "");
+      if (rowPhone === cleanPhone) {
+        var rawDate = data[i][0];
+        var formattedDate = "";
+        try {
+          if (rawDate instanceof Date) {
+            formattedDate = Utilities.formatDate(rawDate, "GMT+9", "yyyy-MM-dd");
+          } else {
+            formattedDate = String(rawDate).split("T")[0];
+          }
+        } catch (e) {
+          formattedDate = String(rawDate);
+        }
+
+        var totalScore = Number(data[i][9]) || 0;
+        var rawCompleteStr = String(data[i][8] || "");
+
+        // 1. 오늘 날짜 행일 경우: 완료내역을 파싱하여 개별 리스트로 조립
+        if (formattedDate === todayStr) {
+          if (rawCompleteStr.trim().length > 0) {
+            var items = rawCompleteStr.split(",");
+            for (var j = 0; j < items.length; j++) {
+              var val = items[j].trim();
+              if (val) todayLogs.push(val);
+            }
+          }
+        }
+
+        // 2. 활동이 실제 기록된 의미 있는 최근 7일 히스토리 수집 (최대 7개)
+        if (historyLogs.length < 7) {
+          if (totalScore > 0 || rawCompleteStr.trim().length > 0) {
+            var shortDate = formattedDate;
+            if (shortDate.length >= 10) {
+              shortDate = shortDate.substring(2, 10); // "2026-05-21" -> "26-05-21" 포맷팅!
+            }
+            historyLogs.push({
+              date: shortDate,
+              score: totalScore
+            });
+          }
+        }
+      }
+    }
+
+    return { 
+      success: true, 
+      todayLogs: todayLogs, 
+      historyLogs: historyLogs 
+    };
+  } catch (e) {
+    return { error: e.toString() };
+  }
+}
+
 

@@ -175,6 +175,26 @@ if (typeof google === 'undefined' || !google.script) {
                       { date: "2026-05-01", weight: 71.0, muscle: 29.5, fat: 25.5, score: 0, memo: "최초 측정일 📊" }
                     ]
                   };
+                } else if (prop === 'getUserWellnessActivityHistory') {
+                  mockResult = {
+                    success: true,
+                    todayLogs: [
+                      "[회복] 로그인 체크 (+5 점) 🔑",
+                      "[회복] 모닝스트레칭 완료 (+2 점) 🤸‍♂️",
+                      "[실천] 아침 식단 (Tier S) 인증 (+10 점) 🍱",
+                      "[실천] 센터방문 퇴실 (+20 점) 🏛️",
+                      "[실천] 운동강도 퇴실 (+80 점) 🤸‍♀️"
+                    ],
+                    historyLogs: [
+                      { date: "26-05-21", score: 117 },
+                      { date: "26-05-20", score: 85 },
+                      { date: "26-05-19", score: 140 },
+                      { date: "26-05-18", score: 30 },
+                      { date: "26-05-15", score: 95 },
+                      { date: "26-05-14", score: 50 },
+                      { date: "26-05-12", score: 110 }
+                    ]
+                  };
                 }
                 
                 if (sHandler) sHandler(mockResult);

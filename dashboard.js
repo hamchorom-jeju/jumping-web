@@ -1006,3 +1006,190 @@ const Village = {
 window.onload = () => Village.init();
 window.syncClubRecord = () => Village.openQuestModal('sync');
 window.triggerSuddenMission = () => Village.openQuestModal('bonus');
+
+/**
+ * 📜 [v58.4] 웰니스 로그 시스템 바텀시트 제어 및 연동 로직
+ */
+window.openWellnessLogModal = function() {
+  const modal = document.getElementById('wellness-log-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+
+  const todayList = document.getElementById('today-log-list');
+  const historyList = document.getElementById('history-log-list');
+
+  // 로딩 상태 렌더링
+  if (todayList) todayList.innerHTML = '<div style="text-align:center; padding:20px; font-size:0.75rem; color:#94a3b8; font-weight:800;">⏱️ 모험 기록 조회 중...</div>';
+  if (historyList) historyList.innerHTML = '<div style="text-align:center; padding:20px; font-size:0.75rem; color:#94a3b8; font-weight:800;">⏱️ 히스토리 조회 중...</div>';
+
+  // 탭 리셋
+  window.switchWellnessTab('today');
+
+  const params = new URLSearchParams(window.location.search);
+  let phone = (params.get('phone') || '').trim();
+  if (!phone) phone = (localStorage.getItem('v44_user_phone') || '').trim();
+  if (!phone) {
+    if (todayList) todayList.innerHTML = '<div style="text-align:center; padding:20px; font-size:0.75rem; color:#ef4444; font-weight:800;">🚨 연락처 정보가 없습니다.</div>';
+    return;
+  }
+
+  if (typeof google !== 'undefined' && google.script && google.script.run) {
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.success) {
+          window.renderWellnessLogs(res.todayLogs, res.historyLogs);
+        } else {
+          window.showWellnessError(res.error || "일치하는 데이터가 없습니다.");
+        }
+      })
+      .withFailureHandler(function(err) {
+        window.showWellnessError(err.message || err);
+      })
+      .getUserWellnessActivityHistory(phone);
+  } else {
+    // 로컬 브릿지 테스트 지원
+    if (window.googleScriptRunMock && window.googleScriptRunMock.getUserWellnessActivityHistory) {
+      window.googleScriptRunMock.getUserWellnessActivityHistory(phone);
+    } else {
+      window.showWellnessError("구글 서비스 연결 실패");
+    }
+  }
+};
+
+window.closeWellnessLogModal = function() {
+  const modal = document.getElementById('wellness-log-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.switchWellnessTab = function(tab) {
+  const todayBtn = document.getElementById('tab-today-log');
+  const historyBtn = document.getElementById('tab-history-log');
+  const todayContent = document.getElementById('content-today-log');
+  const historyContent = document.getElementById('content-history-log');
+
+  if (tab === 'today') {
+    if (todayBtn) {
+      todayBtn.style.background = '#fff';
+      todayBtn.style.color = '#4f46e5';
+      todayBtn.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+    }
+    if (historyBtn) {
+      historyBtn.style.background = 'transparent';
+      historyBtn.style.color = '#64748b';
+      historyBtn.style.boxShadow = 'none';
+    }
+    if (todayContent) todayContent.style.display = 'block';
+    if (historyContent) historyContent.style.display = 'none';
+  } else {
+    if (historyBtn) {
+      historyBtn.style.background = '#fff';
+      historyBtn.style.color = '#4f46e5';
+      historyBtn.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+    }
+    if (todayBtn) {
+      todayBtn.style.background = 'transparent';
+      todayBtn.style.color = '#64748b';
+      todayBtn.style.boxShadow = 'none';
+    }
+    if (todayContent) todayContent.style.display = 'none';
+    if (historyContent) historyContent.style.display = 'block';
+  }
+};
+
+window.renderWellnessLogs = function(todayLogs, historyLogs) {
+  const todayList = document.getElementById('today-log-list');
+  const historyList = document.getElementById('history-log-list');
+  const todayTotalScoreLog = document.getElementById('today-total-score-log');
+
+  // 1. 오늘의 모험 로그 렌더링
+  if (todayList) {
+    if (!todayLogs || todayLogs.length === 0) {
+      todayList.innerHTML = '<div style="text-align:center; padding:30px; font-size:0.75rem; color:#94a3b8; font-weight:800;">💤 오늘 달성한 모험 기록이 없습니다.</div>';
+      if (todayTotalScoreLog) todayTotalScoreLog.innerText = '오늘 0점 획득';
+    } else {
+      let todayHtml = '';
+      let calculatedTodayScore = 0;
+
+      todayLogs.forEach(log => {
+        // 이모지 추론 엔진
+        let icon = '⚔️';
+        if (log.indexOf('로그인') > -1) icon = '🔑';
+        else if (log.indexOf('식단') > -1) icon = '🍱';
+        else if (log.indexOf('티') > -1) icon = '🍵';
+        else if (log.indexOf('스트레칭') > -1) icon = '🧘';
+        else if (log.indexOf('방문') > -1 || log.indexOf('출석') > -1 || log.indexOf('퇴실') > -1) icon = '🏛️';
+        else if (log.indexOf('운동강도') > -1) icon = '🤸‍♀️';
+        else if (log.indexOf('워터') > -1 || log.indexOf('물') > -1) icon = '💧';
+        else if (log.indexOf('칭찬') > -1) icon = '👏';
+        else if (log.indexOf('보너스') > -1) icon = '✨';
+
+        // 점수 숫자 추출
+        let pointsMatch = log.match(/\d+/);
+        let points = pointsMatch ? Number(pointsMatch[0]) : 0;
+        calculatedTodayScore += points;
+
+        // 깔끔하게 점수 형태 정제
+        let cleanText = log;
+        cleanText = cleanText.replace(/\(\d+\)/g, '').trim();
+
+        todayHtml += `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#f8fafc; border-radius:12px; border:1px solid #f1f5f9;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:0.95rem;">${icon}</span>
+              <span style="font-size:0.75rem; font-weight:800; color:#334155;">${cleanText}</span>
+            </div>
+            <span style="font-size:0.72rem; font-weight:900; color:#4f46e5; background:rgba(79, 70, 229, 0.06); padding:2px 8px; border-radius:8px;">+${points} 점</span>
+          </div>
+        `;
+      });
+      todayList.innerHTML = todayHtml;
+      if (todayTotalScoreLog) todayTotalScoreLog.innerText = `오늘 총 +${calculatedTodayScore}점 획득 🔥`;
+    }
+  }
+
+  // 2. 일별 히스토리 렌더링
+  if (historyList) {
+    if (!historyLogs || historyLogs.length === 0) {
+      historyList.innerHTML = '<div style="text-align:center; padding:30px; font-size:0.75rem; color:#94a3b8; font-weight:800;">📈 과거 기록이 존재하지 않습니다.</div>';
+    } else {
+      let historyHtml = `
+        <table style="width:100%; border-collapse:collapse; font-size:0.75rem; text-align:center;">
+          <thead>
+            <tr style="background:#f8fafc; border-bottom:1.5px solid #edf2f7; color:#64748b; font-weight:900;">
+              <th style="padding:10px 4px; font-size:0.68rem;">모험 날짜</th>
+              <th style="padding:10px 4px; font-size:0.68rem;">하루 획득 총점</th>
+              <th style="padding:10px 4px; font-size:0.68rem;">달성 상태</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      historyLogs.forEach((h, idx) => {
+        let rowBg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+        
+        let badge = '';
+        if (h.score >= 120) badge = '<span style="background:#fef3c7; color:#d97706; font-weight:900; padding:2px 6px; border-radius:6px; font-size:0.62rem;">👑 전설적</span>';
+        else if (h.score >= 80) badge = '<span style="background:#dcfce7; color:#15803d; font-weight:900; padding:2px 6px; border-radius:6px; font-size:0.62rem;">🔥 대활약</span>';
+        else badge = '<span style="background:#f1f5f9; color:#64748b; font-weight:800; padding:2px 6px; border-radius:6px; font-size:0.62rem;">🌱 달성</span>';
+
+        historyHtml += `
+          <tr style="background:${rowBg}; border-bottom:1px solid #edf2f7; font-weight:800; color:#334155;">
+            <td style="padding:11px 4px; font-weight:900; color:#1a202c; font-size:0.72rem;">${h.date}</td>
+            <td style="padding:11px 4px; font-weight:900; color:#4f46e5; font-size:0.75rem;">+${h.score} 점</td>
+            <td style="padding:11px 4px;">${badge}</td>
+          </tr>
+        `;
+      });
+
+      historyHtml += '</tbody></table>';
+      historyList.innerHTML = historyHtml;
+    }
+  }
+};
+
+window.showWellnessError = function(msg) {
+  const todayList = document.getElementById('today-log-list');
+  const historyList = document.getElementById('history-log-list');
+  if (todayList) todayList.innerHTML = `<div style="text-align:center; padding:20px; font-size:0.75rem; color:#ef4444; font-weight:800;">🚨 에러: ${msg}</div>`;
+  if (historyList) historyList.innerHTML = `<div style="text-align:center; padding:20px; font-size:0.75rem; color:#ef4444; font-weight:800;">🚨 에러: ${msg}</div>`;
+};
