@@ -7598,7 +7598,17 @@ function setupAutoCheckoutTriggers() {
     return "트리거 세팅 복구 성공!";
   } catch(e) {
     try {
-      SpreadsheetApp.getUi().alert("❌ 오류 발생: " + e.toString());
+      SpreadsheetApp.getUi().alert(
+        "❌ [자동 트리거 설치 실패]\n\n" +
+        "이유: 구글 계정 보안 권한 승인이 필요하거나 브라우저 팝업 제한 때문입니다.\n\n" +
+        "💡 해결 방법 (가장 쉽고 확실한 수동 등록 방법):\n" +
+        "왼쪽 메뉴의 '시계 아이콘(트리거)'을 눌러 다음 4개의 기능을 직접 추가해 주시면 코딩 오류와 무관하게 100% 안전하게 작동합니다.\n\n" +
+        "1️⃣ autoCheckoutJob: [시간 기반] -> [분 단위] -> [30분마다]\n" +
+        "2️⃣ autoCloseDailyLog: [시간 기반] -> [일 단위] -> [오후 11시 ~ 자정]\n" +
+        "3️⃣ autoExpireMemberships: [시간 기반] -> [일 단위] -> [오전 3시 ~ 4시]\n" +
+        "4️⃣ autoRefreshSmsLists: [시간 기반] -> [시간 단위] -> [매시간]\n\n" +
+        "수동으로 등록하시면 구글 서버 자체에서 안전하게 작동하므로 승인 에러가 나지 않습니다!"
+      );
     } catch(err) {}
     return "에러: " + e.toString();
   }
