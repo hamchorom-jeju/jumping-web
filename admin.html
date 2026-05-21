@@ -730,12 +730,18 @@
       <div class="modal-header" style="color:#4f46e5;">✉️ 지니의 전령 발송기</div>
       
       <!-- 회원 검색 영역 -->
-      <div class="form-group" style="position: relative;">
+      <div class="form-group">
         <label class="form-label">👤 수신 모험가 검색 *</label>
-        <input type="text" id="pnSearchName" class="form-control" placeholder="모험가 이름 입력 (2자 이상)"
-          oninput="searchPnMember(this.value)">
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="pnSearchName" class="form-control" placeholder="모험가 이름 입력 (2자 이상)" style="flex: 1; margin: 0;"
+            oninput="searchPnMember(this.value)">
+          <button type="button" class="btn-search-pn" onclick="triggerPnSearch()" 
+            style="background: #4f46e5; color: white; border: none; padding: 0 16px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.9rem; white-space: nowrap; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+            🔍 검색
+          </button>
+        </div>
         <div id="pnSearchResults"
-          style="position: absolute; top: 100%; left: 0; right: 0; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; z-index: 100; display: none; max-height: 180px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+          style="margin-top: 8px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; display: none; max-height: 180px; overflow-y: auto; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.05);">
         </div>
       </div>
       
@@ -2535,12 +2541,13 @@
         return;
       }
       if (typeof google !== 'undefined' && google.script) {
-        google.script.run.withSuccessHandler(function (results) {
-          if (results.length === 0) {
+        google.script.run.withSuccessHandler(function (res) {
+          const list = (res && res.results) || [];
+          if (list.length === 0) {
             document.getElementById('pnSearchResults').innerHTML = '<div style="padding:10px; color:#999; font-size:0.85rem;">검색 결과 없음</div>';
           } else {
             let html = '';
-            results.forEach(m => {
+            list.forEach(m => {
               html += `<div onclick="selectPnMember('${m.name}', '${m.phone}')" style="padding:12px; border-bottom:1px solid #edf2f7; cursor:pointer; font-size:0.9rem; font-weight:700; color:#2d3748;">
                 <strong>${m.name}</strong> (${m.phone.slice(-4)})
               </div>`;
@@ -2572,6 +2579,59 @@
       }
     }
 
+    function triggerPnSearch() {
+      const name = document.getElementById('pnSearchName').value.trim();
+      if (!name || name.length < 2) {
+        alert("검색할 이름을 2자 이상 입력해주세요.");
+        return;
+      }
+      
+      // 로딩 상태 표시
+      document.getElementById('pnSearchResults').innerHTML = '<div style="padding:12px; color:#4f46e5; font-size:0.85rem; font-weight:bold; text-align:center;">🔍 검색 중...</div>';
+      document.getElementById('pnSearchResults').style.display = 'block';
+
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run.withSuccessHandler(function (res) {
+          const list = (res && res.results) || [];
+          if (list.length === 0) {
+            document.getElementById('pnSearchResults').innerHTML = '<div style="padding:10px; color:#999; font-size:0.85rem;">검색 결과 없음</div>';
+          } else if (list.length === 1) {
+            // 단 1명만 검색되면 원클릭 자동선택!
+            selectPnMember(list[0].name, list[0].phone);
+          } else {
+            let html = '';
+            list.forEach(m => {
+              html += `<div onclick="selectPnMember('${m.name}', '${m.phone}')" style="padding:12px; border-bottom:1px solid #edf2f7; cursor:pointer; font-size:0.9rem; font-weight:700; color:#2d3748;">
+                <strong>${m.name}</strong> (${m.phone.slice(-4)})
+              </div>`;
+            });
+            document.getElementById('pnSearchResults').innerHTML = html;
+          }
+        }).searchMemberByName(name);
+      } else {
+        // 로컬 mockup 대응
+        let list = [
+          { name: "홍길동", phone: "01012345678" },
+          { name: "김철수", phone: "01099998888" },
+          { name: "이장님", phone: "01099999999" }
+        ].filter(u => u.name.indexOf(name) > -1);
+        
+        if (list.length === 0) {
+          document.getElementById('pnSearchResults').innerHTML = '<div style="padding:10px; color:#999; font-size:0.85rem;">검색 결과 없음</div>';
+        } else if (list.length === 1) {
+          selectPnMember(list[0].name, list[0].phone);
+        } else {
+          let html = '';
+          list.forEach(m => {
+            html += `<div onclick="selectPnMember('${m.name}', '${m.phone}')" style="padding:12px; border-bottom:1px solid #edf2f7; cursor:pointer; font-size:0.9rem; font-weight:700; color:#2d3748;">
+              <strong>${m.name}</strong> (${m.phone.slice(-4)})
+            </div>`;
+          });
+          document.getElementById('pnSearchResults').innerHTML = html;
+        }
+      }
+    }
+
     function selectPnMember(name, phone) {
       document.getElementById('pnTargetName').innerText = name;
       document.getElementById('pnTargetPhoneHint').innerText = phone.slice(-4);
@@ -2582,8 +2642,82 @@
     }
 
     function submitPersonalNoti() {
+      const nameInput = document.getElementById('pnSearchName').value.trim();
       const phone = document.getElementById('pnTargetPhoneRaw').value;
-      if (!phone) return alert("쪽지를 보낼 모험가를 먼저 검색하여 선택해주세요.");
+
+      if (!phone) {
+        if (!nameInput) {
+          return alert("쪽지를 보낼 모험가 이름을 입력해주세요.");
+        }
+        
+        // 검색하지 않고 이름만 입력한 경우 -> 실시간 자동검색 처리
+        const btn = document.querySelector('#personalNotiModal .btn-submit');
+        const originalText = btn.innerText;
+        btn.innerText = "🔍 모험가 자동 검색 중...";
+        btn.disabled = true;
+
+        if (typeof google !== 'undefined' && google.script) {
+          google.script.run.withSuccessHandler(function (res) {
+            btn.innerText = originalText;
+            btn.disabled = false;
+            const list = (res && res.results) || [];
+            
+            if (list.length === 0) {
+              alert("❌ '" + nameInput + "' 모험가를 찾을 수 없습니다. 정확한 이름을 입력해주세요.");
+              document.getElementById('pnSearchResults').innerHTML = '<div style="padding:10px; color:#999; font-size:0.85rem;">검색 결과 없음</div>';
+              document.getElementById('pnSearchResults').style.display = 'block';
+            } else if (list.length === 1) {
+              // 동명이인이 없으므로 즉시 매칭하고 발송!
+              selectPnMember(list[0].name, list[0].phone);
+              submitPersonalNoti(); // 재귀 호출로 발송 로직 재진행
+            } else {
+              // 동명이인이 여러 명인 경우 선택하게 유도
+              alert("⚠️ '" + nameInput + "' 이름을 가진 동명이인이 여러 명 존재합니다.\n아래 목록에서 전령을 보낼 올바른 모험가를 클릭하신 뒤 다시 발송해주세요!");
+              let html = '';
+              list.forEach(m => {
+                html += `<div onclick="selectPnMember('${m.name}', '${m.phone}')" style="padding:12px; border-bottom:1px solid #edf2f7; cursor:pointer; font-size:0.9rem; font-weight:700; color:#2d3748;">
+                  <strong>${m.name}</strong> (${m.phone.slice(-4)})
+                </div>`;
+              });
+              document.getElementById('pnSearchResults').innerHTML = html;
+              document.getElementById('pnSearchResults').style.display = 'block';
+            }
+          }).withFailureHandler(function(err) {
+            btn.innerText = originalText;
+            btn.disabled = false;
+            alert("❌ 모험가 검색 실패: " + err.message);
+          }).searchMemberByName(nameInput);
+        } else {
+          // 로컬 mockup 대응
+          setTimeout(() => {
+            btn.innerText = originalText;
+            btn.disabled = false;
+            let list = [
+              { name: "홍길동", phone: "01012345678" },
+              { name: "김철수", phone: "01099998888" },
+              { name: "이장님", phone: "01099999999" }
+            ].filter(u => u.name.indexOf(nameInput) > -1);
+            
+            if (list.length === 0) {
+              alert("❌ '" + nameInput + "' 모험가를 찾을 수 없습니다.");
+            } else if (list.length === 1) {
+              selectPnMember(list[0].name, list[0].phone);
+              submitPersonalNoti();
+            } else {
+              alert("⚠️ 동명이인이 존재합니다. 아래에서 클릭해주세요.");
+              let html = '';
+              list.forEach(m => {
+                html += `<div onclick="selectPnMember('${m.name}', '${m.phone}')" style="padding:12px; border-bottom:1px solid #edf2f7; cursor:pointer; font-size:0.9rem; font-weight:700; color:#2d3748;">
+                  <strong>${m.name}</strong> (${m.phone.slice(-4)})
+                </div>`;
+              });
+              document.getElementById('pnSearchResults').innerHTML = html;
+              document.getElementById('pnSearchResults').style.display = 'block';
+            }
+          }, 500);
+        }
+        return;
+      }
 
       const type = document.getElementById('pnType').value;
       const title = document.getElementById('pnTitle').value.trim();
@@ -2612,7 +2746,6 @@
           alert("❌ 통신 실패: " + err.message);
         }).sendPersonalNotification(phone, type, title, content);
       } else {
-        // 로컬 프리뷰 가상 발송 성공 대응
         setTimeout(() => {
           btn.innerText = originalText;
           btn.disabled = false;
