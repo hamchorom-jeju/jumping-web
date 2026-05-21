@@ -235,8 +235,8 @@ const Village = {
                                         ? `🎉 [돌발 완료] 오늘의 돌발 퀘스트를 완수하셨습니다!` 
                                         : `⚡ [오늘의 돌발] ${res.quests.todayQuest.title} (+15 EXP)`;
                                     
-                                    // 돌발 퀘스트를 배열 맨 앞에 주입
-                                    notices.unshift({
+                                    // 돌발 퀘스트를 배열 맨 뒤에 주입 [v58.6]
+                                    notices.push({
                                         title: titleText,
                                         isSuddenQuest: true
                                     });
@@ -269,49 +269,107 @@ const Village = {
                                     noticeEl.dataset.targetUrl = isSudden ? 'miracle.html?tab=quest&cat=bonus' : 'notice.html';
                                 } else {
                                     let curIdx = 0;
-                                    const updateNotice = () => {
+                                    
+                                    // 초기 첫 번째 항목은 깜빡임 없이 즉시 렌더링 [v58.6]
+                                    const renderInitial = () => {
                                         const item = notices[curIdx];
                                         const title = item.title || item.content || '';
                                         const isSudden = !!item.isSuddenQuest;
                                         
-                                        // 300ms 페이드-스케일 아웃 깜빡임 시동!
-                                        noticeEl.style.transition = 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
-                                        noticeEl.style.opacity = '0.3';
-                                        noticeEl.style.transform = 'scale(0.98)';
+                                        const badgeHtml = isSudden
+                                            ? `<span class="v-notice-badge sudden">⚡ 돌발퀘스트</span>`
+                                            : `<span class="v-notice-badge">📢 마을공지</span>`;
                                         
-                                        setTimeout(() => {
-                                            const badgeHtml = isSudden
-                                                ? `<span class="v-notice-badge sudden">⚡ 돌발퀘스트</span>`
-                                                : `<span class="v-notice-badge">📢 마을공지</span>`;
-                                            
-                                            const actionHtml = isSudden
-                                                ? `<span class="v-banner-badge" style="box-shadow: 0 0 12px rgba(244, 63, 94, 0.4); border-color: #f43f5e; color: #f43f5e; background: rgba(244, 63, 94, 0.1);">인증하기 <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i></span>`
-                                                : `<span class="v-banner-badge">전체보기 <i class="fa-solid fa-chevron-right"></i></span>`;
-                                            
-                                            if (isSudden) {
-                                                noticeEl.classList.add('sudden-mode');
-                                            } else {
-                                                noticeEl.classList.remove('sudden-mode');
-                                            }
-                                            
-                                            noticeEl.innerHTML = `<div class="v-banner-notice-inner">${badgeHtml}<span class="v-notice-text">${title.trim()}</span></div>${actionHtml}`;
-                                            
-                                            // 페이드-스케일 인 복구 (새 스타일 옷입고 반짝 등장!)
-                                            noticeEl.style.opacity = '1';
-                                            noticeEl.style.transform = 'scale(1)';
-                                        }, 300);
+                                        const actionHtml = isSudden
+                                            ? `<span class="v-banner-badge" style="box-shadow: 0 0 12px rgba(244, 63, 94, 0.4); border-color: #f43f5e; color: #f43f5e; background: rgba(244, 63, 94, 0.1);">인증하기 <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i></span>`
+                                            : `<span class="v-banner-badge">전체보기 <i class="fa-solid fa-chevron-right"></i></span>`;
                                         
+                                        if (isSudden) {
+                                            noticeEl.classList.add('sudden-mode');
+                                        } else {
+                                            noticeEl.classList.remove('sudden-mode');
+                                        }
+                                        
+                                        noticeEl.innerHTML = `<div class="v-banner-notice-inner">${badgeHtml}<span class="v-notice-text">${title.trim()}</span></div>${actionHtml}`;
                                         noticeEl.dataset.targetUrl = isSudden ? 'miracle.html?tab=quest&cat=bonus' : 'notice.html';
-                                        curIdx = (curIdx + 1) % notices.length;
                                         
-                                        // 가변 롤링 스케줄링 (일반공지 5초 vs 돌발 10초)
                                         const delay = isSudden ? 10000 : 5000;
                                         if (window.noticeInterval) clearTimeout(window.noticeInterval);
-                                        window.noticeInterval = setTimeout(updateNotice, delay);
+                                        window.noticeInterval = setTimeout(transitionToNext, delay);
+                                    };
+
+                                    // 두 번째 항목부터 트랜지션 모드 분기 (글자만 롤링 vs 테마 전체 깜빡임) [v58.6]
+                                    const transitionToNext = () => {
+                                        const nextIdx = (curIdx + 1) % notices.length;
+                                        const curItem = notices[curIdx];
+                                        const nextItem = notices[nextIdx];
+                                        
+                                        const curSudden = !!curItem.isSuddenQuest;
+                                        const nextSudden = !!nextItem.isSuddenQuest;
+                                        const nextTitle = nextItem.title || nextItem.content || '';
+                                        
+                                        if (curSudden !== nextSudden) {
+                                            // ⚡ 테마 깜빡임 스위칭 (일반 ↔ 돌발 유형 교차 시)
+                                            noticeEl.style.transition = 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+                                            noticeEl.style.opacity = '0.3';
+                                            noticeEl.style.transform = 'scale(0.98)';
+                                            
+                                            setTimeout(() => {
+                                                const badgeHtml = nextSudden
+                                                    ? `<span class="v-notice-badge sudden">⚡ 돌발퀘스트</span>`
+                                                    : `<span class="v-notice-badge">📢 마을공지</span>`;
+                                                
+                                                const actionHtml = nextSudden
+                                                    ? `<span class="v-banner-badge" style="box-shadow: 0 0 12px rgba(244, 63, 94, 0.4); border-color: #f43f5e; color: #f43f5e; background: rgba(244, 63, 94, 0.1);">인증하기 <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i></span>`
+                                                    : `<span class="v-banner-badge">전체보기 <i class="fa-solid fa-chevron-right"></i></span>`;
+                                                
+                                                if (nextSudden) {
+                                                    noticeEl.classList.add('sudden-mode');
+                                                } else {
+                                                    noticeEl.classList.remove('sudden-mode');
+                                                }
+                                                
+                                                noticeEl.innerHTML = `<div class="v-banner-notice-inner">${badgeHtml}<span class="v-notice-text">${nextTitle.trim()}</span></div>${actionHtml}`;
+                                                noticeEl.dataset.targetUrl = nextSudden ? 'miracle.html?tab=quest&cat=bonus' : 'notice.html';
+                                                
+                                                noticeEl.style.opacity = '1';
+                                                noticeEl.style.transform = 'scale(1)';
+                                                
+                                                curIdx = nextIdx;
+                                                
+                                                const delay = nextSudden ? 10000 : 5000;
+                                                if (window.noticeInterval) clearTimeout(window.noticeInterval);
+                                                window.noticeInterval = setTimeout(transitionToNext, delay);
+                                            }, 300);
+                                        } else {
+                                            // 🌿 글씨만 부드럽게 롤링 (유형 동일 시: 일반 ↔ 일반)
+                                            const textEl = noticeEl.querySelector('.v-notice-text');
+                                            if (textEl) {
+                                                textEl.style.transition = 'opacity 0.25s ease';
+                                                textEl.style.opacity = '0';
+                                                
+                                                setTimeout(() => {
+                                                    textEl.textContent = nextTitle.trim();
+                                                    textEl.style.opacity = '1';
+                                                    
+                                                    // 타겟 링크는 즉시 최신화
+                                                    noticeEl.dataset.targetUrl = nextSudden ? 'miracle.html?tab=quest&cat=bonus' : 'notice.html';
+                                                    
+                                                    curIdx = nextIdx;
+                                                    
+                                                    const delay = nextSudden ? 10000 : 5000;
+                                                    if (window.noticeInterval) clearTimeout(window.noticeInterval);
+                                                    window.noticeInterval = setTimeout(transitionToNext, delay);
+                                                }, 250);
+                                            } else {
+                                                // 안전대책 예외 처리
+                                                curIdx = nextIdx;
+                                                renderInitial();
+                                            }
+                                        }
                                     };
                                     
-                                    // 첫 실행 기동
-                                    updateNotice();
+                                    renderInitial();
                                 }
                                 
                                 noticeEl.onclick = () => {
