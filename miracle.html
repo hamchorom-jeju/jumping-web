@@ -841,78 +841,7 @@
       }
     }
 
-    // [v46.7] 모바일 기기 하드웨어 뒤로가기 버튼 연동 모달 제어 시스템
-    // 브라우저 history.pushState를 사용하여 모달이 열릴 때 히스토리를 쌓고,
-    // 하드웨어 뒤로가기 클릭 시 popstate 이벤트를 가로채어 모달만 안전하게 닫습니다.
-    let isModalPushing = false;
-
-    function pushModalState(modalId) {
-      isModalPushing = true;
-      history.pushState({ modalId: modalId }, "");
-      isModalPushing = false;
-    }
-
-    function popModalStateIfOpen(modalId) {
-      if (history.state && history.state.modalId === modalId) {
-        history.back();
-      }
-    }
-
-    window.addEventListener('popstate', function(event) {
-      const infoModal = document.getElementById('info-modal');
-      const certModal = document.getElementById('cert-modal');
-      const aiModal = document.getElementById('ai-meal-modal');
-      const polaroidModal = document.getElementById('polaroid-modal');
-      const geminiModal = document.getElementById('gemini-key-modal');
-      
-      let modalClosed = false;
-
-      // 1. 사진 인증 모달 닫기
-      if (certModal && certModal.style.display === 'flex') {
-        certModal.style.display = 'none';
-        resetCertPreview();
-        modalClosed = true;
-      }
-      
-      // 2. 상세 설명 모달 닫기
-      if (infoModal && infoModal.style.display === 'flex') {
-        infoModal.style.display = 'none';
-        modalClosed = true;
-      }
-
-      // 3. Gemini 키 설정 모달 닫기
-      if (geminiModal && geminiModal.style.display === 'flex') {
-        geminiModal.style.display = 'none';
-        modalClosed = true;
-      }
-      
-      // 4. AI 모달 닫기
-      if (aiModal && aiModal.style.display === 'flex') {
-        aiModal.style.display = 'none';
-        const scanLine = document.getElementById('ai-scan-line');
-        if (scanLine) scanLine.style.display = 'none';
-        const scanBtn = document.getElementById('btn-start-ai-scan');
-        if (scanBtn) {
-          scanBtn.disabled = false;
-          scanBtn.innerText = '지니 AI 식단 스캔 시작 🚀';
-        }
-        modalClosed = true;
-      }
-      
-      // 5. 폴라로이드 상세 모달 닫기
-      if (polaroidModal && polaroidModal.style.display === 'flex') {
-        polaroidModal.style.display = 'none';
-        modalClosed = true;
-      }
-
-      // 만약 닫은 모달이 없다면, 메인 광장 최종 퇴장 확인창 결계 가동!
-      if (!modalClosed) {
-        history.pushState(null, null, location.href); // 히스토리 밀림 긴급 복구
-        showAppConfirm("⚔️ 모험가의 기록소에서 퇴장하여 메인 광장으로 이동하시겠습니까?", function() {
-            window.location.replace('index.html');
-        }, "⚔️");
-      }
-    });
+    // [v46.7] 모바일 기기 하드웨어 뒤로가기 버튼 연동 모달 제어 시스템 - 공통 bridge.js 글로벌 시스템으로 이관 및 리팩토링 완료!
 
     function formatAiFriendlyError(err) {
       const errStr = String(err.message || err);
@@ -2026,13 +1955,14 @@
       }
 
       document.getElementById('info-modal').style.display = 'flex';
-      pushModalState('info-modal');
+      window.registerModalOpen(closeInfoModal);
     }
 
-    function closeInfoModal(e) {
-      if (e && e.target !== document.getElementById('info-modal')) return;
+    function closeInfoModal(isPopstate) {
       document.getElementById('info-modal').style.display = 'none';
-      popModalStateIfOpen('info-modal');
+      if (!isPopstate) {
+        window.registerModalClose(closeInfoModal);
+      }
     }
 
     function doHabitCheck(key) {
@@ -2109,12 +2039,14 @@
       document.getElementById('cert-comment').value = '';
       resetCertPreview();
       document.getElementById('cert-modal').style.display = 'flex';
-      pushModalState('cert-modal');
+      window.registerModalOpen(closeCertModal);
     }
-    function closeCertModal() {
+    function closeCertModal(isPopstate) {
       document.getElementById('cert-modal').style.display = 'none';
       resetCertPreview();
-      popModalStateIfOpen('cert-modal');
+      if (!isPopstate) {
+        window.registerModalClose(closeCertModal);
+      }
     }
     function previewCertImage(input) {
       if (input.files && input.files[0]) {
@@ -2553,12 +2485,14 @@
       updateReactionBtn('cheer', '화이팅 🔥', reactions.cheer || []);
       
       document.getElementById('polaroid-modal').style.display = 'flex';
-      pushModalState('polaroid-modal');
+      window.registerModalOpen(closeModal);
     }
 
-    function closeModal() {
+    function closeModal(isPopstate) {
       document.getElementById('polaroid-modal').style.display = 'none';
-      popModalStateIfOpen('polaroid-modal');
+      if (!isPopstate) {
+        window.registerModalClose(closeModal);
+      }
     }
 
     function updateReactionBtn(type, label, list) {

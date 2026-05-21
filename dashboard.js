@@ -77,51 +77,6 @@ const Village = {
         const overlay = document.getElementById('v-loading');
         if (overlay) overlay.style.display = 'none';
     },
-
-    /**
-     * [v44.229] 프리미엄 뒤로가기 핸들러
-     */
-    lastBackTime: 0,
-    handleBackButton() {
-        // 1. 열려있는 모달이 있는지 확인 (Vanilla JS 및 프리미엄 모달 공통)
-        const premiumModal = document.querySelector('.app-modal-overlay');
-        const habitModal = document.getElementById('habit-modal');
-
-        if (premiumModal) {
-            // 프리미엄 알림/확인창 닫기
-            const btn = premiumModal.querySelector('button');
-            if (btn) btn.click();
-            history.pushState(null, null, location.href); 
-            return;
-        }
-
-        if (habitModal && habitModal.style.display === 'flex') {
-            // 습관 가이드 모달 닫기
-            this.closeModal();
-            history.pushState(null, null, location.href); 
-            return;
-        }
-
-        // 2. 모달이 없으면 종료 안내 토스트
-        const now = Date.now();
-        if (now - this.lastBackTime < 2000) {
-            alert("지니 월드(노형 빌리지)를 이용해주셔서 감사합니다.\n로그아웃 버튼으로 안전하게 퇴장하실 수 있습니다. ✨");
-        } else {
-            this.lastBackTime = now;
-            this.showToast("한 번 더 누르면 종료 안내가 표시됩니다.");
-            history.pushState(null, null, location.href); 
-        }
-    },
-
-    showToast(msg) {
-        const toast = document.createElement('div');
-        toast.innerText = msg;
-        toast.style = "position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; font-size:0.8rem; font-weight:800;";
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2000);
-    },
-
-    // [perf] 캐시가 있을 때 백그라운드 동기화 중임을 작은 알림으로 안내
     showSyncToast() {
         const id = 'sync-toast';
         if (document.getElementById(id)) return;
@@ -130,7 +85,6 @@ const Village = {
         toast.innerHTML = '🔄 최신 데이터로 동기화 중...';
         toast.style = "position:fixed; top:14px; right:14px; background:rgba(30,30,40,0.82); color:#fff; padding:8px 16px; border-radius:20px; z-index:9999; font-size:0.75rem; font-weight:700; backdrop-filter:blur(6px); transition:opacity 0.4s;";
         document.body.appendChild(toast);
-        // 서버 응답 후 hideSyncToast()로 제거됨
     },
     hideSyncToast() {
         const toast = document.getElementById('sync-toast');
@@ -140,13 +94,8 @@ const Village = {
         }
     },
 
-
     init() {
         console.log("v44.229 Real Data Sync Initialized.");
-        
-        // [v44.229] 뒤로가기 방지용 히스토리 추가
-        history.pushState(null, null, location.href);
-        window.onpopstate = () => this.handleBackButton();
 
         // [perf] 낙관적 렌더링: localStorage 캐시가 있으면 즉시 화면에 먼저 표시
         const cached = localStorage.getItem('v44_dashboard_cache');
@@ -371,6 +320,9 @@ const Village = {
         };
 
         document.getElementById('habit-modal').style.display = 'flex';
+        if (window.registerModalOpen) {
+            window.registerModalOpen(Village.closeModal);
+        }
     },
 
     applyHabitCheck(id, withAuth) {
@@ -417,9 +369,12 @@ const Village = {
         this.loadRealData();
     },
 
-    closeModal() {
+    closeModal(isPopstate) {
         const modal = document.getElementById('habit-modal');
         if (modal) modal.style.display = 'none';
+        if (!isPopstate && window.registerModalClose) {
+            window.registerModalClose(Village.closeModal);
+        }
     },
     openQuestModal(key) { this.openModal(key, 'quest'); },
 

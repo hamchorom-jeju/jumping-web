@@ -615,3 +615,65 @@ window.addEventListener('load', function() {
     window.initVillageEnvironment();
   }
 });
+
+// ----------------------------------------------------
+// 🌌 [Genie World] 글로벌 모바일 물리 뒤로가기 하드웨어 백버튼 트랩 시스템
+// ----------------------------------------------------
+window.globalModalHistoryStack = [];
+
+window.registerModalOpen = function(closeFn) {
+  if (typeof closeFn !== 'function') return;
+  // 가상 상태를 쌓아 뒤로가기 흐름을 감지함
+  history.pushState({ modalOpen: true }, null, location.href);
+  window.globalModalHistoryStack.push(closeFn);
+  console.log("[Global Backbutton] Modal registered. Stack size:", window.globalModalHistoryStack.length);
+};
+
+window.registerModalClose = function(closeFn) {
+  const idx = window.globalModalHistoryStack.indexOf(closeFn);
+  if (idx > -1) {
+    window.globalModalHistoryStack.splice(idx, 1);
+    history.back();
+    console.log("[Global Backbutton] Modal deregistered. Stack size:", window.globalModalHistoryStack.length);
+  }
+};
+
+window.addEventListener('popstate', function(e) {
+  if (window.globalModalHistoryStack.length > 0) {
+    // 뒤로가기 방어: 스택에서 가장 최근 등록된 닫기 콜백을 실행하여 모달을 닫아줍니다!
+    const closeFn = window.globalModalHistoryStack.pop();
+    if (closeFn) {
+      closeFn(true); // popstate를 통한 물리적 닫힘으로 호출
+    }
+  } else {
+    // 열려있는 모달이 하나도 없을 때, 현재 화면에 알맞게 안전 퇴장 컨펌 작동!
+    history.pushState(null, null, location.href); // 히스토리 밀림 복구
+    
+    const path = window.location.pathname;
+    const pageName = path.substring(path.lastIndexOf('/') + 1) || 'index.html';
+
+    if (pageName === 'oasis.html') {
+      showAppConfirm("🌴 오아시스에서 퇴장하여 메인 광장으로 이동하시겠습니까?", function() {
+        window.location.replace('index.html');
+      }, "🌴");
+    } else if (pageName === 'miracle.html') {
+      showAppConfirm("⚔️ 모험가의 기록소에서 퇴장하여 메인 광장으로 이동하시겠습니까?", function() {
+        window.location.replace('index.html');
+      }, "⚔️");
+    } else if (pageName === 'index.html' || pageName === '') {
+      showAppConfirm("🏰 지니 월드(노형 빌리지)에서 완전히 퇴장하시겠습니까?", function() {
+        const logoutBtn = document.getElementById('btn-logout');
+        if (logoutBtn) {
+          logoutBtn.click();
+        } else {
+          alert("우측 상단의 퇴장/로그아웃 버튼을 눌러 안전하게 퇴장해 주세요! ✨");
+        }
+      }, "🏰");
+    }
+  }
+});
+
+// 진입 시 기본 히스토리 백 트랩 시드 생성
+window.addEventListener('DOMContentLoaded', function() {
+  history.pushState(null, null, location.href);
+});
