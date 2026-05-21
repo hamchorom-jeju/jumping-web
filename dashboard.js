@@ -234,11 +234,17 @@ const Village = {
                                         let curIdx = 0;
                                         const updateNotice = () => {
                                             const title = notices[curIdx].title || notices[curIdx].content || '';
-                                            noticeEl.style.opacity = '0';
-                                            setTimeout(() => {
+                                            const textEl = noticeEl.querySelector('.v-notice-text');
+                                            if (textEl) {
+                                                textEl.style.transition = 'opacity 0.25s ease-in-out';
+                                                textEl.style.opacity = '0';
+                                                setTimeout(() => {
+                                                    textEl.textContent = title.trim();
+                                                    textEl.style.opacity = '1';
+                                                }, 250);
+                                            } else {
                                                 noticeEl.innerHTML = `<div class="v-banner-notice-inner"><span class="v-notice-badge">📢 마을공지</span><span class="v-notice-text">${title.trim()}</span></div><span class="v-banner-badge">전체보기 <i class="fa-solid fa-chevron-right"></i></span>`;
-                                                noticeEl.style.opacity = '1';
-                                            }, 300);
+                                            }
                                             curIdx = (curIdx + 1) % notices.length;
                                         };
                                         updateNotice();
