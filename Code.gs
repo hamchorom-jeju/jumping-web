@@ -7644,12 +7644,14 @@ function getVillageNotices() {
     var data = sheet.getDataRange().getDisplayValues();
     var list = [];
     for (var i = 1; i < data.length; i++) {
+      var activeVal = String(data[i][4]).toUpperCase().trim();
+      // 아카이브(notice.html)에서는 TRUE/FALSE 상관없이 모든 공지글 내역을 역사처럼 보여줍니다.
       list.push({
         date: data[i][0],      // 작성일
         category: data[i][1],  // 카테고리
         title: data[i][2],     // 제목
         content: data[i][3],   // 내용
-        active: String(data[i][4]).toUpperCase() === "TRUE" // 활성화
+        active: (activeVal === "TRUE" || activeVal === "ACTIVATED" || activeVal === "")
       });
     }
     return list.reverse(); // 최신 공지 순
