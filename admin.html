@@ -1452,42 +1452,69 @@
       else if (currentActivityType === '테라피') finalClasses = "테라피(" + (therapyTimes || "자율") + ")";
       else if (currentActivityType === '복합') finalClasses = classes + " / 테라피(" + (therapyTimes || "자율") + ")";
 
-      const btnSubmit = document.querySelector('#checkoutModal .btn-submit');
-      btnSubmit.innerText = "처리 중...";
-      btnSubmit.disabled = true;
-
-      const data = {
+      const checkoutData = {
         rowIdx: currentCheckoutRowIdx,
         timeLog: (currentActivityType === '테라피' ? "0.0" : timeLog),
         classes: finalClasses,
         extraDeduct: extraDeduct
       };
 
+      // 1. 즉시 창을 닫고 로컬 화면 갱신 (딜레이 0ms)
+      closeCheckout();
+      updateDashboardLocally(checkoutData.rowIdx, isEditingMode, checkoutData);
+      
+      // 2. 프리미엄 토스트 알림 표시 (차단형 팝업 대체)
+      showAdminToast(isEditingMode ? "⚡ 수정 내용이 즉시 반영되었습니다." : "⚡ 즉시 퇴실 처리가 완료되었습니다.");
+
+      // 3. 백그라운드 서버 통신 시작
       if (typeof google !== 'undefined' && google.script) {
         const handler = google.script.run.withSuccessHandler(function (res) {
-          closeCheckout();
-          btnSubmit.disabled = false;
-          btnSubmit.innerText = isEditingMode ? "수정 내용 저장" : "퇴실 및 기록 완료";
-
           if (res.error) {
-            showAdminErrorModal(res.error);
+            showAdminErrorModal("서버 처리 오류: " + res.error);
+            refreshDashboard(); // 에러 발생 시 원복을 위한 동기화
           } else {
-            showAdminSuccessModal(res.message || "완료되었습니다.");
-            updateDashboardLocally(data.rowIdx, isEditingMode, data);
-            refreshDashboard();
+            refreshDashboard(); // 정상 처리 시 최종 데이터 동기화
           }
+        }).withFailureHandler(function(err) {
+          showAdminErrorModal("네트워크 통신 오류: " + err.toString());
+          refreshDashboard();
         });
 
         if (isEditingMode) {
-          handler.editAdminCheckout(data);
+          handler.editAdminCheckout(checkoutData);
         } else {
-          handler.processAdminCheckout(data);
+          handler.processAdminCheckout(checkoutData);
         }
       } else {
-        showAdminErrorModal("[테스트 모드] 서버에 연결되지 않았습니다.");
-        closeCheckout();
-        btnSubmit.disabled = false;
+        setTimeout(() => {
+          showAdminToast("[테스트 모드] 로컬 가상 처리 완료");
+        }, 800);
       }
+    }
+
+    function showAdminToast(msg, duration = 2000) {
+      const toast = document.createElement('div');
+      toast.style = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#8a2be2; color:#fff; padding:12px 28px; border-radius:30px; font-size:0.95rem; font-weight: 600; z-index:10000; box-shadow:0 10px 25px rgba(138,43,226,0.3); transition: opacity 0.5s ease; pointer-events: none;";
+      toast.innerText = msg;
+      
+      if (!document.getElementById('toast-anim-style')) {
+        const style = document.createElement('style');
+        style.id = 'toast-anim-style';
+        style.innerHTML = `
+          @keyframes toastFadeIn {
+            from { bottom: 0px; opacity: 0; }
+            to { bottom: 20px; opacity: 1; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+      toast.style.animation = "toastFadeIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)";
+      
+      document.body.appendChild(toast);
+      setTimeout(() => { 
+        toast.style.opacity = "0"; 
+        setTimeout(() => toast.remove(), 500); 
+      }, duration);
     }
 
     function updateDashboardLocally(rowIdx, isEdit, checkoutData) {
