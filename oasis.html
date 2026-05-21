@@ -883,6 +883,7 @@
             }
             
             modal.style.display = 'flex';
+            registerModalOpen(closeWriteModal);
         }
 
         // 자유롭기 카테고리 탭 선택 리스너
@@ -922,8 +923,11 @@
             }
         }
 
-        function closeWriteModal() {
+        function closeWriteModal(isPopstate) {
             document.getElementById('write-popup-modal').style.display = 'none';
+            if (!isPopstate) {
+                registerModalClose(closeWriteModal);
+            }
         }
 
         function applyMagicTemplate(text) {
@@ -1041,6 +1045,7 @@
             
             if (myPraises.length === 0) {
                 listEl.innerHTML = '<div style="text-align:center; padding:30px; font-size:0.75rem; color:var(--text-dim); font-weight:700;">아직 모험가들의 나를 사랑하기 기록이 비어있습니다. 🌸</div>';
+                registerModalOpen(closePastPraiseModal);
                 return;
             }
             
@@ -1052,17 +1057,21 @@
                 card.style.border = '1px solid rgba(13,148,136,0.12)';
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; font-size:0.62rem; color:var(--text-dim); margin-bottom:4px; font-weight:700;">
-                        <span>🌸 ${p.author} 님</span>
+                         <span>🌸 ${p.author} 님</span>
                         <span>${p.date} ${p.time}</span>
                     </div>
                     <div style="font-size:0.75rem; font-weight:800; color:#334155; line-height:1.4;">${p.content}</div>
                 `;
                 listEl.appendChild(card);
             });
+            registerModalOpen(closePastPraiseModal);
         }
 
-        function closePastPraiseModal() {
+        function closePastPraiseModal(isPopstate) {
             document.getElementById('past-praise-modal').style.display = 'none';
+            if (!isPopstate) {
+                registerModalClose(closePastPraiseModal);
+            }
         }
 
         // 📖 흘러간 마음 채우기 명언 보관함 팝업 열기
@@ -1075,6 +1084,7 @@
             
             if (myQuotes.length === 0) {
                 listEl.innerHTML = '<div style="text-align:center; padding:30px; font-size:0.75rem; color:var(--text-dim); font-weight:700;">아직 마음 채우기 보관함이 비어있습니다. 📖</div>';
+                registerModalOpen(closePastQuotesModal);
                 return;
             }
             
@@ -1094,10 +1104,14 @@
                 `;
                 listEl.appendChild(card);
             });
+            registerModalOpen(closePastQuotesModal);
         }
 
-        function closePastQuotesModal() {
+        function closePastQuotesModal(isPopstate) {
             document.getElementById('past-quotes-modal').style.display = 'none';
+            if (!isPopstate) {
+                registerModalClose(closePastQuotesModal);
+            }
         }
 
         function submitPost() {
@@ -1388,11 +1402,51 @@
             document.getElementById('modal-author').innerText = `📷 ${author}`;
             document.getElementById('modal-date').innerText = date || "";
             modal.style.display = 'flex';
+            registerModalOpen(closeModal);
         }
 
-        function closeModal() {
+        function closeModal(isPopstate) {
             document.getElementById('polaroid-modal').style.display = 'none';
+            if (!isPopstate) {
+                registerModalClose(closeModal);
+            }
         }
+
+        // ----------------------------------------------------
+        // 🌌 [Oasis 2.4] 모바일 물리 뒤로가기 하드웨어 백버튼 트랩 시스템
+        // ----------------------------------------------------
+        window.oasisModalStack = [];
+
+        function registerModalOpen(closeFn) {
+            history.pushState({ modalOpen: true }, null, location.href);
+            window.oasisModalStack.push(closeFn);
+            console.log("[Backbutton] Modal opened. Active stack:", window.oasisModalStack.length);
+        }
+
+        function registerModalClose(closeFn) {
+            const idx = window.oasisModalStack.indexOf(closeFn);
+            if (idx > -1) {
+                window.oasisModalStack.splice(idx, 1);
+                history.back();
+                console.log("[Backbutton] Modal closed by user. Active stack:", window.oasisModalStack.length);
+            }
+        }
+
+        window.addEventListener('popstate', function (e) {
+            if (window.oasisModalStack.length > 0) {
+                // 뒤로가기 트랩 작동: 열려있던 마지막 모달을 닫아줍니다!
+                const closeFn = window.oasisModalStack.pop();
+                if (closeFn) {
+                    closeFn(true); // popstate를 통해 물리적으로 닫힘으로 전달
+                }
+            } else {
+                // 열린 모달이 하나도 없을 때 뒤로가기를 누르면 메인 광장으로의 이동 동의를 구합니다!
+                history.pushState(null, null, location.href); // 히스토리 밀림 긴급 복구
+                showAppConfirm("🌴 오아시스에서 퇴장하여 메인 광장으로 이동하시겠습니까?", function() {
+                    window.location.replace('index.html');
+                }, "🌴");
+            }
+        });
 
         function renderMockPosts() {
             renderOasis21Dashboard([
@@ -1408,6 +1462,9 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            // 초기 히스토리 백 트랩 시드 생성
+            history.pushState(null, null, location.href);
+            
             renderLoginStatus();
             loadPosts();
             checkActivePraiseBaton();
