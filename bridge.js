@@ -195,6 +195,23 @@ if (typeof google === 'undefined' || !google.script) {
                       { date: "26-05-12", score: 110 }
                     ]
                   };
+                } else if (prop === 'getVillageNotices') {
+                  mockResult = [
+                    {
+                      date: "2026-05-21",
+                      category: "선포",
+                      title: "노형 빌리지 대광장 리뉴얼 선포!",
+                      content: "노형 빌리지의 광장과 웰니스 센터가 새롭게 태어났습니다. 이제 마을 공지 배너를 누르면 이 황금 두루마리를 통해 언제든 마을의 중대사 역사와 공지 기록을 확인할 수 있습니다. ✨",
+                      active: true
+                    },
+                    {
+                      date: "2026-05-20",
+                      category: "공지",
+                      title: "20시 이후 금식 엄수 권고!",
+                      content: "원활한 신체 대사 순환과 다이어트 가속을 위해 밤 20시 이후 밤샘 공복 상태를 완벽히 유지해주시기 바랍니다. 🍵 따뜻한 보리차는 허용됩니다.",
+                      active: true
+                    }
+                  ];
                 }
                 
                 if (sHandler) sHandler(mockResult);

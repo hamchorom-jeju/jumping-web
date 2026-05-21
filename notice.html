@@ -38,52 +38,23 @@
       position: relative;
     }
 
-    /* 🚪 우측 상단 닫기 듀얼 버튼 */
-    .top-close-btn {
-      position: absolute;
-      top: 30px;
-      right: 16px;
-      width: 44px;
-      height: 44px;
-      background: rgba(212, 175, 55, 0.1);
-      border: 2px solid var(--scroll-gold);
-      border-radius: 50%;
-      color: var(--scroll-gold);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 1.2rem;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      z-index: 100;
-      box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
-    }
-    .top-close-btn:hover {
-      background: var(--scroll-gold);
-      color: var(--scroll-bg);
-      transform: rotate(90deg) scale(1.1);
-      box-shadow: 0 0 25px rgba(212, 175, 55, 0.5);
-    }
-    .top-close-btn:active {
-      transform: rotate(90deg) scale(0.95);
-    }
-
     header {
       text-align: center;
       margin-bottom: 45px;
       padding-top: 15px;
     }
     header h1 {
-      font-size: 2rem;
+      font-size: 1.5rem;
       font-weight: 900;
       color: var(--scroll-gold);
       margin-bottom: 10px;
-      letter-spacing: 1.5px;
+      letter-spacing: 0.5px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
+      gap: 8px;
       text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+      white-space: nowrap;
     }
     header p {
       color: #9c8e7a;
@@ -222,12 +193,13 @@
     /* 🚪 초대형 마을 광장으로 돌아가기 버튼 */
     .huge-return-btn {
       width: 100%;
+      box-sizing: border-box;
       background: linear-gradient(135deg, var(--scroll-gold) 0%, var(--scroll-gold-dark) 100%);
       color: var(--scroll-bg);
       border: none;
-      padding: 18px;
+      padding: 14px 18px;
       border-radius: 20px;
-      font-size: 1.05rem;
+      font-size: 0.95rem;
       font-weight: 900;
       cursor: pointer;
       box-shadow: 0 10px 25px rgba(212, 175, 55, 0.25);
@@ -235,7 +207,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
+      gap: 10px;
       margin-top: 45px;
       text-decoration: none;
     }
@@ -286,11 +258,6 @@
   </div>
 
   <div class="container">
-    
-    <!-- 🚪 우측 상단 닫기 버튼 -->
-    <div class="top-close-btn" onclick="location.href='index.html'" title="마을 광장으로 돌아가기">
-      <i class="fa-solid fa-xmark"></i>
-    </div>
 
     <header>
       <h1><i class="fa-solid fa-scroll"></i> VILLAGE SCROLLS</h1>
@@ -304,7 +271,7 @@
 
     <!-- 🚪 초대형 하단 돌아가기 버튼 -->
     <a href="index.html" class="huge-return-btn">
-      <i class="fa-solid fa-door-open" style="font-size: 1.3rem;"></i> 🚪 마을 광장으로 돌아가기
+      <i class="fa-solid fa-door-open" style="font-size: 1.1rem;"></i> 마을 광장으로 돌아가기
     </a>
 
   </div>
