@@ -689,11 +689,23 @@
 
       if (type === 'tip') {
         titleEl.innerHTML = `<i class="fa-solid fa-scroll"></i> 황금 두루마리 집필실`;
+        categorySelect.innerHTML = `
+          <option value="식단비법">식단비법 🍱</option>
+          <option value="홈트레이닝">홈트레이닝 🏃</option>
+          <option value="마음다스림">마음다스림 🧘</option>
+          <option value="요요방패">요요방패 🛡️</option>
+        `;
         categorySelect.style.display = 'block';
         submitBtn.innerText = '보물고에 소장하기 🏺';
       } else {
         titleEl.innerHTML = `<i class="fa-solid fa-bullhorn"></i> 마을 중대사 선포 (Ticker)`;
-        categorySelect.style.display = 'none';
+        categorySelect.innerHTML = `
+          <option value="선포">🏰 중대사 선포</option>
+          <option value="공지">📢 일반 마을 공지</option>
+          <option value="퀘스트">⚔️ 특별 퀘스트 안내</option>
+          <option value="이벤트">🎁 깜짝 마을 이벤트</option>
+        `;
+        categorySelect.style.display = 'block';
         submitBtn.innerText = '전령의 기둥에 새기기 📢';
       }
 
@@ -742,7 +754,7 @@
           }
         }).updatePillarNotice({
           content: title + " | " + content,
-          category: "공지"
+          category: category
         });
       }
     }
