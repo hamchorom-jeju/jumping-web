@@ -882,18 +882,7 @@
   </div>
 
   <script>
-    // [v58.0] 모바일 뒤로가기 완벽 이탈 방지 결계 가동! (메인 이탈 금지 - 대시보드 새로고침 적용)
-    history.pushState(null, null, location.href);
-    window.addEventListener('popstate', function() {
-      history.pushState(null, null, location.href); // 히스토리 밀림 긴급 방어
-      showAppConfirm("🏰 관리자 대시보드 데이터를 새로고침하시겠습니까?", function() {
-        if (typeof refreshDashboard === 'function') {
-          refreshDashboard();
-        } else {
-          window.location.reload();
-        }
-      }, "🏰");
-    });
+    // [v58.0] 모바일 뒤로가기 완벽 이탈 방지 결계 해제 (어드민에 불필요한 새로고침 팝업 제거)
 
     let currentCheckoutRowIdx = null;
 
@@ -979,7 +968,7 @@
         html += `<div class="section-title"><span>🏃‍♀️ 점핑 진행중 (${justJumping.length}명)</span></div>`;
         justJumping.forEach(p => {
           html += `
-            <div class="list-item">
+            <div class="list-item" data-row-idx="${p.rowIdx}">
               <div class="item-info">
                 <h3>${p.name.replace(/\d{4}$/, "")} <span class="status-badge">점핑중</span></h3>
                 <p>점핑 입실: ${p.inTime} (${p.membership})</p>
@@ -996,7 +985,7 @@
         justCombo.forEach(p => {
           let timeInfo = p.therapyTime ? `복합 입실: ${p.inTime} | 테라피 예약: ${p.therapyTime}` : `복합 입실: ${p.inTime} (${p.membership})`;
           html += `
-            <div class="list-item">
+            <div class="list-item" data-row-idx="${p.rowIdx}">
               <div class="item-info">
                 <h3>${p.name.replace(/\d{4}$/, "")} <span class="status-badge" style="background: rgba(138,43,226,0.2); color: var(--primary);">복합진행</span></h3>
                 <p>${timeInfo}</p>
@@ -1016,7 +1005,7 @@
           const badgeStyle = isBonusAttendance ? "background:#f59e0b; color:#fff;" : "";
 
           html += `
-            <div class="list-item">
+            <div class="list-item" data-row-idx="${p.rowIdx}">
               <div class="item-info">
                 <h3>${p.name.replace(/\d{4}$/, "")} <span class="status-badge therapy" style="${badgeStyle}">${badgeText}</span></h3>
                 <p>${timeInfo}</p>
@@ -1044,7 +1033,7 @@
           let extraChecked = p.extraText && (p.extraText.indexOf("차감됨") !== -1 || p.extraText.indexOf("추가차감") !== -1);
 
           html += `
-            <div class="list-item" style="opacity: 0.65; cursor: pointer; background: rgba(255,255,255,0.03);" onclick="openEditCheckout('${p.name}', ${p.rowIdx}, '${p.timeLog}', '${p.classes}', ${extraChecked})">
+            <div class="list-item" data-row-idx="${p.rowIdx}" style="opacity: 0.65; cursor: pointer; background: rgba(255,255,255,0.03);" onclick="openEditCheckout('${p.name}', ${p.rowIdx}, '${p.timeLog}', '${p.classes}', ${extraChecked})">
               <div class="item-info">
                 <h3 style="color: var(--text-sub);">${p.name.replace(/\d{4}$/, "")} <span class="status-badge" style="background: rgba(255,255,255,0.1); color: #ccc;">완료</span></h3>
                 <p style="font-size:0.85rem;">입실: ${p.inTime} | 기록: ${displayRecord} ${extraChecked ? '<br><span style="color:#ff5252;">(1회 추가 차감됨)</span>' : ''}</p>
@@ -1484,6 +1473,7 @@
             showAdminErrorModal(res.error);
           } else {
             showAdminSuccessModal(res.message || "완료되었습니다.");
+            updateDashboardLocally(data.rowIdx, isEditingMode, data);
             refreshDashboard();
           }
         });
@@ -1497,6 +1487,130 @@
         showAdminErrorModal("[테스트 모드] 서버에 연결되지 않았습니다.");
         closeCheckout();
         btnSubmit.disabled = false;
+      }
+    }
+
+    function updateDashboardLocally(rowIdx, isEdit, checkoutData) {
+      const card = document.querySelector('[data-row-idx="' + rowIdx + '"]');
+      if (!card) return;
+
+      let name = "";
+      let inTime = "시간미정";
+
+      // 1. 이름과 입실 시간 추출
+      const h3 = card.querySelector('h3');
+      if (h3) {
+        name = h3.innerText.replace(/(점핑중|복합진행|테라피중|보너스중|완료)/g, "").trim();
+      }
+      
+      const p = card.querySelector('p');
+      if (p) {
+        const match = p.innerText.match(/(입실|입실시간):\s*([^\s|()]+)/);
+        if (match) {
+          inTime = match[2];
+        }
+      }
+
+      // 2. 만약 수정 모드인 경우
+      if (isEdit) {
+        let extraTextStr = checkoutData.extraDeduct ? '<br><span style="color:#ff5252;">(1회 추가 차감됨)</span>' : '';
+        let displayRecord = checkoutData.classes;
+        if (checkoutData.timeLog && checkoutData.timeLog !== "0.0" && checkoutData.timeLog !== "0") {
+          displayRecord += ' (' + checkoutData.timeLog + '타임)';
+        }
+        let extraChecked = !!checkoutData.extraDeduct;
+
+        const newCardHtml = `
+          <div class="list-item" data-row-idx="${rowIdx}" style="opacity: 0.65; cursor: pointer; background: rgba(255,255,255,0.03);" onclick="openEditCheckout('${name}', ${rowIdx}, '${checkoutData.timeLog}', '${checkoutData.classes}', ${extraChecked})">
+            <div class="item-info">
+              <h3 style="color: var(--text-sub);">${name} <span class="status-badge" style="background: rgba(255,255,255,0.1); color: #ccc;">완료</span></h3>
+              <p style="font-size:0.85rem;">입실: ${inTime} | 기록: ${displayRecord} ${extraTextStr}</p>
+            </div>
+            <div style="color:var(--primary); font-size:0.75rem; border:1px solid var(--primary); padding:4px 10px; border-radius:8px; font-weight:600;">수정</div>
+          </div>`;
+        card.outerHTML = newCardHtml;
+      } 
+      // 3. 신규 퇴실 등록인 경우
+      else {
+        // (1) 해당 카드가 속해 있던 액티브 섹션 타이틀의 인원 수 감소
+        let sectionText = '';
+        if (currentActivityType === '점핑') sectionText = '점핑 진행중';
+        else if (currentActivityType === '테라피') sectionText = '테라피 진행중';
+        else if (currentActivityType === '복합') sectionText = '복합 진행중';
+
+        const spans = document.querySelectorAll('.section-title span');
+        spans.forEach(span => {
+          if (span.innerText.includes(sectionText)) {
+            const match = span.innerText.match(/\((\d+)명\)/);
+            if (match) {
+              const count = parseInt(match[1]) - 1;
+              if (count <= 0) {
+                span.parentNode.style.display = 'none';
+              } else {
+                span.innerText = span.innerText.replace(/\(\d+명\)/, '(' + count + '명)');
+              }
+            }
+          }
+        });
+
+        // (2) 카드 삭제
+        card.remove();
+
+        // (3) 대시보드 하단 귀가완료 수치 1 증가
+        const goHomeCountEl = document.getElementById('goHomeCount');
+        if (goHomeCountEl) {
+          goHomeCountEl.innerText = parseInt(goHomeCountEl.innerText || 0) + 1;
+        }
+
+        // (4) 귀가 완료 섹션 찾기/생성 및 카드 추가
+        let goHomeSection = document.getElementById('goHomeSection');
+        if (!goHomeSection) {
+          const goHomeHtml = `
+            <div id="goHomeSection" style="margin-top: 40px; border-top: 2px solid rgba(255,255,255,0.05); padding-top: 20px;">
+              <div class="section-title" onclick="toggleGoHome()" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2); padding:15px; border-radius:12px;">
+                <span style="color: var(--text-sub); font-size:1rem;">✅ 오늘 귀가 완료 (1명)</span>
+                <span id="goHomeArrow" style="font-size:0.8rem; color:var(--text-sub);">펼치기 ▾</span>
+              </div>
+              <div id="goHomeListContainer" style="display:none; margin-top:15px;"></div>
+            </div>`;
+          
+          const container = document.querySelector('.container');
+          if (container) {
+            container.insertAdjacentHTML('beforeend', goHomeHtml);
+          }
+          goHomeSection = document.getElementById('goHomeSection');
+        } else {
+          const goHomeTitleSpan = goHomeSection.querySelector('.section-title span');
+          if (goHomeTitleSpan) {
+            const match = goHomeTitleSpan.innerText.match(/✅ 오늘 귀가 완료 \((\d+)명\)/);
+            if (match) {
+              const newGoHomeCount = parseInt(match[1]) + 1;
+              goHomeTitleSpan.innerHTML = `✅ 오늘 귀가 완료 (${newGoHomeCount}명)`;
+            }
+          }
+        }
+
+        // (5) 귀가 완료 리스트 컨테이너에 카드 추가
+        const goHomeListContainer = document.getElementById('goHomeListContainer');
+        if (goHomeListContainer) {
+          let extraTextStr = checkoutData.extraDeduct ? '<br><span style="color:#ff5252;">(1회 추가 차감됨)</span>' : '';
+          let displayRecord = checkoutData.classes;
+          if (checkoutData.timeLog && checkoutData.timeLog !== "0.0" && checkoutData.timeLog !== "0") {
+            displayRecord += ' (' + checkoutData.timeLog + '타임)';
+          }
+          let extraChecked = !!checkoutData.extraDeduct;
+
+          const newCardHtml = `
+            <div class="list-item" data-row-idx="${rowIdx}" style="opacity: 0.65; cursor: pointer; background: rgba(255,255,255,0.03);" onclick="openEditCheckout('${name}', ${rowIdx}, '${checkoutData.timeLog}', '${checkoutData.classes}', ${extraChecked})">
+              <div class="item-info">
+                <h3 style="color: var(--text-sub);">${name} <span class="status-badge" style="background: rgba(255,255,255,0.1); color: #ccc;">완료</span></h3>
+                <p style="font-size:0.85rem;">입실: ${inTime} | 기록: ${displayRecord} ${extraTextStr}</p>
+              </div>
+              <div style="color:var(--primary); font-size:0.75rem; border:1px solid var(--primary); padding:4px 10px; border-radius:8px; font-weight:600;">수정</div>
+            </div>`;
+          
+          goHomeListContainer.insertAdjacentHTML('afterbegin', newCardHtml);
+        }
       }
     }
   </script>
