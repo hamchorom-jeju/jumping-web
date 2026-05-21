@@ -859,20 +859,36 @@
     }
 
     window.addEventListener('popstate', function(event) {
+      const infoModal = document.getElementById('info-modal');
+      const certModal = document.getElementById('cert-modal');
       const aiModal = document.getElementById('ai-meal-modal');
       const polaroidModal = document.getElementById('polaroid-modal');
       const geminiModal = document.getElementById('gemini-key-modal');
       
-      // Gemini 키 설정 모달 닫기
-      if (geminiModal && geminiModal.style.display === 'flex') {
-        geminiModal.style.display = 'none';
+      let modalClosed = false;
+
+      // 1. 사진 인증 모달 닫기
+      if (certModal && certModal.style.display === 'flex') {
+        certModal.style.display = 'none';
+        resetCertPreview();
+        modalClosed = true;
       }
       
-      // AI 모달이 열려있는 상태에서 뒤로가기가 발생했다면 모달만 닫아줌
+      // 2. 상세 설명 모달 닫기
+      if (infoModal && infoModal.style.display === 'flex') {
+        infoModal.style.display = 'none';
+        modalClosed = true;
+      }
+
+      // 3. Gemini 키 설정 모달 닫기
+      if (geminiModal && geminiModal.style.display === 'flex') {
+        geminiModal.style.display = 'none';
+        modalClosed = true;
+      }
+      
+      // 4. AI 모달 닫기
       if (aiModal && aiModal.style.display === 'flex') {
         aiModal.style.display = 'none';
-        
-        // 스캔 진행 중 스피너와 버튼 복구
         const scanLine = document.getElementById('ai-scan-line');
         if (scanLine) scanLine.style.display = 'none';
         const scanBtn = document.getElementById('btn-start-ai-scan');
@@ -880,11 +896,21 @@
           scanBtn.disabled = false;
           scanBtn.innerText = '지니 AI 식단 스캔 시작 🚀';
         }
+        modalClosed = true;
       }
       
-      // 폴라로이드 상세 모달이 열려있다면 닫아줌
+      // 5. 폴라로이드 상세 모달 닫기
       if (polaroidModal && polaroidModal.style.display === 'flex') {
         polaroidModal.style.display = 'none';
+        modalClosed = true;
+      }
+
+      // 만약 닫은 모달이 없다면, 메인 광장 최종 퇴장 확인창 결계 가동!
+      if (!modalClosed) {
+        history.pushState(null, null, location.href); // 히스토리 밀림 긴급 복구
+        showAppConfirm("⚔️ 모험가의 기록소에서 퇴장하여 메인 광장으로 이동하시겠습니까?", function() {
+            window.location.replace('index.html');
+        }, "⚔️");
       }
     });
 
@@ -2000,11 +2026,13 @@
       }
 
       document.getElementById('info-modal').style.display = 'flex';
+      pushModalState('info-modal');
     }
 
     function closeInfoModal(e) {
       if (e && e.target !== document.getElementById('info-modal')) return;
       document.getElementById('info-modal').style.display = 'none';
+      popModalStateIfOpen('info-modal');
     }
 
     function doHabitCheck(key) {
@@ -2081,10 +2109,12 @@
       document.getElementById('cert-comment').value = '';
       resetCertPreview();
       document.getElementById('cert-modal').style.display = 'flex';
+      pushModalState('cert-modal');
     }
     function closeCertModal() {
       document.getElementById('cert-modal').style.display = 'none';
       resetCertPreview();
+      popModalStateIfOpen('cert-modal');
     }
     function previewCertImage(input) {
       if (input.files && input.files[0]) {
