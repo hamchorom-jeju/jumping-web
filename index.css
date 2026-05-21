@@ -95,7 +95,12 @@ body {
     cursor: pointer;
     user-select: none;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    white-space: nowrap;
+    /* 2줄 줄바꿈 지원 완벽 복원 및 초과 시 말줄임표(...) 자동 처리 */
+    word-break: keep-all;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
 }
