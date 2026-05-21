@@ -568,17 +568,7 @@ const Village = {
             }
         }
         
-        // 2. 내일의 돌발 예고 배너
-        const teaserBar = document.getElementById('teaser-mission-bar');
-        if (teaserBar) {
-            if (quests.tomorrowQuest) {
-                teaserBar.style.display = 'block';
-                teaserBar.innerHTML = `🔮 [내일의 돌발 예고] 내일은 '<strong>${quests.tomorrowQuest.title}</strong>' 퀘스트가 열립니다!`;
-            } else {
-                teaserBar.style.display = 'none';
-            }
-        }
-        
+
         // 3. 글리코겐 클리어 방패 퀘스트 위젯
         const glyWidget = document.getElementById('glycogen-quest-widget');
         if (glyWidget) {
