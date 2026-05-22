@@ -8055,7 +8055,8 @@ function getScheduledQuests() {
           title: data[i][3],
           description: data[i][4],
           status: data[i][7] || "대기",
-          score: data[i].length > 8 ? Number(data[i][8] || 15) : 15
+          score: data[i].length > 8 ? Number(data[i][8] || 15) : 15,
+          method: data[i].length > 9 ? (data[i][9] || "사진") : "사진"
         });
       }
     }
@@ -8074,6 +8075,7 @@ function saveScheduledQuest(payload) {
     var title = payload.title;
     var desc = payload.description;
     var score = Number(payload.score || 15);
+    var method = payload.method || "사진";
     
     // 동일한 날짜에 이미 등록된 이장 돌발 퀘스트가 있는지 검사하여 덮어쓰기/수정 지원
     var data = sheet.getDataRange().getDisplayValues();
@@ -8091,6 +8093,7 @@ function saveScheduledQuest(payload) {
       sheet.getRange(foundRowIdx, 5).setValue(desc);
       sheet.getRange(foundRowIdx, 8).setValue("대기");
       sheet.getRange(foundRowIdx, 9).setValue(score);
+      sheet.getRange(foundRowIdx, 10).setValue(method);
     } else {
       // 신규 등록
       var newId = "Q_" + Date.now();
@@ -8103,7 +8106,8 @@ function saveScheduledQuest(payload) {
         dateStr + " 23:59:59", // 만료 시간
         "ALL_MEMBERS",
         "대기",
-        score
+        score,
+        method
       ]);
     }
     

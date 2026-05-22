@@ -313,6 +313,13 @@
           <option value="30">+30 EXP</option>
         </select>
       </div>
+      
+      <!-- 🔮 인증 방식 선택 필드 추가 -->
+      <select id="calendar-quest-method" class="pillar-input" style="margin-bottom: 12px;">
+        <option value="사진">📸 사진 인증 돌발 (아카이브 인증 전용)</option>
+        <option value="게시판">⚡ 글쓰기 인증 돌발 (오아시스 칠판 전용)</option>
+      </select>
+
       <input type="text" id="calendar-quest-title" class="pillar-input" placeholder="퀘스트 제목 (예: 쉐이크 믹서기 인증!)">
       <textarea id="calendar-quest-desc" class="pillar-input" style="height: 65px; resize: none;" placeholder="수행 가이드 (예: 쉐이크를 타는 역동적인 순간 인증샷)"></textarea>
       
@@ -620,20 +627,29 @@
         container.innerHTML = '<div style="text-align:center; font-size:0.7rem; color:var(--text-sub); padding:15px; font-weight:700;">예약된 자정 자동 돌발 퀘스트가 없습니다.</div>';
         return;
       }
-      container.innerHTML = list.map(q => `
-        <div class="calendar-item">
-          <div class="calendar-info">
-            <h4>📅 [${q.date}] ${q.title} (+${q.score} EXP)</h4>
-            <p>${q.description}</p>
+      container.innerHTML = list.map(q => {
+        const methodBadge = q.method === '게시판' 
+          ? `<span style="background: rgba(225, 29, 72, 0.2); border: 1px solid #f43f5e; color: #f43f5e; font-size: 0.65rem; padding: 2px 6px; border-radius: 6px; font-weight: 900; margin-left: 6px; display: inline-flex; align-items: center; gap: 2px;">⚡ 글쓰기</span>` 
+          : `<span style="background: rgba(14, 165, 233, 0.2); border: 1px solid #0ea5e9; color: #38bdf8; font-size: 0.65rem; padding: 2px 6px; border-radius: 6px; font-weight: 900; margin-left: 6px; display: inline-flex; align-items: center; gap: 2px;">📸 사진</span>`;
+        return `
+          <div class="calendar-item">
+            <div class="calendar-info">
+              <h4 style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
+                📅 [${q.date}] ${q.title} (+${q.score} EXP)
+                ${methodBadge}
+              </h4>
+              <p>${q.description}</p>
+            </div>
+            <button class="calendar-del-btn" onclick="deleteQuest(${q.rowIdx})">제거</button>
           </div>
-          <button class="calendar-del-btn" onclick="deleteQuest(${q.rowIdx})">제거</button>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function addScheduledQuest() {
       const date = document.getElementById('calendar-quest-date').value;
       const score = document.getElementById('calendar-quest-score').value;
+      const method = document.getElementById('calendar-quest-method').value;
       const title = document.getElementById('calendar-quest-title').value.trim();
       const desc = document.getElementById('calendar-quest-desc').value.trim();
 
@@ -657,6 +673,7 @@
       }).saveScheduledQuest({
         date: date,
         score: parseInt(score),
+        method: method,
         title: title,
         description: desc
       });

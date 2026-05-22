@@ -730,19 +730,6 @@
         </button>
     </div>
 
-    <!-- ⚡ 돌발 퀘스트 롤링 띠 배너 -->
-    <div class="v-self-praise-roller-container" id="sudden-quest-rolling-banner" style="display: none; background: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important; margin-top: -10px; border-radius: 0 0 16px 16px !important; box-shadow: 0 4px 15px rgba(225, 29, 72, 0.15) !important;">
-        <div class="roller-title" id="sudden-banner-title" style="background: rgba(255, 255, 255, 0.2) !important; color: white !important; font-weight: 900 !important;" onclick="openSuddenGuidePopup()">⚡ [돌발] 퀘스트</div>
-        <div class="roller-wrapper" onclick="openSuddenGuidePopup()">
-            <div class="roller-track" id="sudden-roller-track" style="animation: rollerMarquee 20s linear infinite !important;">
-                <!-- 동적 주입 -->
-            </div>
-        </div>
-        <button class="roller-box-btn" style="background: #be123c !important; box-shadow: 0 2px 6px rgba(190, 18, 60, 0.3) !important;" onclick="openWriteModal('일반'); selectMemoCategoryTab('돌발');" title="돌발 기록하고 +15 EXP 받기">
-            <i class="fa-solid fa-pen"></i> 기록
-        </button>
-    </div>
-
     <div class="oasis-container">
         
         <!-- 📖 섹션 2: 마음 채우기 (중복 아이콘 제거, 이모지만 깔끔하게 배치!) -->
@@ -778,7 +765,7 @@
                 ⚡ 한껏 자유롭기
             </div>
             <div style="display:flex; gap:6px; align-items:center;">
-                <button class="v-premium-header-btn" id="blackboard-guide-btn" onclick="event.stopPropagation(); openSuddenGuidePopup()" style="display: none; background: #e11d48 !important; border-color: #be123c !important; color: white !important;">
+                <button class="v-premium-header-btn" id="blackboard-guide-btn" onclick="event.stopPropagation(); openSuddenGuidePopup()" style="display: none !important; background: #e11d48 !important; border-color: #be123c !important; color: white !important;">
                     <i class="fa-solid fa-circle-info"></i> 💡 퀘스트 가이드
                 </button>
                 <button class="v-premium-header-btn" id="blackboard-write-btn" onclick="event.stopPropagation(); handleBlackboardWriteClick()">
@@ -1780,16 +1767,14 @@
             const quoteIcon = document.getElementById('quote-toggle-icon');
             const blackboardTitle = document.getElementById('blackboard-header-title');
             const blackboardGuideBtn = document.getElementById('blackboard-guide-btn');
-            const suddenRollingBanner = document.getElementById('sudden-quest-rolling-banner');
             const tabCatSudden = document.getElementById('tab-cat-sudden');
 
             if (!activeSuddenQuest) {
-                if (suddenRollingBanner) suddenRollingBanner.style.display = 'none';
                 if (tabCatSudden) tabCatSudden.style.display = 'block';
                 if (quoteSection) quoteSection.style.display = 'block';
                 if (quoteIcon) quoteIcon.style.transform = 'rotate(180deg)';
                 if (blackboardTitle) blackboardTitle.innerHTML = `⚡ 한껏 자유롭기`;
-                if (blackboardGuideBtn) blackboardGuideBtn.style.display = 'none';
+                if (blackboardGuideBtn) blackboardGuideBtn.style.setProperty('display', 'none', 'important');
                 return;
             }
 
@@ -1799,13 +1784,12 @@
             if (method === '사진') {
                 // 1. 사진 돌발인 날: 오아시스 글쓰기 내부 돌발인증 탭 숨김
                 if (tabCatSudden) tabCatSudden.style.display = 'none';
-                if (suddenRollingBanner) suddenRollingBanner.style.display = 'none';
 
                 // 평소 복원
                 if (quoteSection) quoteSection.style.display = 'block';
                 if (quoteIcon) quoteIcon.style.transform = 'rotate(180deg)';
                 if (blackboardTitle) blackboardTitle.innerHTML = `⚡ 한껏 자유롭기`;
-                if (blackboardGuideBtn) blackboardGuideBtn.style.display = 'none';
+                if (blackboardGuideBtn) blackboardGuideBtn.style.setProperty('display', 'none', 'important');
 
                 // 2. write=sudden-quest 유입 차단 및 아카이브 리다이렉션
                 if (isSuddenQuestWrite) {
@@ -1818,10 +1802,9 @@
                 // 1. 게시판 돌발인 날: 돌발 탭 활성화
                 if (tabCatSudden) tabCatSudden.style.display = 'block';
 
-                // 2. 칠판 전면 변신: 상단 롤링 배너 숨기고, 칠판 헤더에 타이틀 및 가이드 노출
-                if (suddenRollingBanner) suddenRollingBanner.style.display = 'none';
+                // 2. 칠판 전면 변신: 칠판 헤더에 타이틀 및 가이드 노출
                 if (blackboardTitle) blackboardTitle.innerHTML = `⚡ [돌발] ${pureTitle} 인증판`;
-                if (blackboardGuideBtn) blackboardGuideBtn.style.display = 'block';
+                if (blackboardGuideBtn) blackboardGuideBtn.style.setProperty('display', 'flex', 'important');
 
                 // 3. 아코디언 접기: 마음 채우기 영역 자동 접기
                 if (quoteSection) quoteSection.style.display = 'none';
