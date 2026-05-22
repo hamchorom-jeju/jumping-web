@@ -2102,14 +2102,14 @@
             if (key === 'h9') {
               authBtn.innerText = '✍️ 인증하러 가기';
               authBtn.onclick = () => { 
-                doHabitCheck(key); 
+                doHabitCheck(key, true); 
                 closeInfoModal(); 
                 location.href = "oasis.html?write=self-praise"; 
               };
             } else {
               authBtn.innerText = '📸 인증하러 가기';
               authBtn.onclick = () => { 
-                doHabitCheck(key); 
+                doHabitCheck(key, true); 
                 closeInfoModal(); 
                 setTimeout(() => { openCertModal(key); }, 200); 
               };
@@ -2139,7 +2139,7 @@
       }
     }
 
-    function doHabitCheck(key) {
+    function doHabitCheck(key, isSilent) {
       const d = POPUP_DATA[key];
       if (!d || !d.habitId) return;
       if (!TARGET_PHONE) return showAppAlert('로그인이 필요합니다.', 'error');
@@ -2161,7 +2161,9 @@
         }
         syncDoneListStates(window.lastDoneList);
         closeInfoModal();
-        showAppAlert(`✨ [${d.title}] 수호 완료! +${score} EXP 획득! 🌿 (가상 적립)`, 'success');
+        if (!isSilent) {
+          showAppAlert(`✨ [${d.title}] 수호 완료! +${score} EXP 획득! 🌿 (가상 적립)`, 'success');
+        }
         return;
       }
 
@@ -2175,7 +2177,9 @@
       // 즉시 화면 갱신 (사용자는 누르는 즉시 대기시간 0초로 완료를 체감!)
       syncDoneListStates(window.lastDoneList);
       closeInfoModal();
-      showAppAlert(`✨ [${d.title}] 수호 완료! +${score} EXP 획득! 🌿`, 'success');
+      if (!isSilent) {
+        showAppAlert(`✨ [${d.title}] 수호 완료! +${score} EXP 획득! 🌿`, 'success');
+      }
 
       // 구글 앱스 스크립트 미지원 로컬 환경일 경우 백그라운드 전송은 스킵
       if (typeof google === 'undefined' || !google.script || !google.script.run) {
