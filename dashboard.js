@@ -254,14 +254,27 @@ const Village = {
                                     }
                                 };
 
-                                const getActionHtml = (isSudden, isDone) => {
+                                const getActionHtml = (isSudden, isDone, itemTitle) => {
                                     if (!isSudden) return `<span class="v-banner-badge">전체보기 <i class="fa-solid fa-chevron-right"></i></span>`;
                                     if (isDone) {
                                         // 🎉 격조 높은 에메랄드 초록색 '완료됨' 배지
                                         return `<span class="v-banner-badge" style="box-shadow: 0 0 12px rgba(16, 185, 129, 0.4); border-color: #10b981; color: #10b981; background: rgba(16, 185, 129, 0.1); font-weight: bold;">완료됨 <i class="fa-solid fa-circle-check" style="color: #10b981;"></i></span>`;
                                     } else {
-                                        // ⚡ 액티브한 장미색 '인증하기' 배지
-                                        return `<span class="v-banner-badge" style="box-shadow: 0 0 12px rgba(244, 63, 94, 0.4); border-color: #f43f5e; color: #f43f5e; background: rgba(244, 63, 94, 0.1); font-weight: bold;">인증하기 <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i></span>`;
+                                        // 3중 안전 필터링으로 글쓰기 돌발 여부 확인
+                                        const qTitle = res.quests && res.quests.todayQuest ? (res.quests.todayQuest.title || '') : '';
+                                        const qMethod = res.quests && res.quests.todayQuest ? (res.quests.todayQuest.method || '') : '';
+                                        const titleLower = (itemTitle || qTitle || '').toLowerCase();
+                                        const isBoard = qMethod === '게시판' || 
+                                                        titleLower.indexOf('✍️') > -1 || titleLower.indexOf('📝') > -1 || titleLower.indexOf('✏️') > -1 || titleLower.indexOf('⚡') > -1 ||
+                                                        titleLower.indexOf('글쓰기') > -1 || titleLower.indexOf('게시판') > -1 || titleLower.indexOf('칠판') > -1 || titleLower.indexOf('작성') > -1 || titleLower.indexOf('번개') > -1;
+                                        
+                                        if (isBoard) {
+                                            // 📝 글쓰기 인증용 보라색 테두리 배지
+                                            return `<span class="v-banner-badge" style="box-shadow: 0 0 12px rgba(139, 92, 246, 0.4); border-color: #8b5cf6; color: #8b5cf6; background: rgba(139, 92, 246, 0.1); font-weight: bold;">📝 글쓰기 <i class="fa-solid fa-chevron-right" style="color: #a78bfa; font-size: 0.65rem; margin-left: 2px;"></i></span>`;
+                                        } else {
+                                            // 📸 사진 인증용 기존 장미빛 배지
+                                            return `<span class="v-banner-badge" style="box-shadow: 0 0 12px rgba(244, 63, 94, 0.4); border-color: #f43f5e; color: #f43f5e; background: rgba(244, 63, 94, 0.1); font-weight: bold;">📸 사진 <i class="fa-solid fa-chevron-right" style="color: #fb7185; font-size: 0.65rem; margin-left: 2px;"></i></span>`;
+                                        }
                                     }
                                 };
 
@@ -297,7 +310,7 @@ const Village = {
                                         ? `<span class="v-notice-badge sudden">⚡ 돌발<br>퀘스트</span>`
                                         : `<span class="v-notice-badge">📢 마을공지</span>`;
                                     
-                                    const actionHtml = getActionHtml(isSudden, isDone);
+                                    const actionHtml = getActionHtml(isSudden, isDone, title);
                                     
                                     if (isSudden) {
                                         noticeEl.classList.add('sudden-mode');
@@ -321,7 +334,7 @@ const Village = {
                                             ? `<span class="v-notice-badge sudden">⚡ 돌발<br>퀘스트</span>`
                                             : `<span class="v-notice-badge">📢 마을공지</span>`;
                                         
-                                        const actionHtml = getActionHtml(isSudden, isDone);
+                                        const actionHtml = getActionHtml(isSudden, isDone, title);
                                         
                                         if (isSudden) {
                                             noticeEl.classList.add('sudden-mode');
@@ -359,7 +372,7 @@ const Village = {
                                                     ? `<span class="v-notice-badge sudden">⚡ 돌발<br>퀘스트</span>`
                                                     : `<span class="v-notice-badge">📢 마을공지</span>`;
                                                 
-                                                const actionHtml = getActionHtml(nextSudden, nextDone);
+                                                const actionHtml = getActionHtml(nextSudden, nextDone, nextTitle);
                                                 
                                                 if (nextSudden) {
                                                     noticeEl.classList.add('sudden-mode');
@@ -395,7 +408,7 @@ const Village = {
                                                     const actionContainer = noticeEl.querySelector('.v-banner-badge');
                                                     
                                                     if (actionContainer) {
-                                                        const newActionHtml = getActionHtml(nextSudden, nextDone);
+                                                        const newActionHtml = getActionHtml(nextSudden, nextDone, nextTitle);
                                                         actionContainer.outerHTML = newActionHtml;
                                                     }
                                                     
