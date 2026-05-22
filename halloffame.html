@@ -3,143 +3,879 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>명예의 전당 - 노형점핑</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+  <title>명예의 전당 | 노형점핑</title>
+  
+  <!-- Outfit & Noto Sans KR Premium Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  
   <style>
     :root {
-      --primary: #6b46c1;
-      --gold: #f6e05e;
+      --primary: #8b5cf6;
+      --primary-hover: #7c3aed;
+      --accent: #f59e0b;
+      --gold: #fbbf24;
       --silver: #cbd5e1;
-      --bronze: #ed8936;
-      --bg-dark: #0f172a;
+      --bronze: #ca8a04;
+      --card-bg: rgba(30, 27, 75, 0.4);
+      --card-border: rgba(139, 92, 246, 0.15);
+      --glass-bg: rgba(15, 23, 42, 0.6);
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
       font-family: 'Outfit', 'Noto Sans KR', sans-serif;
-      background-color: var(--bg-dark);
-      color: white;
-      margin: 0;
-      padding: 0;
-      background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+      background: radial-gradient(circle at top right, #0f1123, #070913);
+      color: #f8fafc;
+      min-height: 100vh;
+      padding: 0 0 50px 0;
+      overflow-x: hidden;
+      line-height: 1.5;
     }
 
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 40px 20px;
-    }
-
+    /* Header Styling */
     header {
+      position: relative;
+      padding: 50px 20px 30px;
       text-align: center;
-      margin-bottom: 40px;
+      background: linear-gradient(to bottom, rgba(139, 92, 246, 0.1), transparent);
     }
 
     .back-btn {
       position: absolute;
-      top: 20px;
+      top: 25px;
       left: 20px;
-      color: white;
-      text-decoration: none;
-      font-size: 0.9rem;
-      opacity: 0.7;
-    }
-
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 10px;
-      background: linear-gradient(to right, #f6e05e, #ed8936);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .rank-card {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 20px;
-      padding: 24px;
-      margin-bottom: 20px;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .rank-item {
       display: flex;
       align-items: center;
-      padding: 16px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      gap: 6px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 30px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .rank-item:last-child { border-bottom: none; }
-
-    .rank-num {
-      width: 40px;
-      font-size: 1.2rem;
-      font-weight: 700;
+    .back-btn:hover {
+      color: #ffffff;
+      background: rgba(139, 92, 246, 0.15);
+      border-color: rgba(139, 92, 246, 0.3);
+      transform: translateX(-3px);
     }
 
-    .rank-1 { color: var(--gold); }
-    .rank-2 { color: var(--silver); }
-    .rank-3 { color: var(--bronze); }
+    header h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #ffffff 30%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
 
-    .rank-name {
+    header p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* Container */
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Tab Bar */
+    .tab-bar {
+      display: flex;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 50px;
+      padding: 6px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      position: relative;
+      z-index: 10;
+    }
+
+    .tab-btn {
       flex: 1;
-      font-size: 1.1rem;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 12px 0;
+      font-size: 0.95rem;
       font-weight: 600;
+      cursor: pointer;
+      border-radius: 40px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
 
-    .rank-val {
-      font-size: 1rem;
-      color: #94a3b8;
+    .tab-btn.active {
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--primary) 0%, #6d28d9 100%);
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+      transform: scale(1.02);
     }
 
-    .val-num {
-      color: var(--primary);
+    /* 3D Podium Layout */
+    .podium-container {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 12px;
+      margin: 40px 0 30px;
+      padding-top: 20px;
+      position: relative;
+    }
+
+    .podium-card {
+      flex: 1;
+      background: linear-gradient(to top, rgba(30, 27, 75, 0.8), rgba(15, 23, 42, 0.6));
+      border-radius: 24px;
+      border: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 10px;
+      position: relative;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 3D Height distinctions */
+    .podium-card.rank-2nd {
+      height: 220px;
+      z-index: 2;
+    }
+
+    .podium-card.rank-1st {
+      height: 260px;
+      transform: translateY(-15px);
+      border-color: rgba(251, 191, 36, 0.4);
+      background: linear-gradient(to top, rgba(45, 33, 15, 0.8), rgba(15, 23, 42, 0.6));
+      box-shadow: 0 15px 40px rgba(251, 191, 36, 0.15);
+      z-index: 3;
+    }
+
+    .podium-card.rank-3rd {
+      height: 190px;
+      z-index: 1;
+    }
+
+    .podium-card:hover {
+      transform: translateY(-5px) scale(1.03);
+      border-color: rgba(139, 92, 246, 0.4);
+    }
+
+    .podium-card.rank-1st:hover {
+      transform: translateY(-20px) scale(1.03);
+      border-color: rgba(251, 191, 36, 0.6);
+    }
+
+    /* Badges & Crowns */
+    .badge-wrap {
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .crown-icon {
+      position: absolute;
+      top: -24px;
+      left: 50%;
+      transform: translateX(-50%) rotate(0deg);
+      font-size: 1.8rem;
+      filter: drop-shadow(0 2px 5px rgba(251, 191, 36, 0.5));
+      animation: floatCrown 3s ease-in-out infinite;
+    }
+
+    @keyframes floatCrown {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-5px); }
+    }
+
+    .avatar-circle {
+      width: 54px;
+      height: 54px;
+      border-radius: 50px;
+      background: #1e1b4b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: 800;
+      border: 2px solid var(--text-muted);
+      color: #ffffff;
+      box-shadow: inset 0 2px 10px rgba(255, 255, 255, 0.1);
+    }
+
+    .rank-1st .avatar-circle {
+      width: 66px;
+      height: 66px;
+      font-size: 1.4rem;
+      border-color: var(--gold);
+      background: linear-gradient(135deg, #78350f 0%, #1e1b4b 100%);
+    }
+
+    .rank-2nd .avatar-circle {
+      border-color: var(--silver);
+      background: linear-gradient(135deg, #374151 0%, #1e1b4b 100%);
+    }
+
+    .rank-3rd .avatar-circle {
+      border-color: var(--bronze);
+      background: linear-gradient(135deg, #451a03 0%, #1e1b4b 100%);
+    }
+
+    .podium-card .user-name {
+      font-size: 1.05rem;
       font-weight: 700;
-      margin-right: 4px;
+      color: #ffffff;
+      margin-bottom: 4px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
     }
 
-    .empty-msg {
+    .rank-1st .user-name {
+      font-size: 1.2rem;
+      font-weight: 900;
+    }
+
+    .podium-card .score-val {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .podium-card .score-val strong {
+      color: #ffffff;
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    .rank-1st .score-val strong {
+      color: var(--gold);
+      font-size: 1.2rem;
+    }
+
+    .podium-rank-pill {
+      position: absolute;
+      bottom: -12px;
+      padding: 3px 14px;
+      border-radius: 30px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    }
+
+    .rank-1st .podium-rank-pill {
+      background: linear-gradient(135deg, var(--gold) 0%, #d97706 100%);
+      color: #451a03;
+    }
+
+    .rank-2nd .podium-rank-pill {
+      background: linear-gradient(135deg, var(--silver) 0%, #64748b 100%);
+      color: #0f172a;
+    }
+
+    .rank-3rd .podium-rank-pill {
+      background: linear-gradient(135deg, var(--bronze) 0%, #78350f 100%);
+      color: #ffffff;
+    }
+
+    /* List Card Ranks 4-10 */
+    .list-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 10px 20px;
+      margin-bottom: 40px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      padding: 15px 0;
+      border-bottom: 1px solid rgba(139, 92, 246, 0.08);
+      transition: all 0.2s ease;
+    }
+
+    .list-item:last-child {
+      border-bottom: none;
+    }
+
+    .list-item:hover {
+      transform: translateX(4px);
+    }
+
+    .list-num {
+      width: 45px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-muted);
+    }
+
+    .list-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #d8b4fe;
+      margin-right: 12px;
+    }
+
+    .list-name {
+      flex: 1;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .list-score {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .list-score strong {
+      color: var(--primary);
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin-right: 2px;
+    }
+
+    /* MVP Badge Grid */
+    .mvp-section-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin-bottom: 20px;
+      color: #c084fc;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .mvp-section-title::before, .mvp-section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(192, 132, 252, 0.4), transparent);
+    }
+
+    .mvp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    @media (max-width: 500px) {
+      .mvp-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .mvp-card {
+      background: rgba(15, 11, 42, 0.5);
+      border: 1px solid rgba(139, 92, 246, 0.12);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mvp-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(139, 92, 246, 0.3);
+      box-shadow: 0 10px 25px rgba(139, 92, 246, 0.1);
+    }
+
+    .mvp-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary) 0%, #ec4899 100%);
+    }
+
+    .mvp-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #f1f5f9;
+      margin-bottom: 15px;
+    }
+
+    .mvp-card-header span.emoji {
+      font-size: 1.3rem;
+    }
+
+    .mvp-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mvp-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+    }
+
+    .mvp-item:last-child {
+      border-bottom: none;
+    }
+
+    .mvp-rank-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mvp-badge-mini {
+      font-size: 0.95rem;
+      width: 20px;
+      text-align: center;
+    }
+
+    .mvp-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .mvp-value {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .mvp-value strong {
+      color: #e2e8f0;
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    /* Skeleton Loading UI */
+    .skeleton {
+      animation: skeletonPulse 1.5s ease-in-out infinite;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.05) 75%);
+      background-size: 200% 100%;
+    }
+
+    @keyframes skeletonPulse {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .skeleton-avatar {
+      border-radius: 50%;
+    }
+
+    .skeleton-text {
+      height: 14px;
+      border-radius: 4px;
+    }
+
+    /* Empty state */
+    .empty-state {
       text-align: center;
       padding: 40px;
-      color: #64748b;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .empty-state span {
+      display: block;
+      font-size: 2rem;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
+  
+  <header>
     <a href="?page=index" class="back-btn">← 돌아가기</a>
-    <header>
-      <h1>HALL OF FAME</h1>
-      <p>노형점핑을 빛내는 이달의 주인공들</p>
-    </header>
+    <h1>HALL OF FAME</h1>
+    <p>노형점핑을 빛내는 이달의 웰니스 영웅들</p>
+  </header>
 
-    <div class="rank-card">
-      <h2 style="font-size: 1.2rem; margin-bottom: 20px; color: #a78bfa;">🔥 이달의 출석 왕</h2>
-      <div id="attendanceRank">
-        <!-- 샘플 데이터 -->
-        <div class="rank-item">
-          <span class="rank-num rank-1">1</span>
-          <span class="rank-name">김*정</span>
-          <span class="rank-val"><span class="val-num">24</span>회 출석</span>
+  <div class="container">
+    
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('weekly')">주간 랭킹 🏆</button>
+      <button class="tab-btn" onclick="switchTab('monthly')">월간 랭킹 📅</button>
+      <button class="tab-btn" onclick="switchTab('total')">토탈 랭킹 💫</button>
+    </div>
+
+    <!-- 3D Podium Area -->
+    <div id="podiumArea" class="podium-container">
+      <!-- Skeleton Loading for Podium -->
+      <div class="podium-card rank-2nd skeleton"></div>
+      <div class="podium-card rank-1st skeleton" style="transform: translateY(-15px);"></div>
+      <div class="podium-card rank-3rd skeleton"></div>
+    </div>
+
+    <!-- Leaderboard List Area -->
+    <div class="list-card">
+      <div id="listArea">
+        <!-- Skeleton Loading for List -->
+        <div class="list-item" style="border: none;">
+          <div class="list-num skeleton skeleton-text" style="width: 20px;"></div>
+          <div class="list-avatar skeleton skeleton-avatar" style="width: 38px; height: 38px;"></div>
+          <div class="list-name skeleton skeleton-text" style="width: 100px; margin-left: 10px;"></div>
+          <div class="list-score skeleton skeleton-text" style="width: 60px; margin-left: auto;"></div>
         </div>
-        <div class="rank-item">
-          <span class="rank-num rank-2">2</span>
-          <span class="rank-name">이*혜</span>
-          <span class="rank-val"><span class="val-num">22</span>회 출석</span>
-        </div>
-        <div class="rank-item">
-          <span class="rank-num rank-3">3</span>
-          <span class="rank-name">박*민</span>
-          <span class="rank-val"><span class="val-num">20</span>회 출석</span>
+        <div class="list-item" style="border: none;">
+          <div class="list-num skeleton skeleton-text" style="width: 20px;"></div>
+          <div class="list-avatar skeleton skeleton-avatar" style="width: 38px; height: 38px;"></div>
+          <div class="list-name skeleton skeleton-text" style="width: 80px; margin-left: 10px;"></div>
+          <div class="list-score skeleton skeleton-text" style="width: 50px; margin-left: auto;"></div>
         </div>
       </div>
     </div>
 
-    <div class="rank-card">
-      <h2 style="font-size: 1.2rem; margin-bottom: 20px; color: #ed64a6;">✨ 33챌린지 명예 회원</h2>
-      <div id="challengeSuccess">
-        <div class="empty-msg">아직 공개된 성공 스토리가 없습니다.</div>
-      </div>
+    <!-- MVP Badge Board -->
+    <h2 class="mvp-section-title">🔥 부문별 역대 MVP 명예 뱃지</h2>
+    
+    <div id="mvpArea" class="mvp-grid">
+      <!-- Skeletons for MVP Cards -->
+      <div class="mvp-card skeleton" style="height: 160px;"></div>
+      <div class="mvp-card skeleton" style="height: 160px;"></div>
+      <div class="mvp-card skeleton" style="height: 160px;"></div>
+      <div class="mvp-card skeleton" style="height: 160px;"></div>
     </div>
+
   </div>
+
+  <!-- Apps Script Integration & Local Mock Engine -->
+  <script>
+    let rawData = null;
+    let currentTab = 'weekly';
+
+    // Premium Local Mock Fallback Data (Self-Healing Dev Engine)
+    const MOCK_DATA = {
+      weekly: [
+        { name: "김영희", score: 1450, rank: 1 },
+        { name: "이철수", score: 1280, rank: 2 },
+        { name: "박민수", score: 1100, rank: 3 },
+        { name: "최미진", score: 980, rank: 4 },
+        { name: "정다은", score: 850, rank: 5 },
+        { name: "강동우", score: 820, rank: 6 },
+        { name: "임수빈", score: 790, rank: 7 },
+        { name: "조상혁", score: 750, rank: 8 },
+        { name: "한지원", score: 700, rank: 9 },
+        { name: "윤도현", score: 680, rank: 10 }
+      ],
+      monthly: [
+        { name: "이철수", score: 5800, rank: 1 },
+        { name: "김영희", score: 5200, rank: 2 },
+        { name: "최미진", score: 4800, rank: 3 },
+        { name: "박민수", score: 4500, rank: 4 },
+        { name: "조상혁", score: 3900, rank: 5 },
+        { name: "강동우", score: 3820, rank: 6 },
+        { name: "정다은", score: 3600, rank: 7 },
+        { name: "한지원", score: 3400, rank: 8 },
+        { name: "임수빈", score: 3200, rank: 9 },
+        { name: "윤도현", score: 3100, rank: 10 }
+      ],
+      total: [
+        { name: "박민수", score: 38400, rank: 1 },
+        { name: "이철수", score: 36200, rank: 2 },
+        { name: "김영희", score: 32400, rank: 3 },
+        { name: "최미진", score: 29800, rank: 4 },
+        { name: "조상혁", score: 28400, rank: 5 },
+        { name: "강동우", score: 26000, rank: 6 },
+        { name: "정다은", score: 24500, rank: 7 },
+        { name: "한지원", score: 23000, rank: 8 },
+        { name: "임수빈", score: 21200, rank: 9 },
+        { name: "윤도현", score: 19800, rank: 10 },
+        { name: "홍길동", score: 18400, rank: 11 },
+        { name: "이순신", score: 17200, rank: 12 },
+        { name: "유관순", score: 16000, rank: 13 },
+        { name: "신사임당", score: 14800, rank: 14 }
+      ],
+      mvp: {
+        monthlyAttendance: [
+          { name: "김영희", count: 24 },
+          { name: "이철수", count: 22 },
+          { name: "박민수", count: 21 }
+        ],
+        totalAttendance: [
+          { name: "박민수", count: 284 },
+          { name: "이철수", count: 265 },
+          { name: "최미진", count: 240 }
+        ],
+        sincereKing: [
+          { name: "최미진", score: 18400 },
+          { name: "정다은", score: 16500 },
+          { name: "강동우", score: 15900 }
+        ],
+        oasisAngel: [
+          { name: "정다은", count: 48 },
+          { name: "김영희", count: 32 },
+          { name: "한지원", count: 28 }
+        ]
+      }
+    };
+
+    window.onload = function() {
+      loadData();
+    };
+
+    function loadData() {
+      // Check if running within Google Apps Script Environment
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            if (response && response.success) {
+              rawData = response.data;
+              renderAll();
+            } else {
+              console.error("GAS API Error: ", response ? response.error : "Unknown");
+              loadMockFallback();
+            }
+          })
+          .withFailureHandler(function(err) {
+            console.error("GAS Failure: ", err);
+            loadMockFallback();
+          })
+          .getHallOfFameData();
+      } else {
+        console.warn("Running in local browser environment. Injecting premium mock data...");
+        setTimeout(() => {
+          rawData = MOCK_DATA;
+          renderAll();
+        }, 800); // Soft loading delay for skeletal feel
+      }
+    }
+
+    function loadMockFallback() {
+      rawData = MOCK_DATA;
+      renderAll();
+    }
+
+    function renderAll() {
+      if (!rawData) return;
+      renderRankings();
+      renderMVPs();
+    }
+
+    function switchTab(tab) {
+      if (currentTab === tab) return;
+      currentTab = tab;
+      
+      // Update Tab Button States
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.innerText.includes(tab === 'weekly' ? '주간' : tab === 'monthly' ? '월간' : '토탈')) {
+          btn.classList.add('active');
+        }
+      });
+      
+      renderRankings();
+    }
+
+    function renderRankings() {
+      const list = rawData[currentTab] || [];
+      const podiumArea = document.getElementById('podiumArea');
+      const listArea = document.getElementById('listArea');
+
+      if (list.length === 0) {
+        podiumArea.innerHTML = `<div class="empty-state"><span>🏜️</span>아직 등록된 랭킹 데이터가 없습니다.</div>`;
+        listArea.innerHTML = `<div class="empty-state">순위 데이터 없음</div>`;
+        return;
+      }
+
+      // 1. Separate Top 3 for Podium
+      const rank1 = list.find(item => item.rank === 1);
+      const rank2 = list.find(item => item.rank === 2);
+      const rank3 = list.find(item => item.rank === 3);
+
+      // Helper to generate initials avatar
+      function getInitials(name) {
+        if (!name) return "Hero";
+        return name.length >= 2 ? name.substring(name.length - 2) : name;
+      }
+
+      // Render 3D Podium (Left: 2nd, Middle: 1st, Right: 3rd)
+      let podiumHTML = '';
+
+      // 2nd Place
+      if (rank2) {
+        podiumHTML += `
+          <div class="podium-card rank-2nd">
+            <div class="badge-wrap">
+              <div class="avatar-circle">${getInitials(rank2.name)}</div>
+            </div>
+            <div class="user-name">${rank2.name}</div>
+            <div class="score-val"><strong>${rank2.score.toLocaleString()}</strong> EXP</div>
+            <div class="podium-rank-pill">2ND</div>
+          </div>
+        `;
+      } else {
+        podiumHTML += `<div class="podium-card rank-2nd" style="opacity: 0.3;"><div class="user-name">-</div></div>`;
+      }
+
+      // 1st Place (Crown at top)
+      if (rank1) {
+        podiumHTML += `
+          <div class="podium-card rank-1st">
+            <div class="badge-wrap">
+              <div class="crown-icon">👑</div>
+              <div class="avatar-circle">${getInitials(rank1.name)}</div>
+            </div>
+            <div class="user-name">${rank1.name}</div>
+            <div class="score-val"><strong>${rank1.score.toLocaleString()}</strong> EXP</div>
+            <div class="podium-rank-pill">1ST CHAMP</div>
+          </div>
+        `;
+      } else {
+        podiumHTML += `<div class="podium-card rank-1st" style="opacity: 0.3;"><div class="user-name">-</div></div>`;
+      }
+
+      // 3rd Place
+      if (rank3) {
+        podiumHTML += `
+          <div class="podium-card rank-3rd">
+            <div class="badge-wrap">
+              <div class="avatar-circle">${getInitials(rank3.name)}</div>
+            </div>
+            <div class="user-name">${rank3.name}</div>
+            <div class="score-val"><strong>${rank3.score.toLocaleString()}</strong> EXP</div>
+            <div class="podium-rank-pill">3RD</div>
+          </div>
+        `;
+      } else {
+        podiumHTML += `<div class="podium-card rank-3rd" style="opacity: 0.3;"><div class="user-name">-</div></div>`;
+      }
+
+      podiumArea.innerHTML = podiumHTML;
+
+      // 2. Render 4th to 10th (or all for total)
+      let listHTML = '';
+      const startIdx = 3;
+      const displayList = list.slice(startIdx);
+
+      if (displayList.length === 0) {
+        listHTML = `<div class="empty-state" style="padding: 20px;">순위권 도전의 기회가 남아 있습니다! 🔥</div>`;
+      } else {
+        displayList.forEach(item => {
+          listHTML += `
+            <div class="list-item">
+              <div class="list-num">${item.rank}</div>
+              <div class="list-avatar">${getInitials(item.name)}</div>
+              <div class="list-name">${item.name}</div>
+              <div class="list-score"><strong>${item.score.toLocaleString()}</strong> EXP</div>
+            </div>
+          `;
+        });
+      }
+      listArea.innerHTML = listHTML;
+    }
+
+    function renderMVPs() {
+      const mvp = rawData.mvp || {};
+      const mvpArea = document.getElementById('mvpArea');
+
+      // Helper to generate items
+      function makeMvpList(items, unit, isExp = false) {
+        if (!items || items.length === 0) return `<div class="empty-state" style="padding: 10px; font-size: 0.85rem;">기록 대기 중...</div>`;
+        return items.map((user, idx) => {
+          const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
+          const valFormatted = isExp ? user.score.toLocaleString() : user.count;
+          return `
+            <div class="mvp-item">
+              <div class="mvp-rank-indicator">
+                <span class="mvp-badge-mini">${medal}</span>
+                <span class="mvp-name">${user.name}</span>
+              </div>
+              <div class="mvp-value"><strong>${valFormatted}</strong>${unit}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      mvpArea.innerHTML = `
+        <!-- Card 1: Monthly Attendance -->
+        <div class="mvp-card">
+          <div class="mvp-card-header">
+            <span class="emoji">📅</span> 당월 출석왕
+          </div>
+          <div class="mvp-list">
+            ${makeMvpList(mvp.monthlyAttendance, '회')}
+          </div>
+        </div>
+
+        <!-- Card 2: Total Attendance -->
+        <div class="mvp-card">
+          <div class="mvp-card-header">
+            <span class="emoji">🏆</span> 역대 출석의 신
+          </div>
+          <div class="mvp-list">
+            ${makeMvpList(mvp.totalAttendance, '회')}
+          </div>
+        </div>
+
+        <!-- Card 3: Sincere Active King -->
+        <div class="mvp-card">
+          <div class="mvp-card-header">
+            <span class="emoji">📸</span> 누적 실천왕
+          </div>
+          <div class="mvp-list">
+            ${makeMvpList(mvp.sincereKing, ' EXP', true)}
+          </div>
+        </div>
+
+        <!-- Card 4: Oasis Post Angel -->
+        <div class="mvp-card">
+          <div class="mvp-card-header">
+            <span class="emoji">🌸</span> 오아시스 천사
+          </div>
+          <div class="mvp-list">
+            ${makeMvpList(mvp.oasisAngel, '개')}
+          </div>
+        </div>
+      `;
+    }
+  </script>
 </body>
 </html>

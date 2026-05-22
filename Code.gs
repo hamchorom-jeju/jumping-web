@@ -8709,7 +8709,364 @@ function isKoreanPublicHoliday(date) {
     "12-25"  // 성탄절
   ];
   return (fixedHolidays.indexOf(md) > -1);
+  return (fixedHolidays.indexOf(md) > -1);
 }
+
+/**
+ * [v5.0] 센터 공식 휴일 및 공휴일 감지기
+ */
+function isCenterHoliday(date) {
+  var dayOfWeek = date.getDay();
+  if (dayOfWeek === 0) return true; // 일요일 기본 휴무
+  
+  if (isKoreanPublicHoliday(date)) return true;
+  
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var flashSheet = ss.getSheetByName('벙개테라피 및 휴일 설정');
+    if (flashSheet) {
+      var flashData = flashSheet.getDataRange().getValues();
+      var dateStr = Utilities.formatDate(date, "GMT+9", "yyyy-MM-dd");
+      for (var f = 1; f < flashData.length; f++) {
+        var fDate = flashData[f][0];
+        var fDateStr = (fDate instanceof Date) ? Utilities.formatDate(fDate, "GMT+9", "yyyy-MM-dd") : String(fDate).trim();
+        if (fDateStr === dateStr) {
+          if (String(flashData[f][1]) === "휴무") {
+            return true;
+          } else if (String(flashData[f][1]) === "벙개") {
+            return false; // 벙개는 휴무 제외
+          }
+        }
+      }
+    }
+  } catch (e) {
+    Logger.log("휴일 설정 시트 조회 오류: " + e.toString());
+  }
+  return false;
+}
+
+/**
+ * [v5.0] 명예의 전당 (Hall of Fame) 데이터 실시간 취합 API
+ */
+function getHallOfFameData(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var now = new Date();
+    
+    // 1. 날짜 범위 계산
+    // (1) 주간: 목요일 00:00:00 ~ 수요일 23:59:59 (매주 목요일 00:00 리셋)
+    var day = now.getDay(); // 0(일)~6(토)
+    var diffToThu = (day + 3) % 7; 
+    var startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToThu);
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    // (2) 월간: 매달 1일 00:00:00 ~ 말일 23:59:59
+    var startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    var endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    
+    // 2. 인바디 기록 미리 로드 및 휴대폰 번호 매핑
+    var inbodySheet = ss.getSheetByName("33챌린지_인바디");
+    var inData = inbodySheet ? inbodySheet.getDataRange().getValues() : [];
+    var userInbodyMap = {};
+    for (var k = 1; k < inData.length; k++) {
+      var rawPhone = String(inData[k][2] || "").trim();
+      var phone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, "");
+      if (!phone) continue;
+      
+      var iDate = new Date(inData[k][0]);
+      if (isNaN(iDate.getTime())) continue;
+      
+      var record = {
+        date: iDate,
+        weight: Number(inData[k][3] || 0),
+        muscle: Number(inData[k][4] || 0),
+        fat: Number(inData[k][5] || 0)
+      };
+      
+      if (!userInbodyMap[phone]) {
+        userInbodyMap[phone] = [];
+      }
+      userInbodyMap[phone].push(record);
+    }
+    
+    // 월초 기준 인바디 마감 기한 계산 (1주차 수요일, 공휴일/휴일 시 목요일 연장)
+    var year = now.getFullYear();
+    var month = now.getMonth();
+    var firstDay = new Date(year, month, 1);
+    var firstDayOfWeek = firstDay.getDay(); // 0(Sun) ~ 6(Sat)
+    var diffToWed = (3 - firstDayOfWeek + 7) % 7;
+    var baselineDeadline = new Date(year, month, 1 + diffToWed);
+    var hasWedHoliday = isCenterHoliday(baselineDeadline);
+    if (hasWedHoliday) {
+      baselineDeadline.setDate(baselineDeadline.getDate() + 1); // 목요일로 연장
+    }
+    baselineDeadline.setHours(23, 59, 59, 999);
+    
+    // 3. 일일_활동_기록 로드 및 EXP 집계
+    var summarySheet = ss.getSheetByName("일일_활동_기록");
+    var summaryData = summarySheet ? summarySheet.getDataRange().getValues() : [];
+    
+    var userScoresMap = {}; // phone -> { name, weeklyAct, monthlyAct, totalAct, sincereAct }
+    
+    for (var j = 1; j < summaryData.length; j++) {
+      var rawPhone = String(summaryData[j][1] || "").trim();
+      var phone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, "");
+      if (!phone) continue;
+      
+      var name = String(summaryData[j][2] || "모험가").replace(/\d{4}$/, "").trim(); // 실명 마스킹 없음
+      var recDateRaw = summaryData[j][0];
+      var recDate = (recDateRaw instanceof Date) ? recDateRaw : new Date(recDateRaw);
+      if (isNaN(recDate.getTime())) continue;
+      
+      var rowTotal = Number(summaryData[j][9] || 0); // J열: 웰니스총점
+      var perfScore = Number(summaryData[j][5] || 0); // F열: 일반실천_합산
+      var defScore = Number(summaryData[j][6] || 0); // G열: 일반회복_합산
+      
+      if (!userScoresMap[phone]) {
+        userScoresMap[phone] = {
+          name: name,
+          weeklyAct: 0,
+          monthlyAct: 0,
+          totalAct: 0,
+          sincereAct: 0 // 실천 + 회복
+        };
+      }
+      
+      var entry = userScoresMap[phone];
+      entry.totalAct += rowTotal;
+      entry.sincereAct += (perfScore + defScore);
+      
+      // 주간 합산
+      if (recDate >= startOfWeek) {
+        entry.weeklyAct += rowTotal;
+      }
+      // 월간 합산
+      if (recDate >= startOfMonth && recDate <= endOfMonth) {
+        entry.monthlyAct += rowTotal;
+      }
+    }
+    
+    // 인바디 계산 헬퍼 복사
+    function localInbodyScoreHelper(first, current) {
+      if (!first || !current) return 0;
+      var score = 0;
+      var diffW = Number((first.weight - current.weight).toFixed(2));
+      var diffM = Number((current.muscle - first.muscle).toFixed(2));
+      
+      if (diffW > 0) score += (diffW * 10) * 50;
+      if (diffM > 0) score += (diffM * 10) * 200;
+      
+      var firstFatMass = first.weight * (first.fat / 100);
+      var currentFatMass = current.weight * (current.fat / 100);
+      var fatLossRate = 0;
+      
+      if (firstFatMass > 0) {
+        fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
+        if (fatLossRate > 0) {
+          score += Math.round(fatLossRate * 200);
+        }
+      }
+      
+      if (diffW >= 8.0 || fatLossRate >= 20.0) {
+        score += 1500;
+      }
+      
+      if (Math.abs(diffW) <= 0.2) score += 100;
+      return score;
+    }
+    
+    // 각 회원에 대한 인바디 점수 반영
+    var finalWeeklyScores = [];
+    var finalMonthlyScores = [];
+    var finalTotalScores = [];
+    
+    for (var phone in userScoresMap) {
+      var entry = userScoresMap[phone];
+      var records = userInbodyMap[phone] || [];
+      
+      // 1) 최초 및 최신 구하기 (전체 누적용)
+      var firstEver = null;
+      var latestEver = null;
+      for (var rIdx = 0; rIdx < records.length; rIdx++) {
+        var r = records[rIdx];
+        if (!firstEver || r.date < firstEver.date) firstEver = r;
+        if (!latestEver || r.date > latestEver.date) latestEver = r;
+      }
+      var inbodyLifetimeScore = localInbodyScoreHelper(firstEver, latestEver);
+      
+      // 2) 주간 인바디 구하기
+      var inbodyWeeklyScore = 0;
+      if (latestEver && latestEver.date >= startOfWeek) {
+        var prevBeforeThisWeek = null;
+        for (var rIdx = 0; rIdx < records.length; rIdx++) {
+          var r = records[rIdx];
+          if (r.date < startOfWeek) {
+            if (!prevBeforeThisWeek || r.date > prevBeforeThisWeek.date) {
+              prevBeforeThisWeek = r;
+            }
+          }
+        }
+        var baseRecord = prevBeforeThisWeek || firstEver;
+        inbodyWeeklyScore = localInbodyScoreHelper(baseRecord, latestEver);
+      }
+      
+      // 3) 월간 인바디 구하기 (원장님 피드백 반영 - 월초 기준점 Mon~Wed 필수)
+      var inbodyMonthlyScore = 0;
+      var baselineRecord = null;
+      // 월초 기준 기록 탐색
+      for (var rIdx = 0; rIdx < records.length; rIdx++) {
+        var r = records[rIdx];
+        if (r.date >= startOfMonth && r.date <= baselineDeadline) {
+          var rDay = r.date.getDay();
+          var isValidDay = (rDay >= 1 && rDay <= 3) || (hasWedHoliday && rDay === 4);
+          if (isValidDay) {
+            if (!baselineRecord || r.date < baselineRecord.date) {
+              baselineRecord = r;
+            }
+          }
+        }
+      }
+      
+      if (baselineRecord) {
+        // 당월 말일까지의 최신 인바디 탐색
+        var latestInMonth = null;
+        for (var rIdx = 0; rIdx < records.length; rIdx++) {
+          var r = records[rIdx];
+          if (r.date >= startOfMonth && r.date <= endOfMonth) {
+            if (!latestInMonth || r.date > latestInMonth.date) {
+              latestInMonth = r;
+            }
+          }
+        }
+        if (latestInMonth) {
+          inbodyMonthlyScore = localInbodyScoreHelper(baselineRecord, latestInMonth);
+        }
+      }
+      
+      // 4) 최종 EXP 합산
+      var totalExp = entry.totalAct + inbodyLifetimeScore;
+      var weeklyExp = entry.weeklyAct + inbodyWeeklyScore;
+      var monthlyExp = entry.monthlyAct + inbodyMonthlyScore;
+      
+      finalWeeklyScores.push({ name: entry.name, score: weeklyExp });
+      finalMonthlyScores.push({ name: entry.name, score: monthlyExp });
+      finalTotalScores.push({ name: entry.name, score: totalExp });
+    }
+    
+    // 내림차순 정렬 및 순위 부여
+    function sortAndRank(arr) {
+      arr.sort(function(a, b) { return b.score - a.score; });
+      for (var i = 0; i < arr.length; i++) {
+        arr[i].rank = i + 1;
+      }
+      return arr;
+    }
+    
+    sortAndRank(finalWeeklyScores);
+    sortAndRank(finalMonthlyScores);
+    sortAndRank(finalTotalScores);
+    
+    // Top 10 필터링
+    var topWeekly = finalWeeklyScores.slice(0, 10);
+    var topMonthly = finalMonthlyScores.slice(0, 10);
+    var topTotal = finalTotalScores; // 토탈은 무제한 노출 스크롤
+    
+    // 4. MVP 집계 연산
+    // (1) 출석기록 집계 (당월 출석왕 vs 역대 출석의 신)
+    var attSheet = ss.getSheetByName("출석기록");
+    var attData = attSheet ? attSheet.getDataRange().getValues() : [];
+    
+    var monthlyAttendanceMap = {}; // phone -> { name, count }
+    var totalAttendanceMap = {}; // phone -> { name, count }
+    
+    if (attSheet && attData.length > 1) {
+      var attCols = getAttendanceColumnIndices(attSheet);
+      for (var aIdx = 1; aIdx < attData.length; aIdx++) {
+        var aPhoneRaw = String(attData[aIdx][attCols.phone] || "").trim();
+        var aPhone = formatPhoneNumber(aPhoneRaw).replace(/[^0-9]/g, "");
+        if (!aPhone) continue;
+        
+        var aName = String(attData[aIdx][attCols.name] || "모험가").replace(/\d{4}$/, "").trim();
+        var aDateRaw = attData[aIdx][attCols.date];
+        var aDate = (aDateRaw instanceof Date) ? aDateRaw : new Date(aDateRaw);
+        if (isNaN(aDate.getTime())) continue;
+        
+        // 역대 누적 카운트
+        if (!totalAttendanceMap[aPhone]) {
+          totalAttendanceMap[aPhone] = { name: aName, count: 0 };
+        }
+        totalAttendanceMap[aPhone].count++;
+        
+        // 당월 카운트
+        if (aDate >= startOfMonth && aDate <= endOfMonth) {
+          if (!monthlyAttendanceMap[aPhone]) {
+            monthlyAttendanceMap[aPhone] = { name: aName, count: 0 };
+          }
+          monthlyAttendanceMap[aPhone].count++;
+        }
+      }
+    }
+    
+    // 정렬 후 상위 3명 추출
+    function extractTop3(map, valKey) {
+      var list = [];
+      for (var key in map) {
+        list.push(map[key]);
+      }
+      list.sort(function(a, b) { return b[valKey] - a[valKey]; });
+      return list.slice(0, 3);
+    }
+    
+    var mvpMonthlyAttendance = extractTop3(monthlyAttendanceMap, "count");
+    var mvpTotalAttendance = extractTop3(totalAttendanceMap, "count");
+    
+    // (2) 실천왕 (체력을 완전히 제외한 누적 실천+회복 점수 기반)
+    var sincereList = [];
+    for (var phone in userScoresMap) {
+      sincereList.push({ name: userScoresMap[phone].name, score: userScoresMap[phone].sincereAct });
+    }
+    sincereList.sort(function(a, b) { return b.score - a.score; });
+    var mvpSincereKing = sincereList.slice(0, 3);
+    
+    // (3) 오아시스 천사 (누적 글 작성 수 1~3위)
+    var oasisSheet = ss.getSheetByName("오아시스_글");
+    var oasisData = oasisSheet ? oasisSheet.getDataRange().getValues() : [];
+    var oasisMap = {};
+    if (oasisSheet && oasisData.length > 1) {
+      for (var oIdx = 1; oIdx < oasisData.length; oIdx++) {
+        var oPhoneRaw = String(oasisData[oIdx][2] || "").trim();
+        var oPhone = formatPhoneNumber(oPhoneRaw).replace(/[^0-9]/g, "");
+        if (!oPhone) continue;
+        
+        var oName = String(oasisData[oIdx][3] || "모험가").replace(/\d{4}$/, "").trim();
+        if (!oasisMap[oPhone]) {
+          oasisMap[oPhone] = { name: oName, count: 0 };
+        }
+        oasisMap[oPhone].count++;
+      }
+    }
+    var mvpOasisAngel = extractTop3(oasisMap, "count");
+    
+    return {
+      success: true,
+      data: {
+        weekly: topWeekly,
+        monthly: topMonthly,
+        total: topTotal,
+        mvp: {
+          monthlyAttendance: mvpMonthlyAttendance,
+          totalAttendance: mvpTotalAttendance,
+          sincereKing: mvpSincereKing,
+          oasisAngel: mvpOasisAngel
+        }
+      }
+    };
+    
+  } catch (err) {
+    return { success: false, error: "명예의 전당 연산 실패: " + err.toString() };
+  }
+}
+
 
 
 
