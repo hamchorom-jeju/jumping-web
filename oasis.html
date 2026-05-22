@@ -1803,6 +1803,7 @@
             const blackboardTitle = document.getElementById('blackboard-header-title');
             const blackboardGuideBtn = document.getElementById('blackboard-guide-btn');
             const tabCatSudden = document.getElementById('tab-cat-sudden');
+            const blackboardHeaderBar = document.getElementById('blackboard-header-bar');
 
             if (!activeSuddenQuest) {
                 if (tabCatSudden) tabCatSudden.style.display = 'block';
@@ -1810,6 +1811,10 @@
                 if (quoteIcon) quoteIcon.style.transform = 'rotate(180deg)';
                 if (blackboardTitle) blackboardTitle.innerHTML = `⚡ 한껏 자유롭기`;
                 if (blackboardGuideBtn) blackboardGuideBtn.style.setProperty('display', 'none', 'important');
+                if (blackboardHeaderBar) {
+                    blackboardHeaderBar.style.setProperty('background', 'linear-gradient(135deg, #0f766e 0%, #0d9488 100%)', 'important');
+                    blackboardHeaderBar.style.setProperty('box-shadow', '0 4px 12px rgba(15, 118, 110, 0.12)', 'important');
+                }
                 return;
             }
 
@@ -1825,6 +1830,10 @@
                 if (quoteIcon) quoteIcon.style.transform = 'rotate(180deg)';
                 if (blackboardTitle) blackboardTitle.innerHTML = `⚡ 한껏 자유롭기`;
                 if (blackboardGuideBtn) blackboardGuideBtn.style.setProperty('display', 'none', 'important');
+                if (blackboardHeaderBar) {
+                    blackboardHeaderBar.style.setProperty('background', 'linear-gradient(135deg, #0f766e 0%, #0d9488 100%)', 'important');
+                    blackboardHeaderBar.style.setProperty('box-shadow', '0 4px 12px rgba(15, 118, 110, 0.12)', 'important');
+                }
 
                 // 2. write=sudden-quest 유입 차단 및 아카이브 리다이렉션
                 if (isSuddenQuestWrite) {
@@ -1837,9 +1846,13 @@
                 // 1. 게시판 돌발인 날: 돌발 탭 활성화
                 if (tabCatSudden) tabCatSudden.style.display = 'block';
 
-                // 2. 칠판 전면 변신: 칠판 헤더에 타이틀 및 가이드 노출
-                if (blackboardTitle) blackboardTitle.innerHTML = `⚡ [돌발] ${pureTitle} 인증판`;
-                if (blackboardGuideBtn) blackboardGuideBtn.style.setProperty('display', 'flex', 'important');
+                // 2. 칠판 전면 변신: 칠판 헤더에 심플한 타이틀 노출 (가이드는 숨김) + 돌발 전용 배너 디자인 변경 (화사한 오렌지-로즈 그라데이션)
+                if (blackboardTitle) blackboardTitle.innerHTML = `⚡ 돌발 ${pureTitle}`;
+                if (blackboardGuideBtn) blackboardGuideBtn.style.setProperty('display', 'none', 'important');
+                if (blackboardHeaderBar) {
+                    blackboardHeaderBar.style.setProperty('background', 'linear-gradient(135deg, #e11d48 0%, #ea580c 100%)', 'important');
+                    blackboardHeaderBar.style.setProperty('box-shadow', '0 4px 15px rgba(225, 29, 72, 0.3)', 'important');
+                }
 
                 // 3. 아코디언 접기: 마음 채우기 영역 자동 접기
                 if (quoteSection) quoteSection.style.display = 'none';
