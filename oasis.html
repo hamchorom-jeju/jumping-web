@@ -290,7 +290,7 @@
         }
         .postit-card {
             box-shadow: 3px 5px 10px rgba(0,0,0,0.3) !important;
-            padding: 12px 10px !important;
+            padding: 8px 10px !important;
             border-radius: 3px !important;
             position: relative !important;
             display: flex !important;
@@ -1666,46 +1666,56 @@
                 card.style.transform = `rotate(${rotateVal}deg)`;
                 card.style.background = bgCol;
                 
-                // 🎨 포스트잇 크기(높이) 다양성을 주어 자유롭고 감각적인 느낌 극대화!
-                const heightSeeds = ['105px', '118px', '132px'];
-                const chosenHeight = heightSeeds[seed % heightSeeds.length];
-                card.style.setProperty('min-height', chosenHeight, 'important');
-                card.style.setProperty('max-height', chosenHeight, 'important');
-                
                 const isSudden = p.category === '돌발';
                 const badgeChar = isSudden ? '⚡' : '💬';
-                const badgeText = isSudden ? '돌발' : '자유';
                 const badgeCol = isSudden ? '#e11d48' : '#0f766e';
                 
                 const friendlyName = getFriendlyName(p.author);
-                const timeDisplay = p.time ? p.time.substring(0, 5) : '';
+                const dateDisplay = p.date ? p.date.substring(5) : ''; // "05-22"
                 
                 let displayContent = p.content || '';
                 
-                // 📝 글자수에 따른 동적 폰트 크기 조절 및 말줄임 처리
+                // 📝 글자수 비례 폰트 크기 및 다이내믹 포스트잇 높이(min-height/max-height) 조절
                 let fontSize = '1.05rem';
-                if (displayContent.length > 50) {
-                    fontSize = '0.75rem';
-                    displayContent = displayContent.substring(0, 48) + '...';
-                } else if (displayContent.length > 35) {
-                    fontSize = '0.82rem';
-                } else if (displayContent.length > 20) {
-                    fontSize = '0.92rem';
+                let baseHeight = 104; // 기본 콤팩트 높이
+                
+                const charCount = displayContent.length;
+                if (charCount > 45) {
+                    fontSize = '0.78rem';
+                    baseHeight = 138;
+                    if (charCount > 50) {
+                        displayContent = displayContent.substring(0, 48) + '...';
+                    }
+                } else if (charCount > 30) {
+                    fontSize = '0.86rem';
+                    baseHeight = 126;
+                } else if (charCount > 15) {
+                    fontSize = '0.94rem';
+                    baseHeight = 115;
+                } else {
+                    fontSize = '1.05rem';
+                    baseHeight = 104;
                 }
                 
+                // 🎨 미세한 높이 편차(0~6px)를 가미하여 극도의 삐뚤빼뚤 내추럴 포스트잇 연출
+                const microDiff = seed % 7;
+                const finalHeight = `${baseHeight + microDiff}px`;
+                
+                card.style.setProperty('min-height', finalHeight, 'important');
+                card.style.setProperty('max-height', finalHeight, 'important');
+                
                 card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; border-bottom:1px dashed rgba(0,0,0,0.1); padding-bottom:3px; margin-bottom:5px;">
-                        <span style="font-size:0.8rem; font-weight:900; color:${badgeCol}; display:flex; align-items:center; gap:2px;">
-                            ${badgeChar} <span style="font-size:0.65rem; border:1px solid ${badgeCol}; border-radius:4px; padding:0 3px; font-weight:800; font-family:'Noto Sans KR', sans-serif;">${badgeText}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; border-bottom:1px dashed rgba(0,0,0,0.08); padding-bottom:4px; margin-bottom:5px;">
+                        <span style="font-size:0.85rem; font-weight:900; color:${badgeCol}; display:flex; align-items:center; gap:4px;">
+                            ${badgeChar}
+                            <span style="font-size:0.65rem; border:1.5px solid ${badgeCol}; border-radius:12px; padding:1px 8px; font-weight:900; font-family:'Noto Sans KR', sans-serif; background:${badgeCol}10; display:inline-block;">
+                                ${friendlyName}
+                            </span>
                         </span>
-                        <span style="font-size:0.68rem; color:#64748b; font-family:'Noto Sans KR', sans-serif;">${timeDisplay}</span>
+                        <span style="font-size:0.65rem; color:#64748b; font-family:'Noto Sans KR', sans-serif; font-weight:800;">${dateDisplay}</span>
                     </div>
-                    <div style="font-size:${fontSize}; font-weight:900; color:#1e293b; line-height:1.2; word-break:break-all; flex-grow:1; display:flex; align-items:center; justify-content:center; text-align:center;">
+                    <div style="font-size:${fontSize}; font-weight:900; color:#1e293b; line-height:1.25; word-break:break-all; flex-grow:1; display:flex; align-items:center; justify-content:center; text-align:center; padding: 2px 0;">
                         ${displayContent}
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; font-size:0.85rem; font-weight:800; color:#475569; margin-top:5px; border-top:1px dashed rgba(0,0,0,0.06); padding-top:3px;">
-                        <span>✏️ ${friendlyName}</span>
-                        <span style="font-size:0.65rem; font-family:'Noto Sans KR', sans-serif;">${p.date.substring(5)}</span>
                     </div>
                 `;
                 
