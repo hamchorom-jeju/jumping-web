@@ -20,13 +20,15 @@
     
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body { 
-      font-family: 'Pretendard', sans-serif; background-color: var(--v-paper); 
+      font-family: 'Pretendard', sans-serif; 
+      background: linear-gradient(135deg, #fef9e7 0%, #f7f0dc 100%) !important;
       color: var(--text-main); margin: 0; padding: 0; line-height: 1.6;
     }
 
     .v-global-header {
-      background: #fff; padding: 20px; text-align: center;
-      border-bottom: 2px solid var(--v-border); position: sticky; top: 0; z-index: 1000;
+      background: rgba(255, 255, 255, 0.85); padding: 20px; text-align: center;
+      border-bottom: 1.5px solid rgba(93, 64, 55, 0.08); position: sticky; top: 0; z-index: 1000;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     }
     .v-global-header h1 { font-size: 1.2rem; font-weight: 900; margin: 0; color: var(--v-wood); }
 
@@ -36,7 +38,22 @@
     /* ============================================
        [v50.0] 5섹션 구조 버튼 그리드 스타일
        ============================================ */
-    .arc-section { background: #fff; border-radius: 22px; padding: 18px; border: 1px solid var(--v-border); margin-bottom: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
+    .arc-section { 
+      background: rgba(255, 255, 255, 0.75); 
+      border-radius: 24px; 
+      padding: 20px; 
+      border: 1.5px solid rgba(93, 64, 55, 0.12); 
+      margin-bottom: 22px; 
+      box-shadow: 0 8px 32px rgba(93, 64, 55, 0.03); 
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+    }
+    .arc-section:hover {
+      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 12px 36px rgba(93, 64, 55, 0.06);
+    }
     .arc-section-title { font-size: 0.95rem; font-weight: 900; color: var(--v-wood); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
 
     /* 식단: 3열 버튼 */
@@ -2558,39 +2575,66 @@
       const comment = item.comment || '';
       const itemType = item.item || '';
       
-      // AI 스캔 분석 기록인 경우
-      if (comment.includes("🤖 [지니 AI 항상성 식단 분석]")) {
-        const dashIndex = comment.indexOf(" - ");
-        let cleanFeedback = comment;
+      const isAiAnalysis = comment.includes("🤖 [지니 항상성 식단 분석]") || comment.includes("🤖 [지니 AI 항상성 식단 분석]");
+      
+      if (isAiAnalysis) {
+        // Split user speech and AI feedback
+        const parts = comment.split("|");
+        let userSpeech = "";
+        let aiPart = comment;
+        if (parts.length > 1) {
+          userSpeech = parts[0].trim();
+          aiPart = parts[1].trim();
+        } else {
+          // Fallback if no '|'
+          const aiIndex = comment.indexOf("🤖");
+          if (aiIndex > 0) {
+            userSpeech = comment.substring(0, aiIndex).trim();
+            aiPart = comment.substring(aiIndex).trim();
+          }
+        }
+        
+        const dashIndex = aiPart.indexOf(" - ");
+        let cleanFeedback = aiPart;
         let tierInfo = "";
         let expInfo = "";
         
         if (dashIndex > -1) {
-          cleanFeedback = comment.substring(dashIndex + 3).trim();
-          const prefix = comment.substring(0, dashIndex);
+          cleanFeedback = aiPart.substring(dashIndex + 3).trim();
+          const prefix = aiPart.substring(0, dashIndex);
           
-          // Tier 추출 (예: "Tier S")
           const tierMatch = prefix.match(/Tier\s+([SABC])/i);
           if (tierMatch) {
             tierInfo = `Tier ${tierMatch[1].toUpperCase()}`;
           }
           
-          // EXP 추출 (예: "10 EXP")
           const expMatch = prefix.match(/(\d+)\s*EXP/i);
           if (expMatch) {
             expInfo = `+${expMatch[1]} EXP`;
           }
         }
         
-        // 괄호 및 중복 티어 표시 제거하여 깔끔하게 정리된 아이템 타입 만들기
+        // Clean item type (remove "(Tier ...)" from title)
         const cleanItemType = itemType.replace(/\s*\(Tier\s+[SABC]\)/i, '').trim();
         
-        let badgeBg = "linear-gradient(135deg, #fbcfe8 0%, #ec4899 100%)"; // Tier S default
+        let badgeBg = "linear-gradient(135deg, #fbcfe8 0%, #ec4899 100%)"; // Tier S
         if (tierInfo.includes("Tier A")) badgeBg = "linear-gradient(135deg, #a7f3d0 0%, #10b981 100%)";
         else if (tierInfo.includes("Tier B")) badgeBg = "linear-gradient(135deg, #fef3c7 0%, #d97706 100%)";
         else if (tierInfo.includes("Tier C")) badgeBg = "linear-gradient(135deg, #fee2e2 0%, #ef4444 100%)";
         
-        let html = `
+        let html = "";
+        
+        // 1. User speech block (if any)
+        if (userSpeech) {
+          html += `
+            <div style="background: #fffbef; border: 1.5px solid #fde68a; border-radius: 16px; padding: 12px 14px; margin-bottom: 12px; font-size: 0.88rem; font-weight: 800; color: #78350f; text-align: left; box-shadow: 0 2px 8px rgba(212,175,55,0.04); position: relative; word-break: keep-all; white-space: pre-wrap;">
+              <span style="font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">💬</span> ${userSpeech}
+            </div>
+          `;
+        }
+        
+        // 2. Jelly badges (Capsules)
+        html += `
           <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; text-align: left;">
             <span style="background: var(--v-wood); color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800;">🍱 ${cleanItemType}</span>
         `;

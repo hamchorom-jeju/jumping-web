@@ -389,7 +389,7 @@
 
         /* 🌸 1초 원터치 칭찬 마법 */
         .magic-template-box {
-            display: flex !important;
+            display: flex;
             flex-wrap: wrap !important;
             gap: 5px !important;
             margin-bottom: 12px !important;
@@ -408,6 +408,40 @@
         .magic-tag-btn:active {
             transform: scale(0.95) !important;
             background: #dcfce7 !important;
+        }
+
+        /* 📸 폴라로이드 상세 모달 리액션 스타일 */
+        .reaction-bar { 
+            display: flex !important; 
+            gap: 8px !important; 
+            margin-top: 15px !important; 
+            border-top: 1px dashed rgba(13, 148, 136, 0.15) !important; 
+            padding-top: 15px !important; 
+        }
+        .reaction-btn { 
+            flex: 1 !important; 
+            padding: 8px 4px !important; 
+            background: #fdfbf7 !important; 
+            border: 1.5px solid rgba(13, 148, 136, 0.15) !important; 
+            border-radius: 12px !important; 
+            font-size: 0.72rem !important; 
+            font-weight: 800 !important; 
+            color: #1e293b !important; 
+            cursor: pointer !important; 
+            display: flex !important; 
+            flex-direction: column !important; 
+            align-items: center !important; 
+            gap: 3px !important; 
+            transition: all 0.2s !important; 
+        }
+        .reaction-btn:active { 
+            transform: scale(0.95) !important; 
+        }
+        .reaction-btn.active { 
+            background: var(--oasis-mint) !important; 
+            color: white !important; 
+            border-color: var(--oasis-mint) !important; 
+            box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25) !important; 
         }
 
         /* 📸 폴라로이드 스타일 갤러리 피드 */
@@ -750,6 +784,23 @@
                 <span id="modal-author" style="font-weight:900; color:var(--oasis-emerald);"></span>
                 <span id="modal-date"></span>
             </div>
+            <div class="reaction-bar">
+                <button class="reaction-btn" id="btn-react-cool" onclick="toggleReaction('cool')">
+                    <span style="font-size:1.1rem;">😎</span>
+                    <span style="font-size:0.68rem; margin-top:2px;">멋져요</span>
+                    <span id="cnt-cool" style="font-size:0.75rem; font-weight:900;">0</span>
+                </button>
+                <button class="reaction-btn" id="btn-react-best" onclick="toggleReaction('best')">
+                    <span style="font-size:1.1rem;">👍</span>
+                    <span style="font-size:0.68rem; margin-top:2px;">최고예요</span>
+                    <span id="cnt-best" style="font-size:0.75rem; font-weight:900;">0</span>
+                </button>
+                <button class="reaction-btn" id="btn-react-cheer" onclick="toggleReaction('cheer')">
+                    <span style="font-size:1.1rem;">🔥</span>
+                    <span style="font-size:0.68rem; margin-top:2px;">화이팅</span>
+                    <span id="cnt-cheer" style="font-size:0.75rem; font-weight:900;">0</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -868,12 +919,12 @@
             document.getElementById('sudden-quest-check').checked = false;
             
             if (category === '셀프칭찬') {
-                titleEl.innerHTML = '<i class="fa-solid fa-face-smile"></i> 🌸 나를 사랑하기 기록';
+                titleEl.innerHTML = '🌸 나를 사랑하기 기록';
                 document.getElementById('popup-self-magic-box').style.display = 'flex';
                 document.getElementById('post-title').value = "🌸 나를 위한 1초 칭찬";
                 document.getElementById('post-content').placeholder = "상단의 템플릿 태그를 누르거나, 오늘 나를 격려하는 한마디를 적어보세요 (+3 EXP)...";
             } else if (category === '명언') {
-                titleEl.innerHTML = '<i class="fa-solid fa-book-open"></i> 📖 마음 채우기 한 줄 공유';
+                titleEl.innerHTML = '📖 마음 채우기 한 줄 공유';
                 document.getElementById('post-title').placeholder = "마음 채우기 요약 (예: 용기를 주는 구절)";
                 document.getElementById('post-content').placeholder = "줄공책 템플릿에 들어차도록 약 120자 내외로 마음을 채우는 주옥같은 격언을 적어보세요 (+10 EXP)...";
             } else if (category === '일반') {
@@ -1345,11 +1396,109 @@
                 })
                 .getArchiveFeed({ page: currentPage, limit: 12 });
         }
+        function formatPolaroidComment(item) {
+            const comment = item.description || item.comment || '';
+            const itemType = item.item || '';
+            
+            const isAiAnalysis = comment.includes("🤖 [지니 항상성 식단 분석]") || comment.includes("🤖 [지니 AI 항상성 식단 분석]");
+            
+            if (isAiAnalysis) {
+                // Split user speech and AI feedback
+                const parts = comment.split("|");
+                let userSpeech = "";
+                let aiPart = comment;
+                if (parts.length > 1) {
+                    userSpeech = parts[0].trim();
+                    aiPart = parts[1].trim();
+                } else {
+                    // Fallback if no '|'
+                    const aiIndex = comment.indexOf("🤖");
+                    if (aiIndex > 0) {
+                        userSpeech = comment.substring(0, aiIndex).trim();
+                        aiPart = comment.substring(aiIndex).trim();
+                    }
+                }
+                
+                const dashIndex = aiPart.indexOf(" - ");
+                let cleanFeedback = aiPart;
+                let tierInfo = "";
+                let expInfo = "";
+                
+                if (dashIndex > -1) {
+                    cleanFeedback = aiPart.substring(dashIndex + 3).trim();
+                    const prefix = aiPart.substring(0, dashIndex);
+                    
+                    const tierMatch = prefix.match(/Tier\s+([SABC])/i);
+                    if (tierMatch) {
+                        tierInfo = `Tier ${tierMatch[1].toUpperCase()}`;
+                    }
+                    
+                    const expMatch = prefix.match(/(\d+)\s*EXP/i);
+                    if (expMatch) {
+                        expInfo = `+${expMatch[1]} EXP`;
+                    }
+                }
+                
+                // Clean item type (remove "(Tier ...)" from title)
+                const cleanItemType = itemType.replace(/\s*\(Tier\s+[SABC]\)/i, '').trim();
+                
+                let badgeBg = "linear-gradient(135deg, #fbcfe8 0%, #ec4899 100%)"; // Tier S
+                if (tierInfo.includes("Tier A")) badgeBg = "linear-gradient(135deg, #a7f3d0 0%, #10b981 100%)";
+                else if (tierInfo.includes("Tier B")) badgeBg = "linear-gradient(135deg, #fef3c7 0%, #d97706 100%)";
+                else if (tierInfo.includes("Tier C")) badgeBg = "linear-gradient(135deg, #fee2e2 0%, #ef4444 100%)";
+                
+                let html = "";
+                
+                // 1. User speech block (if any)
+                if (userSpeech) {
+                    html += `
+                        <div style="background: #fffbef; border: 1.5px solid #fde68a; border-radius: 16px; padding: 12px 14px; margin-bottom: 12px; font-size: 0.88rem; font-weight: 800; color: #78350f; text-align: left; box-shadow: 0 2px 8px rgba(212,175,55,0.04); position: relative; word-break: keep-all; white-space: pre-wrap;">
+                            <span style="font-size: 1.1rem; vertical-align: middle; margin-right: 4px;">💬</span> ${userSpeech}
+                        </div>
+                    `;
+                }
+                
+                // 2. Jelly badges (Capsules)
+                html += `
+                    <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; text-align: left;">
+                        <span style="background: var(--oasis-emerald); color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800;">🍱 ${cleanItemType}</span>
+                `;
+                
+                if (tierInfo) {
+                    html += `<span style="background: ${badgeBg}; color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">${tierInfo}</span>`;
+                }
+                if (expInfo) {
+                    html += `<span style="background: rgba(212, 175, 55, 0.15); color: #b8860b; border: 1px solid rgba(212, 175, 55, 0.3); padding: 3px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800;">${expInfo}</span>`;
+                }
+                
+                html += `
+                    </div>
+                    <div style="background: rgba(13, 148, 136, 0.03); border-left: 4px solid var(--oasis-mint); padding: 12px 15px; border-radius: 0 12px 12px 0; margin-top: 10px; text-align: left; box-sizing: border-box;">
+                        <div style="font-size: 0.75rem; font-weight: 900; color: var(--oasis-mint); margin-bottom: 6px;">🤖 지니 AI의 항상성 수호 피드백</div>
+                        <p style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin: 0; line-height: 1.5; word-break: keep-all; white-space: pre-wrap;">${cleanFeedback}</p>
+                    </div>
+                `;
+                return html;
+            } else {
+                // 일반 유저 인증 기록인 경우
+                return `
+                    <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; text-align: left;">
+                        <span style="background: var(--oasis-emerald); color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800;">✨ ${itemType}</span>
+                    </div>
+                    <p style="font-size: 0.9rem; font-weight: 800; color: #334155; margin: 5px 0 0 0; line-height: 1.4; text-align: left; word-break: keep-all; white-space: pre-wrap;">${comment || '오늘도 멋진 습관 수호 완료! 🌿'}</p>
+                `;
+            }
+        }
+
+        window.archivePhotos = [];
+
         function renderGalleryGrid(data) {
             const feedEl = document.getElementById('archive-feed');
             const paginationEl = document.getElementById('feed-pagination');
             feedEl.innerHTML = '';
             paginationEl.innerHTML = '';
+
+            window.archivePhotos = data.photos || [];
 
             if (!data.photos || data.photos.length === 0) {
                 feedEl.innerHTML = '<div style="text-align:center; padding:30px; font-size:0.75rem; color:var(--text-dim); font-weight:800;">아직 보관된 자랑하기 Polaroid 사진이 없습니다. 📸</div>';
@@ -1397,7 +1546,7 @@
                     scoreHtml = `<span style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 4px; padding: 1px 3px; font-size: 0.52rem; font-weight: 800; margin-left: 2px;">+${p.score}</span>`;
                 }
 
-                card.onclick = () => openModal(p.url, p.description, cleanAuthor, p.date, p.time, p.type, rawItem, p.score, tinyBadgeHtml);
+                card.onclick = () => openModal(idx);
 
                 card.innerHTML = `
                     <div class="polaroid-badge">${icon}</div>
@@ -1429,25 +1578,28 @@
             }
         }
 
-        function openModal(url, desc, author, date, time, type, item, score, tinyBadgeHtml) {
+        let currentModalIndex = -1;
+
+        function openModal(index) {
+            const item = window.archivePhotos[index];
+            if (!item) return;
+            currentModalIndex = index;
+            
             const modal = document.getElementById('polaroid-modal');
-            document.getElementById('modal-img').src = url;
+            document.getElementById('modal-img').src = item.url;
+            document.getElementById('modal-text').innerHTML = formatPolaroidComment(item);
             
-            const formattedTime = time ? ` ${time.substring(0, 5)}` : '';
-            const typeLabel = type ? `[${type}] ` : '';
-            const scoreLabel = (score && parseInt(score) > 0) ? ` (+${score}점)` : '';
+            const formattedTime = item.time ? ` ${item.time.substring(0, 5)}` : '';
+            const cleanAuthor = String(item.author).replace(/[^ㄱ-ㅎ가-힣a-zA-Z0-9]/g, "");
             
-            document.getElementById('modal-text').innerHTML = `
-                <div style="margin-bottom: 8px; font-size: 0.72rem; display: flex; align-items: center; gap: 4px; color: var(--oasis-emerald); font-weight: 800;">
-                    <span>${typeLabel}</span> 
-                    <span style="color:#64748b; font-weight:600;">${item || ''}</span>
-                    ${scoreLabel}
-                </div>
-                <div style="font-weight: 700; color: #334155; line-height: 1.4;">${desc || "인증 사진의 한 장면 🌟"}</div>
-            `;
+            document.getElementById('modal-author').innerText = `📷 ${cleanAuthor}`;
+            document.getElementById('modal-date').innerText = `${item.date}${formattedTime}`;
             
-            document.getElementById('modal-author').innerText = `📷 ${author}`;
-            document.getElementById('modal-date').innerText = `${date}${formattedTime}`;
+            const reactions = item.reactions || { cool: [], best: [], cheer: [] };
+            updateReactionBtn('cool', '멋져요 😎', reactions.cool || []);
+            updateReactionBtn('best', '최고 👍', reactions.best || []);
+            updateReactionBtn('cheer', '화이팅 🔥', reactions.cheer || []);
+            
             modal.style.display = 'flex';
             window.registerModalOpen(closeModal);
         }
@@ -1457,6 +1609,48 @@
             if (!isPopstate) {
                 window.registerModalClose(closeModal);
             }
+        }
+
+        function updateReactionBtn(type, label, list) {
+            const btn = document.getElementById(`btn-react-${type}`);
+            const cntLabel = document.getElementById(`cnt-${type}`);
+            const count = list.length;
+            const myPhone = (currentUser.phone || '').replace(/[^0-9]/g, "");
+            const iClicked = myPhone && list.includes(myPhone);
+            
+            cntLabel.innerText = count;
+            if (iClicked) btn.classList.add('active');
+            else btn.classList.remove('active');
+        }
+
+        function toggleReaction(reactionType) {
+            if (!currentUser.phone) return showAppAlert("로그인이 필요합니다.", "error");
+            const myPhone = currentUser.phone.replace(/[^0-9]/g, "");
+            if (!myPhone) return showAppAlert("세션 정보가 올바르지 않습니다.", "error");
+            
+            const item = window.archivePhotos[currentModalIndex];
+            if (!item || !item.rowIdx) return;
+            
+            if (!item.reactions) item.reactions = { cool: [], best: [], cheer: [] };
+            const list = item.reactions[reactionType] || [];
+            const idx = list.indexOf(myPhone);
+            
+            if (idx > -1) list.splice(idx, 1);
+            else list.push(myPhone);
+            
+            item.reactions[reactionType] = list;
+            updateReactionBtn(reactionType, getReactionLabel(reactionType), list);
+            
+            if (typeof google !== 'undefined') {
+                google.script.run.updateReaction(item.rowIdx, reactionType, myPhone);
+            }
+        }
+
+        function getReactionLabel(type) {
+            if (type === 'cool') return '멋져요 😎';
+            if (type === 'best') return '최고 👍';
+            if (type === 'cheer') return '화이팅 🔥';
+            return '';
         }
 
         function renderMockPosts() {
