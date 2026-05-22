@@ -917,11 +917,12 @@ const Mailbox = {
         border: 1px solid #edf2f7;
         display: flex;
         flex-direction: column;
-        gap: 5px;
+        gap: 6px;
         transition: all 0.25s ease;
         text-align: left;
         position: relative;
         overflow: hidden;
+        flex-shrink: 0; /* 우편함 개수 증가 시 카드 찌그러짐 방지 */
       }
       .mailbox-card.unread {
         box-shadow: 0 6px 20px rgba(79, 70, 229, 0.08);
@@ -934,20 +935,28 @@ const Mailbox = {
       .mailbox-card .card-header {
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-start; /* 타이틀 여러 줄일 때 정렬 깨짐 방지 */
+        gap: 12px;
       }
       .mailbox-card .card-title {
-        font-size: 0.82rem;
-        font-weight: 900;
+        font-size: 0.85rem;
+        font-weight: 800;
         color: #1e293b;
         display: flex;
-        align-items: center;
+        align-items: flex-start; /* 이모지 높이 맞춤 */
         gap: 6px;
+        flex: 1;
+        word-break: keep-all;
+        overflow-wrap: anywhere;
+        line-height: 1.4;
       }
       .mailbox-card .card-time {
-        font-size: 0.62rem;
-        font-weight: 700;
+        font-size: 0.65rem;
+        font-weight: 600;
         color: #94a3b8;
+        white-space: nowrap; /* 시간 텍스트 줄바꿈 깨짐 완전 차단 */
+        flex-shrink: 0;
+        margin-top: 2px;
       }
       .mailbox-card .card-body {
         font-size: 0.73rem;
@@ -955,6 +964,22 @@ const Mailbox = {
         color: #475569;
         line-height: 1.45;
         word-break: keep-all;
+        overflow-wrap: break-word;
+      }
+      
+      /* 우편함 스크롤바 모바일/크롬 디자인 튜닝 */
+      #mailbox-list::-webkit-scrollbar {
+        width: 5px;
+      }
+      #mailbox-list::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      #mailbox-list::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+      }
+      #mailbox-list::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
       }
       
       /* 유형별 특수 보더 및 배경 효과 */
@@ -1017,7 +1042,7 @@ const Mailbox = {
     if (!document.getElementById('mailbox-modal')) {
       const modal = document.createElement('div');
       modal.id = 'mailbox-modal';
-      modal.style = "display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.45); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:99999; align-items:flex-end; justify-content:center;";
+      modal.style = "display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.65); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); z-index:99999; align-items:flex-end; justify-content:center;";
       
       modal.innerHTML = `
         <div style="background:#fff; border-radius:30px 30px 0 0; width:100%; max-width:500px; padding:25px 20px 45px; box-shadow:0 -8px 40px rgba(0,0,0,0.15); animation:slideUp 0.35s ease-out; text-align: left; box-sizing: border-box; position: relative;">
@@ -1029,7 +1054,7 @@ const Mailbox = {
           </div>
           
           <!-- 리스트 -->
-          <div id="mailbox-list" style="max-height: 330px; overflow-y: auto; padding-right: 4px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px;">
+          <div id="mailbox-list" style="max-height: 380px; overflow-y: auto; padding-right: 4px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px;">
             <!-- 동적 삽입 -->
           </div>
           
