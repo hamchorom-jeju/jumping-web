@@ -2982,7 +2982,9 @@ function processAdminCheckout(data) {
     var memberName = logSheet.getRange(rowIdx, cols.name + 1).getValue();
     
     // [v46.30] 웰니스 통합 점수제 연동: 퇴실 시 출석 기본점수 및 운동 강도점수 자동 하사
-    var timeLogVal = parseInt(data.timeLog) || 0;
+    var timeLogVal = parseFloat(data.timeLog) || 0;
+    var reasonText = String(logSheet.getRange(rowIdx, cols.reason + 1).getValue() || "");
+    var isCombo = (reasonText.indexOf("복합") !== -1);
     
     // (1) 출석 기본점수 (+20 EXP 상향) 기록 -> D열 (센터방문_수행)
     recordActivityLog({
@@ -2995,9 +2997,9 @@ function processAdminCheckout(data) {
       statType: "perf"
     });
     
-    // (2) 운동 강도점수 (+40 or +80 EXP 상향) 혹은 테라피 회복력점수(+30 EXP 상향) 기록
+    // (2) 운동 강도점수 (소수점 비례 반영: 운동시간 * 40 EXP) 기록
     if (timeLogVal > 0) {
-      var extraWorkoutScore = (timeLogVal === 1 ? 40 : 80);
+      var extraWorkoutScore = Math.round(timeLogVal * 40);
       recordActivityLog({
         phone: phoneStr,
         name: memberName,
@@ -3007,8 +3009,10 @@ function processAdminCheckout(data) {
         score: extraWorkoutScore,
         statType: "perf"
       });
-    } else {
-      // 0인 경우: 원적외선 테라피로 몸과 마음을 이완하여 스트레스 지수 감소 -> 회복력(+30 EXP 상향) 부여
+    }
+    
+    // (3) 테라피 회복력점수 (+30 EXP 상향) 기록 (0시간 테라피 전용이거나 복합출석인 경우 지급)
+    if (timeLogVal === 0 || isCombo) {
       recordActivityLog({
         phone: phoneStr,
         name: memberName,
@@ -6360,16 +6364,23 @@ function syncClubRecord(payload) {
     
     if (!todayRecord) return { success: false, error: "오늘 클럽 출석 기록이 확인되지 않습니다. 키오스크 출석을 먼저 해주세요." };
     
-    // 3. 점수 계산 (안 1: 2배 상향 적용)
+    // 3. 점수 계산 (소수점 타임 비례 계산 및 복합출석 더블 보상 연동)
     var visitPoints = 20;
     var timeCount = parseFloat(todayRecord[10] || 0); // K열: 운동타임수
-    var timePoints = 0;
+    var reasonText = String(todayRecord[8] || ""); // I열: 사유
+    var isCombo = (reasonText.indexOf("복합") !== -1);
     
-    if (timeCount >= 2.0) timePoints = 80;
-    else if (timeCount >= 1.0) timePoints = 40;
-    
-    var totalPoints = visitPoints + timePoints;
+    var timePoints = Math.round(timeCount * 40);
+    var therapyPoints = (timeCount === 0 || isCombo) ? 30 : 0;
+    var totalPoints = visitPoints + timePoints + therapyPoints;
     var memberName = todayRecord[2];
+    
+    var detailMsg = "운동 타임: " + timeCount;
+    if (isCombo) {
+      detailMsg += " (복합출석: 점핑 + 테라피)";
+    } else if (timeCount === 0) {
+      detailMsg = "테라피 완료";
+    }
     
     // 4. 활동기록에 저장
     var now = new Date();
@@ -6380,12 +6391,12 @@ function syncClubRecord(payload) {
       "'" + phone,
       "출석동기화",
       "클럽 방문",
-      "운동 타임: " + timeCount,
+      detailMsg,
       "",
       totalPoints
     ]);
     
-    return { success: true, points: totalPoints, timePoints: timePoints };
+    return { success: true, points: totalPoints, timePoints: timePoints, therapyPoints: therapyPoints };
     
   } catch (e) {
     return { success: false, error: e.toString() };
