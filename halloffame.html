@@ -747,6 +747,20 @@
           { name: "김영희", count: 32 },
           { name: "한지원", count: 28 }
         ]
+      },
+      archive: {
+        weekly: [
+          { period: "5월 4주", winners: "🥇 1.김순희(344p) | 2.박노형(320p) | 3.이순례(310p)" },
+          { period: "5월 3주", winners: "🥇 1.이만수(350p) | 2.김순희(330p) | 3.정점례(290p)" },
+          { period: "5월 2주", winners: "🥇 1.정점례(320p) | 2.박노형(315p) | 3.김순희(298p)" },
+          { period: "5월 1주", winners: "🥇 1.박노형(330p) | 2.이만수(310p) | 3.김순희(295p)" }
+        ],
+        monthly: [
+          { period: "5월", winners: "🥇 1.김순희(1,240p) | 2.박노형(1,150p) | 3.정점례(1,080p)" }
+        ],
+        attendance: [
+          { period: "5월", winners: "🥇 1위 정순렬(20회) | 🥈 2위 진금희(18회) | 🥉 3위 홍양숙(17회)" }
+        ]
       }
     };
 
@@ -928,9 +942,10 @@
     }
 
     function renderArchives() {
-      renderArchiveList('weekly-archive', ARCHIVE_DATA.weekly);
-      renderArchiveList('monthly-archive', ARCHIVE_DATA.monthly);
-      renderArchiveList('attendance-archive', ARCHIVE_DATA.attendance);
+      const archive = (rawData && rawData.archive) ? rawData.archive : ARCHIVE_DATA;
+      renderArchiveList('weekly-archive', archive.weekly || []);
+      renderArchiveList('monthly-archive', archive.monthly || []);
+      renderArchiveList('attendance-archive', archive.attendance || []);
     }
 
     function renderArchiveList(containerId, list) {

@@ -9047,12 +9047,62 @@ function getHallOfFameData(payload) {
     }
     var mvpOasisAngel = extractTop3(oasisMap, "count");
     
+    // 5. 역대 명예의 전당 아카이브 동적 데이터 조회 (원장님 피드백 반영)
+    var archiveWeekly = [];
+    var archiveMonthly = [];
+    var archiveAttendance = [];
+    
+    try {
+      var archiveSheet = ss.getSheetByName("명예의전당_아카이브");
+      if (!archiveSheet) {
+        // 시트가 없으면 자동으로 템플릿 헤더와 함께 시트 생성 (자가 치유)
+        archiveSheet = ss.insertSheet("명예의전당_아카이브");
+        archiveSheet.appendRow(["구분", "기간", "기록", "등록일"]);
+        // 초기 템플릿 데이터 삽입 (원장님 입력 지표용 예시)
+        archiveSheet.appendRow(["주간", "5월 4주", "🥇 1.김순희(344p) | 2.박노형(320p) | 3.이순례(310p)", "2026-05-24"]);
+        archiveSheet.appendRow(["주간", "5월 3주", "🥇 1.이만수(350p) | 2.김순희(330p) | 3.정점례(290p)", "2026-05-17"]);
+        archiveSheet.appendRow(["주간", "5월 2주", "🥇 1.정점례(320p) | 2.박노형(315p) | 3.김순희(298p)", "2026-05-10"]);
+        archiveSheet.appendRow(["주간", "5월 1주", "🥇 1.박노형(330p) | 2.이만수(310p) | 3.김순희(295p)", "2026-05-03"]);
+        archiveSheet.appendRow(["월간", "5월", "🥇 1.김순희(1,240p) | 2.박노형(1,150p) | 3.정점례(1,080p)", "2026-05-31"]);
+        archiveSheet.appendRow(["출석왕", "5월", "🥇 1위 정순렬(20회) | 🥈 2위 진금희(18회) | 🥉 3위 홍양숙(17회)", "2026-05-31"]);
+      }
+      
+      var arcData = archiveSheet.getDataRange().getValues();
+      if (arcData.length > 1) {
+        // 최신 등록 순서(아래에서 위로)대로 배열에 담아, 최신 기록(직전 주, 전달)이 상단에 배치되게 함
+        for (var a = arcData.length - 1; a >= 1; a--) {
+          var row = arcData[a];
+          var type = String(row[0] || "").trim();
+          var period = String(row[1] || "").trim();
+          var winners = String(row[2] || "").trim();
+          
+          if (!period || !winners) continue;
+          
+          var item = { period: period, winners: winners };
+          if (type === "주간") {
+            archiveWeekly.push(item);
+          } else if (type === "월간") {
+            archiveMonthly.push(item);
+          } else if (type === "출석왕") {
+            archiveAttendance.push(item);
+          }
+        }
+      }
+    } catch (arcErr) {
+      Logger.log("역대 명예의 전당 아카이브 로드 에러: " + arcErr.toString());
+    }
+
     return {
       success: true,
       data: {
         weekly: topWeekly,
         monthly: topMonthly,
         total: topTotal,
+        archive: {
+          weekly: archiveWeekly,
+          monthly: archiveMonthly,
+          attendance: archiveAttendance
+        },
         mvp: {
           monthlyAttendance: mvpMonthlyAttendance,
           totalAttendance: mvpTotalAttendance,
