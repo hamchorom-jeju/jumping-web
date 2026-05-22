@@ -1010,7 +1010,7 @@ function doGet(e) {
     if (page === 'index') title = "🏰 GENIE WORLD";
     else if (page === 'reservation') title = "🔮 GENIE GATE (예약 포탈)";
     else if (page === 'challenge') title = "🏛️ GENIE GUILD (33 챌린지)";
-    else if (page === 'halloffame') title = "TOP HEROES (시상자&출석왕)";
+    else if (page === 'halloffame') title = "🏆 [명예의 전당]";
     else if (page === 'miracle') title = "MIRACLE (오운완&식단)";
     else if (page === 'notice') title = "INSIDE (건강 꿀팁 & 공지)";
     else if (page === 'community') title = "CONNECT (칭찬&수다)";

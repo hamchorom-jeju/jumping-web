@@ -277,6 +277,19 @@ body {
 .rank-badge { 
     background: var(--v-wood); color: #fff; 
     padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 900;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: inline-block;
+    user-select: none;
+}
+.rank-badge:hover {
+    transform: translateY(-2px) scale(1.05);
+    background: #4e342e;
+    box-shadow: 0 4px 10px rgba(93, 64, 55, 0.3);
+}
+.rank-badge:active {
+    transform: translateY(0) scale(1);
+    box-shadow: none;
 }
 
 /* Ability Gauges */
@@ -387,7 +400,7 @@ body {
     box-shadow: 0 5px 15px rgba(0,0,0,0.03);
     display: flex;
     align-items: center;
-    padding: 0 20px;
+    padding: 0 75px 0 20px; /* Right padding reserved for gold badge */
     cursor: pointer;
     user-select: none;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -403,6 +416,22 @@ body {
 .v-banner-ranking-container:active {
     transform: translateY(0);
     box-shadow: 0 3px 10px rgba(93, 64, 55, 0.05);
+}
+
+/* 🏆 Premium Gold Navigation Badge for Ticker */
+.v-gold-badge {
+    background: rgba(243, 156, 18, 0.15);
+    border: 1px solid #f39c12;
+    color: #f39c12;
+    box-shadow: 0 0 10px rgba(243, 156, 18, 0.2);
+}
+
+.v-banner-ranking-container:hover .v-gold-badge {
+    background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+    border-color: #f39c12;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(243, 156, 18, 0.5);
+    transform: translateY(-50%) scale(1.05);
 }
 
 /* 🏆 Premium Live Pulse Dot Animation */

@@ -153,6 +153,7 @@
                 <!-- Premium Ticker Items will be injected here -->
                 <div class="v-ranking-item">[랭킹 로딩 중...]</div>
             </div>
+            <span class="v-banner-badge v-gold-badge">랭킹보기 <i class="fa-solid fa-chevron-right"></i></span>
         </div>
 
 
@@ -217,7 +218,7 @@
                         <div class="gauge-fill" id="evo-bar" style="width: 0%; background: linear-gradient(to right, #f1c40f, #e67e22);"></div>
                     </div>
                 </div>
-                <div class="rank-badge">랭킹 <span id="current-rank">-</span>위</div>
+                <div class="rank-badge" id="profile-rank-badge" onclick="Village.confirmRankingWarp(event)">랭킹 <span id="current-rank">-</span>위 <i class="fa-solid fa-chevron-right" style="font-size: 0.65rem; margin-left: 2px;"></i></div>
             </div>
 
             <div class="gauge-section">

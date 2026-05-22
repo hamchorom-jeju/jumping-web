@@ -1299,6 +1299,14 @@ const Village = {
         }
     },
     
+    confirmRankingWarp(event) {
+        if (event) event.stopPropagation();
+        const confirmWarp = confirm("🏆 위대한 모험가들의 공간 [명예의 전당]으로 이동하시겠습니까?");
+        if (confirmWarp) {
+            location.href = '?page=halloffame';
+        }
+    },
+    
     toggleWeatherParticles(event) {
         if (event) event.stopPropagation();
         
