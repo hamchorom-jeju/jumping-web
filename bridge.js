@@ -744,12 +744,19 @@ window.registerModalClose = function(closeFn) {
   const idx = window.globalModalHistoryStack.indexOf(closeFn);
   if (idx > -1) {
     window.globalModalHistoryStack.splice(idx, 1);
+    window._isManualModalClose = true; // [v50.9.1] 수동 모달 닫기 플래그 활성화 (popstate 퇴장 확인팝업 방어용)
     history.back();
     console.log("[Global Backbutton] Modal deregistered. Stack size:", window.globalModalHistoryStack.length);
   }
 };
 
 window.addEventListener('popstate', function(e) {
+  if (window._isManualModalClose) {
+    window._isManualModalClose = false; // 플래그 즉시 리셋
+    console.log("[Global Backbutton] Ignored popstate exit confirmation because of manual modal close.");
+    return;
+  }
+
   if (window.globalModalHistoryStack.length > 0) {
     // 뒤로가기 방어: 스택에서 가장 최근 등록된 닫기 콜백을 실행하여 모달을 닫아줍니다!
     const closeFn = window.globalModalHistoryStack.pop();
