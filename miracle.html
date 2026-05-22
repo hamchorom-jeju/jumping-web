@@ -67,6 +67,7 @@
     
     .habit-btn.done-check { background: linear-gradient(135deg, #fffbeb, #fde68a); border-color: #f59e0b; color: #b45309; }
     .habit-btn.done-check::after { content: '📸'; margin-left: auto; font-size: 0.9rem; color: #d97706; opacity: 0.8; animation: pulseIcon 1.5s infinite; }
+    #hbtn-h9.done-check::after { content: '✍️' !important; }
     
     @keyframes pulseIcon {
       0% { transform: scale(1); opacity: 0.6; }
@@ -364,8 +365,8 @@
     <!-- 🌿 섹션 3: 습관 인증 (9대 데일리, 2열) -->
     <!-- ═══════════════════════════════════════════════ -->
     <div class="arc-section">
-      <div class="arc-section-title">🌿 습관 인증
-        <span style="font-size:0.75rem; font-weight:800; color:var(--text-dim); margin-left:auto;">체크 및 인증</span>
+      <div class="arc-section-title">🌿 미라클 루틴
+        <span style="font-size:0.75rem; font-weight:800; color:var(--text-dim); margin-left:auto;">체크 및 루틴 인증</span>
       </div>
       <div class="habit-btn-grid">
         <div class="habit-btn" id="hbtn-h1" onclick="showInfoPopup('h1')">
@@ -1126,7 +1127,11 @@
       habits.forEach(h => {
         const btn = document.getElementById('hbtn-' + h.id);
         if (btn) {
-          const matchedRecords = doneList.filter(item => item.includes(h.name));
+          const matchedRecords = doneList.filter(item => {
+            const cleanItem = item.replace(/\s+/g, '');
+            const cleanName = h.name.replace(/\s+/g, '');
+            return cleanItem.includes(cleanName) || cleanName.includes(cleanItem);
+          });
           if (matchedRecords.length > 0) {
             btn.classList.remove('done', 'done-auth', 'done-check');
             const isFullyCertified = h.checkOnly || matchedRecords.some(r => r.includes('인증') || r.includes('Tier') || r.includes('S'));
@@ -1940,7 +1945,7 @@
       h6:  { icon:'🪜', title:'스테어 마법', score:'+2~5 EXP', guide:'3층 이하의 낮은 층수는 계단을 이용함으로써 하체 근력을 강화하고 유산소 효과를 얻습니다. 특히 기록소(아카이브)에 사진 인증을 남기시면 강력한 보너스 점수가 부여됩니다.\n\n🌿 체크 완료 시 +2 EXP\n📸 아카이브 사진 인증 시 추가 +3 EXP 지급!', type:'habit', item:'스테어마법', habitId:'h6', checkOnly:false },
       h7:  { icon:'🌙', title:'나이트 컷', score:'+5 EXP', guide:'밤 20시 이후의 금식은 신체가 소화가 아닌 \'지방 연소와 세포 재생\'에 집중하게 만듭니다.\n\n🤖 [AI 식단 스캔 전용 미션]\n저녁 식단 분석 시 따뜻한 물/차(단식)로 AI 판독(Tier S) 완료 시 자동으로 연계 완료 처리되어 +5 EXP를 획득합니다! 🍵\n(중복 방지를 위해 수동 체크 및 아카이브 인증은 지원하지 않습니다.)', type:'habit', item:'나이트컷', habitId:'h7', checkOnly:false },
       h8:  { icon:'💤', title:'굿 슬립', score:'+2 EXP', guide:'세포가 재생되고 성장 호르몬이 활발히 분비되는 자정(24:00) 전 취침으로 신체 회복을 최적화하세요. 충분한 수면은 식욕 억제 호르몬인 렙틴의 분비를 도와 다이어트를 수월하게 만듭니다.\n\n🌿 체크 완료 시 +2 EXP (체크 전용)', type:'habit', item:'굿슬립', habitId:'h8', checkOnly:true },
-      h9:  { icon:'👏', title:'셀프 칭찬', score:'+2~5 EXP', guide:'오늘 하루도 노력한 나자신을 위해 따뜻한 한마디를 해주며 셀프 허그를 해주세요.\n"오늘도 수고했어 영희야!"\n\n🌿 체크 완료 시 +2 EXP\n📸 게시판/아카이브 글/사진 인증 시 추가 +3 EXP 지급!', type:'habit', item:'셀프칭찬', habitId:'h9', checkOnly:false },
+      h9:  { icon:'👏', title:'셀프 칭찬', score:'+2~5 EXP', guide:'오늘 하루도 노력한 나자신을 위해 따뜻한 한마디를 해주며 셀프 허그를 해주세요.\n"오늘도 수고했어 영희야!"\n\n🌿 체크 완료 시 +2 EXP\n✍️ 오아시스 나를사랑하기 게시판에 글쓰기시 추가 3점', type:'habit', item:'셀프칭찬', habitId:'h9', checkOnly:false },
       // 미라클 플러스
       miracle_dawn: { icon:'☀️', title:'새벽 기상', score:'+3 EXP', guide:'새벽 기상의 위대한 사소한 승리를 인증해 주세요!\n인증 사진(시계, 창밖 새벽 하늘 등)을 남기시면 +3 EXP가 지급됩니다.', type:'miracle', item:'새벽기상' },
       miracle_read: { icon:'📚', title:'독서 인증', score:'+3 EXP', guide:'오늘 읽은 책의 한 페이지 또는 독서 중인 사진을 인증해 주세요!\n+3 EXP가 지급됩니다.', type:'miracle', item:'독서인증' },
@@ -1980,7 +1985,11 @@
       document.getElementById('info-guide').innerText = guideText;
 
       // 오늘 완료 여부 검증
-      const isCompleted = window.lastDoneList && window.lastDoneList.some(item => item.includes(d.item));
+      const isCompleted = window.lastDoneList && window.lastDoneList.some(item => {
+        const cleanItem = item.replace(/\s+/g, '');
+        const cleanPopupItem = d.item.replace(/\s+/g, '');
+        return cleanItem.includes(cleanPopupItem) || cleanPopupItem.includes(cleanItem);
+      });
 
       // 수분 게이지 표시 여부
       const waterWrap = document.getElementById('info-water-wrap');
@@ -2022,8 +2031,13 @@
           const authBtn = document.createElement('button');
           authBtn.className = 'info-btn-auth';
           authBtn.style.flex = '1.5';
-          authBtn.innerText = '📸 인증하기';
-          authBtn.onclick = () => { closeInfoModal(); openCertModal(key); };
+          if (key === 'h9') {
+            authBtn.innerText = '✍️ 글쓰러 가기';
+            authBtn.onclick = () => { closeInfoModal(); location.href = "oasis.html?write=self-praise"; };
+          } else {
+            authBtn.innerText = '📸 인증하러 가기';
+            authBtn.onclick = () => { closeInfoModal(); openCertModal(key); };
+          }
           
           btnsEl.appendChild(cancelIndicator);
           btnsEl.appendChild(authBtn);
@@ -2068,8 +2082,21 @@
             const authBtn = document.createElement('button');
             authBtn.className = 'info-btn-auth';
             authBtn.style.flex = '1.5';
-            authBtn.innerText = '📸 인증하기';
-            authBtn.onclick = () => { closeInfoModal(); openCertModal(key); };
+            if (key === 'h9') {
+              authBtn.innerText = '✍️ 인증하러 가기';
+              authBtn.onclick = () => { 
+                doHabitCheck(key); 
+                closeInfoModal(); 
+                location.href = "oasis.html?write=self-praise"; 
+              };
+            } else {
+              authBtn.innerText = '📸 인증하러 가기';
+              authBtn.onclick = () => { 
+                doHabitCheck(key); 
+                closeInfoModal(); 
+                openCertModal(key); 
+              };
+            }
 
             btnsEl.appendChild(checkBtn);
             btnsEl.appendChild(authBtn);
@@ -2105,7 +2132,7 @@
         return showAppAlert(`✨ 이미 오늘 [${d.title}]을 완료했습니다!`, 'error');
       }
 
-      const score = parseInt((d.score || '+2').replace(/[^0-9]/g,'')) || 2;
+      const score = d.type === 'habit' ? 2 : (parseInt((d.score || '+2').replace(/[^0-9]/g,'')) || 2);
 
       // [v50.5] 구글 앱스 스크립트 미지원 로컬 가상 환경 대응 방어막
       if (typeof google === 'undefined' || !google.script || !google.script.run) {

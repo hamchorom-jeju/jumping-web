@@ -1478,6 +1478,16 @@
             checkActivePraiseBaton();
             loadArchiveFeed();
             initSwipeEvent();
+
+            // [v50.9] 셀프칭찬 연동: URL에 write=self-praise 파라미터가 있으면 자동으로 글쓰기 모달을 띄워줌
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('write') === 'self-praise') {
+                setTimeout(() => {
+                    if (typeof openWriteModal === 'function') {
+                        openWriteModal('셀프칭찬');
+                    }
+                }, 500);
+            }
         });
     </script>
 </body>
