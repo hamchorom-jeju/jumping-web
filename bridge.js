@@ -996,12 +996,47 @@ const Mailbox = {
       .mailbox-card.type-admin {
         border-left: 5px solid #3b82f6;
       }
+      .mailbox-card.type-ranking {
+        border-left: 5px solid #8a2be2;
+        background: linear-gradient(135deg, #ffffff 0%, rgba(138, 43, 226, 0.03) 100%);
+      }
       
       .mailbox-card.read.type-welcome,
       .mailbox-card.read.type-debuff,
       .mailbox-card.read.type-quest,
-      .mailbox-card.read.type-admin {
+      .mailbox-card.read.type-admin,
+      .mailbox-card.read.type-ranking {
         border-left-color: #cbd5e1;
+        background: #f8fafc;
+      }
+      
+      /* [v60.0] 명예의 전당 액션 버튼 스타일 */
+      .mailbox-action-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #8a2be2, #4f46e5);
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 0.73rem;
+        font-weight: 800;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        box-shadow: 0 4px 12px rgba(138, 43, 226, 0.25);
+        transition: all 0.2s ease;
+        margin-top: 6px;
+        box-sizing: border-box;
+      }
+      .mailbox-action-btn:hover {
+        transform: translateY(-1.5px);
+        box-shadow: 0 6px 16px rgba(138, 43, 226, 0.35);
+        filter: brightness(1.05);
+      }
+      .mailbox-action-btn:active {
+        transform: translateY(0);
       }
       
       @keyframes card-warning-pulse {
@@ -1145,11 +1180,18 @@ const Mailbox = {
         "퀘스트": "⚡",
         "방어": "🛡️",
         "안부": "💌",
-        admin: "✉️" 
+        admin: "✉️",
+        ranking: "🏆",
+        "랭킹": "🏆"
       };
       const emoji = emojiMap[noti.type] || "✉️";
       
       const timeStr = this.timeAgo(noti.createdAt);
+      
+      // [v60.0] ranking 유형일 때 하단 바로가기 액션 버튼 삽입
+      const actionButtonHtml = noti.type === 'ranking' 
+        ? `<button onclick="navigateTo('halloffame')" class="mailbox-action-btn">🏆 명예의 전당 바로가기 ➔</button>` 
+        : '';
       
       card.innerHTML = `
         <div class="card-header">
@@ -1163,6 +1205,7 @@ const Mailbox = {
         <div class="card-body">
           ${noti.content.replace(/\n/g, '<br>')}
         </div>
+        ${actionButtonHtml}
       `;
       listContainer.appendChild(card);
     });

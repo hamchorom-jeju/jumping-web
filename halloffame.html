@@ -558,6 +558,157 @@
     .more-btn:active {
       transform: translateY(1px);
     }
+
+    /* [v60.0] 최신 시상식 10인 확장 그리드 및 모바일 대응 카드 스타일 */
+    .archive-row.latest-award {
+      border-bottom: 1px solid rgba(139, 92, 246, 0.15) !important;
+      padding: 16px 0 !important;
+      background: rgba(139, 92, 246, 0.03);
+      margin: 4px -10px;
+      padding-left: 10px !important;
+      padding-right: 10px !important;
+      border-radius: 16px;
+    }
+    
+    .latest-award-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 6px;
+      width: 100%;
+    }
+    
+    .award-top3-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      width: 100%;
+    }
+    
+    .award-card {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 12px 6px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      position: relative;
+      overflow: hidden;
+      min-height: 90px;
+    }
+    
+    .award-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.06), transparent 70%);
+      pointer-events: none;
+    }
+    
+    .award-card.rank-1 {
+      border-color: rgba(245, 158, 11, 0.35);
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(30, 41, 59, 0.85) 100%);
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.12);
+      transform: scale(1.03);
+    }
+    .award-card.rank-2 {
+      border-color: rgba(148, 163, 184, 0.3);
+      background: linear-gradient(135deg, rgba(148, 163, 184, 0.08) 0%, rgba(30, 41, 59, 0.85) 100%);
+    }
+    .award-card.rank-3 {
+      border-color: rgba(217, 119, 6, 0.25);
+      background: linear-gradient(135deg, rgba(217, 119, 6, 0.06) 0%, rgba(30, 41, 59, 0.85) 100%);
+    }
+    
+    .award-medal {
+      font-size: 1.1rem;
+      margin-bottom: 2px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+    
+    .award-name {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+    
+    .award-score {
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #94a3b8;
+    }
+    
+    .award-card.rank-1 .award-score {
+      color: #fcd34d;
+    }
+    .award-card.rank-2 .award-score {
+      color: #cbd5e1;
+    }
+    .award-card.rank-3 .award-score {
+      color: #fdba74;
+    }
+    
+    /* 4~10위 2열 격자 바둑판 그리드 */
+    .award-runners-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      width: 100%;
+    }
+    
+    .runner-card {
+      background: rgba(30, 41, 59, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 10px;
+      padding: 7px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    
+    .runner-card:hover {
+      background: rgba(30, 41, 59, 0.65);
+      border-color: rgba(139, 92, 246, 0.15);
+    }
+    
+    .runner-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      font-size: 0.58rem;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 6px;
+      min-width: 28px;
+      text-align: center;
+    }
+    
+    .runner-name {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: #cbd5e1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      text-align: left;
+    }
+    
+    .runner-score {
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #64748b;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
@@ -958,15 +1109,106 @@
       }
 
       let html = '';
-      list.forEach(item => {
-        html += `
-          <div class="archive-row">
-            <div class="archive-row-title">📅 ${item.period}</div>
-            <div class="archive-row-data">${formatArchiveWinners(item.winners)}</div>
-          </div>
-        `;
+      list.forEach((item, idx) => {
+        const isLatest = (idx === 0 && (containerId === 'weekly-archive' || containerId === 'monthly-archive'));
+        if (isLatest) {
+          html += `
+            <div class="archive-row latest-award">
+              <div class="archive-row-title" style="margin-bottom: 8px;">👑 최신 명예의 전장 시상식 (${item.period})</div>
+              <div class="latest-award-container">
+                ${formatLatestArchiveWinners(item.winners)}
+              </div>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="archive-row">
+              <div class="archive-row-title">📅 ${item.period}</div>
+              <div class="archive-row-data">${formatArchiveWinners(item.winners)}</div>
+            </div>
+          `;
+        }
       });
       container.innerHTML = html;
+    }
+
+    function parseWinnerToken(token, index) {
+      // Clean emojis
+      let clean = token.replace(/[🥇🥈🥉🏅]/g, '').trim();
+      
+      let rank = index + 1;
+      let name = '';
+      let score = '';
+      
+      // Regex to match "rank.name(score)" or "rank위 name(score)" or just "name(score)"
+      let match = clean.match(/^(?:\d+(?:\.|\s*위)?\s*)?([^\(]+)(?:\((.+)\))?/);
+      if (match) {
+        name = match[1].trim();
+        score = match[2] ? match[2].trim() : '';
+      } else {
+        name = clean;
+      }
+      
+      return { rank, name, score };
+    }
+
+    function formatLatestArchiveWinners(winnersStr) {
+      if (!winnersStr) return '';
+      const tokens = winnersStr.split('|');
+      const winners = tokens.map((token, index) => parseWinnerToken(token, index));
+      
+      const top3 = winners.filter(w => w.rank <= 3);
+      const runners = winners.filter(w => w.rank > 3 && w.rank <= 10);
+      
+      let html = '';
+      
+      // Render Top 3 Grid (Podium Order: 2nd, 1st, 3rd)
+      if (top3.length > 0) {
+        html += `<div class="award-top3-grid">`;
+        const sortedTop3 = [];
+        const rank1 = top3.find(w => w.rank === 1);
+        const rank2 = top3.find(w => w.rank === 2);
+        const rank3 = top3.find(w => w.rank === 3);
+        
+        if (rank2) sortedTop3.push(rank2);
+        if (rank1) sortedTop3.push(rank1);
+        if (rank3) sortedTop3.push(rank3);
+        
+        const displayTop3 = sortedTop3.length > 0 ? sortedTop3 : top3;
+        
+        displayTop3.forEach(w => {
+          let medal = '🏅';
+          if (w.rank === 1) medal = '🥇';
+          if (w.rank === 2) medal = '🥈';
+          if (w.rank === 3) medal = '🥉';
+          
+          html += `
+            <div class="award-card rank-${w.rank}">
+              <div class="award-medal">${medal}</div>
+              <div class="award-name">${w.name}</div>
+              <div class="award-score">${w.score}</div>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      }
+      
+      // Render Runners Grid (4th ~ 10th Place, 2-column compact)
+      if (runners.length > 0) {
+        html += `<div class="award-runners-grid">`;
+        runners.forEach(w => {
+          html += `
+            <div class="runner-card">
+              <span class="runner-badge">${w.rank}위</span>
+              <span class="runner-name">${w.name}</span>
+              <span class="runner-score">${w.score}</span>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      }
+      
+      return html;
     }
 
     function formatArchiveWinners(winnersStr) {

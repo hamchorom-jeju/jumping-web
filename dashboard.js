@@ -613,13 +613,17 @@ const Village = {
     },
 
     /**
-     * [v5.0] 실시간 랭킹 데이터를 티커에 정밀 반영 및 동적 월명 렌더링
+     * [v60.0] 실시간/시상식 랭킹 데이터를 티커에 정밀 반영 및 동적 월명 렌더링
      */
     updateRankingsFromData(data) {
         if (!data) return;
 
         const currentMonth = new Date().getMonth() + 1;
         const formattedRankings = [];
+        
+        const today = new Date();
+        const dayOfWeek = today.getDay(); // 4 = Thursday
+        const dateOfMonth = today.getDate(); // 1, 2, 3
 
         // 큰 EXP 수치를 k단위로 축약하여 프리미엄 룩 완성 (예: 38,400 -> 38.4k)
         const formatScore = (score, isCount = false, unit = "p") => {
@@ -651,8 +655,36 @@ const Village = {
             return `<div class="v-ranking-content-multiline">${line1}${line2}</div>`;
         };
 
-        // (1) 주간 랭킹 TOP 3
-        if (data.weekly && data.weekly.length > 0) {
+        // 확정된 아카이브 랭킹 데이터를 시상식 뷰로 가공하는 헬퍼 함수
+        const getConfirmedTop3Html = (winnersStr) => {
+            if (!winnersStr) return "<div class='v-ranking-line line-1'>시상 기록 데이터가 없습니다.</div>";
+            
+            // 🥇 왕관 이모지 제거 후 세로 바 기준으로 split
+            const cleanStr = winnersStr.replace("🥇 ", "");
+            const tokens = cleanStr.split("|").map(t => t.trim());
+            
+            const w1 = tokens[0] || "-";
+            const w2 = tokens[1] || "-";
+            const w3 = tokens[2] || "-";
+            
+            const line1 = `<div class="v-ranking-line line-1"><span class="v-ranker-span">🥇 ${w1}<span class="v-live-badge award" style="background:#4f46e5; box-shadow: 0 0 8px rgba(79, 70, 229, 0.4);">🏆 시상<span class="v-pulse-dot" style="background:#fff;"></span></span></span></div>`;
+            const line2 = `<div class="v-ranking-line line-2"><span class="v-ranker-span">${w2}</span><span class="v-ranker-span">${w3}</span></div>`;
+            
+            return `<div class="v-ranking-content-multiline">${line1}${line2}</div>`;
+        };
+
+        // (1) 주간 랭킹 TOP 3 (목요일: 지난주 확정 시상 배너로 자동 스위칭)
+        const isWeeklyConfirmedDay = (dayOfWeek === 4); // 목요일
+        const hasWeeklyArchive = (data.archive && data.archive.weekly && data.archive.weekly.length > 0);
+        
+        if (isWeeklyConfirmedDay && hasWeeklyArchive) {
+            const latestWeeklyArchive = data.archive.weekly[0];
+            formattedRankings.push({
+                type: `🏆 ${latestWeeklyArchive.period} 시상`,
+                badge: "weekly",
+                content: getConfirmedTop3Html(latestWeeklyArchive.winners)
+            });
+        } else if (data.weekly && data.weekly.length > 0) {
             formattedRankings.push({
                 type: "🏆 주간랭킹",
                 badge: "weekly",
@@ -660,8 +692,18 @@ const Village = {
             });
         }
 
-        // (2) 월간 랭킹 TOP 3
-        if (data.monthly && data.monthly.length > 0) {
+        // (2) 월간 랭킹 TOP 3 (1~3일: 지난달 확정 시상 배너로 자동 스위칭)
+        const isMonthlyConfirmedDay = (dateOfMonth >= 1 && dateOfMonth <= 3); // 매월 1일 ~ 3일
+        const hasMonthlyArchive = (data.archive && data.archive.monthly && data.archive.monthly.length > 0);
+        
+        if (isMonthlyConfirmedDay && hasMonthlyArchive) {
+            const latestMonthlyArchive = data.archive.monthly[0];
+            formattedRankings.push({
+                type: `📅 ${latestMonthlyArchive.period} 시상`,
+                badge: "monthly",
+                content: getConfirmedTop3Html(latestMonthlyArchive.winners)
+            });
+        } else if (data.monthly && data.monthly.length > 0) {
             formattedRankings.push({
                 type: "📅 월간랭킹",
                 badge: "monthly",
@@ -669,7 +711,7 @@ const Village = {
             });
         }
 
-        // (3) 토탈 랭킹 TOP 3
+        // (3) 토탈 랭킹 TOP 3 (변함없는 누적 랭킹)
         if (data.total && data.total.length > 0) {
             formattedRankings.push({
                 type: "💫 토탈랭킹",
@@ -678,8 +720,17 @@ const Village = {
             });
         }
 
-        // (4) 당월 출석왕 실시간 라이브 닷 레이스
-        if (data.mvp && data.mvp.monthlyAttendance && data.mvp.monthlyAttendance.length > 0) {
+        // (4) 당월 출석왕 실시간 라이브 닷 레이스 (1~3일: 지난달 최종 확정 출석왕 시상 배너로 자동 스위칭)
+        const hasAttendanceArchive = (data.archive && data.archive.attendance && data.archive.attendance.length > 0);
+        
+        if (isMonthlyConfirmedDay && hasAttendanceArchive) {
+            const latestAttArchive = data.archive.attendance[0];
+            formattedRankings.push({
+                type: `🏃 ${latestAttArchive.period} 출석왕`,
+                badge: "weekly", // 녹색 배지
+                content: getConfirmedTop3Html(latestAttArchive.winners)
+            });
+        } else if (data.mvp && data.mvp.monthlyAttendance && data.mvp.monthlyAttendance.length > 0) {
             formattedRankings.push({
                 type: "🏃 출석왕",
                 badge: "weekly", // 활기찬 초록색 라이브 배지 연출
@@ -734,6 +785,17 @@ const Village = {
                             { name: "김영희", count: 24 },
                             { name: "이철수", count: 22 },
                             { name: "박민수", count: 21 }
+                        ]
+                    },
+                    archive: {
+                        weekly: [
+                            { period: "5월 4주", winners: "🥇 1.김영희(1,450p) | 2.이철수(1,280p) | 3.박민수(1,100p)" }
+                        ],
+                        monthly: [
+                            { period: "5월", winners: "🥇 1.이철수(5,800p) | 2.김영희(5,200p) | 3.최미진(4,800p)" }
+                        ],
+                        attendance: [
+                            { period: "5월", winners: "🥇 1위 김영희(24회) | 🥈 2위 이철수(22회) | 🥉 3위 박민수(21회)" }
                         ]
                     }
                 };

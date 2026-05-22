@@ -9047,49 +9047,227 @@ function getHallOfFameData(payload) {
     }
     var mvpOasisAngel = extractTop3(oasisMap, "count");
     
-    // 5. 역대 명예의 전당 아카이브 동적 데이터 조회 (원장님 피드백 반영)
+    // 5. 역대 명예의 전당 아카이브 완전 자동 연산 (원장님 피드백 반영 - 100% 무개입 자동화)
     var archiveWeekly = [];
     var archiveMonthly = [];
     var archiveAttendance = [];
     
     try {
-      var archiveSheet = ss.getSheetByName("명예의전당_아카이브");
-      if (!archiveSheet) {
-        // 시트가 없으면 자동으로 템플릿 헤더와 함께 시트 생성 (자가 치유)
-        archiveSheet = ss.insertSheet("명예의전당_아카이브");
-        archiveSheet.appendRow(["구분", "기간", "기록", "등록일"]);
-        // 초기 템플릿 데이터 삽입 (원장님 입력 지표용 예시)
-        archiveSheet.appendRow(["주간", "5월 4주", "🥇 1.김순희(344p) | 2.박노형(320p) | 3.이순례(310p)", "2026-05-24"]);
-        archiveSheet.appendRow(["주간", "5월 3주", "🥇 1.이만수(350p) | 2.김순희(330p) | 3.정점례(290p)", "2026-05-17"]);
-        archiveSheet.appendRow(["주간", "5월 2주", "🥇 1.정점례(320p) | 2.박노형(315p) | 3.김순희(298p)", "2026-05-10"]);
-        archiveSheet.appendRow(["주간", "5월 1주", "🥇 1.박노형(330p) | 2.이만수(310p) | 3.김순희(295p)", "2026-05-03"]);
-        archiveSheet.appendRow(["월간", "5월", "🥇 1.김순희(1,240p) | 2.박노형(1,150p) | 3.정점례(1,080p)", "2026-05-31"]);
-        archiveSheet.appendRow(["출석왕", "5월", "🥇 1위 정순렬(20회) | 🥈 2위 진금희(18회) | 🥉 3위 홍양숙(17회)", "2026-05-31"]);
+      // (1) 목요일 기준 주간의 시작일(목요일 00:00:00)을 구하는 헬퍼 함수
+      function getThuStartOfWeekLocal(date) {
+        var d = new Date(date.getTime());
+        var day = d.getDay(); // 0(일)~6(토)
+        var diffToThu = (day + 3) % 7; 
+        d.setDate(d.getDate() - diffToThu);
+        d.setHours(0, 0, 0, 0);
+        return d;
       }
       
-      var arcData = archiveSheet.getDataRange().getValues();
-      if (arcData.length > 1) {
-        // 최신 등록 순서(아래에서 위로)대로 배열에 담아, 최신 기록(직전 주, 전달)이 상단에 배치되게 함
-        for (var a = arcData.length - 1; a >= 1; a--) {
-          var row = arcData[a];
-          var type = String(row[0] || "").trim();
-          var period = String(row[1] || "").trim();
-          var winners = String(row[2] || "").trim();
+      // (2) 임의의 날짜에 대해 목요일 기준의 "M월 W주" 문자열을 구하는 헬퍼 함수
+      function getWeekStringLocal(date) {
+        var thu = getThuStartOfWeekLocal(date);
+        var year = thu.getFullYear();
+        var month = thu.getMonth() + 1; // 1~12
+        
+        // 이 달의 첫 번째 목요일 구하기
+        var firstDayOfMonth = new Date(year, thu.getMonth(), 1);
+        var firstThu = new Date(year, thu.getMonth(), 1);
+        var firstDayOfWeek = firstDayOfMonth.getDay();
+        var diffToFirstThu = (4 - firstDayOfWeek + 7) % 7;
+        firstThu.setDate(1 + diffToFirstThu);
+        firstThu.setHours(0, 0, 0, 0);
+        
+        var weekNum = 1;
+        if (thu >= firstThu) {
+          weekNum = Math.floor((thu.getDate() - firstThu.getDate()) / 7) + 1;
+        } else {
+          // 이전 달의 마지막 주에 속함
+          var prevMonth = new Date(year, thu.getMonth(), 0); // 이전 달 마지막 날
+          return getWeekStringLocal(prevMonth);
+        }
+        return month + "월 " + weekNum + "주";
+      }
+
+      // (3) 과거 주간 및 월간 웰니스총점 집계
+      // summaryData 에는 모든 회원들의 일일 기록이 들어있습니다.
+      // 현재 주차 시작일(startOfWeek) 및 현재 월 시작일(startOfMonth)은 앞단에서 계산되었습니다.
+      var weeklyGroups = {}; // "5월 3주" -> { thuDate, users: { phone -> { name, score } } }
+      var monthlyGroups = {}; // "5월" -> { yearMonthDate, users: { phone -> { name, score } } }
+      
+      for (var sIdx = 1; sIdx < summaryData.length; sIdx++) {
+        var row = summaryData[sIdx];
+        var sPhoneRaw = String(row[1] || "").trim();
+        var sPhone = formatPhoneNumber(sPhoneRaw).replace(/[^0-9]/g, "");
+        if (!sPhone) continue;
+        
+        var sName = String(row[2] || "모험가").replace(/\d{4}$/, "").trim();
+        var sDateRaw = row[0];
+        var sDate = (sDateRaw instanceof Date) ? sDateRaw : new Date(sDateRaw);
+        if (isNaN(sDate.getTime())) continue;
+        
+        var rowWellnessTotal = Number(row[9] || 0); // J열: 웰니스총점
+        if (rowWellnessTotal <= 0) continue;
+        
+        // A. 과거 주간 집계 (현재 실시간 주간 제외)
+        if (sDate < startOfWeek) {
+          var weekKey = getWeekStringLocal(sDate);
+          if (!weeklyGroups[weekKey]) {
+            weeklyGroups[weekKey] = {
+              thuDate: getThuStartOfWeekLocal(sDate), // 정렬을 위해 주차 목요일 시작일 저장
+              users: {}
+            };
+          }
+          var group = weeklyGroups[weekKey];
+          if (!group.users[sPhone]) {
+            group.users[sPhone] = { name: sName, score: 0 };
+          }
+          group.users[sPhone].score += rowWellnessTotal;
+        }
+        
+        // B. 과거 월간 집계 (현재 실시간 월 제외)
+        if (sDate < startOfMonth) {
+          var monthKey = (sDate.getFullYear()) + "년 " + (sDate.getMonth() + 1) + "월";
+          if (!monthlyGroups[monthKey]) {
+            monthlyGroups[monthKey] = {
+              yearMonthDate: new Date(sDate.getFullYear(), sDate.getMonth(), 1), // 정렬용
+              users: {}
+            };
+          }
+          var mGroup = monthlyGroups[monthKey];
+          if (!mGroup.users[sPhone]) {
+            mGroup.users[sPhone] = { name: sName, score: 0 };
+          }
+          mGroup.users[sPhone].score += rowWellnessTotal;
+        }
+      }
+      
+      // C. 과거 주간 데이터 정렬 및 1~3위 추출
+      var weeklyKeys = Object.keys(weeklyGroups);
+      // 목요일 날짜 기준 내림차순 정렬 (최신 주차가 위로 가게)
+      weeklyKeys.sort(function(a, b) {
+        return weeklyGroups[b].thuDate - weeklyGroups[a].thuDate;
+      });
+      
+      weeklyKeys.forEach(function(weekKey, idx) {
+        var usersMap = weeklyGroups[weekKey].users;
+        var usersArr = [];
+        for (var ph in usersMap) {
+          usersArr.push(usersMap[ph]);
+        }
+        usersArr.sort(function(a, b) { return b.score - a.score; });
+        
+        var winners = [];
+        var limit = (idx === 0) ? Math.min(usersArr.length, 10) : Math.min(usersArr.length, 3);
+        for (var w = 0; w < limit; w++) {
+          var u = usersArr[w];
+          winners.push((w + 1) + "." + u.name + "(" + u.score.toLocaleString() + "p)");
+        }
+        if (winners.length > 0) {
+          archiveWeekly.push({
+            period: weekKey,
+            winners: "🥇 " + winners.join(" | ")
+          });
+        }
+      });
+      
+      // D. 과거 월간 데이터 정렬 및 1~3위 추출
+      var monthlyKeys = Object.keys(monthlyGroups);
+      // 연월 날짜 기준 내림차순 정렬 (최신 월이 위로 가게)
+      monthlyKeys.sort(function(a, b) {
+        return monthlyGroups[b].yearMonthDate - monthlyGroups[a].yearMonthDate;
+      });
+      
+      monthlyKeys.forEach(function(monthKey, idx) {
+        var usersMap = monthlyGroups[monthKey].users;
+        var usersArr = [];
+        for (var ph in usersMap) {
+          usersArr.push(usersMap[ph]);
+        }
+        usersArr.sort(function(a, b) { return b.score - a.score; });
+        
+        var winners = [];
+        var limit = (idx === 0) ? Math.min(usersArr.length, 10) : Math.min(usersArr.length, 3);
+        for (var w = 0; w < limit; w++) {
+          var u = usersArr[w];
+          winners.push((w + 1) + "." + u.name + "(" + u.score.toLocaleString() + "p)");
+        }
+        if (winners.length > 0) {
+          // 표시할 때는 연도를 떼고 깔끔하게 "5월", "4월" 형태로 출력
+          var displayPeriod = monthKey.split("년 ")[1];
+          archiveMonthly.push({
+            period: displayPeriod,
+            winners: "🥇 " + winners.join(" | ")
+          });
+        }
+      });
+      
+      // E. 과거 출석왕 집계 및 정렬 (현재 월 제외)
+      // attData 에는 출석 데이터가 들어있습니다.
+      var attCols = getAttendanceColumnIndices(attSheet);
+      var attendanceGroups = {}; // "5월" -> { yearMonthDate, users: { phone -> { name, count } } }
+      
+      if (attSheet && attData.length > 1) {
+        for (var aIdx = 1; aIdx < attData.length; aIdx++) {
+          var aRow = attData[aIdx];
+          var aPhoneRaw = String(aRow[attCols.phone] || "").trim();
+          var aPhone = formatPhoneNumber(aPhoneRaw).replace(/[^0-9]/g, "");
+          if (!aPhone) continue;
           
-          if (!period || !winners) continue;
+          var aName = String(aRow[attCols.name] || "모험가").replace(/\d{4}$/, "").trim();
+          var aDateRaw = aRow[attCols.date];
+          var aDate = (aDateRaw instanceof Date) ? aDateRaw : new Date(aDateRaw);
+          if (isNaN(aDate.getTime())) continue;
           
-          var item = { period: period, winners: winners };
-          if (type === "주간") {
-            archiveWeekly.push(item);
-          } else if (type === "월간") {
-            archiveMonthly.push(item);
-          } else if (type === "출석왕") {
-            archiveAttendance.push(item);
+          // 과거 출석왕 집계 (현재 월 미만)
+          if (aDate < startOfMonth) {
+            var attMonthKey = (aDate.getFullYear()) + "년 " + (aDate.getMonth() + 1) + "월";
+            if (!attendanceGroups[attMonthKey]) {
+              attendanceGroups[attMonthKey] = {
+                yearMonthDate: new Date(aDate.getFullYear(), aDate.getMonth(), 1), // 정렬용
+                users: {}
+              };
+            }
+            var attGroup = attendanceGroups[attMonthKey];
+            if (!attGroup.users[aPhone]) {
+              attGroup.users[aPhone] = { name: aName, count: 0 };
+            }
+            attGroup.users[aPhone].count++;
           }
         }
       }
+      
+      var attKeys = Object.keys(attendanceGroups);
+      // 내림차순 정렬 (최신 월이 위로 가게)
+      attKeys.sort(function(a, b) {
+        return attendanceGroups[b].yearMonthDate - attendanceGroups[a].yearMonthDate;
+      });
+      
+      attKeys.forEach(function(attKey) {
+        var usersMap = attendanceGroups[attKey].users;
+        var usersArr = [];
+        for (var ph in usersMap) {
+          usersArr.push(usersMap[ph]);
+        }
+        usersArr.sort(function(a, b) { return b.count - a.count; });
+        
+        var winners = [];
+        var limit = Math.min(usersArr.length, 3);
+        var medals = ["🥇 1위", "🥈 2위", "🥉 3위"];
+        for (var w = 0; w < limit; w++) {
+          var u = usersArr[w];
+          winners.push(medals[w] + " " + u.name + "(" + u.count + "회)");
+        }
+        if (winners.length > 0) {
+          var displayPeriod = attKey.split("년 ")[1];
+          archiveAttendance.push({
+            period: displayPeriod,
+            winners: winners.join(" | ")
+          });
+        }
+      });
+      
     } catch (arcErr) {
-      Logger.log("역대 명예의 전당 아카이브 로드 에러: " + arcErr.toString());
+      Logger.log("역대 명예의 전당 아카이브 완전 자동화 연산 오류: " + arcErr.toString());
     }
 
     return {
@@ -9116,6 +9294,262 @@ function getHallOfFameData(payload) {
     return { success: false, error: "명예의 전당 연산 실패: " + err.toString() };
   }
 }
+
+/**
+ * 📬 [v60.0] 등록현황 시트에서 '진행중' 상태인 전체 회원의 전화번호 추출
+ */
+function getActiveUserPhones() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+    var phones = [];
+    if (regSheet) {
+      var data = regSheet.getDataRange().getValues();
+      var cols = getRegColumnIndices(regSheet);
+      for (var i = 1; i < data.length; i++) {
+        var status = String(data[i][cols.status] || "").trim();
+        if (status === "진행중" || status === "진행 중") {
+          var rawPhone = String(data[i][cols.phone] || "").trim();
+          var phone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, "");
+          if (phone && phones.indexOf(phone) === -1) {
+            phones.push(phone);
+          }
+        }
+      }
+    }
+    return phones;
+  } catch (e) {
+    Logger.log("액티브 회원 추출 실패: " + e.toString());
+    return [];
+  }
+}
+
+/**
+ * 📬 [v60.0] 매주 목요일 새벽 0시 5분 실행되는 주간 랭킹 자동 우편 발송 트리거
+ */
+function autoSendWeeklyRankingNotice() {
+  try {
+    var preview = getWeeklyRankingNoticePreview();
+    if (!preview || !preview.success) {
+      Logger.log("주간 명예의 전당 프리뷰 생성 실패로 트리거 종료: " + (preview ? preview.error : ""));
+      return;
+    }
+    
+    var title = preview.title;
+    var content = preview.content;
+    var phones = getActiveUserPhones();
+    var sendCount = 0;
+    for (var i = 0; i < phones.length; i++) {
+      var res = sendPersonalNotification(phones[i], "ranking", title, content);
+      if (res && res.success) sendCount++;
+    }
+    Logger.log("주간 명예의 전당 쪽지 발송 완료: 총 " + phones.length + "명 중 " + sendCount + "명 성공");
+  } catch (err) {
+    Logger.log("주간 명예의 전당 자동 쪽지 발송 오류: " + err.toString());
+  }
+}
+
+/**
+ * 📬 [v60.0] 매월 1일 새벽 0시 10분 실행되는 월간 랭킹 및 출석왕 자동 우편 발송 트리거
+ */
+function autoSendMonthlyRankingNotice() {
+  try {
+    var preview = getMonthlyRankingNoticePreview();
+    if (!preview || !preview.success) {
+      Logger.log("월간 명예의 전당 프리뷰 생성 실패로 트리거 종료: " + (preview ? preview.error : ""));
+      return;
+    }
+    
+    var title = preview.title;
+    var content = preview.content;
+    var phones = getActiveUserPhones();
+    var sendCount = 0;
+    for (var i = 0; i < phones.length; i++) {
+      var res = sendPersonalNotification(phones[i], "ranking", title, content);
+      if (res && res.success) sendCount++;
+    }
+    Logger.log("월간 명예의 전당 쪽지 발송 완료: 총 " + phones.length + "명 중 " + sendCount + "명 성공");
+  } catch (err) {
+    Logger.log("월간 명예의 전당 자동 쪽지 발송 오류: " + err.toString());
+  }
+}
+
+/**
+ * 📬 [v60.0] 주간 랭킹 시상식 쪽지 내용 실시간 생성 및 미리보기 함수
+ */
+function getWeeklyRankingNoticePreview() {
+  try {
+    var hofRes = getHallOfFameData();
+    if (!hofRes || !hofRes.success || !hofRes.data || !hofRes.data.archive || !hofRes.data.archive.weekly) {
+      return { success: false, error: "주간 명예의 전당 데이터 취합 실패" };
+    }
+    
+    var weeklyArchive = hofRes.data.archive.weekly;
+    if (weeklyArchive.length === 0) {
+      return { success: false, error: "과거 주간 랭킹 아카이브 데이터가 없습니다." };
+    }
+    
+    // 가장 최근 완성된 주차 (직전 주)
+    var latestWeek = weeklyArchive[0];
+    var period = latestWeek.period; // 예: "5월 4주"
+    
+    // winners parsing ("🥇 1.김순희(344p) | 2.박노형(320p)...")
+    var winnersStr = latestWeek.winners.replace("🥇 ", "");
+    var tokens = winnersStr.split("|");
+    var w1 = tokens[0] ? tokens[0].trim() : "-";
+    var w2 = tokens[1] ? tokens[1].trim() : "-";
+    var w3 = tokens[2] ? tokens[2].trim() : "-";
+    
+    var title = "🏆 [노형빌리지] " + period + " 주간 명예의 전당 발표! ✉️";
+    var content = "🏰 [노형빌리지 " + period + " 주간 시상식] 🏰\n\n" +
+                  "지난 한 주 동안 노형빌리지를 뜨겁게 빛내주신 위대한 영웅들의 주간 명예의 전당 순위가 발표되었습니다!\n\n" +
+                  "👑 [최종 주간 TOP 3]\n" +
+                  "🥇 1위 : " + w1 + "\n" +
+                  "🥈 2위 : " + w2 + "\n" +
+                  "🥉 3위 : " + w3 + "\n\n" +
+                  "수상하신 모든 모험가님 진심으로 축하드립니다! 👏\n\n" +
+                  "우편함의 바로가기 버튼을 터치하여 전체 10위까지의 영광스러운 전체 순위표를 확인하고 축하의 박수를 보내주세요! 🎉";
+                  
+    return { success: true, title: title, content: content };
+  } catch (err) {
+    return { success: false, error: err.toString() };
+  }
+}
+
+/**
+ * 📬 [v60.0] 월간/출석왕 랭킹 시상식 쪽지 내용 실시간 생성 및 미리보기 함수
+ */
+function getMonthlyRankingNoticePreview() {
+  try {
+    var hofRes = getHallOfFameData();
+    if (!hofRes || !hofRes.success || !hofRes.data || !hofRes.data.archive) {
+      return { success: false, error: "월간 명예의 전당 데이터 취합 실패" };
+    }
+    
+    var monthlyArchive = hofRes.data.archive.monthly || [];
+    var attArchive = hofRes.data.archive.attendance || [];
+    
+    if (monthlyArchive.length === 0 && attArchive.length === 0) {
+      return { success: false, error: "과거 월간/출석왕 아카이브 데이터가 없습니다." };
+    }
+    
+    // 가장 최근 완성된 월 (직전 월)
+    var latestMonth = monthlyArchive[0];
+    var latestAtt = attArchive[0];
+    
+    var displayPeriod = "";
+    if (latestMonth) displayPeriod = latestMonth.period;
+    else if (latestAtt) displayPeriod = latestAtt.period;
+    
+    var w1 = "-", w2 = "-", w3 = "-";
+    if (latestMonth) {
+      var mWinnersStr = latestMonth.winners.replace("🥇 ", "");
+      var mTokens = mWinnersStr.split("|");
+      w1 = mTokens[0] ? mTokens[0].trim() : "-";
+      w2 = mTokens[1] ? mTokens[1].trim() : "-";
+      w3 = mTokens[2] ? mTokens[2].trim() : "-";
+    }
+    
+    var att1 = "-", att2 = "-", att3 = "-";
+    if (latestAtt) {
+      var attTokens = latestAtt.winners.split("|");
+      att1 = attTokens[0] ? attTokens[0].trim() : "-";
+      att2 = attTokens[1] ? attTokens[1].trim() : "-";
+      att3 = attTokens[2] ? attTokens[2].trim() : "-";
+    }
+    
+    var title = "📅 [노형빌리지] " + displayPeriod + " 월간 명예의 전당 발표! ✉️";
+    var content = "🏰 [노형빌리지 " + displayPeriod + " 월간 & 출석왕 시상식] 🏰\n\n" +
+                  "지난 한 달 동안 노형빌리지를 가장 뜨겁게 불태워주신 명예로운 월간 MVP와 출석왕이 탄생했습니다!\n\n" +
+                  "🔥 [최종 월간 TOP 3]\n" +
+                  "🥇 1위 : " + w1 + "\n" +
+                  "🥈 2위 : " + w2 + "\n" +
+                  "🥉 3위 : " + w3 + "\n\n" +
+                  "🏃 [최종 월별 출석왕 TOP 3]\n" +
+                  att1 + "\n" +
+                  att2 + "\n" +
+                  att3 + "\n\n" +
+                  "위대한 성과를 거두신 모든 영웅분들께 뜨거운 박수를 보냅니다! 👏\n\n" +
+                  "우편함의 바로가기 버튼을 터치하여 전체 명예의 전당에서 영광스러운 순위표를 즉시 확인해 보세요! 💫";
+                  
+    return { success: true, title: title, content: content };
+  } catch (err) {
+    return { success: false, error: err.toString() };
+  }
+}
+
+/**
+ * 📬 [v60.0] 오늘자 돌발 퀘스트 시상식/공지 쪽지 내용 실시간 생성 및 미리보기 함수
+ */
+function getDailyQuestNoticePreview() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("돌발퀘스트_목록");
+    if (!sheet) {
+      return { success: false, error: "돌발퀘스트_목록 시트가 없습니다." };
+    }
+    var data = sheet.getDataRange().getDisplayValues();
+    var now = new Date();
+    var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    
+    var todayQuest = null;
+    for (var i = 1; i < data.length; i++) {
+      var type = String(data[i][2] || "").trim();
+      var dateStr = String(data[i][1] || "").trim();
+      if (type === "이장" && dateStr === todayStr) {
+        var title = String(data[i][3] || "").trim();
+        var desc = String(data[i][4] || "").trim();
+        var qScore = data[i].length > 8 ? Number(data[i][8] || 15) : 15;
+        var qMethod = data[i].length > 9 ? String(data[i][9] || '사진').trim() : '사진';
+        todayQuest = { title: title, description: desc, score: qScore, method: qMethod };
+        break;
+      }
+    }
+    
+    if (!todayQuest) {
+      return { success: false, error: "오늘(" + todayStr + ") 자 돌발 퀘스트가 시트에 등록되어 있지 않습니다." };
+    }
+    
+    var title = "⚡ [돌발 퀘스트] " + todayQuest.title + " 선포! ✉️";
+    var content = "📢 [이장님의 긴급 돌발 퀘스트 선포!] 📢\n\n" +
+                  "오늘의 돌발 퀘스트가 선포되었습니다! 오늘 자정까지 완수하고 추가 보너스 에너지를 획득하세요!\n\n" +
+                  "🔥 [돌발 퀘스트]: " + todayQuest.title + "\n" +
+                  "📝 [임무 설명]: " + todayQuest.description + "\n" +
+                  "💎 [보상 EXP]: +" + todayQuest.score + " EXP\n" +
+                  "🎯 [인증 방법]: " + todayQuest.method + " 인증\n\n" +
+                  "지금 즉시 대시보드에서 돌발 퀘스트를 인증하고 수호 점수를 획득해 보세요! ⚔️";
+                  
+    return { success: true, title: title, content: content };
+  } catch (err) {
+    return { success: false, error: err.toString() };
+  }
+}
+
+/**
+ * 📬 [v60.0] 매일 새벽 0시 1분 실행되는 오늘자 돌발 퀘스트 자동 선포 및 우편 발송 트리거
+ */
+function autoSendDailyQuestNotice() {
+  try {
+    var preview = getDailyQuestNoticePreview();
+    if (!preview || !preview.success) {
+      Logger.log("돌발 퀘스트 프리뷰 생성 실패로 트리거 종료: " + (preview ? preview.error : ""));
+      return;
+    }
+    
+    var title = preview.title;
+    var content = preview.content;
+    var phones = getActiveUserPhones();
+    var sendCount = 0;
+    for (var i = 0; i < phones.length; i++) {
+      var res = sendPersonalNotification(phones[i], "quest", title, content);
+      if (res && res.success) sendCount++;
+    }
+    Logger.log("돌발 퀘스트 자동 쪽지 발송 완료: 총 " + phones.length + "명 중 " + sendCount + "명 성공");
+  } catch (err) {
+    Logger.log("돌발 퀘스트 자동 쪽지 발송 오류: " + err.toString());
+  }
+}
+
 
 
 
