@@ -1045,9 +1045,9 @@
                         const countEl = btnEl.querySelector('.heart-count');
                         if (countEl) countEl.innerText = res.hearts;
                         createHeartBurst(btnEl);
-                        alert(res.message);
+                        showAppAlert(res.message, "success");
                     } else {
-                        alert(res.error || "공감 처리에 실패했습니다.");
+                        showAppAlert(res.error || "공감 처리에 실패했습니다.", "error");
                     }
                 })
                 .reactOasisPost({
@@ -1171,41 +1171,69 @@
             const isSuddenChecked = document.getElementById('sudden-quest-check').checked;
 
             if (!content) {
-                alert("기록할 내용을 소중히 입력해 주세요!");
+                showAppAlert("기록할 내용을 소중히 입력해 주세요!", "error");
                 return;
             }
 
-            const loader = document.getElementById('v-loading');
-            loader.style.display = 'flex';
+            // [v59.1] 낙관적 UI 적용: 하얀 장막 로딩을 완전히 배제하고 즉시 화면 렌더링
+            const now = new Date();
+            const dateStr = Utilities_formatDate_local(now, "yyyy-MM-dd");
+            const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+            const categoryVal = isSuddenChecked ? '돌발' : selectedCategoryVal;
+            const virtualPost = {
+                id: "temp_" + Date.now(), // 임시 아이디
+                author: currentUser.name,
+                title: title || `${currentUser.name} 님의 기록`,
+                content: content,
+                category: categoryVal,
+                date: dateStr,
+                time: timeStr,
+                hearts: 0,
+                heartPhones: []
+            };
+
+            // 즉시 UI 반영하여 사용성을 극대화 (0.01초 반응)
+            loadedPostsGlobal.unshift(virtualPost);
+            renderOasis21Dashboard(loadedPostsGlobal);
+            closeWriteModal();
 
             const payload = {
                 phone: currentUser.phone,
                 author: currentUser.name,
                 title: title || `${currentUser.name} 님의 기록`,
                 content: content,
-                category: isSuddenChecked ? '돌발' : selectedCategoryVal,
+                category: categoryVal,
                 targetMember: '',
                 questTitle: isSuddenChecked && activeSuddenQuest ? activeSuddenQuest.title : null
             };
 
             if (typeof google === 'undefined') {
                 setTimeout(() => {
-                    loader.style.display = 'none';
-                    alert("로컬 환경 제출 시뮬레이션 완료!");
-                }, 1000);
+                    showAppAlert("로컬 환경 제출 시뮬레이션 완료!", "success");
+                }, 800);
                 return;
             }
 
             google.script.run
                 .withSuccessHandler(res => {
-                    loader.style.display = 'none';
                     if (res.success) {
-                        alert(res.message);
-                        closeWriteModal();
+                        // 프리미엄 웰니스 팝업 통일 적용
+                        showAppAlert(res.message, "success");
+                        // 백엔드 정식 반영된 데이터 기반으로 갱신
                         loadPosts();
                     } else {
-                        alert("에러: " + res.error);
+                        // 실패 시 롤백 및 에러 알림
+                        loadedPostsGlobal = loadedPostsGlobal.filter(p => p.id !== virtualPost.id);
+                        renderOasis21Dashboard(loadedPostsGlobal);
+                        showAppAlert("에러: " + res.error, "error");
                     }
+                })
+                .withFailureHandler(err => {
+                    // 실패 시 롤백 및 네트워크 에러 알림
+                    loadedPostsGlobal = loadedPostsGlobal.filter(p => p.id !== virtualPost.id);
+                    renderOasis21Dashboard(loadedPostsGlobal);
+                    showAppAlert("네트워크 에러: " + (err.message || String(err)), "error");
                 })
                 .submitOasisPost(payload);
         }
