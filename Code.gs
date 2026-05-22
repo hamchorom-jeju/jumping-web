@@ -7856,10 +7856,38 @@ function reactOasisPost(payload) {
     var authorPhone = formatPhoneNumber(postData[2]).replace(/[^0-9]/g, "");
     var authorName = postData[3];
     var currentHearts = Number(postData[8] || 0);
-    var heartPhones = String(postData[9] || "");
+    var heartPhones = String(postData[9] || "").trim();
     
-    // 중복 하트 클릭 방지
-    if (heartPhones.indexOf(clickerPhone) > -1) {
+    // 🛠️ [자가 치유 (Self-healing) 로직] 
+    // 기존 데이터에 과학적 지수 표기법(E+31 등)이 들어있어 망가져 있다면,
+    // 정상적인 중복 체크가 불가능하므로 빈값으로 정규화하여 자가 치유합니다.
+    if (heartPhones.indexOf("E+") > -1 || heartPhones.indexOf("e+") > -1) {
+      heartPhones = "";
+    }
+    
+    // 🛡️ [고도화된 중복 방지 엔진]
+    // 0이 떼어진 번호, E+ 표기법 등으로 오염되어 매칭이 실패하는 것을 완벽 방어하기 위해
+    // 앞자리 '0'을 떼어낸 숫자만 추출해 대조하거나 서브셋 포함 관계를 판별합니다.
+    var cleanClicker = clickerPhone.replace(/^0/, ""); // '1012345678'
+    var isAlreadyHearted = false;
+    
+    if (heartPhones) {
+      var phoneList = heartPhones.split(",");
+      for (var pIdx = 0; pIdx < phoneList.length; pIdx++) {
+        var existingPhone = phoneList[pIdx].trim().replace(/[^0-9]/g, "");
+        var cleanExisting = existingPhone.replace(/^0/, "");
+        
+        if (cleanExisting && cleanClicker) {
+          // 번호 전체가 정확히 같거나, 앞의 0이 떨어진 형태가 완전히 매칭될 때
+          if (cleanExisting === cleanClicker || existingPhone === clickerPhone) {
+            isAlreadyHearted = true;
+            break;
+          }
+        }
+      }
+    }
+    
+    if (isAlreadyHearted) {
       return { success: false, error: "이미 마음에 스며든 명언입니다. ❤️" };
     }
     
@@ -7868,7 +7896,10 @@ function reactOasisPost(payload) {
     var newHearts = currentHearts + 1;
     
     sheet.getRange(rowIdx, 9).setValue(newHearts);
-    sheet.getRange(rowIdx, 10).setValue(newHeartPhones);
+    
+    // ✍️ [문자열 포맷 강제] J열에 값을 쓸 때 앞에 `'` 접두사를 붙여 
+    // 구글 시트가 대단히 큰 전화번호 문자열 목록을 숫자로 오인하여 E+31 지수 표기로 자동 변환하는 참사를 원천 차단합니다!
+    sheet.getRange(rowIdx, 10).setValue("'" + newHeartPhones);
     
     // 2. 리액션을 누른 나에게 +1 EXP 적립
     recordActivityLog({

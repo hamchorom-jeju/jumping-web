@@ -75,7 +75,7 @@
             display: flex !important;
             position: absolute !important;
             white-space: nowrap !important;
-            animation: rollerMarquee 25s linear infinite !important;
+            animation: rollerMarquee 40s linear infinite !important;
             align-items: center !important;
             gap: 40px !important;
         }
@@ -86,8 +86,8 @@
             letter-spacing: -0.3px !important;
         }
         @keyframes rollerMarquee {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
         }
         .roller-box-btn {
             background: #e11d48 !important;
@@ -296,8 +296,6 @@
             display: flex !important;
             flex-direction: column !important;
             justify-content: space-between !important;
-            min-height: 105px !important;
-            max-height: 135px !important;
             box-sizing: border-box !important;
             transition: transform 0.2s, box-shadow 0.2s !important;
             cursor: pointer !important;
@@ -1520,6 +1518,12 @@
                 `;
             }
 
+            // 🔄 [무한 루프 Marquee 구현] 휴지기 없는 부드러운 롤링을 위해 전체 내용을 복사하여 2배로 만듬
+            if (rollerTrack) {
+                const originalHTML = rollerTrack.innerHTML;
+                rollerTrack.innerHTML = originalHTML + originalHTML;
+            }
+
             const userQuotes = posts.filter(p => p.category === '명언' || p.category === '격언');
             let mergedQuotes = [];
             userQuotes.forEach(q => mergedQuotes.push(q));
@@ -1675,34 +1679,45 @@
                 
                 let displayContent = p.content || '';
                 
-                // 📝 글자수 비례 폰트 크기 및 다이내믹 포스트잇 높이(min-height/max-height) 조절
+                // 📝 글자수 비례 폰트 크기 및 다이내믹 포스트잇 높이(min-height) 스케일링 엔진
                 let fontSize = '1.05rem';
-                let baseHeight = 104; // 기본 콤팩트 높이
+                let baseHeight = 98; // 기본 컴팩트 높이
                 
                 const charCount = displayContent.length;
                 if (charCount > 45) {
                     fontSize = '0.78rem';
-                    baseHeight = 138;
-                    if (charCount > 50) {
-                        displayContent = displayContent.substring(0, 48) + '...';
+                    baseHeight = 145;
+                    // 글자 자르기 범위를 70자로 넉넉히 주어 포스트잇이 길어지고 내용이 더 많이 보이도록 함
+                    if (charCount > 72) {
+                        displayContent = displayContent.substring(0, 70) + '...';
                     }
                 } else if (charCount > 30) {
                     fontSize = '0.86rem';
-                    baseHeight = 126;
+                    baseHeight = 128;
                 } else if (charCount > 15) {
                     fontSize = '0.94rem';
-                    baseHeight = 115;
+                    baseHeight = 112;
                 } else {
                     fontSize = '1.05rem';
-                    baseHeight = 104;
+                    baseHeight = 98;
                 }
                 
-                // 🎨 미세한 높이 편차(0~6px)를 가미하여 극도의 삐뚤빼뚤 내추럴 포스트잇 연출
-                const microDiff = seed % 7;
+                // 🎨 미세한 높이 편차를 글자 크기 범위별로 조금씩 주입하여 극도의 삐뚤빼뚤 내추럴 감성 연출
+                let microDiff = 0;
+                if (charCount > 45) {
+                    microDiff = seed % 20; // 0~19px 랜덤 편차
+                } else if (charCount > 30) {
+                    microDiff = seed % 16; // 0~15px 랜덤 편차
+                } else if (charCount > 15) {
+                    microDiff = seed % 14; // 0~13px 랜덤 편차
+                } else {
+                    microDiff = seed % 12; // 0~11px 랜덤 편차
+                }
+                
                 const finalHeight = `${baseHeight + microDiff}px`;
                 
                 card.style.setProperty('min-height', finalHeight, 'important');
-                card.style.setProperty('max-height', finalHeight, 'important');
+                card.style.removeProperty('max-height'); // CSS max-height 상속 방지하여 자연스러운 삐뚤빼뚤 자유 확장 보장
                 
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; width:100%; border-bottom:1px dashed rgba(0,0,0,0.08); padding-bottom:4px; margin-bottom:5px;">
