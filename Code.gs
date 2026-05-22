@@ -6610,13 +6610,29 @@ function DEPRECATED_submitInBodyRecord(payload) {
 function checkAndCreateQuestRegistrySheet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName("돌발퀘스트_목록");
+  var headers = ["ID", "시행일", "유형", "퀘스트명", "설명", "만료일", "전화번호", "상태", "점수", "인증방식"];
   if (!sheet) {
     sheet = ss.insertSheet("돌발퀘스트_목록");
-    var headers = ["ID", "시행일", "유형", "퀘스트명", "설명", "만료일", "전화번호", "상태"];
     sheet.appendRow(headers);
     sheet.setFrozenRows(1);
     sheet.getRange("1:1").setBackground("#e3faf2").setFontWeight("bold").setHorizontalAlignment("center");
-    Logger.log("✅ '돌발퀘스트_목록' 시트 생성 완료!");
+    Logger.log("✅ '돌발퀘스트_목록' 시트 신규 생성 및 10열 헤더 배치 완료!");
+  } else {
+    // 🩹 기존 시트의 헤더가 유실되었거나 8열까지만 있는 경우 자가치유(Self-healing) 실행
+    var lastCol = sheet.getLastColumn();
+    var currentHeaders = sheet.getRange(1, 1, 1, Math.max(lastCol, 10)).getDisplayValues()[0];
+    var needsRepair = false;
+    for (var c = 0; c < headers.length; c++) {
+      if (String(currentHeaders[c] || "").trim() !== headers[c]) {
+        needsRepair = true;
+        break;
+      }
+    }
+    if (needsRepair) {
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      sheet.getRange("1:1").setBackground("#e3faf2").setFontWeight("bold").setHorizontalAlignment("center");
+      Logger.log("🩹 '돌발퀘스트_목록' 시트 헤더 자가치유(10열 확장) 완료!");
+    }
   }
   return sheet;
 }
@@ -6659,8 +6675,17 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
 
       // 1. 이장 공지 퀘스트
       if (type === "이장") {
-        var qScore = data[i].length > 8 ? Number(data[i][8] || 15) : 15;
-        var qMethod = data[i].length > 9 ? String(data[i][9] || '사진').trim() : '사진';
+        var qScore = (data[i] && data[i].length > 8) ? Number(data[i][8] || 15) : 15;
+        var qMethod = (data[i] && data[i].length > 9) ? String(data[i][9] || '사진').trim() : '사진';
+        
+        // ⚠️ 이중 방어막: 제목에 명시적인 이모지가 있다면 백엔드 단에서 강제로 매핑해 주는 인텔리전트 보정
+        var titleStr = String(title || "");
+        if (titleStr.indexOf('✍️') > -1 || titleStr.indexOf('📝') > -1 || titleStr.indexOf('✏️') > -1 || titleStr.indexOf('⚡') > -1) {
+          qMethod = '게시판';
+        } else if (titleStr.indexOf('📸') > -1 || titleStr.indexOf('📷') > -1) {
+          qMethod = '사진';
+        }
+
         if (dateStr === todayStr) {
           result.todayQuest = { title: title, description: desc, score: qScore, method: qMethod };
         } else if (dateStr === tomorrowStr) {
@@ -7261,13 +7286,7 @@ function checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName) {
         statType: "health"
       });
       Logger.log("🎉 [" + memberName + "] 주간 3회 출석 달성! 체력 보너스 +100 EXP 하사 완료!");
-      // sendWeeklyBonusSms(phoneStr, memberName, 3);
-      sendPersonalNotification(
-        phoneStr,
-        "welcome",
-        "주간 3회 출석 보너스 달성! 🎉",
-        friendlyName + "님, 축하합니다! 금주 3회째 출석 마일스톤을 달성하여 '체력보너스' 스탯이 활성화되고 추가 보너스 +100 EXP가 전격 지급되었습니다! 오늘도 신나고 건강하게 점핑! 🔥🤸‍♂️"
-      );
+      sendWeeklyBonusNotification(phoneStr, memberName, 3);
     }
     // 4일 출석: +100 EXP 추가 하사 (누적 200)
     else if (attendDaysThisWeek === 4 && !hasBonus4) {
@@ -7281,13 +7300,7 @@ function checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName) {
         statType: "health"
       });
       Logger.log("🎉 [" + memberName + "] 주간 4회 출석 달성! 체력 보너스 +100 EXP 추가 하사 완료!");
-      // sendWeeklyBonusSms(phoneStr, memberName, 4);
-      sendPersonalNotification(
-        phoneStr,
-        "welcome",
-        "주간 4회 출석 보너스 달성! 🎉",
-        friendlyName + "님, 정말 대단하십니다! 금주 4회째 출석 마일스톤을 달성하여 체력보너스 추가 +100 EXP가 전격 지급되었습니다! 꾸준함이 모여 기적을 만듭니다. 화이팅! 🏆✨"
-      );
+      sendWeeklyBonusNotification(phoneStr, memberName, 4);
     }
     // 5일 출석: +100 EXP 추가 하사 (누적 300)
     else if (attendDaysThisWeek === 5 && !hasBonus5) {
@@ -7301,13 +7314,7 @@ function checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName) {
         statType: "health"
       });
       Logger.log("🎉 [" + memberName + "] 주간 5회 출석 달성! 체력 보너스 +100 EXP 추가 하사 완료!");
-      // sendWeeklyBonusSms(phoneStr, memberName, 5);
-      sendPersonalNotification(
-        phoneStr,
-        "welcome",
-        "주간 5회 출석 보너스 달성! 🎉",
-        friendlyName + "님, 당신은 진정한 웰니스 리더! 금주 5회째 출석 마일스톤을 달성하여 체력보너스 추가 +100 EXP가 전격 지급되었습니다! 오늘 하루도 상쾌하고 에너제틱하게! 💪🔥"
-      );
+      sendWeeklyBonusNotification(phoneStr, memberName, 5);
     }
     // 6일 출석: +100 EXP 추가 하사 (누적 400 EXP!)
     else if (attendDaysThisWeek >= 6 && !hasBonus6) {
@@ -7321,13 +7328,7 @@ function checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName) {
         statType: "health"
       });
       Logger.log("🎉 [" + memberName + "] 주간 6회 출석 달성! 체력 보너스 +100 EXP 추가 하사 완료!");
-      // sendWeeklyBonusSms(phoneStr, memberName, 6);
-      sendPersonalNotification(
-        phoneStr,
-        "welcome",
-        "주간 6회 출석 그랜드슬램 달성! 👑",
-        friendlyName + "님, 경이로운 출석 질주! 금주 6회째 출석 그랜드슬램을 달성하여 체력보너스 추가 +100 EXP가 전격 지급되었습니다! 건강한 습관의 끝판왕, 원장님이 진심으로 축하드립니다! ❤️🤸‍♂️"
-      );
+      sendWeeklyBonusNotification(phoneStr, memberName, 6);
     }
   } catch (e) {
     Logger.log("🚨 주간 출석 보너스 정산 오류: " + e.toString());
@@ -7335,37 +7336,38 @@ function checkAndAwardWeeklyAttendanceBonus(phoneStr, memberName) {
 }
 
 /**
- * [v46.4] 체력 보너스 달성 시 문자 발송 대기록 적재
+ * [v60.3] 체력 보너스 달성 시 일반문자(SMS)를 발송하지 않고, 인앱 쪽지(Personal Notification)로 안전하게 즉시 발송
  */
-function sendWeeklyBonusSms(phoneStr, memberName, count) {
+function sendWeeklyBonusNotification(phoneStr, memberName, count) {
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var smsSheet = ss.getSheetByName("문자발송");
-    if (!smsSheet) return;
+    var friendlyName = getFriendlyName(memberName);
+    var title = "주간 " + count + "회 출석 보너스 달성! 🎉";
+    var content = friendlyName + "님, 축하합니다! 금주 " + count + "회째 출석 마일스톤을 달성하여 체력보너스 추가 +100 EXP가 전격 지급되었습니다! 오늘도 신나고 건강하게 점핑! 🔥🤸‍♂️";
     
-    // 전화번호 형식 보정 (010-XXXX-XXXX)
-    var formattedPhone = phoneStr;
-    var digits = phoneStr.replace(/[^0-9]/g, "");
-    if (digits.length === 11) {
-      formattedPhone = digits.slice(0, 3) + "-" + digits.slice(3, 7) + "-" + digits.slice(7);
+    if (count === 4) {
+      content = friendlyName + "님, 정말 대단하십니다! 금주 " + count + "회째 출석 마일스톤을 달성하여 체력보너스 추가 +100 EXP가 전격 지급되었습니다! 꾸준함이 모여 기적을 만듭니다. 화이팅! 🏆✨";
+    } else if (count === 5) {
+      content = friendlyName + "님, 당신은 진정한 웰니스 리더! 금주 " + count + "회째 출석 마일스톤을 달성하여 체력보너스 추가 +100 EXP가 전격 지급되었습니다! 오늘 하루도 상쾌하고 에너제틱하게! 💪🔥";
+    } else if (count >= 6) {
+      title = "주간 6회 출석 그랜드슬램 달성! 👑";
+      content = friendlyName + "님, 경이로운 출석 질주! 금주 " + count + "회째 출석 그랜드슬램을 달성하여 체력보너스 추가 +100 EXP가 전격 지급되었습니다! 건강한 습관의 끝판왕, 원장님이 진심으로 축하드립니다! ❤️🤸‍♂️";
     }
     
-    var now = new Date();
-    var logTimeStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm:ss");
-    var smsContent = "🎉 [" + memberName + "]님 축하합니다!\n금주 " + count + "회째 출석으로 '체력보너스'를 달성하셨습니다! 🔥\n추가 보너스 +100 EXP가 지급되었습니다. 오늘도 건강하게 점핑!";
-    
-    smsSheet.appendRow([
-      logTimeStr,       // 기록시간
-      memberName,       // 이름
-      formattedPhone,   // 전화번호
-      "체력보너스달성", // 안내분류
-      smsContent,       // 생성된문자내용
-      "대기"            // 상태
-    ]);
-    Logger.log("📢 [" + memberName + "] 체력보너스 문자발송 대기열 추가 완료: " + count + "회");
-  } catch(e) {
-    Logger.log("🚨 체력보너스 문자 발송 대기열 추가 실패: " + e.toString());
+    sendPersonalNotification(phoneStr, "welcome", title, content);
+    Logger.log("📢 [" + memberName + "] 체력보너스 인앱 쪽지 안전 전송 완료 (주간 " + count + "회)");
+  } catch (e) {
+    Logger.log("🚨 체력보너스 인앱 쪽지 전송 오류: " + e.toString());
   }
+}
+
+/**
+ * [트리거 호환 안전 패치 v60.41]
+ * 혹시 구글 Apps Script 온라인 트리거에 구버전 함수명(sendWeeklyBonusSms)이 수동 등록되어 돌고 있을 경우를 대비하여,
+ * 실행 차단 에러를 예방하고 인앱 쪽지 발송 신규 로직으로 안전하게 토스해 주는 하위 호환용 연결 함수입니다.
+ */
+function sendWeeklyBonusSms(phoneStr, memberName, count) {
+  Logger.log("⚠️ [호환 엔진] 구버전 트리거 함수명(sendWeeklyBonusSms) 감지 -> 신규 인앱 쪽지 엔진으로 자동 이관합니다.");
+  sendWeeklyBonusNotification(phoneStr, memberName, count);
 }
 
 // [v46.35] 구글의 소스코드 노출 자동차단을 예방하는 안전한 백엔드 API 키 저장/배포 시스템
@@ -9499,8 +9501,17 @@ function getDailyQuestNoticePreview() {
       if (type === "이장" && dateStr === todayStr) {
         var title = String(data[i][3] || "").trim();
         var desc = String(data[i][4] || "").trim();
-        var qScore = data[i].length > 8 ? Number(data[i][8] || 15) : 15;
-        var qMethod = data[i].length > 9 ? String(data[i][9] || '사진').trim() : '사진';
+        var qScore = (data[i] && data[i].length > 8) ? Number(data[i][8] || 15) : 15;
+        var qMethod = (data[i] && data[i].length > 9) ? String(data[i][9] || '사진').trim() : '사진';
+        
+        // ⚠️ 이중 방어막: 제목에 명시적인 이모지가 있다면 백엔드 단에서 강제로 매핑해 주는 인텔리전트 보정
+        var titleStr = String(title || "");
+        if (titleStr.indexOf('✍️') > -1 || titleStr.indexOf('📝') > -1 || titleStr.indexOf('✏️') > -1 || titleStr.indexOf('⚡') > -1) {
+          qMethod = '게시판';
+        } else if (titleStr.indexOf('📸') > -1 || titleStr.indexOf('📷') > -1) {
+          qMethod = '사진';
+        }
+        
         todayQuest = { title: title, description: desc, score: qScore, method: qMethod };
         break;
       }
@@ -9549,7 +9560,6 @@ function autoSendDailyQuestNotice() {
     Logger.log("돌발 퀘스트 자동 쪽지 발송 오류: " + err.toString());
   }
 }
-
 
 
 

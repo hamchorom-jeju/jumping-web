@@ -236,14 +236,32 @@ const Village = {
                                     notices = [res.pillarNotice];
                                 }
 
-                                const getNoticeTargetUrl = (isSudden) => {
+                                const getNoticeTargetUrl = (isSudden, itemTitle) => {
                                     if (!isSudden || !res.quests || !res.quests.todayQuest) return 'notice.html';
                                     const qTitle = res.quests.todayQuest.title || '';
                                     const qMethod = res.quests.todayQuest.method || '';
-                                    if (qMethod === '게시판' || qTitle.includes('✍️') || qTitle.includes('📝') || qTitle.includes('✏️')) {
+                                    
+                                    // 3중 안전 필터링 (1. method 데이터, 2. 제목 이모지, 3. 제목 키워드)
+                                    const titleLower = (itemTitle || qTitle || '').toLowerCase();
+                                    const isBoard = qMethod === '게시판' || 
+                                                    titleLower.indexOf('✍️') > -1 || titleLower.indexOf('📝') > -1 || titleLower.indexOf('✏️') > -1 || titleLower.indexOf('⚡') > -1 ||
+                                                    titleLower.indexOf('글쓰기') > -1 || titleLower.indexOf('게시판') > -1 || titleLower.indexOf('칠판') > -1 || titleLower.indexOf('작성') > -1 || titleLower.indexOf('번개') > -1;
+                                                    
+                                    if (isBoard) {
                                         return 'oasis.html?write=sudden-quest';
                                     } else {
                                         return 'miracle.html?tab=quest&cat=bonus&auto_open=camera';
+                                    }
+                                };
+
+                                const getActionHtml = (isSudden, isDone) => {
+                                    if (!isSudden) return `<span class="v-banner-badge">전체보기 <i class="fa-solid fa-chevron-right"></i></span>`;
+                                    if (isDone) {
+                                        // 🎉 격조 높은 에메랄드 초록색 '완료됨' 배지
+                                        return `<span class="v-banner-badge" style="box-shadow: 0 0 12px rgba(16, 185, 129, 0.4); border-color: #10b981; color: #10b981; background: rgba(16, 185, 129, 0.1); font-weight: bold;">완료됨 <i class="fa-solid fa-circle-check" style="color: #10b981;"></i></span>`;
+                                    } else {
+                                        // ⚡ 액티브한 장미색 '인증하기' 배지
+                                        return `<span class="v-banner-badge" style="box-shadow: 0 0 12px rgba(244, 63, 94, 0.4); border-color: #f43f5e; color: #f43f5e; background: rgba(244, 63, 94, 0.1); font-weight: bold;">인증하기 <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i></span>`;
                                     }
                                 };
 
@@ -260,7 +278,8 @@ const Village = {
                                     // 돌발 퀘스트를 배열 맨 뒤에 주입 [v58.6]
                                     notices.push({
                                         title: titleText,
-                                        isSuddenQuest: true
+                                        isSuddenQuest: true,
+                                        isCompleted: isCompleted
                                     });
                                 }
 
@@ -272,14 +291,13 @@ const Village = {
                                     const item = notices[0];
                                     const title = item.title || item.content || '';
                                     const isSudden = !!item.isSuddenQuest;
+                                    const isDone = !!item.isCompleted;
                                     
                                     const badgeHtml = isSudden
                                         ? `<span class="v-notice-badge sudden">⚡ 돌발<br>퀘스트</span>`
                                         : `<span class="v-notice-badge">📢 마을공지</span>`;
                                     
-                                    const actionHtml = isSudden
-                                        ? `<span class="v-banner-badge" style="box-shadow: 0 0 12px rgba(244, 63, 94, 0.4); border-color: #f43f5e; color: #f43f5e; background: rgba(244, 63, 94, 0.1);">인증하기 <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i></span>`
-                                        : `<span class="v-banner-badge">전체보기 <i class="fa-solid fa-chevron-right"></i></span>`;
+                                    const actionHtml = getActionHtml(isSudden, isDone);
                                     
                                     if (isSudden) {
                                         noticeEl.classList.add('sudden-mode');
@@ -288,7 +306,7 @@ const Village = {
                                     }
                                     
                                     noticeEl.innerHTML = `<div class="v-banner-notice-inner">${badgeHtml}<span class="v-notice-text">${title.trim()}</span></div>${actionHtml}`;
-                                    noticeEl.dataset.targetUrl = getNoticeTargetUrl(isSudden);
+                                    noticeEl.dataset.targetUrl = getNoticeTargetUrl(isSudden, title);
                                 } else {
                                     let curIdx = 0;
                                     
@@ -297,14 +315,13 @@ const Village = {
                                         const item = notices[curIdx];
                                         const title = item.title || item.content || '';
                                         const isSudden = !!item.isSuddenQuest;
+                                        const isDone = !!item.isCompleted;
                                         
                                         const badgeHtml = isSudden
                                             ? `<span class="v-notice-badge sudden">⚡ 돌발<br>퀘스트</span>`
                                             : `<span class="v-notice-badge">📢 마을공지</span>`;
                                         
-                                        const actionHtml = isSudden
-                                            ? `<span class="v-banner-badge" style="box-shadow: 0 0 12px rgba(244, 63, 94, 0.4); border-color: #f43f5e; color: #f43f5e; background: rgba(244, 63, 94, 0.1);">인증하기 <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i></span>`
-                                            : `<span class="v-banner-badge">전체보기 <i class="fa-solid fa-chevron-right"></i></span>`;
+                                        const actionHtml = getActionHtml(isSudden, isDone);
                                         
                                         if (isSudden) {
                                             noticeEl.classList.add('sudden-mode');
@@ -313,7 +330,7 @@ const Village = {
                                         }
                                         
                                         noticeEl.innerHTML = `<div class="v-banner-notice-inner">${badgeHtml}<span class="v-notice-text">${title.trim()}</span></div>${actionHtml}`;
-                                        noticeEl.dataset.targetUrl = getNoticeTargetUrl(isSudden);
+                                        noticeEl.dataset.targetUrl = getNoticeTargetUrl(isSudden, title);
                                         
                                         const delay = isSudden ? 10000 : 5000;
                                         if (window.noticeInterval) clearTimeout(window.noticeInterval);
@@ -329,6 +346,7 @@ const Village = {
                                         const curSudden = !!curItem.isSuddenQuest;
                                         const nextSudden = !!nextItem.isSuddenQuest;
                                         const nextTitle = nextItem.title || nextItem.content || '';
+                                        const nextDone = !!nextItem.isCompleted;
                                         
                                         if (curSudden !== nextSudden) {
                                             // ⚡ 테마 깜빡임 스위칭 (일반 ↔ 돌발 유형 교차 시)
@@ -341,9 +359,7 @@ const Village = {
                                                     ? `<span class="v-notice-badge sudden">⚡ 돌발<br>퀘스트</span>`
                                                     : `<span class="v-notice-badge">📢 마을공지</span>`;
                                                 
-                                                const actionHtml = nextSudden
-                                                    ? `<span class="v-banner-badge" style="box-shadow: 0 0 12px rgba(244, 63, 94, 0.4); border-color: #f43f5e; color: #f43f5e; background: rgba(244, 63, 94, 0.1);">인증하기 <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i></span>`
-                                                    : `<span class="v-banner-badge">전체보기 <i class="fa-solid fa-chevron-right"></i></span>`;
+                                                const actionHtml = getActionHtml(nextSudden, nextDone);
                                                 
                                                 if (nextSudden) {
                                                     noticeEl.classList.add('sudden-mode');
@@ -352,7 +368,7 @@ const Village = {
                                                 }
                                                 
                                                 noticeEl.innerHTML = `<div class="v-banner-notice-inner">${badgeHtml}<span class="v-notice-text">${nextTitle.trim()}</span></div>${actionHtml}`;
-                                                noticeEl.dataset.targetUrl = getNoticeTargetUrl(nextSudden);
+                                                noticeEl.dataset.targetUrl = getNoticeTargetUrl(nextSudden, nextTitle);
                                                 
                                                 noticeEl.style.opacity = '1';
                                                 noticeEl.style.transform = 'scale(1)';
@@ -374,8 +390,16 @@ const Village = {
                                                     textEl.textContent = nextTitle.trim();
                                                     textEl.style.opacity = '1';
                                                     
-                                                    // 타겟 링크는 즉시 최신화
-                                                    noticeEl.dataset.targetUrl = getNoticeTargetUrl(nextSudden);
+                                                    // 타겟 링크 및 액션 버튼 디자인 즉시 최신화
+                                                    const badgeContainer = noticeEl.querySelector('.v-notice-badge');
+                                                    const actionContainer = noticeEl.querySelector('.v-banner-badge');
+                                                    
+                                                    if (actionContainer) {
+                                                        const newActionHtml = getActionHtml(nextSudden, nextDone);
+                                                        actionContainer.outerHTML = newActionHtml;
+                                                    }
+                                                    
+                                                    noticeEl.dataset.targetUrl = getNoticeTargetUrl(nextSudden, nextTitle);
                                                     
                                                     curIdx = nextIdx;
                                                     
