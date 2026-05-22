@@ -254,6 +254,47 @@ const Village = {
                                     }
                                 };
 
+                                const getNoticeBadgeHtml = (isSudden, itemTitle) => {
+                                    if (!isSudden) return `<span class="v-notice-badge">📢 마을공지</span>`;
+                                    
+                                    const qTitle = res.quests && res.quests.todayQuest ? (res.quests.todayQuest.title || '') : '';
+                                    const qMethod = res.quests && res.quests.todayQuest ? (res.quests.todayQuest.method || '') : '';
+                                    const titleLower = (itemTitle || qTitle || '').toLowerCase();
+                                    const isBoard = qMethod === '게시판' || 
+                                                    titleLower.indexOf('✍️') > -1 || titleLower.indexOf('📝') > -1 || titleLower.indexOf('✏️') > -1 || titleLower.indexOf('⚡') > -1 ||
+                                                    titleLower.indexOf('글쓰기') > -1 || titleLower.indexOf('게시판') > -1 || titleLower.indexOf('칠판') > -1 || titleLower.indexOf('작성') > -1 || titleLower.indexOf('번개') > -1;
+                                    
+                                    if (isBoard) {
+                                        return `<span class="v-notice-badge sudden-board">📝 글쓰기<br>돌발</span>`;
+                                    } else {
+                                        return `<span class="v-notice-badge sudden-photo">📸 사진<br>돌발</span>`;
+                                    }
+                                };
+
+                                const updateSuddenClasses = (el, isSudden, itemTitle) => {
+                                    if (!el) return;
+                                    if (isSudden) {
+                                        el.classList.add('sudden-mode');
+                                        
+                                        const qTitle = res.quests && res.quests.todayQuest ? (res.quests.todayQuest.title || '') : '';
+                                        const qMethod = res.quests && res.quests.todayQuest ? (res.quests.todayQuest.method || '') : '';
+                                        const titleLower = (itemTitle || qTitle || '').toLowerCase();
+                                        const isBoard = qMethod === '게시판' || 
+                                                        titleLower.indexOf('✍️') > -1 || titleLower.indexOf('📝') > -1 || titleLower.indexOf('✏️') > -1 || titleLower.indexOf('⚡') > -1 ||
+                                                        titleLower.indexOf('글쓰기') > -1 || titleLower.indexOf('게시판') > -1 || titleLower.indexOf('칠판') > -1 || titleLower.indexOf('작성') > -1 || titleLower.indexOf('번개') > -1;
+                                        
+                                        if (isBoard) {
+                                            el.classList.add('sudden-mode-board');
+                                            el.classList.remove('sudden-mode-photo');
+                                        } else {
+                                            el.classList.add('sudden-mode-photo');
+                                            el.classList.remove('sudden-mode-board');
+                                        }
+                                    } else {
+                                        el.classList.remove('sudden-mode', 'sudden-mode-board', 'sudden-mode-photo');
+                                    }
+                                };
+
                                 const getActionHtml = (isSudden, isDone, itemTitle) => {
                                     if (!isSudden) return `<span class="v-banner-badge">전체보기 <i class="fa-solid fa-chevron-right"></i></span>`;
                                     if (isDone) {
@@ -306,17 +347,10 @@ const Village = {
                                     const isSudden = !!item.isSuddenQuest;
                                     const isDone = !!item.isCompleted;
                                     
-                                    const badgeHtml = isSudden
-                                        ? `<span class="v-notice-badge sudden">⚡ 돌발<br>퀘스트</span>`
-                                        : `<span class="v-notice-badge">📢 마을공지</span>`;
-                                    
+                                    const badgeHtml = getNoticeBadgeHtml(isSudden, title);
                                     const actionHtml = getActionHtml(isSudden, isDone, title);
                                     
-                                    if (isSudden) {
-                                        noticeEl.classList.add('sudden-mode');
-                                    } else {
-                                        noticeEl.classList.remove('sudden-mode');
-                                    }
+                                    updateSuddenClasses(noticeEl, isSudden, title);
                                     
                                     noticeEl.innerHTML = `<div class="v-banner-notice-inner">${badgeHtml}<span class="v-notice-text">${title.trim()}</span></div>${actionHtml}`;
                                     noticeEl.dataset.targetUrl = getNoticeTargetUrl(isSudden, title);
@@ -330,17 +364,10 @@ const Village = {
                                         const isSudden = !!item.isSuddenQuest;
                                         const isDone = !!item.isCompleted;
                                         
-                                        const badgeHtml = isSudden
-                                            ? `<span class="v-notice-badge sudden">⚡ 돌발<br>퀘스트</span>`
-                                            : `<span class="v-notice-badge">📢 마을공지</span>`;
-                                        
+                                        const badgeHtml = getNoticeBadgeHtml(isSudden, title);
                                         const actionHtml = getActionHtml(isSudden, isDone, title);
                                         
-                                        if (isSudden) {
-                                            noticeEl.classList.add('sudden-mode');
-                                        } else {
-                                            noticeEl.classList.remove('sudden-mode');
-                                        }
+                                        updateSuddenClasses(noticeEl, isSudden, title);
                                         
                                         noticeEl.innerHTML = `<div class="v-banner-notice-inner">${badgeHtml}<span class="v-notice-text">${title.trim()}</span></div>${actionHtml}`;
                                         noticeEl.dataset.targetUrl = getNoticeTargetUrl(isSudden, title);
@@ -349,9 +376,9 @@ const Village = {
                                         if (window.noticeInterval) clearTimeout(window.noticeInterval);
                                         window.noticeInterval = setTimeout(transitionToNext, delay);
                                     };
- 
-                                    // 두 번째 항목부터 트랜지션 모드 분기 (글자만 롤링 vs 테마 전체 깜빡임) [v58.6]
-                                    const transitionToNext = () => {
+  
+                                     // 두 번째 항목부터 트랜지션 모드 분기 (글자만 롤링 vs 테마 전체 깜빡임) [v58.6]
+                                     const transitionToNext = () => {
                                         const nextIdx = (curIdx + 1) % notices.length;
                                         const curItem = notices[curIdx];
                                         const nextItem = notices[nextIdx];
@@ -368,17 +395,10 @@ const Village = {
                                             noticeEl.style.transform = 'scale(0.98)';
                                             
                                             setTimeout(() => {
-                                                const badgeHtml = nextSudden
-                                                    ? `<span class="v-notice-badge sudden">⚡ 돌발<br>퀘스트</span>`
-                                                    : `<span class="v-notice-badge">📢 마을공지</span>`;
-                                                
+                                                const badgeHtml = getNoticeBadgeHtml(nextSudden, nextTitle);
                                                 const actionHtml = getActionHtml(nextSudden, nextDone, nextTitle);
                                                 
-                                                if (nextSudden) {
-                                                    noticeEl.classList.add('sudden-mode');
-                                                } else {
-                                                    noticeEl.classList.remove('sudden-mode');
-                                                }
+                                                updateSuddenClasses(noticeEl, nextSudden, nextTitle);
                                                 
                                                 noticeEl.innerHTML = `<div class="v-banner-notice-inner">${badgeHtml}<span class="v-notice-text">${nextTitle.trim()}</span></div>${actionHtml}`;
                                                 noticeEl.dataset.targetUrl = getNoticeTargetUrl(nextSudden, nextTitle);
@@ -407,10 +427,17 @@ const Village = {
                                                     const badgeContainer = noticeEl.querySelector('.v-notice-badge');
                                                     const actionContainer = noticeEl.querySelector('.v-banner-badge');
                                                     
+                                                    if (badgeContainer) {
+                                                        const newBadgeHtml = getNoticeBadgeHtml(nextSudden, nextTitle);
+                                                        badgeContainer.outerHTML = newBadgeHtml;
+                                                    }
+                                                    
                                                     if (actionContainer) {
                                                         const newActionHtml = getActionHtml(nextSudden, nextDone, nextTitle);
                                                         actionContainer.outerHTML = newActionHtml;
                                                     }
+                                                    
+                                                    updateSuddenClasses(noticeEl, nextSudden, nextTitle);
                                                     
                                                     noticeEl.dataset.targetUrl = getNoticeTargetUrl(nextSudden, nextTitle);
                                                     

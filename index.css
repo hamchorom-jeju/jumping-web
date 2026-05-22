@@ -141,6 +141,36 @@ body {
     display: inline-block !important;
 }
 
+.v-notice-badge.sudden-board {
+    background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    white-space: normal !important;
+    text-align: center !important;
+    line-height: 1.15 !important;
+    font-size: 0.58rem !important;
+    padding: 3px 6px !important;
+    border-radius: 9px !important;
+    min-width: 44px !important;
+    display: inline-block !important;
+}
+
+.v-notice-badge.sudden-photo {
+    background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(244, 63, 94, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    white-space: normal !important;
+    text-align: center !important;
+    line-height: 1.15 !important;
+    font-size: 0.58rem !important;
+    padding: 3px 6px !important;
+    border-radius: 9px !important;
+    min-width: 44px !important;
+    display: inline-block !important;
+}
+
 .v-notice-text {
     flex: 1;
     font-size: 0.75rem;
@@ -194,15 +224,29 @@ body {
     box-shadow: 0 3px 10px rgba(241, 196, 15, 0.1);
 }
 
-/* ⚡ 돌발 퀘스트 전용 럭셔리 네온 테마 배너 스타일 */
-.v-banner-notice.sudden-mode {
+/* ⚡ 돌발 퀘스트 전용 럭셔리 네온 테마 배너 스타일 - 글쓰기 (보라색) */
+.v-banner-notice.sudden-mode.sudden-mode-board {
+    background: linear-gradient(135deg, #2e1065 0%, #1e1b4b 100%) !important;
+    border-left: 5px solid #8b5cf6 !important;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.35) !important;
+    animation: vBannerPulseBoard 2s infinite ease-in-out !important;
+}
+
+@keyframes vBannerPulseBoard {
+    0% { box-shadow: 0 0 12px rgba(139, 92, 246, 0.25); }
+    50% { box-shadow: 0 0 22px rgba(139, 92, 246, 0.55); }
+    100% { box-shadow: 0 0 12px rgba(139, 92, 246, 0.25); }
+}
+
+/* ⚡ 돌발 퀘스트 전용 럭셔리 네온 테마 배너 스타일 - 사진 (장미빛) */
+.v-banner-notice.sudden-mode.sudden-mode-photo {
     background: linear-gradient(135deg, #881337 0%, #4c0519 100%) !important;
     border-left: 5px solid #f43f5e !important;
     box-shadow: 0 0 20px rgba(244, 63, 94, 0.35) !important;
-    animation: vBannerPulse 2s infinite ease-in-out;
+    animation: vBannerPulsePhoto 2s infinite ease-in-out !important;
 }
 
-@keyframes vBannerPulse {
+@keyframes vBannerPulsePhoto {
     0% { box-shadow: 0 0 12px rgba(244, 63, 94, 0.25); }
     50% { box-shadow: 0 0 22px rgba(244, 63, 94, 0.55); }
     100% { box-shadow: 0 0 12px rgba(244, 63, 94, 0.25); }

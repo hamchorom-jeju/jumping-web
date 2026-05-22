@@ -783,21 +783,22 @@
 
       
       // [v50.0] URL 파라미터에 따른 자동 설명 팝업 및 스크롤
-      const cat = urlParams.get('tab') || urlParams.get('cat');
-      const itemKey = urlParams.get('item');
+      const tabParam = urlParams.get('tab') || '';
+      const catParam = urlParams.get('cat') || '';
+      const itemKey = urlParams.get('item') || '';
+      const autoOpen = urlParams.get('auto_open') || '';
       
-      if (cat === 'habit' && itemKey) {
+      if ((tabParam === 'habit' || catParam === 'habit') && itemKey) {
         setTimeout(() => showInfoPopup(itemKey), 400);
-      } else if (cat === 'water' || itemKey === 'water') {
+      } else if (tabParam === 'water' || catParam === 'water' || itemKey === 'water') {
         setTimeout(() => showInfoPopup('water'), 400);
-      } else if (cat === 'visit') {
+      } else if (tabParam === 'visit' || catParam === 'visit') {
         setTimeout(() => showInfoPopup('water'), 400);
-      } else if (cat === 'bonus' || itemKey === 'bonus') {
-        const autoOpen = urlParams.get('auto_open');
+      } else if (tabParam === 'bonus' || catParam === 'bonus' || itemKey === 'bonus') {
         if (autoOpen !== 'camera') {
           setTimeout(() => showInfoPopup('bonus'), 400);
         }
-      } else if (cat === 'meal') {
+      } else if (tabParam === 'meal' || catParam === 'meal') {
         setTimeout(() => {
           const mealSec = document.querySelector('.arc-section');
           if (mealSec) mealSec.scrollIntoView({ behavior: 'smooth' });
@@ -825,10 +826,11 @@
                 }
 
                 // auto_open=camera 유입 처리
-                const cat = urlParams.get('tab') || urlParams.get('cat');
-                const itemKey = urlParams.get('item');
-                const autoOpen = urlParams.get('auto_open');
-                if (autoOpen === 'camera' && (cat === 'bonus' || itemKey === 'bonus')) {
+                const tabParam = urlParams.get('tab') || '';
+                const catParam = urlParams.get('cat') || '';
+                const itemKey = urlParams.get('item') || '';
+                const autoOpen = urlParams.get('auto_open') || '';
+                if (autoOpen === 'camera' && (tabParam === 'bonus' || catParam === 'bonus' || itemKey === 'bonus')) {
                   if (res.quests.todayQuest.method === '게시판') {
                     showAppAlert("오늘의 돌발 퀘스트는 게시판 작성 전용입니다. 오아시스에서 작성해 주세요! ✍️", "error");
                     setTimeout(() => {
