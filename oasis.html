@@ -1156,23 +1156,19 @@
                     document.getElementById('sudden-quest-check').checked = true;
                     toggleSuddenLabel();
                     
+                    const pureTitle = getPureQuestTitle(activeSuddenQuest.title);
                     // 돌발퀘스트 연동 시, 제목 고정 및 disabled 처리 (게시판 인증 돌발일 때)
                     if (activeSuddenQuest.method === '게시판') {
-                        const pureTitle = getPureQuestTitle(activeSuddenQuest.title);
                         document.getElementById('post-title').value = `⚡ [돌발] ${pureTitle} 기록`;
                         document.getElementById('post-title').readOnly = true;
                         document.getElementById('sudden-quest-check').disabled = true;
-                        
-                        // 본문 pre-fill (비어있는 경우에만 입력)
-                        if (!document.getElementById('post-content').value) {
-                            document.getElementById('post-content').value = `오늘의 돌발 퀘스트 [${pureTitle}] 완수를 위해 실천한 성찰과 소감을 자유롭게 기록합니다! ⚡\n\n`;
-                        }
                     }
+                    
+                    document.getElementById('post-content').placeholder = `오늘의 돌발퀘스트 [${pureTitle}]`;
                 } else {
                     linkBox.style.display = 'none';
+                    document.getElementById('post-content').placeholder = "오늘의 돌발 퀘스트 소감이나 실천 다짐을 입력하세요 (+15 EXP)...";
                 }
-                
-                document.getElementById('post-content').placeholder = "오늘의 돌발 퀘스트 소감이나 실천 다짐을 입력하세요 (+15 EXP)...";
             }
         }
 
