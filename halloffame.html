@@ -175,7 +175,7 @@
     }
 
     .podium-card.rank-3rd {
-      height: 105px;
+      height: 125px;
       z-index: 1;
     }
 
@@ -319,7 +319,7 @@
     .list-item {
       display: flex;
       align-items: center;
-      padding: 15px 0;
+      padding: 7px 0;
       border-bottom: 1px solid rgba(139, 92, 246, 0.08);
       transition: all 0.2s ease;
     }
@@ -333,36 +333,36 @@
     }
 
     .list-num {
-      width: 45px;
-      font-size: 1.05rem;
+      width: 38px;
+      font-size: 0.95rem;
       font-weight: 800;
       color: var(--text-muted);
     }
-
+ 
     .list-avatar {
-      width: 38px;
-      height: 38px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       background: rgba(139, 92, 246, 0.15);
       border: 1px solid rgba(139, 92, 246, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.85rem;
+      font-size: 0.78rem;
       font-weight: 700;
       color: #d8b4fe;
-      margin-right: 12px;
+      margin-right: 10px;
     }
-
+ 
     .list-name {
       flex: 1;
-      font-size: 1.05rem;
+      font-size: 0.95rem;
       font-weight: 600;
       color: #ffffff;
     }
-
+ 
     .list-score {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: var(--text-muted);
     }
 
@@ -728,6 +728,16 @@
       </div>
     </div>
 
+    <!-- 🏆 실시간 MVP 부문별 영웅들 -->
+    <h2 class="mvp-section-title">🏆 실시간 MVP 부문별 영웅들</h2>
+    <div id="mvpArea" class="mvp-grid">
+      <!-- Skeleton Loading for MVP Grid -->
+      <div class="mvp-card skeleton" style="height: 140px;"></div>
+      <div class="mvp-card skeleton" style="height: 140px;"></div>
+      <div class="mvp-card skeleton" style="height: 140px;"></div>
+      <div class="mvp-card skeleton" style="height: 140px;"></div>
+    </div>
+
     <!-- 🏆 역대 MVP 명예의 전당 (지난 분기 기록) -->
     <h2 class="archive-section-title">🏆 역대 MVP 명예의 전당</h2>
     <p class="archive-section-desc">지난 분기 및 과거 월간/주간 부문별 영웅들의 확정 기록 목록</p>
@@ -908,6 +918,7 @@
     function renderAll() {
       if (!rawData) return;
       renderRankings();
+      renderMVPs(rawData.mvp);
       renderArchives();
     }
 
@@ -1106,6 +1117,81 @@
           card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }, 150);
       }
+    }
+
+    function toggleMoreRanks() {
+      ranksExpanded = !ranksExpanded;
+      renderRankings();
+    }
+
+    function renderMVPs(mvp) {
+      const mvpArea = document.getElementById('mvpArea');
+      if (!mvpArea) return;
+      
+      if (!mvp) {
+        mvpArea.innerHTML = `<div class="empty-state">MVP 데이터를 로드할 수 없습니다.</div>`;
+        return;
+      }
+
+      function makeMvpList(list, unit, isScore = false) {
+        if (!list || list.length === 0) return `<div class="empty-state" style="padding: 10px; font-size: 0.8rem;">순위권 도전의 기회가 남아 있습니다! 🔥</div>`;
+        return list.map((item, idx) => {
+          const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : "🥉";
+          const val = isScore ? item.score : item.count;
+          const formattedVal = typeof val === 'number' ? val.toLocaleString() : val;
+          return `
+            <div class="mvp-item">
+              <div class="mvp-rank-indicator">
+                <span class="mvp-badge-mini">${medal}</span>
+                <span class="mvp-name">${item.name}</span>
+              </div>
+              <div class="mvp-value"><strong>${formattedVal}</strong>${unit}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      mvpArea.innerHTML = `
+        <!-- Card 1: Monthly Attendance -->
+        <div class="mvp-card">
+          <div class="mvp-card-header">
+            <span class="emoji">🏃</span> 당월 출석왕
+          </div>
+          <div class="mvp-list">
+            ${makeMvpList(mvp.monthlyAttendance, '회')}
+          </div>
+        </div>
+
+        <!-- Card 2: Total Attendance -->
+        <div class="mvp-card">
+          <div class="mvp-card-header">
+            <span class="emoji">🏆</span> 역대 출석의 신
+          </div>
+          <div class="mvp-list">
+            ${makeMvpList(mvp.totalAttendance, '회')}
+          </div>
+        </div>
+
+        <!-- Card 3: Sincere Active King -->
+        <div class="mvp-card">
+          <div class="mvp-card-header">
+            <span class="emoji">📸</span> 누적 실천왕
+          </div>
+          <div class="mvp-list">
+            ${makeMvpList(mvp.sincereKing, 'p', true)}
+          </div>
+        </div>
+
+        <!-- Card 4: Oasis Post Angel -->
+        <div class="mvp-card">
+          <div class="mvp-card-header">
+            <span class="emoji">🌸</span> 오아시스 천사
+          </div>
+          <div class="mvp-list">
+            ${makeMvpList(mvp.oasisAngel, '개')}
+          </div>
+        </div>
+      `;
     }
 
     function goBackToDashboard(event) {

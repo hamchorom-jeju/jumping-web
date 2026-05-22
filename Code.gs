@@ -8967,8 +8967,8 @@ function getHallOfFameData(payload) {
     sortAndRank(finalTotalScores);
     
     // Top 10 필터링
-    var topWeekly = finalWeeklyScores.slice(0, 10);
-    var topMonthly = finalMonthlyScores.slice(0, 10);
+    var topWeekly = finalWeeklyScores.slice(0, 30);
+    var topMonthly = finalMonthlyScores.slice(0, 30);
     var topTotal = finalTotalScores; // 토탈은 무제한 노출 스크롤
     
     // 4. MVP 집계 연산
