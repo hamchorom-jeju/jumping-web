@@ -7804,13 +7804,18 @@ function submitOasisPost(payload) {
       if (recordResult && recordResult.success) {
         if (category === "돌발") {
           awardMessage = " (돌발 퀘스트 완료 +15 EXP가 실시간 적립되었습니다!) ⚡";
-        } else {
+        } else if (category !== "셀프칭찬") {
           awardMessage = " (오아시스 보상 +" + expAwarded + " EXP가 실시간 적립되었습니다!) 🌟";
         }
       }
     }
     
-    return { success: true, message: "오아시스 생명샘에 소중한 마음이 안전하게 기록되었습니다!" + awardMessage };
+    var mainMessage = "오아시스 생명샘에 소중한 마음이 안전하게 기록되었습니다!";
+    if (category === "셀프칭찬") {
+      mainMessage = "스스로를 칭찬하는 긍정 선언은 자존감을 높이고 스트레스를 완화하여 뇌에 긍정적인 활력을 불어넣는 아주 훌륭한 웰니스 요법입니다. 나를 사랑하고 격려하는 따뜻한 한마디를 건넨 당신의 모습이 참으로 멋집니다! 🌸";
+    }
+    
+    return { success: true, message: mainMessage + awardMessage };
   } catch (e) {
     return { success: false, error: e.toString() };
   }
