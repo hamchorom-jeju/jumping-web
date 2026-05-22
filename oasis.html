@@ -290,7 +290,7 @@
         }
         .postit-card {
             box-shadow: 3px 5px 10px rgba(0,0,0,0.3) !important;
-            padding: 8px 10px !important;
+            padding: 12px 10px !important;
             border-radius: 3px !important;
             position: relative !important;
             display: flex !important;
@@ -1666,12 +1666,19 @@
                 card.style.transform = `rotate(${rotateVal}deg)`;
                 card.style.background = bgCol;
                 
+                // 🎨 포스트잇 크기(높이) 다양성을 주어 자유롭고 감각적인 느낌 극대화!
+                const heightSeeds = ['105px', '118px', '132px'];
+                const chosenHeight = heightSeeds[seed % heightSeeds.length];
+                card.style.setProperty('min-height', chosenHeight, 'important');
+                card.style.setProperty('max-height', chosenHeight, 'important');
+                
                 const isSudden = p.category === '돌발';
                 const badgeChar = isSudden ? '⚡' : '💬';
+                const badgeText = isSudden ? '돌발' : '자유';
                 const badgeCol = isSudden ? '#e11d48' : '#0f766e';
                 
                 const friendlyName = getFriendlyName(p.author);
-                const dateDisplay = p.date ? p.date.substring(5) : '';
+                const timeDisplay = p.time ? p.time.substring(0, 5) : '';
                 
                 let displayContent = p.content || '';
                 
@@ -1687,16 +1694,18 @@
                 }
                 
                 card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; border-bottom:1px dashed rgba(0,0,0,0.08); padding-bottom:4px; margin-bottom:6px;">
-                        <span style="font-size:0.85rem; font-weight:900; color:${badgeCol}; display:flex; align-items:center;">
-                            ${badgeChar}
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; border-bottom:1px dashed rgba(0,0,0,0.1); padding-bottom:3px; margin-bottom:5px;">
+                        <span style="font-size:0.8rem; font-weight:900; color:${badgeCol}; display:flex; align-items:center; gap:2px;">
+                            ${badgeChar} <span style="font-size:0.65rem; border:1px solid ${badgeCol}; border-radius:4px; padding:0 3px; font-weight:800; font-family:'Noto Sans KR', sans-serif;">${badgeText}</span>
                         </span>
-                        <span style="background:${badgeCol}15; color:${badgeCol}; border:1px solid ${badgeCol}25; border-radius:12px; padding:2px 8px; font-size:0.65rem; font-weight:800; font-family:'Noto Sans KR', sans-serif; display:inline-flex; align-items:center; gap:4px;">
-                            ${friendlyName} ${dateDisplay}
-                        </span>
+                        <span style="font-size:0.68rem; color:#64748b; font-family:'Noto Sans KR', sans-serif;">${timeDisplay}</span>
                     </div>
-                    <div style="font-size:${fontSize}; font-weight:900; color:#1e293b; line-height:1.25; word-break:break-all; flex-grow:1; display:flex; align-items:center; justify-content:center; text-align:center; padding: 2px 0;">
+                    <div style="font-size:${fontSize}; font-weight:900; color:#1e293b; line-height:1.2; word-break:break-all; flex-grow:1; display:flex; align-items:center; justify-content:center; text-align:center;">
                         ${displayContent}
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; font-size:0.85rem; font-weight:800; color:#475569; margin-top:5px; border-top:1px dashed rgba(0,0,0,0.06); padding-top:3px;">
+                        <span>✏️ ${friendlyName}</span>
+                        <span style="font-size:0.65rem; font-family:'Noto Sans KR', sans-serif;">${p.date.substring(5)}</span>
                     </div>
                 `;
                 
