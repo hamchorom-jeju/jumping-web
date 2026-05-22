@@ -18,7 +18,8 @@ function getArchiveFeed(payload) {
     var lastRow = sheet.getLastRow();
     if (lastRow < 2) return { success: true, data: { photos: [], total: 0 } };
     
-    var data = sheet.getRange(2, 1, lastRow - 1, 9).getDisplayValues();
+    // 💡 리액션 정보가 있는 10번째 열(J열)까지 데이터를 가져옵니다.
+    var data = sheet.getRange(2, 1, lastRow - 1, 10).getDisplayValues();
     var photos = [];
     
     for (var i = 0; i < data.length; i++) {
@@ -28,7 +29,14 @@ function getArchiveFeed(payload) {
       // 사진 ID가 실제로 존재하는 유효한 자랑 이미지들만 필터링
       if (photoId && photoId.length > 5) {
         var imageUrl = "https://lh3.googleusercontent.com/d/" + photoId;
+        
+        // 💡 10번째 열(Index 9)에서 리액션 JSON을 파싱합니다.
+        var reactions = { cool: [], best: [], cheer: [] };
+        var reactionJson = String(row[9] || "{}").trim();
+        try { reactions = JSON.parse(reactionJson); } catch(e) {}
+        
         photos.push({
+          rowIdx: i + 2, // 💡 실제 시트에서의 행 번호 (2행부터 시작하므로 i + 2)
           url: imageUrl,
           description: String(row[6] || "소중한 인증의 한 장면 🌟"),
           author: String(row[2] || "모험가"),
@@ -36,7 +44,8 @@ function getArchiveFeed(payload) {
           time: String(row[1] || ""),
           type: String(row[4] || "기록"),
           item: String(row[5] || ""),
-          score: String(row[8] || "0")
+          score: String(row[8] || "0"),
+          reactions: reactions // 💡 리액션 데이터 포함!
         });
       }
     }
