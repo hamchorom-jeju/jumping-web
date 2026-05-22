@@ -793,7 +793,10 @@
       } else if (cat === 'visit') {
         setTimeout(() => showInfoPopup('water'), 400);
       } else if (cat === 'bonus' || itemKey === 'bonus') {
-        setTimeout(() => showInfoPopup('bonus'), 400);
+        const autoOpen = urlParams.get('auto_open');
+        if (autoOpen !== 'camera') {
+          setTimeout(() => showInfoPopup('bonus'), 400);
+        }
       } else if (cat === 'meal') {
         setTimeout(() => {
           const mealSec = document.querySelector('.arc-section');
@@ -809,6 +812,34 @@
         google.script.run
           .withSuccessHandler(res => {
             if (res && res.success) {
+              if (res.quests && res.quests.todayQuest) {
+                window.activeSuddenQuest = res.quests.todayQuest;
+                const qTitle = res.quests.todayQuest.title || "";
+                const cleanQuestName = qTitle.split('!')[0].replace("⚡", "").replace("[돌발]", "").trim();
+                const bonusBtn = document.getElementById('bonus-quest-btn');
+                if (bonusBtn) {
+                  const labelEl = bonusBtn.querySelector('span:not(.q-icon)');
+                  if (labelEl) {
+                    labelEl.innerText = cleanQuestName;
+                  }
+                }
+
+                // auto_open=camera 유입 처리
+                const cat = urlParams.get('tab') || urlParams.get('cat');
+                const itemKey = urlParams.get('item');
+                const autoOpen = urlParams.get('auto_open');
+                if (autoOpen === 'camera' && (cat === 'bonus' || itemKey === 'bonus')) {
+                  if (res.quests.todayQuest.method === '게시판') {
+                    showAppAlert("오늘의 돌발 퀘스트는 게시판 작성 전용입니다. 오아시스에서 작성해 주세요! ✍️", "error");
+                    setTimeout(() => {
+                      location.href = 'oasis.html?write=sudden-quest';
+                    }, 1500);
+                  } else {
+                    openCertModal('bonus');
+                  }
+                }
+              }
+
               if (res.doneList) {
                 window.lastDoneList = res.doneList;
                 updateMealButtonsState(res.doneList);
@@ -1975,6 +2006,17 @@
     window.currentWaterL = 1.2;
 
     function showInfoPopup(key) {
+      if (key === 'bonus' && window.activeSuddenQuest) {
+        const qTitle = window.activeSuddenQuest.title || "";
+        const cleanQuestName = qTitle.split('!')[0].replace("⚡", "").replace("[돌발]", "").trim();
+        POPUP_DATA.bonus.title = `⚡ [돌발] ${cleanQuestName}`;
+        
+        const qDesc = window.activeSuddenQuest.description || "";
+        const qScore = window.activeSuddenQuest.score ? `+${window.activeSuddenQuest.score} EXP` : "+15 EXP";
+        POPUP_DATA.bonus.score = qScore;
+        POPUP_DATA.bonus.guide = `${qDesc}\n\n오늘의 돌발 미션을 실천해 주세요!\n${window.activeSuddenQuest.method === '게시판' ? '✍️ 게시판 작성 시 ' : '📸 인증 사진 제출 시 '}${qScore} 지급!`;
+      }
+
       const d = POPUP_DATA[key];
       if (!d) return;
       window.currentPopupKey = key;
@@ -2122,8 +2164,16 @@
           // 퀘스트 / 미라클: 인증만 가능
           const authBtn = document.createElement('button');
           authBtn.className = 'info-btn-auth';
-          authBtn.innerText = '📸 인증하러 가기';
-          authBtn.onclick = () => { closeInfoModal(); setTimeout(() => { openCertModal(key); }, 200); };
+          if (key === 'bonus' && window.activeSuddenQuest && window.activeSuddenQuest.method === '게시판') {
+            authBtn.innerText = '✍️ 작성하러 가기';
+            authBtn.onclick = () => { 
+              closeInfoModal(); 
+              location.href = "oasis.html?write=sudden-quest"; 
+            };
+          } else {
+            authBtn.innerText = '📸 인증하러 가기';
+            authBtn.onclick = () => { closeInfoModal(); setTimeout(() => { openCertModal(key); }, 200); };
+          }
           btnsEl.appendChild(authBtn);
         }
       }
@@ -2213,12 +2263,32 @@
     // 공통 인증 모달 열기
     window.currentCertKey = null;
     function openCertModal(key) {
+      if (key === 'bonus' && window.activeSuddenQuest) {
+        if (window.activeSuddenQuest.method === '게시판') {
+          showAppAlert("오늘의 돌발 퀘스트는 게시판 작성 전용입니다. 오아시스에서 작성해 주세요! ✍️", "error");
+          setTimeout(() => {
+            location.href = "oasis.html?write=sudden-quest";
+          }, 1500);
+          return;
+        }
+      }
+
       const d = POPUP_DATA[key];
       if (!d) return;
       window.currentCertKey = key;
 
-      document.getElementById('cert-modal-title').innerHTML = `${d.icon} ${d.title} 인증`;
-      document.getElementById('cert-comment').value = '';
+      let titleText = `${d.icon} ${d.title} 인증`;
+      let commentPrefill = '';
+
+      if (key === 'bonus' && window.activeSuddenQuest) {
+        const qTitle = window.activeSuddenQuest.title || "";
+        const cleanQuestName = qTitle.split('!')[0].replace("⚡", "").replace("[돌발]", "").trim();
+        titleText = `📸 [돌발] ${cleanQuestName} 인증`;
+        commentPrefill = cleanQuestName;
+      }
+
+      document.getElementById('cert-modal-title').innerHTML = titleText;
+      document.getElementById('cert-comment').value = commentPrefill;
       resetCertPreview();
       document.getElementById('cert-modal').style.display = 'flex';
       window.registerModalOpen(closeCertModal);

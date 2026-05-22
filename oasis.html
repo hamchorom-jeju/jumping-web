@@ -7,6 +7,7 @@
     <!-- v56.0 Cache Buster CSS -->
     <link rel="stylesheet" href="index.css?v=56.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
     <style>
         :root {
             --oasis-bg: #f4faf6;
@@ -160,7 +161,7 @@
         .quote-sliderbook-section {
             background: rgba(255,255,255,0.75);
             border-radius: 25px;
-            padding: 12px;
+            padding: 4px; /* 여백 획기적으로 축소 */
             border: 1px solid rgba(13, 148, 136, 0.12);
             box-sizing: border-box;
         }
@@ -201,14 +202,14 @@
             justify-content: center !important;
             align-items: center !important;
             text-align: center !important;
-            padding: 20px 20px 20px 45px !important; /* 왼쪽 스프링 타공 영역 확보 */
+            padding: 20px 20px 20px 38px !important; /* 왼쪽 스프링 타공 영역 확보 및 패딩 줄임 */
         }
         /* 스프링 메탈릭 링 (감성 100% 철제 링 관통 비주얼) */
         .v-notebook-paper::before {
             content: '' !important;
             position: absolute !important;
             top: 0 !important;
-            left: 17px !important;
+            left: 14px !important; /* 왼쪽으로 밀어서 여백 최적화 */
             width: 8px !important;
             height: 100% !important;
             background-image: linear-gradient(
@@ -229,7 +230,7 @@
             content: '' !important;
             position: absolute !important;
             top: 0 !important;
-            left: 11px !important;
+            left: 8px !important; /* 왼쪽으로 밀어서 여백 최적화 */
             width: 8px !important;
             height: 100% !important;
             background-image: radial-gradient(circle, #334155 40%, transparent 50%) !important;
@@ -239,23 +240,113 @@
         }
 
         .slider-arrow {
-            background: white;
+            position: absolute !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(4px) !important;
             border: 1px solid rgba(0,0,0,0.06);
             color: var(--oasis-emerald);
-            width: 28px;
-            height: 28px;
+            width: 34px !important;
+            height: 34px !important;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.04);
-            z-index: 5;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            z-index: 10 !important;
             transition: all 0.2s;
             flex-shrink: 0;
         }
+        .slider-arrow.prev {
+            left: -8px !important;
+        }
+        .slider-arrow.next {
+            right: -8px !important;
+        }
         .slider-arrow:active {
-            transform: scale(0.9);
+            transform: translateY(-50%) scale(0.9) !important;
+        }
+
+        /* 🎨 다크그린 칠판 및 브라운 원목 프레임 테마 */
+        .oasis-blackboard-container {
+            background-color: #112d24 !important;
+            border: 8px solid #854d0e !important;
+            border-radius: 16px !important;
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.65), 0 8px 20px rgba(0,0,0,0.15) !important;
+            position: relative !important;
+            padding: 20px 20px 30px 20px !important;
+            min-height: 290px !important;
+            box-sizing: border-box !important;
+            margin-bottom: 15px !important;
+        }
+        .postit-grid {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            grid-gap: 15px 12px !important;
+            box-sizing: border-box !important;
+            width: 100% !important;
+        }
+        .postit-card {
+            box-shadow: 3px 5px 10px rgba(0,0,0,0.3) !important;
+            padding: 12px !important;
+            border-radius: 3px !important;
+            position: relative !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            min-height: 105px !important;
+            max-height: 135px !important;
+            box-sizing: border-box !important;
+            transition: transform 0.2s, box-shadow 0.2s !important;
+            cursor: pointer !important;
+            font-family: 'Nanum Pen Script', 'Noto Sans KR', sans-serif !important;
+            overflow: hidden !important;
+        }
+        .postit-card:hover {
+            transform: scale(1.06) rotate(0deg) !important;
+            z-index: 10 !important;
+            box-shadow: 6px 10px 18px rgba(0,0,0,0.4) !important;
+        }
+        .blackboard-arrow {
+            position: absolute !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            background: rgba(255, 255, 255, 0.2) !important;
+            backdrop-filter: blur(4px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            color: rgba(255, 255, 255, 0.8) !important;
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important;
+            z-index: 5 !important;
+            transition: all 0.2s !important;
+        }
+        .blackboard-arrow:active {
+            transform: translateY(-50%) scale(0.9) !important;
+        }
+        .blackboard-arrow.prev {
+            left: 5px !important;
+        }
+        .blackboard-arrow.next {
+            right: 5px !important;
+        }
+        .blackboard-pager {
+            position: absolute !important;
+            bottom: 6px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            font-family: 'Nanum Pen Script', sans-serif !important;
+            color: rgba(255, 255, 255, 0.6) !important;
+            font-size: 1.1rem !important;
+            font-weight: 800 !important;
+            letter-spacing: 1px !important;
         }
 
         .heart-reaction-btn {
@@ -639,6 +730,19 @@
         </button>
     </div>
 
+    <!-- ⚡ 돌발 퀘스트 롤링 띠 배너 -->
+    <div class="v-self-praise-roller-container" id="sudden-quest-rolling-banner" style="display: none; background: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important; margin-top: -10px; border-radius: 0 0 16px 16px !important; box-shadow: 0 4px 15px rgba(225, 29, 72, 0.15) !important;">
+        <div class="roller-title" id="sudden-banner-title" style="background: rgba(255, 255, 255, 0.2) !important; color: white !important; font-weight: 900 !important;" onclick="openSuddenGuidePopup()">⚡ [돌발] 퀘스트</div>
+        <div class="roller-wrapper" onclick="openSuddenGuidePopup()">
+            <div class="roller-track" id="sudden-roller-track" style="animation: rollerMarquee 20s linear infinite !important;">
+                <!-- 동적 주입 -->
+            </div>
+        </div>
+        <button class="roller-box-btn" style="background: #be123c !important; box-shadow: 0 2px 6px rgba(190, 18, 60, 0.3) !important;" onclick="openWriteModal('일반'); selectMemoCategoryTab('돌발');" title="돌발 기록하고 +15 EXP 받기">
+            <i class="fa-solid fa-pen"></i> 기록
+        </button>
+    </div>
+
     <div class="oasis-container">
         
         <!-- 📖 섹션 2: 마음 채우기 (중복 아이콘 제거, 이모지만 깔끔하게 배치!) -->
@@ -678,13 +782,20 @@
             </button>
         </div>
 
-        <div id="oasis-posts-list" style="margin-bottom: 20px;">
-            <!-- 동적 주입 -->
-        </div>
-        <div style="text-align:center; margin-bottom:30px;" id="memo-more-btn-box">
-            <button onclick="expandMemos()" style="background:#fff; border:1px solid rgba(0,0,0,0.08); padding:8px 25px; border-radius:15px; font-weight:800; font-size:0.75rem; color:var(--oasis-emerald); cursor:pointer; box-shadow:0 3px 8px rgba(0,0,0,0.02);">
-                더보기 <i class="fa-solid fa-chevron-down"></i>
-            </button>
+        <!-- 🎨 다크그린 칠판 및 브라운 원목 프레임 낙서판 -->
+        <div class="oasis-blackboard-container" id="blackboard-wrapper">
+            <div class="postit-grid" id="oasis-posts-list-board">
+                <!-- 동적으로 6개의 포스트잇이 주입됩니다 -->
+            </div>
+            
+            <!-- 칠판 양옆의 반투명 꺽쇠 화살표 -->
+            <button class="blackboard-arrow prev" id="blackboard-prev-btn" onclick="prevBlackboardPage()"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="blackboard-arrow next" id="blackboard-next-btn" onclick="nextBlackboardPage()"><i class="fa-solid fa-chevron-right"></i></button>
+            
+            <!-- 칠판 하단의 분필 페이징 라벨 -->
+            <div class="blackboard-pager" id="blackboard-pager-label">
+                1 / 1
+            </div>
         </div>
 
         <!-- 📸 섹션 4: 자랑하기 (중복 아이콘 제거, 이모지만 깔끔하게 배치!) -->
@@ -830,6 +941,84 @@
         </div>
     </div>
 
+    <!-- ⚡ 돌발 퀘스트 3단계 페이징 안내 팝업 모달 -->
+    <div id="sudden-guide-modal" class="oasis-popup-modal" style="display: none;">
+        <div class="oasis-popup-content" style="max-width: 400px; padding: 25px; border-color: rgba(225, 29, 72, 0.3) !important;">
+            <button class="popup-close-x" onclick="closeSuddenGuidePopup()">&times;</button>
+            <h3 style="font-weight:900; color:#e11d48; font-size:1.1rem; margin-top:0; margin-bottom:15px; display:flex; align-items:center; gap:6px;">
+                <i class="fa-solid fa-bolt"></i> <span id="sudden-guide-title">오늘의 돌발 퀘스트</span>
+            </h3>
+            
+            <!-- 3단계 페이징 컨테이너 -->
+            <div style="position: relative; min-height: 180px; display: flex; flex-direction: column; justify-content: center;">
+                <!-- 1페이지 -->
+                <div class="sudden-guide-page" id="sudden-page-1" style="display: block;">
+                    <div style="font-size: 0.95rem; font-weight: 800; color: #1e293b; margin-bottom: 10px; text-align: center; word-break: keep-all;" id="sudden-guide-desc-1">
+                        퀘스트 정보 로딩 중...
+                    </div>
+                    <p style="font-size: 0.78rem; font-weight: 700; color: #64748b; text-align: center; margin: 0;">
+                         오늘의 특별한 웰니스 성장을 위한 도전을 시작해 보세요!
+                    </p>
+                </div>
+                <!-- 2페이지 -->
+                <div class="sudden-guide-page" id="sudden-page-2" style="display: none;">
+                    <div style="font-size: 0.85rem; font-weight: 800; color: #0f766e; margin-bottom: 8px; text-align: center;">
+                         💡 퀘스트 성공을 위한 꿀팁!
+                    </div>
+                    <ul style="font-size: 0.78rem; font-weight: 700; color: #334155; line-height: 1.5; margin: 0; padding-left: 20px; word-break: keep-all;">
+                         <li>오늘 안에 오아시스 돌발 게시판에 기록을 남겨주셔야 인정됩니다.</li>
+                         <li>정직하고 자유롭게 실천 소감을 성찰해 주시면 됩니다.</li>
+                         <li>주의: 거짓 작성 시 이장님의 정화 마법이 발동될 수 있습니다. 🧙‍♂️</li>
+                    </ul>
+                </div>
+                <!-- 3페이지 -->
+                <div class="sudden-guide-page" id="sudden-page-3" style="display: none;">
+                    <div style="font-size: 0.85rem; font-weight: 800; color: #e11d48; margin-bottom: 10px; text-align: center;">
+                         🎁 특별 수호 혜택 안내
+                    </div>
+                    <p style="font-size: 0.78rem; font-weight: 700; color: #334155; text-align: center; line-height: 1.5; margin: 0 0 15px 0;">
+                         성공적으로 기록 완료 시 즉시 **+15 EXP 항상성 에너지**가 지급되며,<br>마을의 수호 랭킹에 즉각 반영됩니다! 🛡️
+                    </p>
+                    <button class="oasis-submit-btn" style="background: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important; box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2) !important;" onclick="startSuddenQuestWriting()">
+                         <i class="fa-solid fa-pencil"></i> ✍️ 작성하러 가기
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 페이지네이션 컨트롤 -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; border-top: 1px solid #f1f5f9; padding-top: 15px;">
+                <button id="btn-prev-guide" onclick="changeGuidePage(-1)" style="border: none; background: #f1f5f9; color: #64748b; font-size: 0.75rem; font-weight: 800; padding: 6px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s;">이전</button>
+                <div style="display: flex; gap: 6px;" id="guide-dots-container">
+                     <span class="guide-dot active" style="width: 8px; height: 8px; border-radius: 50%; background: #e11d48; display: inline-block;"></span>
+                     <span class="guide-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; display: inline-block;"></span>
+                     <span class="guide-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; display: inline-block;"></span>
+                </div>
+                <button id="btn-next-guide" onclick="changeGuidePage(1)" style="border: none; background: #e11d48; color: white; font-size: 0.75rem; font-weight: 800; padding: 6px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s;">다음</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✏️ 포스트잇 상세 뷰어 모달창 -->
+    <div id="postit-detail-modal" class="oasis-popup-modal" onclick="closePostitDetailModal()">
+        <div class="oasis-popup-content" id="postit-detail-content" style="max-width: 350px; padding: 25px; border-radius: 4px; box-shadow: 5px 8px 20px rgba(0,0,0,0.3) !important;" onclick="event.stopPropagation()">
+            <button class="popup-close-x" onclick="closePostitDetailModal()">&times;</button>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed rgba(0,0,0,0.1); padding-bottom:8px; margin-bottom:15px;">
+                <span id="postit-detail-badge" style="font-size:0.9rem; font-weight:900;"></span>
+                <span id="postit-detail-time" style="font-size:0.75rem; color:#64748b;"></span>
+            </div>
+            
+            <div id="postit-detail-body" style="font-family:'Nanum Pen Script', sans-serif; font-size:1.6rem; font-weight:900; color:#1e293b; line-height:1.5; text-align:center; min-height:100px; display:flex; align-items:center; justify-content:center; word-break:keep-all; white-space:pre-wrap;">
+                포스트잇 상세 내용
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed rgba(0,0,0,0.1); padding-top:10px; margin-top:20px; font-size:1.1rem; font-weight:800; color:#475569;">
+                <span id="postit-detail-author"></span>
+                <span id="postit-detail-date" style="font-size:0.75rem;"></span>
+            </div>
+        </div>
+    </div>
+
     <script src="bridge.js?v=58.3"></script>
     <script>
         let currentUser = { name: '', phone: '' };
@@ -918,6 +1107,11 @@
             document.getElementById('post-content').value = '';
             document.getElementById('sudden-quest-check').checked = false;
             
+            // disabled / readOnly 리셋
+            document.getElementById('post-title').readOnly = false;
+            document.getElementById('post-title').disabled = false;
+            document.getElementById('sudden-quest-check').disabled = false;
+            
             if (category === '셀프칭찬') {
                 titleEl.innerHTML = '🌸 나를 사랑하기 기록';
                 document.getElementById('popup-self-magic-box').style.display = 'flex';
@@ -946,6 +1140,11 @@
             
             document.getElementById('sudden-quest-check').checked = false;
             
+            // disabled / readOnly 리셋
+            document.getElementById('post-title').readOnly = false;
+            document.getElementById('post-title').disabled = false;
+            document.getElementById('sudden-quest-check').disabled = false;
+            
             if (cat === '일반') {
                 btnGeneral.style.background = '#0d9488';
                 btnGeneral.style.color = '#fff';
@@ -965,6 +1164,19 @@
                     linkBox.style.display = 'block';
                     document.getElementById('sudden-quest-check').checked = true;
                     toggleSuddenLabel();
+                    
+                    // 돌발퀘스트 연동 시, 제목 고정 및 disabled 처리 (게시판 인증 돌발일 때)
+                    if (activeSuddenQuest.method === '게시판') {
+                        const pureTitle = getPureQuestTitle(activeSuddenQuest.title);
+                        document.getElementById('post-title').value = `⚡ [돌발] ${pureTitle} 기록`;
+                        document.getElementById('post-title').readOnly = true;
+                        document.getElementById('sudden-quest-check').disabled = true;
+                        
+                        // 본문 pre-fill (비어있는 경우에만 입력)
+                        if (!document.getElementById('post-content').value) {
+                            document.getElementById('post-content').value = `오늘의 돌발 퀘스트 [${pureTitle}] 완수를 위해 실천한 성찰과 소감을 자유롭게 기록합니다! ⚡\n\n`;
+                        }
+                    }
                 } else {
                     linkBox.style.display = 'none';
                 }
@@ -1255,11 +1467,9 @@
         function renderOasis21Dashboard(posts) {
             const rollerTrack = document.getElementById('self-praise-roller-track');
             const quoteTrack = document.getElementById('quote-slider-track');
-            const memoList = document.getElementById('oasis-posts-list');
             
-            rollerTrack.innerHTML = '';
-            quoteTrack.innerHTML = '';
-            memoList.innerHTML = '';
+            if (rollerTrack) rollerTrack.innerHTML = '';
+            if (quoteTrack) quoteTrack.innerHTML = '';
 
             const now = new Date();
             const todayStr = Utilities_formatDate_local(now, "yyyy-MM-dd");
@@ -1330,62 +1540,331 @@
             currentQuoteIndex = 0;
             quoteTrack.style.transform = 'translateX(0%)';
 
+            // 🎨 원목 칠판 낙서장 렌더링 호출
+            renderBlackboardMemos();
+        }
+
+        // 🎨 칠판 낙서장 제어 및 렌더링 로직
+        let currentBlackboardPage = 1;
+        let blackboardPosts = [];
+
+        function getSeedValue(str) {
+            if (!str) return 0;
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return Math.abs(hash);
+        }
+
+        function getFriendlyName(fullName) {
+            if (!fullName) return '';
+            fullName = fullName.trim();
+            if (fullName.length <= 2) return fullName;
+            const hangulRegex = /^[ㄱ-ㅎ가-힣a-zA-Z0-9\s]+$/;
+            if (hangulRegex.test(fullName)) {
+                // 3글자 이상이면 성(1자)을 떼고 반환
+                return fullName.substring(1);
+            }
+            return fullName;
+        }
+
+        function renderBlackboardMemos() {
+            const listBoard = document.getElementById('oasis-posts-list-board');
+            const pagerLabel = document.getElementById('blackboard-pager-label');
+            const prevBtn = document.getElementById('blackboard-prev-btn');
+            const nextBtn = document.getElementById('blackboard-next-btn');
+            
+            if (!listBoard) return;
+            listBoard.innerHTML = '';
+            
+            const now = new Date();
             const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            const memoPosts = posts.filter(p => {
+            
+            // 최근 7일 동안의 일반(자유메모) 및 돌발 포스트 필터링
+            blackboardPosts = loadedPostsGlobal.filter(p => {
                 const pDate = new Date(p.date);
                 return (p.category === '일반' || p.category === '돌발') && pDate >= sevenDaysAgo;
             });
-
-            const slicedMemos = memoPosts.slice(0, memoLimit);
-            if (slicedMemos.length > 0) {
-                slicedMemos.forEach(p => {
-                    const card = document.createElement('div');
-                    card.className = 'v-notebook-paper';
-                    card.style.lineHeight = '1.65rem';
-                    card.style.backgroundSize = '100% 1.65rem';
-                    card.style.minHeight = 'auto';
-                    card.style.marginBottom = '12px';
-                    
-                    const isSudden = p.category === '돌발';
-                    const badgeClass = isSudden ? 'sudden' : 'general';
-                    const badgeText = isSudden ? '⚡ 돌발퀘스트' : '💬 자유메모';
-
-                    card.innerHTML = `
-                        <div class="oasis-post-header" style="margin-bottom: 5px;">
-                            <span class="oasis-post-author">
-                                <i class="fas fa-user-circle"></i> ${p.author}
-                                <span class="oasis-badge ${badgeClass}">${badgeText}</span>
-                            </span>
-                            <span class="oasis-post-date">${p.date} ${p.time}</span>
-                        </div>
-                        <div class="oasis-post-title" style="font-size: 0.85rem; font-weight: 900; margin-bottom: 4px;">${p.title}</div>
-                        <div class="oasis-post-content" style="font-size: 0.76rem; font-weight: 750; line-height: 1.5;">${p.content}</div>
-                    `;
-                    memoList.appendChild(card);
-                });
+            
+            const totalPosts = blackboardPosts.length;
+            const limit = 6;
+            const totalPages = Math.ceil(totalPosts / limit) || 1;
+            
+            if (currentBlackboardPage > totalPages) {
+                currentBlackboardPage = totalPages;
+            }
+            
+            pagerLabel.innerText = `${currentBlackboardPage} / ${totalPages}`;
+            
+            // 이전/다음 꺽쇠 버튼 노출 상태
+            prevBtn.style.visibility = (currentBlackboardPage === 1) ? 'hidden' : 'visible';
+            nextBtn.style.visibility = (currentBlackboardPage === totalPages) ? 'hidden' : 'visible';
+            
+            if (totalPosts === 0) {
+                listBoard.style.display = 'block';
+                listBoard.innerHTML = '<div style="text-align:center; padding:65px 0; font-family:\'Nanum Pen Script\', sans-serif; font-size:1.4rem; color:rgba(255,255,255,0.7); font-weight:800;">최근 7일간의 낙서가 없습니다.<br>기록 버튼을 눌러 자유로운 한마디를 적어보세요! ✏️</div>';
+                return;
+            }
+            
+            listBoard.style.display = 'grid';
+            
+            const startIdx = (currentBlackboardPage - 1) * limit;
+            const slicedPosts = blackboardPosts.slice(startIdx, startIdx + limit);
+            
+            slicedPosts.forEach((p, idx) => {
+                const card = document.createElement('div');
+                card.className = 'postit-card';
                 
-                if (memoPosts.length > memoLimit) {
-                    document.getElementById('memo-more-btn-box').style.display = 'block';
-                } else {
-                    document.getElementById('memo-more-btn-box').style.display = 'none';
+                // 결정론적 의사 랜덤값 생성
+                const seed = getSeedValue(p.id || p.content);
+                const rotateVal = ((seed % 9) - 4) + (seed % 10) * 0.1; // -4deg ~ +4deg
+                const colors = ['#fef08a', '#fda4af', '#93c5fd', '#a7f3d0', '#fbcfe8'];
+                const bgCol = colors[seed % colors.length];
+                
+                card.style.transform = `rotate(${rotateVal}deg)`;
+                card.style.background = bgCol;
+                
+                const isSudden = p.category === '돌발';
+                const badgeChar = isSudden ? '⚡' : '💬';
+                const badgeText = isSudden ? '돌발' : '자유';
+                const badgeCol = isSudden ? '#e11d48' : '#0f766e';
+                
+                const friendlyName = getFriendlyName(p.author);
+                const timeDisplay = p.time ? p.time.substring(0, 5) : '';
+                
+                let displayContent = p.content || '';
+                if (displayContent.length > 52) {
+                    displayContent = displayContent.substring(0, 50) + '...';
                 }
-            } else {
-                memoList.innerHTML = '<div style="text-align:center; padding:30px; font-weight:800; color:var(--text-dim); font-size:0.72rem;">최근 7일간 한껏 자유로워진 기록이 없습니다. 🌱</div>';
-                document.getElementById('memo-more-btn-box').style.display = 'none';
+                
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; border-bottom:1px dashed rgba(0,0,0,0.1); padding-bottom:3px; margin-bottom:5px;">
+                        <span style="font-size:0.8rem; font-weight:900; color:${badgeCol}; display:flex; align-items:center; gap:2px;">
+                            ${badgeChar} <span style="font-size:0.65rem; border:1px solid ${badgeCol}; border-radius:4px; padding:0 3px; font-weight:800; font-family:'Noto Sans KR', sans-serif;">${badgeText}</span>
+                        </span>
+                        <span style="font-size:0.68rem; color:#64748b; font-family:'Noto Sans KR', sans-serif;">${timeDisplay}</span>
+                    </div>
+                    <div style="font-size:0.98rem; font-weight:900; color:#1e293b; line-height:1.2; word-break:break-all; flex-grow:1; display:flex; align-items:center; justify-content:center; text-align:center;">
+                        ${displayContent}
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; font-size:0.85rem; font-weight:800; color:#475569; margin-top:5px; border-top:1px dashed rgba(0,0,0,0.06); padding-top:3px;">
+                        <span>✏️ ${friendlyName}</span>
+                        <span style="font-size:0.65rem; font-family:'Noto Sans KR', sans-serif;">${p.date.substring(5)}</span>
+                    </div>
+                `;
+                
+                card.onclick = () => showPostitDetailModal(p);
+                
+                listBoard.appendChild(card);
+            });
+        }
+
+        function prevBlackboardPage() {
+            if (currentBlackboardPage > 1) {
+                currentBlackboardPage--;
+                renderBlackboardMemos();
             }
         }
 
-        function expandMemos() {
-            memoLimit += 5;
-            renderOasis21Dashboard(loadedPostsGlobal);
+        function nextBlackboardPage() {
+            const totalPages = Math.ceil(blackboardPosts.length / 6) || 1;
+            if (currentBlackboardPage < totalPages) {
+                currentBlackboardPage++;
+                renderBlackboardMemos();
+            }
+        }
+
+        // ✏️ 포스트잇 상세 모달 제어
+        function showPostitDetailModal(post) {
+            const modal = document.getElementById('postit-detail-modal');
+            const contentCard = document.getElementById('postit-detail-content');
+            const badgeEl = document.getElementById('postit-detail-badge');
+            const timeEl = document.getElementById('postit-detail-time');
+            const bodyEl = document.getElementById('postit-detail-body');
+            const authorEl = document.getElementById('postit-detail-author');
+            const dateEl = document.getElementById('postit-detail-date');
+            
+            const seed = getSeedValue(post.id || post.content);
+            const colors = ['#fef08a', '#fda4af', '#93c5fd', '#a7f3d0', '#fbcfe8'];
+            const bgCol = colors[seed % colors.length];
+            contentCard.style.background = bgCol;
+            
+            const isSudden = post.category === '돌발';
+            const badgeChar = isSudden ? '⚡' : '💬';
+            const badgeText = isSudden ? '돌발퀘스트' : '자유메모';
+            const badgeCol = isSudden ? '#e11d48' : '#0f766e';
+            
+            badgeEl.innerHTML = `${badgeChar} <span style="font-size:0.7rem; border:1px solid ${badgeCol}; border-radius:4px; padding:1px 4px; font-weight:800; font-family:'Noto Sans KR', sans-serif; color:${badgeCol};">${badgeText}</span>`;
+            timeEl.innerText = post.time || '';
+            bodyEl.innerText = post.content || '';
+            authorEl.innerText = `✏️ ${post.author}`;
+            dateEl.innerText = post.date || '';
+            
+            modal.style.display = 'flex';
+            window.registerModalOpen(closePostitDetailModal);
+        }
+
+        function closePostitDetailModal(isPopstate) {
+            document.getElementById('postit-detail-modal').style.display = 'none';
+            if (!isPopstate) {
+                window.registerModalClose(closePostitDetailModal);
+            }
+        }
+
+        // ⚡ 돌발 퀘스트 상호 배제 및 가이드 모달 관련 함수군
+        function getPureQuestTitle(qTitle) {
+            if (!qTitle) return '';
+            return qTitle.split('!')[0].replace("⚡", "").replace("[돌발]", "").trim();
+        }
+
+        function handleSuddenQuestLogic() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isSuddenQuestWrite = urlParams.get('write') === 'sudden-quest';
+
+            if (!activeSuddenQuest) {
+                document.getElementById('sudden-quest-rolling-banner').style.display = 'none';
+                document.getElementById('tab-cat-sudden').style.display = 'block';
+                return;
+            }
+
+            const pureTitle = getPureQuestTitle(activeSuddenQuest.title);
+            const method = activeSuddenQuest.method || '';
+
+            if (method === '사진') {
+                // 1. 사진 돌발인 날: 오아시스 글쓰기 내부 돌발인증 탭 숨김
+                document.getElementById('tab-cat-sudden').style.display = 'none';
+                document.getElementById('sudden-quest-rolling-banner').style.display = 'none';
+
+                // 2. write=sudden-quest 유입 차단 및 아카이브 리다이렉션
+                if (isSuddenQuestWrite) {
+                    showAppAlert("오늘의 돌발 퀘스트는 사진 인증 전용입니다. 아카이브에서 인증해 주세요! 📸", "error");
+                    setTimeout(() => {
+                        window.location.href = "miracle.html?tab=quest&cat=bonus&auto_open=camera";
+                    }, 1500);
+                }
+            } else if (method === '게시판') {
+                // 1. 게시판 돌발인 날: 돌발 탭 활성화
+                document.getElementById('tab-cat-sudden').style.display = 'block';
+
+                // 2. 상단 Marquee 돌발 배너 활성화
+                document.getElementById('sudden-quest-rolling-banner').style.display = 'flex';
+                document.getElementById('sudden-banner-title').innerText = `⚡ [돌발] ${pureTitle}`;
+
+                // Marquee 트랙 채우기
+                const descParts = activeSuddenQuest.description ? activeSuddenQuest.description.split('!') : [''];
+                const pureDesc = descParts[0].trim();
+                const rollerTrack = document.getElementById('sudden-roller-track');
+                if (rollerTrack) {
+                    rollerTrack.innerHTML = `
+                        <span class="roller-item" style="color: #fef08a !important; font-weight: 900;">"오늘의 돌발 퀘스트: ${pureTitle} ⚡ ${pureDesc} (+15 EXP)"</span>
+                        <span class="roller-item" style="color: #ffffff !important; font-weight: 900;">"배너를 클릭하여 3단계 가이드 팝업을 확인해보세요! 🎁"</span>
+                    `;
+                }
+
+                // 3. write=sudden-quest 유입 시 돌발 글쓰기 즉시 기동
+                if (isSuddenQuestWrite) {
+                    setTimeout(() => {
+                        openWriteModal('일반');
+                        selectMemoCategoryTab('돌발');
+                    }, 600);
+                }
+            }
+        }
+
+        let currentGuidePage = 1;
+        
+        function openSuddenGuidePopup() {
+            if (!activeSuddenQuest) return;
+            currentGuidePage = 1;
+            
+            const pureTitle = getPureQuestTitle(activeSuddenQuest.title);
+            document.getElementById('sudden-guide-title').innerText = `⚡ [돌발] ${pureTitle}`;
+            
+            const descParts = activeSuddenQuest.description ? activeSuddenQuest.description.split('!') : [''];
+            const pureDesc = descParts[0].trim();
+            document.getElementById('sudden-guide-desc-1').innerText = pureDesc || "오늘의 특별한 웰니스 성장을 위한 도전을 시작해 보세요!";
+            
+            updateGuidePopupPage();
+            
+            document.getElementById('sudden-guide-modal').style.display = 'flex';
+            window.registerModalOpen(closeSuddenGuidePopup);
+        }
+        
+        function closeSuddenGuidePopup(isPopstate) {
+            document.getElementById('sudden-guide-modal').style.display = 'none';
+            if (!isPopstate) {
+                window.registerModalClose(closeSuddenGuidePopup);
+            }
+        }
+        
+        function changeGuidePage(direction) {
+            const nextPage = currentGuidePage + direction;
+            if (nextPage >= 1 && nextPage <= 3) {
+                currentGuidePage = nextPage;
+                updateGuidePopupPage();
+            }
+        }
+        
+        function updateGuidePopupPage() {
+            document.getElementById('sudden-page-1').style.display = 'none';
+            document.getElementById('sudden-page-2').style.display = 'none';
+            document.getElementById('sudden-page-3').style.display = 'none';
+            
+            document.getElementById(`sudden-page-${currentGuidePage}`).style.display = 'block';
+            
+            const dots = document.querySelectorAll('#guide-dots-container .guide-dot');
+            dots.forEach((dot, idx) => {
+                if (idx + 1 === currentGuidePage) {
+                    dot.classList.add('active');
+                    dot.style.background = '#e11d48';
+                } else {
+                    dot.classList.remove('active');
+                    dot.style.background = '#cbd5e1';
+                }
+            });
+            
+            const btnPrev = document.getElementById('btn-prev-guide');
+            const btnNext = document.getElementById('btn-next-guide');
+            
+            if (currentGuidePage === 1) {
+                btnPrev.style.visibility = 'hidden';
+            } else {
+                btnPrev.style.visibility = 'visible';
+            }
+            
+            if (currentGuidePage === 3) {
+                btnNext.style.visibility = 'hidden';
+            } else {
+                btnNext.style.visibility = 'visible';
+            }
+        }
+        
+        function startSuddenQuestWriting() {
+            closeSuddenGuidePopup();
+            openWriteModal('일반');
+            selectMemoCategoryTab('돌발');
         }
 
         function checkActivePraiseBaton() {
-            if (typeof google === 'undefined') return;
+            if (typeof google === 'undefined') {
+                // 로컬 테스트 환경 시뮬레이션용 Mock 데이터 설정
+                setTimeout(() => {
+                    activeSuddenQuest = {
+                        title: "⚡ [돌발] 단백질 데이!식단에 단백질 추가하기",
+                        description: "오늘 식단에 닭가슴살, 두부, 달걀 등의 단백질을 20g 이상 섭취하고 성찰을 적어주세요! 🥚",
+                        method: "게시판",
+                        score: 15
+                    };
+                    handleSuddenQuestLogic();
+                }, 500);
+                return;
+            }
             google.script.run
                 .withSuccessHandler(res => {
                     if (res && res.success) {
                         activeSuddenQuest = res.quests ? res.quests.todayQuest : null;
+                        handleSuddenQuestLogic();
                     }
                 })
                 .getUserDashboardData({ phone: currentUser.phone });

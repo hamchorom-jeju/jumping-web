@@ -235,11 +235,26 @@ const Village = {
                                     notices = [res.pillarNotice];
                                 }
 
+                                const getNoticeTargetUrl = (isSudden) => {
+                                    if (!isSudden || !res.quests || !res.quests.todayQuest) return 'notice.html';
+                                    const qTitle = res.quests.todayQuest.title || '';
+                                    const qMethod = res.quests.todayQuest.method || '';
+                                    if (qMethod === '게시판' || qTitle.includes('✍️') || qTitle.includes('📝') || qTitle.includes('✏️')) {
+                                        return 'oasis.html?write=sudden-quest';
+                                    } else {
+                                        return 'miracle.html?tab=quest&cat=bonus&auto_open=camera';
+                                    }
+                                };
+
                                 if (res.quests && res.quests.todayQuest) {
                                     const isCompleted = this.user.doneList && this.user.doneList.some(item => item.indexOf(res.quests.todayQuest.title) > -1);
+                                    const scoreText = res.quests.todayQuest.score ? `+${res.quests.todayQuest.score} EXP` : '+15 EXP';
+                                    const qTitle = res.quests.todayQuest.title || '';
+                                    const qDesc = res.quests.todayQuest.description || '';
+                                    const combinedTitle = qDesc ? `${qTitle}! ${qDesc}` : qTitle;
                                     const titleText = isCompleted 
-                                        ? `🎉 완수! ${res.quests.todayQuest.title}` 
-                                        : `${res.quests.todayQuest.title} (+15 EXP)`;
+                                        ? `🎉 완수! ${qTitle}` 
+                                        : `${combinedTitle} (${scoreText})`;
                                     
                                     // 돌발 퀘스트를 배열 맨 뒤에 주입 [v58.6]
                                     notices.push({
@@ -272,7 +287,7 @@ const Village = {
                                     }
                                     
                                     noticeEl.innerHTML = `<div class="v-banner-notice-inner">${badgeHtml}<span class="v-notice-text">${title.trim()}</span></div>${actionHtml}`;
-                                    noticeEl.dataset.targetUrl = isSudden ? 'miracle.html?tab=quest&cat=bonus' : 'notice.html';
+                                    noticeEl.dataset.targetUrl = getNoticeTargetUrl(isSudden);
                                 } else {
                                     let curIdx = 0;
                                     
@@ -297,13 +312,13 @@ const Village = {
                                         }
                                         
                                         noticeEl.innerHTML = `<div class="v-banner-notice-inner">${badgeHtml}<span class="v-notice-text">${title.trim()}</span></div>${actionHtml}`;
-                                        noticeEl.dataset.targetUrl = isSudden ? 'miracle.html?tab=quest&cat=bonus' : 'notice.html';
+                                        noticeEl.dataset.targetUrl = getNoticeTargetUrl(isSudden);
                                         
                                         const delay = isSudden ? 10000 : 5000;
                                         if (window.noticeInterval) clearTimeout(window.noticeInterval);
                                         window.noticeInterval = setTimeout(transitionToNext, delay);
                                     };
-
+ 
                                     // 두 번째 항목부터 트랜지션 모드 분기 (글자만 롤링 vs 테마 전체 깜빡임) [v58.6]
                                     const transitionToNext = () => {
                                         const nextIdx = (curIdx + 1) % notices.length;
@@ -336,7 +351,7 @@ const Village = {
                                                 }
                                                 
                                                 noticeEl.innerHTML = `<div class="v-banner-notice-inner">${badgeHtml}<span class="v-notice-text">${nextTitle.trim()}</span></div>${actionHtml}`;
-                                                noticeEl.dataset.targetUrl = nextSudden ? 'miracle.html?tab=quest&cat=bonus' : 'notice.html';
+                                                noticeEl.dataset.targetUrl = getNoticeTargetUrl(nextSudden);
                                                 
                                                 noticeEl.style.opacity = '1';
                                                 noticeEl.style.transform = 'scale(1)';
@@ -359,7 +374,7 @@ const Village = {
                                                     textEl.style.opacity = '1';
                                                     
                                                     // 타겟 링크는 즉시 최신화
-                                                    noticeEl.dataset.targetUrl = nextSudden ? 'miracle.html?tab=quest&cat=bonus' : 'notice.html';
+                                                    noticeEl.dataset.targetUrl = getNoticeTargetUrl(nextSudden);
                                                     
                                                     curIdx = nextIdx;
                                                     

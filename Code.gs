@@ -6660,10 +6660,11 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
       // 1. 이장 공지 퀘스트
       if (type === "이장") {
         var qScore = data[i].length > 8 ? Number(data[i][8] || 15) : 15;
+        var qMethod = data[i].length > 9 ? String(data[i][9] || '사진').trim() : '사진';
         if (dateStr === todayStr) {
-          result.todayQuest = { title: title, description: desc, score: qScore };
+          result.todayQuest = { title: title, description: desc, score: qScore, method: qMethod };
         } else if (dateStr === tomorrowStr) {
-          result.tomorrowQuest = { title: title, description: desc, score: qScore };
+          result.tomorrowQuest = { title: title, description: desc, score: qScore, method: qMethod };
         }
       }
 
@@ -7173,6 +7174,9 @@ function createSurpriseQuest(payload) {
     var lastRow = sheet.getLastRow();
     var nextId = lastRow;
     
+    var qScore = payload.score ? Number(payload.score) : 15;
+    var qMethod = payload.method || "사진";
+    
     // 퀘스트 행 등록
     sheet.appendRow([
       nextId,
@@ -7182,11 +7186,17 @@ function createSurpriseQuest(payload) {
       payload.description || "마을 이장님의 특별 계시입니다.",
       endTimeStr,
       "", // G열: 전화번호 공란 (전체 멤버용 돌발)
-      "진행중" // H열: 상태
+      "진행중", // H열: 상태
+      qScore,   // I열: 점수
+      qMethod   // J열: 인증방식
     ]);
     
     // 전령의 기둥(실시간 공지)으로 연동 선포
-    updatePillarNotice({ content: "⚡ [돌발 계시] " + payload.title });
+    var noticeContent = "⚡ [돌발 계시] " + payload.title;
+    if (payload.description) {
+      noticeContent += "! " + payload.description;
+    }
+    updatePillarNotice({ content: noticeContent });
     
     return { success: true, endTime: endTime.getTime() };
   } catch (e) {
@@ -7760,14 +7770,18 @@ function submitOasisPost(payload) {
     var itemTitle = "";
     
     var qTitle = payload.questTitle || "";
-    if (category === "돌발" && !qTitle) {
+    var qScore = 15;
+    if (category === "돌발") {
       try {
         var questStatus = getActiveQuestStatus(phone, ss, null, payload.author);
         if (questStatus && questStatus.todayQuest) {
-          qTitle = questStatus.todayQuest.title;
+          if (!qTitle) qTitle = questStatus.todayQuest.title;
+          if (questStatus.todayQuest.score) {
+            qScore = Number(questStatus.todayQuest.score);
+          }
         }
       } catch (err) {
-        Logger.log("돌발 퀘스트 제목 스캔 중 에러: " + err.toString());
+        Logger.log("돌발 퀘스트 제목/점수 스캔 중 에러: " + err.toString());
       }
     }
     if (!qTitle && category === "돌발") {
@@ -7775,7 +7789,7 @@ function submitOasisPost(payload) {
     }
 
     if (category === "돌발") {
-      expAwarded = 15;
+      expAwarded = qScore;
       statType = "perf";
       itemTitle = "🔥 돌발: " + qTitle;
     } else if (category === "셀프칭찬") {
@@ -7803,7 +7817,7 @@ function submitOasisPost(payload) {
       });
       if (recordResult && recordResult.success) {
         if (category === "돌발") {
-          awardMessage = " (돌발 퀘스트 완료 +15 EXP가 실시간 적립되었습니다!) ⚡";
+          awardMessage = " (돌발 퀘스트 완료 +" + expAwarded + " EXP가 실시간 적립되었습니다!) ⚡";
         } else if (category !== "셀프칭찬") {
           awardMessage = " (오아시스 보상 +" + expAwarded + " EXP가 실시간 적립되었습니다!) 🌟";
         }
