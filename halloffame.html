@@ -492,128 +492,7 @@
       font-weight: 800;
     }
 
-    /* MVP Badge Grid */
-    .mvp-section-title {
-      font-size: 1.3rem;
-      font-weight: 800;
-      margin-bottom: 20px;
-      color: #c084fc;
-      text-align: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      letter-spacing: -0.5px;
-    }
 
-    .mvp-section-title::before, .mvp-section-title::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(to right, transparent, rgba(192, 132, 252, 0.4), transparent);
-    }
-
-    .mvp-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 30px;
-    }
-
-    @media (max-width: 500px) {
-      .mvp-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .mvp-card {
-      background: rgba(15, 11, 42, 0.5);
-      border: 1px solid rgba(139, 92, 246, 0.12);
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .mvp-card:hover {
-      transform: translateY(-3px);
-      border-color: rgba(139, 92, 246, 0.3);
-      box-shadow: 0 10px 25px rgba(139, 92, 246, 0.1);
-    }
-
-    .mvp-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 4px;
-      background: linear-gradient(90deg, var(--primary) 0%, #ec4899 100%);
-    }
-
-    .mvp-card-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 1rem;
-      font-weight: 800;
-      color: #f1f5f9;
-      margin-bottom: 15px;
-    }
-
-    .mvp-card-header span.emoji {
-      font-size: 1.3rem;
-    }
-
-    .mvp-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .mvp-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 0;
-      border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
-    }
-
-    .mvp-item:last-child {
-      border-bottom: none;
-    }
-
-    .mvp-rank-indicator {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .mvp-badge-mini {
-      font-size: 0.95rem;
-      width: 20px;
-      text-align: center;
-    }
-
-    .mvp-name {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #ffffff;
-    }
-
-    .mvp-value {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    .mvp-value strong {
-      color: #e2e8f0;
-      font-size: 0.95rem;
-      font-weight: 700;
-    }
 
     /* Skeleton Loading UI */
     .skeleton {
@@ -728,15 +607,7 @@
       </div>
     </div>
 
-    <!-- 🏆 실시간 MVP 부문별 영웅들 -->
-    <h2 class="mvp-section-title">🏆 실시간 MVP 부문별 영웅들</h2>
-    <div id="mvpArea" class="mvp-grid">
-      <!-- Skeleton Loading for MVP Grid -->
-      <div class="mvp-card skeleton" style="height: 140px;"></div>
-      <div class="mvp-card skeleton" style="height: 140px;"></div>
-      <div class="mvp-card skeleton" style="height: 140px;"></div>
-      <div class="mvp-card skeleton" style="height: 140px;"></div>
-    </div>
+
 
     <!-- 🏆 역대 MVP 명예의 전당 (지난 분기 기록) -->
     <h2 class="archive-section-title">🏆 역대 MVP 명예의 전당</h2>
@@ -918,7 +789,6 @@
     function renderAll() {
       if (!rawData) return;
       renderRankings();
-      renderMVPs(rawData.mvp);
       renderArchives();
     }
 
@@ -1124,75 +994,7 @@
       renderRankings();
     }
 
-    function renderMVPs(mvp) {
-      const mvpArea = document.getElementById('mvpArea');
-      if (!mvpArea) return;
-      
-      if (!mvp) {
-        mvpArea.innerHTML = `<div class="empty-state">MVP 데이터를 로드할 수 없습니다.</div>`;
-        return;
-      }
 
-      function makeMvpList(list, unit, isScore = false) {
-        if (!list || list.length === 0) return `<div class="empty-state" style="padding: 10px; font-size: 0.8rem;">순위권 도전의 기회가 남아 있습니다! 🔥</div>`;
-        return list.map((item, idx) => {
-          const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : "🥉";
-          const val = isScore ? item.score : item.count;
-          const formattedVal = typeof val === 'number' ? val.toLocaleString() : val;
-          return `
-            <div class="mvp-item">
-              <div class="mvp-rank-indicator">
-                <span class="mvp-badge-mini">${medal}</span>
-                <span class="mvp-name">${item.name}</span>
-              </div>
-              <div class="mvp-value"><strong>${formattedVal}</strong>${unit}</div>
-            </div>
-          `;
-        }).join('');
-      }
-
-      mvpArea.innerHTML = `
-        <!-- Card 1: Monthly Attendance -->
-        <div class="mvp-card">
-          <div class="mvp-card-header">
-            <span class="emoji">🏃</span> 당월 출석왕
-          </div>
-          <div class="mvp-list">
-            ${makeMvpList(mvp.monthlyAttendance, '회')}
-          </div>
-        </div>
-
-        <!-- Card 2: Total Attendance -->
-        <div class="mvp-card">
-          <div class="mvp-card-header">
-            <span class="emoji">🏆</span> 역대 출석의 신
-          </div>
-          <div class="mvp-list">
-            ${makeMvpList(mvp.totalAttendance, '회')}
-          </div>
-        </div>
-
-        <!-- Card 3: Sincere Active King -->
-        <div class="mvp-card">
-          <div class="mvp-card-header">
-            <span class="emoji">📸</span> 누적 실천왕
-          </div>
-          <div class="mvp-list">
-            ${makeMvpList(mvp.sincereKing, 'p', true)}
-          </div>
-        </div>
-
-        <!-- Card 4: Oasis Post Angel -->
-        <div class="mvp-card">
-          <div class="mvp-card-header">
-            <span class="emoji">🌸</span> 오아시스 천사
-          </div>
-          <div class="mvp-list">
-            ${makeMvpList(mvp.oasisAngel, '개')}
-          </div>
-        </div>
-      `;
-    }
 
     function goBackToDashboard(event) {
       if (event) event.preventDefault();
