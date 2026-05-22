@@ -545,10 +545,14 @@ body {
 .v-ranking-line.line-1 {
     font-weight: 900;
     color: #1e293b;
+    justify-content: center;
+    text-align: center;
 }
 .v-ranking-line.line-2 {
     font-size: 0.68rem;
     color: #475569;
+    justify-content: center;
+    gap: 24px;
 }
 .v-ranker-span {
     display: inline-flex;

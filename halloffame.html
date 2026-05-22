@@ -7,6 +7,8 @@
   
   <!-- Outfit & Noto Sans KR Premium Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <!-- Icon Library -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="bridge.js?v=58.3"></script>
   
   <style>
@@ -151,7 +153,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px 10px;
+      padding: 12px 6px;
       position: relative;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
@@ -159,13 +161,13 @@
 
     /* 3D Height distinctions */
     .podium-card.rank-2nd {
-      height: 220px;
+      height: 125px;
       z-index: 2;
     }
 
     .podium-card.rank-1st {
-      height: 260px;
-      transform: translateY(-15px);
+      height: 155px;
+      transform: translateY(-10px);
       border-color: rgba(251, 191, 36, 0.4);
       background: linear-gradient(to top, rgba(45, 33, 15, 0.8), rgba(15, 23, 42, 0.6));
       box-shadow: 0 15px 40px rgba(251, 191, 36, 0.15);
@@ -173,50 +175,50 @@
     }
 
     .podium-card.rank-3rd {
-      height: 190px;
+      height: 105px;
       z-index: 1;
     }
 
     .podium-card:hover {
-      transform: translateY(-5px) scale(1.03);
+      transform: translateY(-3px) scale(1.03);
       border-color: rgba(139, 92, 246, 0.4);
     }
 
     .podium-card.rank-1st:hover {
-      transform: translateY(-20px) scale(1.03);
+      transform: translateY(-15px) scale(1.03);
       border-color: rgba(251, 191, 36, 0.6);
     }
 
     /* Badges & Crowns */
     .badge-wrap {
       position: relative;
-      margin-bottom: 12px;
+      margin-bottom: 6px;
     }
 
     .crown-icon {
       position: absolute;
-      top: -24px;
+      top: -18px;
       left: 50%;
       transform: translateX(-50%) rotate(0deg);
-      font-size: 1.8rem;
+      font-size: 1.4rem;
       filter: drop-shadow(0 2px 5px rgba(251, 191, 36, 0.5));
       animation: floatCrown 3s ease-in-out infinite;
     }
 
     @keyframes floatCrown {
       0%, 100% { transform: translateX(-50%) translateY(0); }
-      50% { transform: translateX(-50%) translateY(-5px); }
+      50% { transform: translateX(-50%) translateY(-3px); }
     }
 
     .avatar-circle {
-      width: 54px;
-      height: 54px;
+      width: 40px;
+      height: 40px;
       border-radius: 50px;
       background: #1e1b4b;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.2rem;
+      font-size: 0.9rem;
       font-weight: 800;
       border: 2px solid var(--text-muted);
       color: #ffffff;
@@ -224,9 +226,9 @@
     }
 
     .rank-1st .avatar-circle {
-      width: 66px;
-      height: 66px;
-      font-size: 1.4rem;
+      width: 48px;
+      height: 48px;
+      font-size: 1.05rem;
       border-color: var(--gold);
       background: linear-gradient(135deg, #78350f 0%, #1e1b4b 100%);
     }
@@ -242,10 +244,10 @@
     }
 
     .podium-card .user-name {
-      font-size: 1.05rem;
+      font-size: 0.85rem;
       font-weight: 700;
       color: #ffffff;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
       text-align: center;
       white-space: nowrap;
       overflow: hidden;
@@ -254,12 +256,12 @@
     }
 
     .rank-1st .user-name {
-      font-size: 1.2rem;
+      font-size: 0.95rem;
       font-weight: 900;
     }
 
     .podium-card .score-val {
-      font-size: 0.85rem;
+      font-size: 0.72rem;
       color: var(--text-muted);
       font-weight: 500;
       display: flex;
@@ -269,21 +271,21 @@
 
     .podium-card .score-val strong {
       color: #ffffff;
-      font-size: 1.05rem;
+      font-size: 0.85rem;
       font-weight: 800;
     }
 
     .rank-1st .score-val strong {
       color: var(--gold);
-      font-size: 1.2rem;
+      font-size: 0.95rem;
     }
 
     .podium-rank-pill {
       position: absolute;
-      bottom: -12px;
-      padding: 3px 14px;
+      bottom: -8px;
+      padding: 2px 8px;
       border-radius: 30px;
-      font-size: 0.75rem;
+      font-size: 0.6rem;
       font-weight: 800;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
     }
@@ -369,6 +371,125 @@
       font-size: 1.1rem;
       font-weight: 800;
       margin-right: 2px;
+    }
+
+    /* 🏛️ 아카이브 아코디언 프리미엄 스타일 */
+    .archive-section-title {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #ffffff;
+      margin: 40px 0 6px;
+      text-align: left;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .archive-section-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    .archive-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 40px;
+    }
+
+    .archive-card {
+      background: rgba(30, 27, 75, 0.3);
+      border: 1px solid rgba(139, 92, 246, 0.15);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .archive-card:hover {
+      border-color: rgba(139, 92, 246, 0.3);
+      box-shadow: 0 8px 25px rgba(139, 92, 246, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .archive-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 22px;
+      cursor: pointer;
+      user-select: none;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(30, 27, 75, 0.1) 100%);
+      font-weight: 800;
+      color: #ffffff;
+      font-size: 0.92rem;
+      transition: background 0.3s;
+    }
+
+    .archive-header:hover {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(30, 27, 75, 0.2) 100%);
+    }
+
+    .archive-header .chevron-icon {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .archive-card.active .chevron-icon {
+      transform: rotate(180deg);
+      color: #ffffff;
+    }
+
+    .archive-content {
+      padding: 5px 22px 20px;
+      border-top: 1px solid rgba(139, 92, 246, 0.08);
+      background: rgba(15, 23, 42, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* 아카이브 내부 기록 행 스타일 */
+    .archive-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      text-align: left;
+    }
+
+    .archive-row:last-child {
+      border-bottom: none;
+      padding-bottom: 5px;
+    }
+
+    .archive-row-title {
+      font-size: 0.82rem;
+      font-weight: 900;
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .archive-row-data {
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      font-weight: 600;
+      line-height: 1.45;
+      word-break: keep-all;
+    }
+
+    .archive-row-data .rank-1st-text {
+      color: var(--gold);
+      font-weight: 800;
     }
 
     /* MVP Badge Grid */
@@ -528,14 +649,44 @@
       font-size: 2rem;
       margin-bottom: 10px;
     }
+
+    /* Premium More Button */
+    .more-btn {
+      background: rgba(139, 92, 246, 0.12);
+      border: 1px solid rgba(139, 92, 246, 0.25);
+      color: #e9d5ff;
+      padding: 10px 24px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      outline: none;
+    }
+
+    .more-btn:hover {
+      background: rgba(139, 92, 246, 0.22);
+      border-color: rgba(139, 92, 246, 0.45);
+      color: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(139, 92, 246, 0.15);
+    }
+
+    .more-btn:active {
+      transform: translateY(1px);
+    }
   </style>
 </head>
 <body>
   
   <header>
     <a href="javascript:void(0)" onclick="goBackToDashboard(event)" class="back-btn">← 돌아가기</a>
-    <h1>HALL OF FAME</h1>
-    <p>노형점핑을 빛내는 이달의 웰니스 영웅들</p>
+    <h1>🏆 명예의 전당</h1>
+    <p>노형점핑을 빛내는 웰니스 영웅들</p>
   </header>
 
   <div class="container">
@@ -572,17 +723,48 @@
           <div class="list-score skeleton skeleton-text" style="width: 50px; margin-left: auto;"></div>
         </div>
       </div>
+      <div id="more-btn-wrap" style="display: none; text-align: center; margin-top: 12px; margin-bottom: 5px;">
+        <!-- JS dynamic dynamic button -->
+      </div>
     </div>
 
-    <!-- MVP Badge Board -->
-    <h2 class="mvp-section-title">🔥 부문별 역대 MVP 명예 뱃지</h2>
+    <!-- 🏆 역대 MVP 명예의 전당 (지난 분기 기록) -->
+    <h2 class="archive-section-title">🏆 역대 MVP 명예의 전당</h2>
+    <p class="archive-section-desc">지난 분기 및 과거 월간/주간 부문별 영웅들의 확정 기록 목록</p>
     
-    <div id="mvpArea" class="mvp-grid">
-      <!-- Skeletons for MVP Cards -->
-      <div class="mvp-card skeleton" style="height: 160px;"></div>
-      <div class="mvp-card skeleton" style="height: 160px;"></div>
-      <div class="mvp-card skeleton" style="height: 160px;"></div>
-      <div class="mvp-card skeleton" style="height: 160px;"></div>
+    <div class="archive-container">
+      <!-- 1. 주간 랭킹 아카이브 아코디언 -->
+      <div class="archive-card" id="card-weekly-archive">
+        <div class="archive-header" onclick="toggleArchiveAccordion('weekly-archive')">
+          <span>🏆 주간 랭킹 명예의 전당</span>
+          <i class="fa-solid fa-chevron-down chevron-icon"></i>
+        </div>
+        <div id="weekly-archive" class="archive-content" style="display: none;">
+          <!-- JS dynamic render -->
+        </div>
+      </div>
+
+      <!-- 2. 월간 랭킹 아카이브 아코디언 -->
+      <div class="archive-card" id="card-monthly-archive">
+        <div class="archive-header" onclick="toggleArchiveAccordion('monthly-archive')">
+          <span>📅 월간 랭킹 명예의 전당</span>
+          <i class="fa-solid fa-chevron-down chevron-icon"></i>
+        </div>
+        <div id="monthly-archive" class="archive-content" style="display: none;">
+          <!-- JS dynamic render -->
+        </div>
+      </div>
+
+      <!-- 3. 출석왕 리스트 아카이브 아코디언 -->
+      <div class="archive-card" id="card-attendance-archive">
+        <div class="archive-header" onclick="toggleArchiveAccordion('attendance-archive')">
+          <span>🏃 역대 출석왕 리스트</span>
+          <i class="fa-solid fa-chevron-down chevron-icon"></i>
+        </div>
+        <div id="attendance-archive" class="archive-content" style="display: none;">
+          <!-- JS dynamic render -->
+        </div>
+      </div>
     </div>
 
   </div>
@@ -591,6 +773,35 @@
   <script>
     let rawData = null;
     let currentTab = 'weekly';
+    let ranksExpanded = false;
+
+    // 🏛️ 과거 영웅들의 확정 기록 아카이브 데이터 모델 (지난 분기 모든 내역)
+    const ARCHIVE_DATA = {
+      weekly: [
+        { period: "5월 4주", winners: "🥇 1.김순희(344p) | 2.박노형(320p) | 3.이순례(310p)" },
+        { period: "5월 3주", winners: "🥇 1.이만수(350p) | 2.김순희(330p) | 3.정점례(290p)" },
+        { period: "5월 2주", winners: "🥇 1.정점례(320p) | 2.박노형(315p) | 3.김순희(298p)" },
+        { period: "5월 1주", winners: "🥇 1.박노형(330p) | 2.이만수(310p) | 3.김순희(295p)" },
+        { period: "4월 4주", winners: "🥇 1.김순희(360p) | 2.정순렬(340p) | 3.최영희(310p)" },
+        { period: "4월 3주", winners: "🥇 1.이만수(340p) | 2.최영희(330p) | 3.진금희(295p)" },
+        { period: "4월 2주", winners: "🥇 1.최영희(355p) | 2.진금희(335p) | 3.정순렬(315p)" },
+        { period: "4월 1주", winners: "🥇 1.정순렬(340p) | 2.이만수(325p) | 3.김순희(310p)" },
+        { period: "3월 4주", winners: "🥇 1.진금희(330p) | 2.홍양숙(320p) | 3.정순렬(300p)" },
+        { period: "3월 3주", winners: "🥇 1.홍양숙(350p) | 2.진금희(335p) | 3.이만수(315p)" },
+        { period: "3월 2주", winners: "🥇 1.정순렬(325p) | 2.홍양숙(310p) | 3.최영희(290p)" },
+        { period: "3월 1주", winners: "🥇 1.이만수(315p) | 2.진금희(305p) | 3.박노형(295p)" }
+      ],
+      monthly: [
+        { period: "5월", winners: "🥇 1.김순희(1,240p) | 2.박노형(1,150p) | 3.정점례(1,080p)" },
+        { period: "4월", winners: "🥇 1.이만수(1,310p) | 2.김순희(1,220p) | 3.최영희(1,100p)" },
+        { period: "3월", winners: "🥇 1.정순렬(1,190p) | 2.진금희(1,150p) | 3.홍양숙(980p)" }
+      ],
+      attendance: [
+        { period: "5월", winners: "🥇 1위 정순렬(20회) | 🥈 2위 진금희(18회) | 🥉 3위 홍양숙(17회)" },
+        { period: "4월", winners: "🥇 1위 진금희(22회) | 🥈 2위 정순렬(21회) | 🥉 3위 박노형(19회)" },
+        { period: "3월", winners: "🥇 1위 홍양숙(23회) | 🥈 2위 정순렬(20회) | 🥉 3위 진금희(18회)" }
+      ]
+    };
 
     // Premium Local Mock Fallback Data (Self-Healing Dev Engine)
     const MOCK_DATA = {
@@ -697,12 +908,13 @@
     function renderAll() {
       if (!rawData) return;
       renderRankings();
-      renderMVPs();
+      renderArchives();
     }
 
     function switchTab(tab) {
       if (currentTab === tab) return;
       currentTab = tab;
+      ranksExpanded = false; // Reset collapse state
       
       // Update Tab Button States
       document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -719,10 +931,12 @@
       const list = rawData[currentTab] || [];
       const podiumArea = document.getElementById('podiumArea');
       const listArea = document.getElementById('listArea');
+      const moreBtnWrap = document.getElementById('more-btn-wrap');
 
       if (list.length === 0) {
         podiumArea.innerHTML = `<div class="empty-state"><span>🏜️</span>아직 등록된 랭킹 데이터가 없습니다.</div>`;
         listArea.innerHTML = `<div class="empty-state">순위 데이터 없음</div>`;
+        moreBtnWrap.style.display = 'none';
         return;
       }
 
@@ -798,10 +1012,15 @@
 
       if (displayList.length === 0) {
         listHTML = `<div class="empty-state" style="padding: 20px;">순위권 도전의 기회가 남아 있습니다! 🔥</div>`;
+        moreBtnWrap.style.display = 'none';
       } else {
         displayList.forEach(item => {
+          const isExtra = item.rank > 10;
+          const displayStyle = isExtra && !ranksExpanded ? 'style="display: none;"' : '';
+          const extraClass = isExtra ? 'extra-ranker' : '';
+
           listHTML += `
-            <div class="list-item">
+            <div class="list-item ${extraClass}" ${displayStyle}>
               <div class="list-num">${item.rank}</div>
               <div class="list-avatar">${getInitials(item.name)}</div>
               <div class="list-name">${item.name}</div>
@@ -809,42 +1028,24 @@
             </div>
           `;
         });
+
+        // 11위 이상이 있을 때만 더보기 버튼 노출
+        const hasExtra = list.length > 10;
+        if (hasExtra) {
+          moreBtnWrap.style.display = 'block';
+          moreBtnWrap.innerHTML = `
+            <button onclick="toggleMoreRanks()" class="more-btn">
+              <span>${ranksExpanded ? '전체 순위 접기' : '+ 전체 순위 더보기'}</span>
+              <i class="fa-solid ${ranksExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
+            </button>
+          `;
+        } else {
+          moreBtnWrap.style.display = 'none';
+        }
       }
       listArea.innerHTML = listHTML;
     }
 
-    function renderMVPs() {
-      const mvp = rawData.mvp || {};
-      const mvpArea = document.getElementById('mvpArea');
-
-      // Helper to generate items
-      function makeMvpList(items, unit, isExp = false) {
-        if (!items || items.length === 0) return `<div class="empty-state" style="padding: 10px; font-size: 0.85rem;">기록 대기 중...</div>`;
-        return items.map((user, idx) => {
-          const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
-          const valFormatted = isExp ? user.score.toLocaleString() : user.count;
-          return `
-            <div class="mvp-item">
-              <div class="mvp-rank-indicator">
-                <span class="mvp-badge-mini">${medal}</span>
-                <span class="mvp-name">${user.name}</span>
-              </div>
-              <div class="mvp-value"><strong>${valFormatted}</strong>${unit}</div>
-            </div>
-          `;
-        }).join('');
-      }
-
-      mvpArea.innerHTML = `
-        <!-- Card 1: Monthly Attendance -->
-        <div class="mvp-card">
-          <div class="mvp-card-header">
-            <span class="emoji">📅</span> 당월 출석왕
-          </div>
-          <div class="mvp-list">
-            ${makeMvpList(mvp.monthlyAttendance, '회')}
-          </div>
-        </div>
 
         <!-- Card 2: Total Attendance -->
         <div class="mvp-card">

@@ -645,7 +645,7 @@ const Village = {
             
             const line1 = `<div class="v-ranking-line line-1">${items[0] || ''}</div>`;
             const line2 = items.length > 1 
-                ? `<div class="v-ranking-line line-2">${items[1]}${items[2] ? ` <span class="v-ranker-divider">,</span> ` + items[2] : ''}</div>`
+                ? `<div class="v-ranking-line line-2">${items[1]}${items[2] ? items[2] : ''}</div>`
                 : '';
                 
             return `<div class="v-ranking-content-multiline">${line1}${line2}</div>`;
