@@ -7,6 +7,7 @@
   
   <!-- Outfit & Noto Sans KR Premium Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <script src="bridge.js?v=58.3"></script>
   
   <style>
     :root {
@@ -532,7 +533,7 @@
 <body>
   
   <header>
-    <a href="?page=index" class="back-btn">← 돌아가기</a>
+    <a href="javascript:void(0)" onclick="goBackToDashboard(event)" class="back-btn">← 돌아가기</a>
     <h1>HALL OF FAME</h1>
     <p>노형점핑을 빛내는 이달의 웰니스 영웅들</p>
   </header>
@@ -872,9 +873,16 @@
           </div>
           <div class="mvp-list">
             ${makeMvpList(mvp.oasisAngel, '개')}
-          </div>
         </div>
       `;
+    }
+
+    function goBackToDashboard(event) {
+      if (event) event.preventDefault();
+      const params = new URLSearchParams(window.location.search);
+      let phone = (params.get('phone') || '').trim();
+      if (!phone) phone = (localStorage.getItem('v44_user_phone') || '').trim();
+      navigateTo('index', { phone: phone });
     }
   </script>
 </body>

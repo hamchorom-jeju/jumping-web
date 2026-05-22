@@ -478,14 +478,19 @@ body {
 }
 
 .v-ranking-badge {
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.65rem;
+    padding: 6px 10px;
+    border-radius: 16px;
+    font-size: 0.62rem;
     font-weight: 900;
     color: #fff;
-    white-space: nowrap;
+    white-space: normal; /* 두 줄 배치 허용 */
+    line-height: 1.15;
+    text-align: center;
+    min-width: 68px; /* 일정한 폭 유지 */
+    min-height: 38px; /* 통일성 높이 보장 */
     align-self: center; /* Keep badge centered even if text wraps */
     display: inline-flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
@@ -517,13 +522,44 @@ body {
     flex-wrap: wrap; /* Allow wrapping to prevent cut-off */
     gap: 6px 12px;
     line-height: 1.2;
+    flex: 1;
 }
 
-.v-ranking-content span {
+/* 🏆 멀티라인 랭킹 배너 레이아웃 */
+.v-ranking-content-multiline {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    justify-content: center;
+    width: 100%;
+    text-align: left;
+}
+.v-ranking-line {
     display: flex;
     align-items: center;
+    gap: 10px;
+    font-size: 0.73rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+.v-ranking-line.line-1 {
+    font-weight: 900;
+    color: #1e293b;
+}
+.v-ranking-line.line-2 {
+    font-size: 0.68rem;
+    color: #475569;
+}
+.v-ranker-span {
+    display: inline-flex;
+    align-items: center;
     gap: 2px;
-    white-space: nowrap; /* Keep individual rankers on one line */
+    white-space: nowrap;
+}
+.v-ranker-divider {
+    color: #94a3b8;
+    margin: 0 -2px;
+    font-weight: bold;
 }
 
 /* Profile Bar Styles (Global) */

@@ -622,7 +622,7 @@ const Village = {
         const formattedRankings = [];
 
         // 큰 EXP 수치를 k단위로 축약하여 프리미엄 룩 완성 (예: 38,400 -> 38.4k)
-        const formatScore = (score, isCount = false, unit = " EXP") => {
+        const formatScore = (score, isCount = false, unit = "p") => {
             if (isCount) return `${score}${unit}`;
             if (score >= 10000) {
                 return `${(score / 1000).toFixed(1)}k${unit}`;
@@ -630,47 +630,58 @@ const Village = {
             return `${score.toLocaleString()}${unit}`;
         };
 
-        // 상위 3명 순위를 메달 뱃지와 함께 템플릿 스트링으로 가공
-        const getTop3Html = (list, isCount = false, unit = " EXP") => {
-            if (!list || list.length === 0) return "<span>데이터 집계 중...</span>";
-            return list.slice(0, 3).map((item, idx) => {
-                const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : "🥉";
+        // 상위 3명 순위를 메달 뱃지와 함께 템플릿 스트링으로 가공 (멀티라인 2줄 전격 교체)
+        const getTop3Html = (list, isCount = false, unit = "p") => {
+            if (!list || list.length === 0) return "<div class='v-ranking-line line-1'>데이터 집계 중...</div>";
+            
+            const items = list.slice(0, 3).map((item, idx) => {
                 const scoreVal = item.score !== undefined ? item.score : item.count;
-                return `<span>${medal}${item.name} (${formatScore(scoreVal, isCount, unit)})</span>`;
-            }).join('');
+                if (idx === 0) {
+                    return `<span class="v-ranker-span">🥇 1.${item.name}(${formatScore(scoreVal, isCount, unit)})</span>`;
+                } else {
+                    return `<span class="v-ranker-span">${idx + 1}.${item.name}(${formatScore(scoreVal, isCount, unit)})</span>`;
+                }
+            });
+            
+            const line1 = `<div class="v-ranking-line line-1">${items[0] || ''}</div>`;
+            const line2 = items.length > 1 
+                ? `<div class="v-ranking-line line-2">${items[1]}${items[2] ? ` <span class="v-ranker-divider">,</span> ` + items[2] : ''}</div>`
+                : '';
+                
+            return `<div class="v-ranking-content-multiline">${line1}${line2}</div>`;
         };
 
         // (1) 주간 랭킹 TOP 3
         if (data.weekly && data.weekly.length > 0) {
             formattedRankings.push({
-                type: "주간 랭킹 🏆",
+                type: "주간 랭킹<br>🏆",
                 badge: "weekly",
-                content: getTop3Html(data.weekly)
+                content: getTop3Html(data.weekly, false, "p")
             });
         }
 
         // (2) 월간 랭킹 TOP 3
         if (data.monthly && data.monthly.length > 0) {
             formattedRankings.push({
-                type: "월간 랭킹 📅",
+                type: "월간 랭킹<br>📅",
                 badge: "monthly",
-                content: getTop3Html(data.monthly)
+                content: getTop3Html(data.monthly, false, "p")
             });
         }
 
         // (3) 토탈 랭킹 TOP 3
         if (data.total && data.total.length > 0) {
             formattedRankings.push({
-                type: "토탈 랭킹 💫",
+                type: "토탈 랭킹<br>💫",
                 badge: "total",
-                content: getTop3Html(data.total)
+                content: getTop3Html(data.total, false, "p")
             });
         }
 
-        // (4) 당월 출석왕 실시간 라이브 닷 레이스
+        // (4) 당월 출석왕 실시간 라이브 닷 레이스 (원장님 맞춤형 2줄 뱃지 타이틀 적용)
         if (data.mvp && data.mvp.monthlyAttendance && data.mvp.monthlyAttendance.length > 0) {
             formattedRankings.push({
-                type: `${currentMonth}월 출석왕 (실시간 <span class="v-pulse-dot">●</span>)`,
+                type: `출석왕(${currentMonth}월)<br>실시간 <span class="v-pulse-dot">●</span>`,
                 badge: "weekly", // 활기찬 초록색 라이브 배지 연출
                 content: getTop3Html(data.mvp.monthlyAttendance, true, "회")
             });
@@ -1301,10 +1312,22 @@ const Village = {
     
     confirmRankingWarp(event) {
         if (event) event.stopPropagation();
-        const confirmWarp = confirm("🏆 위대한 모험가들의 공간 [명예의 전당]으로 이동하시겠습니까?");
-        if (confirmWarp) {
-            location.href = '?page=halloffame';
-        }
+        
+        const params = new URLSearchParams(window.location.search);
+        let phone = (params.get('phone') || '').trim();
+        if (!phone) phone = (localStorage.getItem('v44_user_phone') || '').trim();
+        
+        showAppConfirm("🏆 위대한 모험가들의 공간 [명예의 전당]으로 이동하시겠습니까?", () => {
+            navigateTo('halloffame', { phone: phone });
+        }, "🏆");
+    },
+    
+    warpToRanking(event) {
+        if (event) event.stopPropagation();
+        const params = new URLSearchParams(window.location.search);
+        let phone = (params.get('phone') || '').trim();
+        if (!phone) phone = (localStorage.getItem('v44_user_phone') || '').trim();
+        navigateTo('halloffame', { phone: phone });
     },
     
     toggleWeatherParticles(event) {
