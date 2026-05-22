@@ -2053,7 +2053,7 @@
             authBtn.onclick = () => { closeInfoModal(); location.href = "oasis.html?write=self-praise"; };
           } else {
             authBtn.innerText = '📸 인증하러 가기';
-            authBtn.onclick = () => { closeInfoModal(); openCertModal(key); };
+            authBtn.onclick = () => { closeInfoModal(); setTimeout(() => { openCertModal(key); }, 200); };
           }
           
           btnsEl.appendChild(cancelIndicator);
@@ -2111,7 +2111,7 @@
               authBtn.onclick = () => { 
                 doHabitCheck(key); 
                 closeInfoModal(); 
-                openCertModal(key); 
+                setTimeout(() => { openCertModal(key); }, 200); 
               };
             }
 
@@ -2123,7 +2123,7 @@
           const authBtn = document.createElement('button');
           authBtn.className = 'info-btn-auth';
           authBtn.innerText = '📸 인증하러 가기';
-          authBtn.onclick = () => { closeInfoModal(); openCertModal(key); };
+          authBtn.onclick = () => { closeInfoModal(); setTimeout(() => { openCertModal(key); }, 200); };
           btnsEl.appendChild(authBtn);
         }
       }
@@ -2155,7 +2155,10 @@
       if (typeof google === 'undefined' || !google.script || !google.script.run) {
         console.warn("⚠️ [Local Environment] recordActivityLog simulated.");
         if (!window.lastDoneList) window.lastDoneList = [];
-        window.lastDoneList.push(d.item);
+        const itemWithAction = d.item + " 완료";
+        if (!window.lastDoneList.includes(itemWithAction)) {
+          window.lastDoneList.push(itemWithAction);
+        }
         syncDoneListStates(window.lastDoneList);
         closeInfoModal();
         showAppAlert(`✨ [${d.title}] 수호 완료! +${score} EXP 획득! 🌿 (가상 적립)`, 'success');
@@ -2164,8 +2167,9 @@
 
       // [v50.7] 초고속 낙관적 UI(Optimistic UI) 적용: 장막 없이 0.01초 만에 즉시 로컬 완료 처리!
       if (!window.lastDoneList) window.lastDoneList = [];
-      if (!window.lastDoneList.includes(d.item)) {
-        window.lastDoneList.push(d.item);
+      const itemWithAction = d.item + " 완료";
+      if (!window.lastDoneList.includes(itemWithAction)) {
+        window.lastDoneList.push(itemWithAction);
       }
       
       // 즉시 화면 갱신 (사용자는 누르는 즉시 대기시간 0초로 완료를 체감!)
@@ -2256,10 +2260,15 @@
       if (!d) return;
       if (!TARGET_PHONE) return showAppAlert('로그인이 필요합니다.', 'error');
 
-      // [v50.9] 중복 전송 원천 차단 가드!
-      const isAlreadyDone = window.lastDoneList && window.lastDoneList.some(item => item.includes(d.item));
-      if (isAlreadyDone) {
-        return showAppAlert(`✨ 이미 오늘 [${d.title}]을 완료했습니다!`, 'error');
+      // [v50.9] 이미 사진 인증(인증/Tier/S)을 최종 완료한 경우만 차단! (체크만 된 상태는 업로드 허용)
+      const isAlreadyCertified = window.lastDoneList && window.lastDoneList.some(item => {
+        const cleanItem = item.replace(/\s+/g, '');
+        const cleanTarget = d.item.replace(/\s+/g, '');
+        return (cleanItem.includes(cleanTarget) || cleanTarget.includes(cleanItem)) && 
+               (cleanItem.includes('인증') || cleanItem.includes('Tier') || cleanItem.includes('S'));
+      });
+      if (isAlreadyCertified) {
+        return showAppAlert(`✨ 이미 오늘 [${d.title}] 사진 인증을 완료했습니다!`, 'error');
       }
 
       const cam = document.getElementById('file-input-cert-camera');
@@ -2314,8 +2323,9 @@
           btn.disabled = false; btn.innerText = '📸 사진 인증하기';
           
           if (!window.lastDoneList) window.lastDoneList = [];
-          if (!window.lastDoneList.includes(d.item)) {
-            window.lastDoneList.push(d.item);
+          const itemWithAction = d.item + " 인증";
+          if (!window.lastDoneList.includes(itemWithAction)) {
+            window.lastDoneList.push(itemWithAction);
           }
           syncDoneListStates(window.lastDoneList);
           
