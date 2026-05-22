@@ -326,7 +326,7 @@ function submitArchive(payload) {
 function getUserDashboardData(payload) {
   try {
     var rawPhone = String(payload.phone || "");
-    var phone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, ""); 
+    var phone = normalizePhoneDigits(rawPhone); 
     if (!phone) return { error: "전화번호가 없습니다." };
     
 
@@ -338,7 +338,7 @@ function getUserDashboardData(payload) {
     var praiseBatonSender = "";
 
     var cache = CacheService.getScriptCache();
-    var cacheKey = "v48_dash_" + phone + "_" + todayStr;
+    var cacheKey = "v62_dash_" + phone + "_" + todayStr;
     var cachedData = cache.get(cacheKey);
     if (cachedData) {
       try {
@@ -366,7 +366,7 @@ function getUserDashboardData(payload) {
       var regData = regSheet.getDataRange().getDisplayValues();
       var regCols = getRegColumnIndices(regSheet);
       for (var i = 1; i < regData.length; i++) {
-        var sheetPhone = formatPhoneNumber(regData[i][regCols.phone]).replace(/[^0-9]/g, ""); 
+        var sheetPhone = normalizePhoneDigits(regData[i][regCols.phone]); 
         if (sheetPhone === phone || (phone.length >= 8 && sheetPhone.endsWith(phone.substring(phone.length - 8)))) {
           memberInfo.name = regData[i][regCols.name];
           memberInfo.tier = regData[i][regCols.membership] || "새싹";
@@ -415,7 +415,7 @@ function getUserDashboardData(payload) {
 
     var data = summarySheet.getDataRange().getDisplayValues();
     for (var j = 1; j < data.length; j++) {
-      var recPhone = formatPhoneNumber(data[j][1]).replace(/[^0-9]/g, "");
+      var recPhone = normalizePhoneDigits(data[j][1]);
       if (recPhone === phone) {
         var recDateStr = String(data[j][0]);
         var dMatch = recDateStr.match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
@@ -518,7 +518,7 @@ function getUserDashboardData(payload) {
     if (inbodySheet) {
       var inData = inbodySheet.getDataRange().getValues();
       for (var k = 1; k < inData.length; k++) {
-        var recPhone = formatPhoneNumber(inData[k][2]).replace(/[^0-9]/g, "");
+        var recPhone = normalizePhoneDigits(inData[k][2]);
         if (recPhone === phone) {
           var iDate = new Date(inData[k][0]);
           var remarksStr = String(inData[k][7] || "");
@@ -620,7 +620,7 @@ function getUserDashboardData(payload) {
         var prevBeforeThisWeek = null;
         if (inbodySheet && inData) {
           for (var k = 1; k < inData.length; k++) {
-            var recPhone = formatPhoneNumber(inData[k][2]).replace(/[^0-9]/g, "");
+            var recPhone = normalizePhoneDigits(inData[k][2]);
             if (recPhone === phone) {
               var iDate = new Date(inData[k][0]);
               if (iDate < startOfWeek) {
@@ -653,7 +653,7 @@ function getUserDashboardData(payload) {
       var logData = logSheet.getDataRange().getValues();
       var logCols = getAttendanceColumnIndices(logSheet);
       for (var l = logData.length - 1; l >= 1; l--) {
-        var sheetPhone = formatPhoneNumber(logData[l][logCols.phone]).replace(/[^0-9]/g, "");
+        var sheetPhone = normalizePhoneDigits(logData[l][logCols.phone]);
         if (sheetPhone === phone) {
           var dRaw = logData[l][logCols.date];
           if (dRaw) {
@@ -734,7 +734,7 @@ function getUserDashboardData(payload) {
         var allData = summarySheet.getDataRange().getValues();
         var scoreMap = {};
         for (var rowIdx = 1; rowIdx < allData.length; rowIdx++) {
-          var rPhone = formatPhoneNumber(allData[rowIdx][1] || "").replace(/[^0-9]/g, "");
+          var rPhone = normalizePhoneDigits(allData[rowIdx][1] || "");
           var rTotal = Number(allData[rowIdx][9] || 0); // J열: 총점(웰니스총점)
           if (rPhone) {
             scoreMap[rPhone] = (scoreMap[rPhone] || 0) + rTotal;
@@ -838,7 +838,7 @@ function clearUserDashboardCache(phone) {
   try {
     var cache = CacheService.getScriptCache();
     var todayStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
-    cache.remove("v47_dash_" + cleanPhone + "_" + todayStr);
+    cache.remove("v62_dash_" + cleanPhone + "_" + todayStr);
     Logger.log("⚡ 대시보드 캐시 강제 삭제 완료: " + cleanPhone);
   } catch (e) {
     Logger.log("캐시 삭제 오류: " + e.toString());
@@ -5801,6 +5801,18 @@ function checkInactivityDebuffAbsentees() {
 }
 
 /**
+ * ⚡ [초고속 헬퍼] 루프 내 성능 극대화를 위한 순수 숫자 추출 및 010 자동 보정
+ */
+function normalizePhoneDigits(phoneStr) {
+  if (!phoneStr) return "";
+  var phone = String(phoneStr).replace(/[^0-9]/g, "");
+  if (phone.startsWith("1") && (phone.length === 10 || phone.length === 9)) {
+    phone = "0" + phone;
+  }
+  return phone;
+}
+
+/**
  * [공용] 휴대폰 번호 정규화 (010-0000-0000 형식 강제)
  */
 function formatPhoneNumber(phoneStr) {
@@ -8546,6 +8558,7 @@ function getPersonalNotifications(payload) {
  * 📬 [v59.0] 사용자의 안 읽은 알림 전체 읽음 처리
  */
 function markNotificationsAsRead(payload) {
+  var lock = LockService.getScriptLock();
   try {
     var rawPhone = String(payload.phone || "");
     var phone = rawPhone.replace(/[^0-9]/g, ""); 
@@ -8555,25 +8568,42 @@ function markNotificationsAsRead(payload) {
     var lastRow = sheet.getLastRow();
     if (lastRow < 2) return { success: true };
     
-    var range = sheet.getRange(2, 1, lastRow - 1, 8);
-    var data = range.getDisplayValues();
-    var lock = LockService.getScriptLock();
+    // 1. Acquire Lock FIRST to protect the entire read-modify-write process safely
     lock.waitLock(5000);
+    
+    // Read raw values (getValues is faster than getDisplayValues for simple checks)
+    var range = sheet.getRange(2, 1, lastRow - 1, 8);
+    var data = range.getValues();
     
     var now = new Date();
     var nowStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm:ss");
     var updated = false;
     
+    // Prepare a 2D array specifically for column H (index 8) to write in one batch
+    var readAtValues = [];
+    
     for (var i = 0; i < data.length; i++) {
       var rowPhone = String(data[i][1] || "").replace(/[^0-9]/g, "");
       var readAt = String(data[i][7] || "");
       
-      // 본인 알림 중 안 읽은 알림의 읽은시각 컬럼(H열, index 7) 업데이트
+      // If matching phone and not read, set read time to now
       if ((rowPhone === phone || (phone.length >= 8 && rowPhone.endsWith(phone.substring(phone.length - 8)))) && readAt.length === 0) {
-        var rowNum = i + 2; // 2-indexed
-        sheet.getRange(rowNum, 8).setValue(nowStr);
+        readAtValues.push([nowStr]);
         updated = true;
+      } else {
+        // Keep the original read timestamp value
+        var origVal = data[i][7];
+        // If it's a Date object, convert to string representation matching sheet format
+        if (origVal instanceof Date) {
+          origVal = Utilities.formatDate(origVal, "GMT+9", "yyyy-MM-dd HH:mm:ss");
+        }
+        readAtValues.push([origVal ? String(origVal) : ""]);
       }
+    }
+    
+    if (updated) {
+      // 2. BATCH WRITE: Write all updated read timestamps to column H at once (O(1) write operation!)
+      sheet.getRange(2, 8, lastRow - 1, 1).setValues(readAtValues);
     }
     
     lock.releaseLock();
@@ -8584,6 +8614,9 @@ function markNotificationsAsRead(payload) {
     
     return { success: true };
   } catch (e) {
+    try {
+      lock.releaseLock();
+    } catch (lockErr) {}
     Logger.log("알림 읽음 처리 실패: " + e.toString());
     return { success: false, error: e.toString() };
   }

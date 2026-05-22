@@ -811,6 +811,7 @@ window.addEventListener('DOMContentLoaded', function() {
 const Mailbox = {
   notifications: [],
   initialized: false,
+  markingAsRead: false,
   
   init: function() {
     if (this.initialized) return;
@@ -1230,20 +1231,28 @@ const Mailbox = {
     
     const self = this;
     const hasUnread = this.notifications.some(n => !n.isRead);
-    if (hasUnread) {
+    if (hasUnread && !this.markingAsRead) {
+      this.markingAsRead = true;
       if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run.withSuccessHandler(function(res) {
-          if (res && res.success) {
-            // 로컬 상태 즉각 전부 읽음 처리
-            self.notifications.forEach(n => n.isRead = true);
-            self.render();
-          }
-        }).markNotificationsAsRead({ phone: phone });
+        google.script.run
+          .withSuccessHandler(function(res) {
+            self.markingAsRead = false;
+            if (res && res.success) {
+              // 로컬 상태 즉각 전부 읽음 처리
+              self.notifications.forEach(n => n.isRead = true);
+              self.render();
+            }
+          })
+          .withFailureHandler(function(err) {
+            self.markingAsRead = false;
+          })
+          .markNotificationsAsRead({ phone: phone });
       } else {
         // Mock 모드 대응
         setTimeout(() => {
           self.notifications.forEach(n => n.isRead = true);
           self.render();
+          self.markingAsRead = false;
         }, 300);
       }
     }
