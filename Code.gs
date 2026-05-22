@@ -317,7 +317,7 @@ function submitArchive(payload) {
 function getUserDashboardData(payload) {
   try {
     var rawPhone = String(payload.phone || "");
-    var phone = rawPhone.replace(/[^0-9]/g, ""); 
+    var phone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, ""); 
     if (!phone) return { error: "전화번호가 없습니다." };
     
 
@@ -357,7 +357,7 @@ function getUserDashboardData(payload) {
       var regData = regSheet.getDataRange().getDisplayValues();
       var regCols = getRegColumnIndices(regSheet);
       for (var i = 1; i < regData.length; i++) {
-        var sheetPhone = String(regData[i][regCols.phone]).replace(/[^0-9]/g, ""); 
+        var sheetPhone = formatPhoneNumber(regData[i][regCols.phone]).replace(/[^0-9]/g, ""); 
         if (sheetPhone === phone || (phone.length >= 8 && sheetPhone.endsWith(phone.substring(phone.length - 8)))) {
           memberInfo.name = regData[i][regCols.name];
           memberInfo.tier = regData[i][regCols.membership] || "새싹";
@@ -406,7 +406,7 @@ function getUserDashboardData(payload) {
 
     var data = summarySheet.getDataRange().getDisplayValues();
     for (var j = 1; j < data.length; j++) {
-      var recPhone = String(data[j][1]).replace(/[^0-9]/g, "");
+      var recPhone = formatPhoneNumber(data[j][1]).replace(/[^0-9]/g, "");
       if (recPhone === phone) {
         var recDateStr = String(data[j][0]);
         var dMatch = recDateStr.match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
@@ -509,7 +509,7 @@ function getUserDashboardData(payload) {
     if (inbodySheet) {
       var inData = inbodySheet.getDataRange().getValues();
       for (var k = 1; k < inData.length; k++) {
-        var recPhone = String(inData[k][2]).replace(/[^0-9]/g, "");
+        var recPhone = formatPhoneNumber(inData[k][2]).replace(/[^0-9]/g, "");
         if (recPhone === phone) {
           var iDate = new Date(inData[k][0]);
           var remarksStr = String(inData[k][7] || "");
@@ -611,7 +611,7 @@ function getUserDashboardData(payload) {
         var prevBeforeThisWeek = null;
         if (inbodySheet && inData) {
           for (var k = 1; k < inData.length; k++) {
-            var recPhone = String(inData[k][2]).replace(/[^0-9]/g, "");
+            var recPhone = formatPhoneNumber(inData[k][2]).replace(/[^0-9]/g, "");
             if (recPhone === phone) {
               var iDate = new Date(inData[k][0]);
               if (iDate < startOfWeek) {
@@ -644,7 +644,7 @@ function getUserDashboardData(payload) {
       var logData = logSheet.getDataRange().getValues();
       var logCols = getAttendanceColumnIndices(logSheet);
       for (var l = logData.length - 1; l >= 1; l--) {
-        var sheetPhone = String(logData[l][logCols.phone]).replace(/[^0-9]/g, "");
+        var sheetPhone = formatPhoneNumber(logData[l][logCols.phone]).replace(/[^0-9]/g, "");
         if (sheetPhone === phone) {
           var dRaw = logData[l][logCols.date];
           if (dRaw) {
@@ -725,7 +725,7 @@ function getUserDashboardData(payload) {
         var allData = summarySheet.getDataRange().getValues();
         var scoreMap = {};
         for (var rowIdx = 1; rowIdx < allData.length; rowIdx++) {
-          var rPhone = String(allData[rowIdx][1] || "").replace(/[^0-9]/g, "");
+          var rPhone = formatPhoneNumber(allData[rowIdx][1] || "").replace(/[^0-9]/g, "");
           var rTotal = Number(allData[rowIdx][9] || 0); // J열: 총점(웰니스총점)
           if (rPhone) {
             scoreMap[rPhone] = (scoreMap[rPhone] || 0) + rTotal;
@@ -845,7 +845,7 @@ function submitInBodyRecord(payload) {
     var sheet = ss.getSheetByName("33챌린지_인바디") || ss.insertSheet("33챌린지_인바디");
     
     var name = payload.name;
-    var phone = String(payload.phone || "").replace(/[^0-9]/g, "");
+    var phone = formatPhoneNumber(payload.phone).replace(/[^0-9]/g, "");
     var weight = Number(payload.weight);
     var muscle = Number(payload.muscle);
     var fat = Number(payload.fat);
@@ -869,7 +869,7 @@ function submitInBodyRecord(payload) {
     var existingRowIndex = -1; // 동일 날짜 중복 행 인덱스
     
     for (var i = 1; i < data.length; i++) {
-      if (String(data[i][2]).replace(/[^0-9]/g, "") === phone) {
+      if (formatPhoneNumber(data[i][2]).replace(/[^0-9]/g, "") === phone) {
         var rowDate = new Date(data[i][0]);
         var rowDateStr = Utilities.formatDate(rowDate, "GMT+9", "yyyy-MM-dd");
         
@@ -6325,14 +6325,14 @@ function syncClubRecord(payload) {
     
     if (!logSheet) return { success: false, error: "'출석기록' 시트가 없습니다." };
     
-    var phone = String(payload.phone).replace(/[^0-9]/g, "");
+    var phone = formatPhoneNumber(payload.phone).replace(/[^0-9]/g, "");
     var todayStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
     
     // 1. 이미 오늘 동기화했는지 확인
     var actData = actSheet.getDataRange().getDisplayValues();
     for (var i = 1; i < actData.length; i++) {
       var aDateRaw = actData[i][0];
-      var aPhone = String(actData[i][3]).replace(/[^0-9]/g, "");
+      var aPhone = formatPhoneNumber(actData[i][3]).replace(/[^0-9]/g, "");
       var aType = String(actData[i][4]);
       
       // 날짜 비교 (하이픈 처리 등 정규화)
@@ -6350,7 +6350,7 @@ function syncClubRecord(payload) {
     for (var j = logData.length - 1; j >= 1; j--) {
       var lDateMatch = logData[j][0].match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
       var lDateStr = lDateMatch ? lDateMatch[1] + "-" + lDateMatch[2].padStart(2, '0') + "-" + lDateMatch[3].padStart(2, '0') : "";
-      var lPhone = String(logData[j][3]).replace(/[^0-9]/g, "");
+      var lPhone = formatPhoneNumber(logData[j][3]).replace(/[^0-9]/g, "");
       
       if (lDateStr === todayStr && lPhone === phone) {
         todayRecord = logData[j];
@@ -6377,7 +6377,7 @@ function syncClubRecord(payload) {
       now,
       Utilities.formatDate(now, "GMT+9", "HH:mm:ss"),
       memberName,
-      "'" + payload.phone,
+      "'" + phone,
       "출석동기화",
       "클럽 방문",
       "운동 타임: " + timeCount,
@@ -6408,7 +6408,7 @@ function recordActivityLog(payload) {
 
     var now = new Date();
     var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
-    var phone = String(payload.phone || "").replace(/[^0-9]/g, "");
+    var phone = formatPhoneNumber(payload.phone).replace(/[^0-9]/g, "");
     var type = payload.type || "일반"; 
     var score = Number(payload.score || 0);
 
@@ -6446,7 +6446,7 @@ function recordActivityLog(payload) {
     var completedDetails = "";
     for (var i = 1; i < data.length; i++) {
       var rowDate = (data[i][0] instanceof Date) ? Utilities.formatDate(data[i][0], "GMT+9", "yyyy-MM-dd") : String(data[i][0]);
-      if (rowDate === todayStr && String(data[i][1]).replace(/[^0-9]/g, "") === phone) {
+      if (rowDate === todayStr && formatPhoneNumber(data[i][1]).replace(/[^0-9]/g, "") === phone) {
         targetRowIdx = i + 1;
         targetRowIdxInArray = i;
         completedDetails = String(data[i][8] || ""); // I열(9번째)
@@ -6468,6 +6468,9 @@ function recordActivityLog(payload) {
       while (rowValues.length < 10) {
         rowValues.push(0);
       }
+      
+      // [자가 치유] 기존 행에 혹시라도 0이 잘린 전화번호가 들어가 있다면 올바른 텍스트로 보정 및 업데이트 강제
+      rowValues[1] = "'" + formatPhoneNumber(rowValues[1]).replace(/[^0-9]/g, "");
       
       if (type === "로그인") {
         rowValues[6] = Number(rowValues[6] || 0) + 5; // 일반회복_합산
@@ -6619,7 +6622,7 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
     var tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     var tomorrowStr = Utilities.formatDate(tomorrow, "GMT+9", "yyyy-MM-dd");
     
-    var cleanPhone = String(phone || "").replace(/[^0-9]/g, "");
+    var cleanPhone = formatPhoneNumber(phone).replace(/[^0-9]/g, "");
     
     // [perf] 3개의 for-loop을 1개로 통합하여 퀘스트 시트 3중 반복 스캔을 제거
     var activeGlycogenRowIdx = -1;
@@ -6631,7 +6634,7 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
       var dateStr = data[i][1]; // B열: 시행일
       var title = data[i][3];  // D열: 퀘스트명
       var desc = data[i][4];   // E열: 설명
-      var qPhone = String(data[i][6]).replace(/[^0-9]/g, ""); // G열: 전화번호
+      var qPhone = formatPhoneNumber(data[i][6]).replace(/[^0-9]/g, ""); // G열: 전화번호
       var status = data[i][7]; // H열: 상태
 
       // 1. 이장 공지 퀘스트
@@ -6662,7 +6665,7 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
                   var regData = regSheet.getDataRange().getDisplayValues();
                   var regCols = getRegColumnIndices(regSheet);
                   for (var r = 1; r < regData.length; r++) {
-                    var rPhone = String(regData[r][regCols.phone]).replace(/[^0-9]/g, "");
+                    var rPhone = formatPhoneNumber(regData[r][regCols.phone]).replace(/[^0-9]/g, "");
                     if (rPhone === cleanPhone) {
                       mName = regData[r][regCols.name];
                       break;
@@ -6720,7 +6723,7 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
       
       if (localLogData) {
         for (var j = 1; j < localLogData.length; j++) {
-          var logPhone = String(localLogData[j][3]).replace(/[^0-9]/g, ""); // D열: 전화번호
+          var logPhone = formatPhoneNumber(localLogData[j][3]).replace(/[^0-9]/g, ""); // D열: 전화번호
           if (logPhone === cleanPhone) {
             var logDateRaw = localLogData[j][0]; // A열: 날짜
             var logDateStr = (logDateRaw instanceof Date) ? Utilities.formatDate(logDateRaw, "GMT+9", "yyyy-MM-dd") : String(logDateRaw);
@@ -7803,7 +7806,7 @@ function reactOasisPost(payload) {
     if (!sheet) return { success: false, error: "오아시스 글 시트가 존재하지 않습니다." };
     
     var rowIdx = Number(payload.rowIdx);
-    var clickerPhone = String(payload.phone || "").replace(/[^0-9]/g, "");
+    var clickerPhone = formatPhoneNumber(payload.phone).replace(/[^0-9]/g, "");
     var clickerName = payload.author || "모험가";
     
     if (!rowIdx || rowIdx < 2 || rowIdx > sheet.getLastRow()) {
@@ -7811,7 +7814,7 @@ function reactOasisPost(payload) {
     }
     
     var postData = sheet.getRange(rowIdx, 1, 1, 10).getValues()[0];
-    var authorPhone = String(postData[2]).replace(/[^0-9]/g, "");
+    var authorPhone = formatPhoneNumber(postData[2]).replace(/[^0-9]/g, "");
     var authorName = postData[3];
     var currentHearts = Number(postData[8] || 0);
     var heartPhones = String(postData[9] || "");
