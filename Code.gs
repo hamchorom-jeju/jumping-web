@@ -8478,10 +8478,9 @@ function getPersonalNotifications(payload) {
         var content = String(row[5] || "");
         var createdAt = String(row[6] || "");
         var readAt = String(row[7] || "");
-        
         var isRead = readAt.length > 0;
         
-        // 라이프사이클 관리: 읽은 쪽지는 24시간 이내인 것만 반환
+        // [v61.2] 라이프사이클 관리: 읽은 쪽지는 24시간(readAt 기준) 소멸, 안읽은 쪽지는 36시간(createdAt 기준) 소멸
         var keepNotification = true;
         if (isRead) {
           try {
@@ -8492,7 +8491,24 @@ function getPersonalNotifications(payload) {
               var diffTime = now.getTime() - readDate.getTime();
               var diffHours = diffTime / (1000 * 60 * 60);
               if (diffHours > 24) {
-                keepNotification = false; // 24시간 초과 시 필터링 아웃 (자동 소멸)
+                keepNotification = false; // 읽은 쪽지 24시간 초과 시 필터링 아웃
+              }
+            } else {
+              keepNotification = false; // 파싱 실패 시 안전하게 감춤
+            }
+          } catch (err) {
+            keepNotification = false;
+          }
+        } else {
+          try {
+            // "yyyy-MM-dd HH:mm:ss" 포맷 파싱
+            var parts = createdAt.split(/[ \-:]/);
+            if (parts.length >= 6) {
+              var createDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
+              var diffTime = now.getTime() - createDate.getTime();
+              var diffHours = diffTime / (1000 * 60 * 60);
+              if (diffHours > 36) {
+                keepNotification = false; // 안읽은 쪽지 36시간 초과 시 필터링 아웃 (자동 소멸)
               }
             } else {
               keepNotification = false; // 파싱 실패 시 안전하게 감춤
