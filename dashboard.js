@@ -123,6 +123,7 @@ const Village = {
         this.renderAll();
         this.updateEvolution();
         this.loadRealData(cacheLoaded);
+        this.loadRankingTickerData();
         this.startTicker();
         this.bindEvents();
     },
@@ -604,10 +605,130 @@ const Village = {
         };
 
         showItem(0);
-        setInterval(() => {
+        if (window.rankingTickerInterval) clearInterval(window.rankingTickerInterval);
+        window.rankingTickerInterval = setInterval(() => {
             this.currentRankIndex = (this.currentRankIndex + 1) % this.rankings.length;
             showItem(this.currentRankIndex);
         }, 5000);
+    },
+
+    /**
+     * [v5.0] 실시간 랭킹 데이터를 티커에 정밀 반영 및 동적 월명 렌더링
+     */
+    updateRankingsFromData(data) {
+        if (!data) return;
+
+        const currentMonth = new Date().getMonth() + 1;
+        const formattedRankings = [];
+
+        // 큰 EXP 수치를 k단위로 축약하여 프리미엄 룩 완성 (예: 38,400 -> 38.4k)
+        const formatScore = (score, isCount = false, unit = " EXP") => {
+            if (isCount) return `${score}${unit}`;
+            if (score >= 10000) {
+                return `${(score / 1000).toFixed(1)}k${unit}`;
+            }
+            return `${score.toLocaleString()}${unit}`;
+        };
+
+        // 상위 3명 순위를 메달 뱃지와 함께 템플릿 스트링으로 가공
+        const getTop3Html = (list, isCount = false, unit = " EXP") => {
+            if (!list || list.length === 0) return "<span>데이터 집계 중...</span>";
+            return list.slice(0, 3).map((item, idx) => {
+                const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : "🥉";
+                const scoreVal = item.score !== undefined ? item.score : item.count;
+                return `<span>${medal}${item.name} (${formatScore(scoreVal, isCount, unit)})</span>`;
+            }).join('');
+        };
+
+        // (1) 주간 랭킹 TOP 3
+        if (data.weekly && data.weekly.length > 0) {
+            formattedRankings.push({
+                type: "주간 랭킹 🏆",
+                badge: "weekly",
+                content: getTop3Html(data.weekly)
+            });
+        }
+
+        // (2) 월간 랭킹 TOP 3
+        if (data.monthly && data.monthly.length > 0) {
+            formattedRankings.push({
+                type: "월간 랭킹 📅",
+                badge: "monthly",
+                content: getTop3Html(data.monthly)
+            });
+        }
+
+        // (3) 토탈 랭킹 TOP 3
+        if (data.total && data.total.length > 0) {
+            formattedRankings.push({
+                type: "토탈 랭킹 💫",
+                badge: "total",
+                content: getTop3Html(data.total)
+            });
+        }
+
+        // (4) 당월 출석왕 실시간 라이브 닷 레이스
+        if (data.mvp && data.mvp.monthlyAttendance && data.mvp.monthlyAttendance.length > 0) {
+            formattedRankings.push({
+                type: `${currentMonth}월 출석왕 (실시간 <span class="v-pulse-dot">●</span>)`,
+                badge: "weekly", // 활기찬 초록색 라이브 배지 연출
+                content: getTop3Html(data.mvp.monthlyAttendance, true, "회")
+            });
+        }
+
+        if (formattedRankings.length > 0) {
+            this.rankings = formattedRankings;
+            this.refreshTicker();
+        }
+    },
+
+    refreshTicker() {
+        this.currentRankIndex = 0;
+        this.startTicker();
+    },
+
+    /**
+     * [v5.0] 실시간 랭킹 티커 데이터 호출 (구글 서버 API 및 로컬 모의 백엔드 하이브리드)
+     */
+    loadRankingTickerData() {
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run
+                .withSuccessHandler(res => {
+                    if (res && res.success && res.data) {
+                        this.updateRankingsFromData(res.data);
+                    }
+                })
+                .getHallOfFameData();
+        } else {
+            console.warn("Running in local browser environment. Injecting premium ranking mock data...");
+            setTimeout(() => {
+                const MOCK_RANKING_DATA = {
+                    weekly: [
+                        { name: "김영희", score: 1450 },
+                        { name: "이철수", score: 1280 },
+                        { name: "박민수", score: 1100 }
+                    ],
+                    monthly: [
+                        { name: "이철수", score: 5800 },
+                        { name: "김영희", score: 5200 },
+                        { name: "최미진", score: 4800 }
+                    ],
+                    total: [
+                        { name: "박민수", score: 38400 },
+                        { name: "이철수", score: 36200 },
+                        { name: "김영희", score: 32400 }
+                    ],
+                    mvp: {
+                        monthlyAttendance: [
+                            { name: "김영희", count: 24 },
+                            { name: "이철수", count: 22 },
+                            { name: "박민수", count: 21 }
+                        ]
+                    }
+                };
+                this.updateRankingsFromData(MOCK_RANKING_DATA);
+            }, 1000);
+        }
     },
 
     renderAll() {
