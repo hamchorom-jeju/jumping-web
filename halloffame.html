@@ -1046,36 +1046,66 @@
       listArea.innerHTML = listHTML;
     }
 
+    function renderArchives() {
+      renderArchiveList('weekly-archive', ARCHIVE_DATA.weekly);
+      renderArchiveList('monthly-archive', ARCHIVE_DATA.monthly);
+      renderArchiveList('attendance-archive', ARCHIVE_DATA.attendance);
+    }
 
-        <!-- Card 2: Total Attendance -->
-        <div class="mvp-card">
-          <div class="mvp-card-header">
-            <span class="emoji">🏆</span> 역대 출석의 신
-          </div>
-          <div class="mvp-list">
-            ${makeMvpList(mvp.totalAttendance, '회')}
-          </div>
-        </div>
+    function renderArchiveList(containerId, list) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      
+      if (!list || list.length === 0) {
+        container.innerHTML = `<div class="empty-state">아카이브 기록이 없습니다.</div>`;
+        return;
+      }
 
-        <!-- Card 3: Sincere Active King -->
-        <div class="mvp-card">
-          <div class="mvp-card-header">
-            <span class="emoji">📸</span> 누적 실천왕
+      let html = '';
+      list.forEach(item => {
+        html += `
+          <div class="archive-row">
+            <div class="archive-row-title">📅 ${item.period}</div>
+            <div class="archive-row-data">${formatArchiveWinners(item.winners)}</div>
           </div>
-          <div class="mvp-list">
-            ${makeMvpList(mvp.sincereKing, ' EXP', true)}
-          </div>
-        </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
 
-        <!-- Card 4: Oasis Post Angel -->
-        <div class="mvp-card">
-          <div class="mvp-card-header">
-            <span class="emoji">🌸</span> 오아시스 천사
-          </div>
-          <div class="mvp-list">
-            ${makeMvpList(mvp.oasisAngel, '개')}
-        </div>
-      `;
+    function formatArchiveWinners(winnersStr) {
+      if (!winnersStr) return '';
+      const tokens = winnersStr.split('|');
+      const formatted = tokens.map(token => {
+        const text = token.trim();
+        if (text.includes('1.') || text.includes('1위')) {
+          return `<span class="rank-1st-text">${text}</span>`;
+        }
+        return `<span>${text}</span>`;
+      });
+      return formatted.join(' <span class="archive-divider" style="color: rgba(255,255,255,0.15); margin: 0 4px;">|</span> ');
+    }
+
+    function toggleArchiveAccordion(id) {
+      const content = document.getElementById(id);
+      const card = document.getElementById('card-' + id);
+      if (!content || !card) return;
+      
+      const isOpen = content.style.display !== 'none';
+      
+      // 모든 아코디언 접기
+      document.querySelectorAll('.archive-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.archive-card').forEach(el => el.classList.remove('active'));
+      
+      if (!isOpen) {
+        content.style.display = 'flex';
+        card.classList.add('active');
+        
+        // 부드러운 스크롤 이동 모션
+        setTimeout(() => {
+          card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 150);
+      }
     }
 
     function goBackToDashboard(event) {

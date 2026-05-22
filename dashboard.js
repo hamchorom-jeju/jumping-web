@@ -637,7 +637,7 @@ const Village = {
             const items = list.slice(0, 3).map((item, idx) => {
                 const scoreVal = item.score !== undefined ? item.score : item.count;
                 if (idx === 0) {
-                    return `<span class="v-ranker-span">🥇 1.${item.name}(${formatScore(scoreVal, isCount, unit)})</span>`;
+                    return `<span class="v-ranker-span">🥇 1.${item.name}(${formatScore(scoreVal, isCount, unit)})<span class="v-live-badge">실시간<span class="v-pulse-dot"></span></span></span>`;
                 } else {
                     return `<span class="v-ranker-span">${idx + 1}.${item.name}(${formatScore(scoreVal, isCount, unit)})</span>`;
                 }
@@ -654,7 +654,7 @@ const Village = {
         // (1) 주간 랭킹 TOP 3
         if (data.weekly && data.weekly.length > 0) {
             formattedRankings.push({
-                type: "주간 랭킹<br>🏆",
+                type: "🏆 주간랭킹",
                 badge: "weekly",
                 content: getTop3Html(data.weekly, false, "p")
             });
@@ -663,7 +663,7 @@ const Village = {
         // (2) 월간 랭킹 TOP 3
         if (data.monthly && data.monthly.length > 0) {
             formattedRankings.push({
-                type: "월간 랭킹<br>📅",
+                type: "📅 월간랭킹",
                 badge: "monthly",
                 content: getTop3Html(data.monthly, false, "p")
             });
@@ -672,16 +672,16 @@ const Village = {
         // (3) 토탈 랭킹 TOP 3
         if (data.total && data.total.length > 0) {
             formattedRankings.push({
-                type: "토탈 랭킹<br>💫",
+                type: "💫 토탈랭킹",
                 badge: "total",
                 content: getTop3Html(data.total, false, "p")
             });
         }
 
-        // (4) 당월 출석왕 실시간 라이브 닷 레이스 (원장님 맞춤형 2줄 뱃지 타이틀 적용)
+        // (4) 당월 출석왕 실시간 라이브 닷 레이스
         if (data.mvp && data.mvp.monthlyAttendance && data.mvp.monthlyAttendance.length > 0) {
             formattedRankings.push({
-                type: `출석왕(${currentMonth}월)<br>실시간 <span class="v-pulse-dot">●</span>`,
+                type: "🏃 출석왕",
                 badge: "weekly", // 활기찬 초록색 라이브 배지 연출
                 content: getTop3Html(data.mvp.monthlyAttendance, true, "회")
             });
