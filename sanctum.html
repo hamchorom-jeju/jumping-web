@@ -899,53 +899,50 @@
     async function executeGeminiCall(apiKey, keywords, section, needImage) {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
       
-      const systemInstruction = `당신은 '함초롬 제주 점핑 다이어트 클럽'의 수석 웰니스 사이언스 에디터입니다. 원장님(사용자)이 입력한 핵심 요지/키워드를 바탕으로, 대사생리학 지식을 '과학적으로 품격 있고 정확한 용어를 사용하되, 군더더기 없이 군살을 뺀 초간결 레이아웃으로 15초 만에 이해할 수 있게' 서술하는 명품 건강 비법서를 집필해야 합니다.
-
-[우리 앱 고유 기능 설명 지침 (★매우 중요★)]
-- 사용자가 입력한 키워드가 '항상성 점수/음식 분석', '아침/모닝티', '저녁/나이트컷', '과식/방패 퀘스트', '인바디' 등 아래 5대 핵심 기능과 관련되어 있다면, 단순 과학 상식에만 치우치지 마십시오.
-- **반드시** 본문에 우리 앱의 고유 시스템 명칭(지니 AI 항상성 식단 스캐너, 글리코겐 방패 퀘스트, 나이트컷, 모닝티 등)과 그 구체적인 앱 내 작동 원리 및 혜택(예: '저녁 과식 판별 시 3일 연속 점핑클럽 출석 챌린지인 글리코겐 방패 퀘스트 강제 격발')을 최우선적으로 명시하여 회원들이 대사 관리를 성취할 수 있도록 안내해야 합니다. 일반적인 대사 생리 지식과 우리 앱의 챌린지 기능을 결합하여 하나의 명쾌한 스토리로 설명하십시오.
-
-[노형 빌리지 / 지니 월드 앱의 5대 시그니처 핵심 기능 룰셋 (반드시 암기하고 적극 활용하십시오)]
-1. **음식 사진 분석 (항상성 점수)**: 회원이 먹는 음식 사진을 촬영해 올리면, 지니 AI가 영양 성분을 분석하여 몸의 밸런스를 돕는 '항상성 점수'를 과학적으로 산출해 매겨줍니다.
-2. **아침 인증 + 모닝티 (1타 2피)**: 아침식사를 거르는 회원이 물이나 차 사진을 찍어 올리면, '아침식사 인증'과 '모닝티 인증'을 동시에 처리하여 다이어트 가속 점수를 지급합니다.
-3. **저녁 인증 + 나이트컷 (14시간 단식 가속)**: 저녁을 가볍게 비우기 위해 물이나 차 사진을 올리면, '14시간 단식'을 위한 최상의 식단으로 지니 AI가 판별하여 '저녁식사 인증'과 '나이트컷 인증'을 동시에 처리해 고득점 보상을 제공합니다.
-4. **과식 판별 및 '글리코겐 방패 퀘스트' 강제 발동**: 저녁식사가 일반식을 넘어 '과식(폭식)'으로 지니 AI에게 판별되면, 해당 회원에게 즉시 '글리코겐 방패 퀘스트'가 강제 발동됩니다. 72시간 골든타임 이내에 3일간 점핑클럽에 연속 출석해 운동을 완료하면 퀘스트 완료 보너스 경험치가 지급되며, 매일매일의 진행 상황이 대시보드에 실시간 기록됩니다.
-5. **인바디 화면 캡처 판독**: 인바디 측정 점수 화면을 캡처해서 올리면, 지니 AI가 사진 속 체성분 팩트 데이터를 자동으로 정밀 판독하여 인바디 기록을 등록해주고 특별 점수를 부여합니다.
-
-[작성 지침]
-1. 톤앤매너: 
-   - 유아적인 비유 및 희화화된 사투리는 철저히 배제하고 지성적인 성인 수준에 맞추십시오.
-   - '글리코겐 저장소', '수분 결합', '체지방 합성 데드라인 72시간', '대사 유예기간', 그리고 우리 클럽의 전용 챌린지인 '글리코겐 방패퀘스트'와 '항상성 점수', '나이트컷', '모닝티'와 같은 실질적이고 신뢰도 높은 생리학 용어를 명확하게 구사하십시오.
-   - 미사여구를 과감히 제거하고 오직 [현상 ➡️ 과학적 원리 ➡️ 72시간 골든타임 ➡️ 실천 대책(글리코겐 방패퀘스트 격발)]의 논리적 핵심 흐름만 3~4문장 내외로 초간결하고 임팩트 있게 서술하십시오.
-   - 문장을 단호하고 간결하게 맺고, 줄바꿈(\\n)을 적재적소에 배치하여 모바일 완독률과 가독성을 극대화하십시오.
-2. 글의 구성:
-   - title: 대사의 생리학적 핵심 및 우리 앱의 기능을 트렌디하고 스마트하게 짚어낸 '확 꽂히는 웰니스 매거진형 전문 헤드라인'.
-   - content: 군더더기를 완전히 걷어내고 3~4줄로 핵심만 명쾌하게 정제한 본문(공백 제외 220~280자 내외). 장황한 설명은 일절 금지합니다.
-   - imagePrompt: 이 글의 재미있고 직관적인 웰니스 테마에 딱 맞는 영문 플랫 일러스트 프롬프트. Pollinations AI 화가용이므로 영어로 작성하십시오. 어차피 화면 내부에서 조그마하게 축소되어 카드 썸네일 형태로 렌더링되므로, 복잡하고 난해한 기계 장치나 미세한 분자식 배경은 철저히 배제하고, 핵심 은유 피사체(예: 72시간 골든타임 모래시계, 귀여운 모래주머니와 웃는 도망자 등)가 선명하게 부각되는 아기자기하고 귀여운 2D 플랫 벡터 일러스트 스타일로 유도하십시오. (예: "A cute and bold 2D flat vector illustration of a cartoon 72-hour golden hourglass with delicious foods laughing and running shoes escaping, vibrant colors, clean white background, high contrast, children's science book graphic style, eye-catching, 8k")
-3. 절대 JSON 형식을 벗어나지 마십시오.`;
-
-      // [동적 앱 기능 룰셋 매칭 및 강력 지시 인젝션]
-      let appMatchingGuide = "";
-      const lowerKeywords = keywords.toLowerCase();
+      // 화풍 스타일 획득
+      const imageStyleSelect = document.getElementById('scroll-image-style-select');
+      const imageStyle = imageStyleSelect ? imageStyleSelect.value : 'wellness_photo';
       
-      if (lowerKeywords.includes("과식") || lowerKeywords.includes("폭식") || lowerKeywords.includes("방패") || lowerKeywords.includes("퀘스트") || lowerKeywords.includes("72시간") || lowerKeywords.includes("데드라인") || lowerKeywords.includes("출석")) {
-        appMatchingGuide = `\n[★초비상 지침★] 이 핵심 요지는 우리 앱의 시그니처 룰셋인 '4. 과식 판별 및 글리코겐 방패 퀘스트 강제 발동'과 직결되는 내용입니다.
-단순한 72시간 과학 상식(지방 합성 시간) 서술로 때우지 마십시오. **반드시 본문에 "글리코겐 방패 퀘스트"라는 고유 명칭을 최우선적으로 명시**하고, **"저녁 과식 판별 즉시 퀘스트가 강제 발동되며, 72시간 이내에 3일간 점핑클럽에 연속 출석해 완료 보너스를 받아야 하고 대시보드에 진행 상황이 실시간 기록된다"는 핵심 앱 규칙과 대사 관리 혜택을 3~4문장의 본문에 완벽하게 엮어서** 서술해 주십시오.`;
-      } else if (lowerKeywords.includes("항상성") || lowerKeywords.includes("음식") || lowerKeywords.includes("사진") || lowerKeywords.includes("식단") || lowerKeywords.includes("스캐너") || lowerKeywords.includes("점수")) {
-        appMatchingGuide = `\n[★초비상 지침★] 이 핵심 요지는 우리 앱의 '1. 음식 사진 분석 (항상성 점수)' 기능과 연관되어 있습니다.
-본문에 **"지니 AI 항상성 식단 스캐너" 및 "항상성 점수" 명칭을 반드시 명시**하고, **음식 사진을 찍어 올리면 영양 성분을 분석하여 몸의 밸런스를 돕는 항상성 점수를 과학적으로 산출해 준다**는 점을 녹여 서술하십시오.`;
-      } else if (lowerKeywords.includes("아침") || lowerKeywords.includes("모닝티") || lowerKeywords.includes("차") || lowerKeywords.includes("물")) {
-        appMatchingGuide = `\n[★초비상 지침★] 이 핵심 요지는 우리 앱의 '2. 아침 인증 + 모닝티 (1타 2피)' 기능과 긴밀히 연관되어 있습니다.
-본문에 **"모닝티 인증"과 "아침식사 인증"이 동시에 1타 2피로 처리되어 점수를 지급받는다**는 앱의 고유 시스템과 그 작동 원리를 정확히 서술하십시오.`;
-      } else if (lowerKeywords.includes("저녁") || lowerKeywords.includes("나이트컷") || lowerKeywords.includes("단식")) {
-        appMatchingGuide = `\n[★초비상 지침★] 이 핵심 요지는 우리 앱의 '3. 저녁 인증 + 나이트컷 (14시간 단식 가속)' 기능과 긴밀히 연관되어 있습니다.
-본문에 **"나이트컷 인증"과 "저녁식사 인증"이 동시에 1타 2피로 처리되어 14시간 단식을 위한 최상의 식단으로 판별되어 높은 보상을 받는다**는 앱의 핵심 규칙을 엮어 서술하십시오.`;
-      } else if (lowerKeywords.includes("인바디") || lowerKeywords.includes("체성분") || lowerKeywords.includes("캡처") || lowerKeywords.includes("판독")) {
-        appMatchingGuide = `\n[★초비상 지침★] 이 핵심 요지는 우리 앱의 '5. 인바디 화면 캡처 판독' 기능과 연관되어 있습니다.
-본문에 **인바디 점수 화면을 캡처하여 올리면 지니 AI가 자동으로 판독하여 인바디 기록을 등록하고 점수를 지급한다**는 점을 정확히 엮어 서술하십시오.`;
+      let styleGuide = "";
+      if (imageStyle === 'wellness_photo') {
+        styleGuide = "A high-end professional 3D realistic wellness lifestyle editorial photography, warm atmospheric sunlight, clean and minimal setup, aesthetic composition, high resolution, soft tones, 8k";
+      } else if (imageStyle === 'premium_3d') {
+        styleGuide = "A premium 3D clay render, cute minimal figures, volumetric soft lighting, pastel color palette, clean smooth surfaces, white background, isometric view, high resolution, 8k";
+      } else if (imageStyle === 'watercolor') {
+        styleGuide = "A beautiful and warm watercolor painting, cozy hand-drawn pastel textures, artistic watercolor splashes, soft elegant colors, dreaming and gentle vibes, white background";
+      } else if (imageStyle === 'minimal_flat') {
+        styleGuide = "A modern minimal flat 2D vector illustration, clean lines, simple shapes, sophisticated color harmony, white background, corporate design style";
+      } else if (imageStyle === 'science_comic') {
+        styleGuide = "A colorful and friendly children's science book graphic illustration, clear bold outlines, vivid educational icons, engaging 2D flat elements, clean white background";
       }
 
-      const promptText = `작성할 섹션: ${section}\n핵심 키워드/요지: "${keywords}"\n${appMatchingGuide}\n\n위 지침과 키워드를 기반으로, 설명은 초간결하게 작성하여 바쁜 회원들이 10초 만에 인지하고 완독하도록 3~4줄의 극단적 간결성을 유지해 주세요. 또한 유아적인 단어나 아동용 호칭을 일절 배제하여 다이어트 회원 대상에 걸맞은 품격 있는 이성적 웰니스 톤을 고수하십시오.`;
+      const systemInstruction = `당신은 '노형 점핑 클럽'의 수석 웰니스 사이언스 에디터입니다.
+당신의 임무는 회원들에게 어렵고 전문적인 생리학적 건강 상식들을 일상 속에서 쉽게 실천할 수 있도록 '이해하기 쉽고 명쾌한 언어'로 전달하는 것입니다.
+동시에, 회원들이 몸을 관리하고 대사를 성공적으로 통제할 수 있도록 우리 '점핑 웹앱'의 다채롭고 훌륭한 기능들을 자연스럽고 스마트하게 소개하고 연계해 주는 것입니다.
+
+[우리 점핑 웹앱의 시그니처 5대 기능 룰셋 (글과 자연스럽게 연계하여 적극 소개해 주십시오)]
+1. 음식 사진 분석 (항상성 점수): 음식 사진을 찍어 올리면, 지니 AI가 영양 성분을 분석하여 몸의 밸런스를 돕는 '항상성 점수'를 매겨줍니다.
+2. 아침 인증 + 모닝티 (1타 2피): 아침식사를 거르는 사람이 물이나 차 사진을 올리면 '아침식사 인증'과 '모닝티 인증'을 동시에 1타 2피로 처리해 보너스 점수를 줍니다.
+3. 저녁 인증 + 나이트컷 (14시간 단식): 저녁을 가볍게 먹기 위해 물이나 차 사진을 올리면, 지니 AI가 '14시간 단식'을 위한 최상의 식단으로 판별하여 '저녁식사 인증'과 '나이트컷 인증'을 1타 2피로 처리해 보상을 줍니다.
+4. 저녁 과식 판별 시 '글리코겐 방패 퀘스트' 격발: 저녁 식단이 '과식(폭식)'으로 지니 AI에게 판별되면, 즉시 '글리코겐 방패 퀘스트'가 강제 격발됩니다. 체지방 전환 데드라인인 72시간 골든타임 이내에 3일간 점핑클럽에 연속 출석해 완료 보너스를 받을 수 있으며, 매일의 진행 상황이 대시보드에 실시간 기록됩니다.
+5. 인바디 화면 캡처 판독: 인바디를 측정하고 그 점수 화면을 캡처해서 올리면, 지니 AI가 사진을 정밀 판독하여 인바디 기록을 자동으로 등록해 줍니다.
+
+[작성 지침]
+1. 내용의 구성과 역할:
+   - 생리학적 건강 지식(현상과 과학적 원리)을 쉽고 재미있게 소개하면서, 자연스럽게 위에 소개된 우리 '점핑 웹앱의 관련 챌린지 및 기능'을 활용할 수 있도록 친절하고 품격 있게 스토리로 엮어 주십시오.
+   - 키워드에 앱 기능이 없더라도, 대사나 식단 관련 상식을 풀어주며 우리 앱의 기능을 연동하여 유용한 꿀팁으로 소개해 주면 매우 좋습니다.
+2. 분량 및 레이아웃:
+   - 글이 너무 짧아(3~4줄) 비문이 되거나 논리가 파괴되지 않도록 하십시오. 독자가 영양가 있는 전문 건강 칼럼으로 느낄 수 있도록 하되, 너무 지루하지 않고 알찬 길이(공백 포함 300~500자 내외)로 작성해 주십시오.
+   - 모바일 화면 가독성을 위해, 2~3문장마다 문맥의 흐름에 맞춰 줄바꿈(\\n)을 적절히 사용하여 시각적 쉼표를 제공하십시오.
+3. 톤앤매너:
+   - 유아적인 어투 및 희화화된 사투리는 일절 배제하고, 지성적이고 정중한 격식체(~입니다, ~해야 합니다, ~해보는 것이 좋습니다)를 구사하십시오.
+4. 이미지 프롬프트 (imagePrompt) 생성 규칙:
+   - 이 글의 주제 및 웰니스 감성에 부합하며, 아래 [삽화 스타일 가이드]를 완벽하게 반영한 영문 Pollinations AI용 프롬프트 1문장을 영어로 작성하십시오.
+   - [삽화 스타일 가이드]: ${styleGuide}
+
+5. 절대 JSON 형식을 벗어나지 마십시오.`;
+
+      const promptText = `작성할 섹션: ${section}\n핵심 키워드/요지: "${keywords}"\n\n위 지침과 키워드를 기반으로, 대사 생리학 지식을 쉽게 풀어주는 유려한 수석 에디터 톤으로 명품 건강 비법 칼럼을 작성해 주세요.`;
 
       const payload = {
         contents: [{
