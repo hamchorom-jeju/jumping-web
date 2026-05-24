@@ -486,7 +486,7 @@
 
     <!-- 🏛️ 지난 황금 고서첩 (과거 목록) 드로어 모달 -->
     <div id="archive-list-modal" class="scroll-modal" style="display: none; align-items: flex-end; padding: 0;">
-        <div class="scroll-body" style="max-width: 500px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 30px; border-top-right-radius: 30px; border-bottom: none; max-height: 78vh; overflow-y: auto; margin-bottom: 0; padding-bottom: 60px; width: 100%;">
+        <div class="scroll-body" style="max-width: 500px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 30px; border-top-right-radius: 30px; border-bottom: none; max-height: 80vh; overflow-y: auto; -webkit-overflow-scrolling: touch; margin-bottom: 0; padding-bottom: 120px; width: 100%;">
             <div class="scroll-close-btn" onclick="closeArchiveList()" style="top: 18px; right: 18px;">X</div>
             
             <div class="scroll-modal-title" style="color: var(--wisdom-wood); font-weight: 900; margin-bottom: 20px;">
@@ -611,8 +611,10 @@
             if (excerpt.length > limit) excerpt = excerpt.substring(0, limit) + "...";
             
             const hasImage = t.image && t.image.trim().length > 10;
+            // 작은따옴표(') 기호 충돌로 인한 CSS 파괴 버그를 URL 안전 문자(%27) 치환을 통해 철저히 방지!
+            const safeImageUrl = hasImage ? String(t.image).replace(/'/g, "%27") : "";
             const cardStyle = hasImage 
-                ? `background-image: url('${t.image}');`
+                ? `background-image: url('${safeImageUrl}');`
                 : ``;
                 
             // 더보기 입체형 버튼 마크업
