@@ -456,11 +456,11 @@
             <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.65); color: #fff; font-size: 0.6rem; text-align: center; padding: 5px; font-weight: 800; letter-spacing: 0.5px;">Pollinations AI 화가의 즉석 맞춤 삽화</div>
           </div>
           
-          <div style="font-size: 0.65rem; color: #825e0c; font-weight: 900; margin-bottom: 4px;">비법 제목</div>
-          <div id="ai-preview-title" style="font-size: 0.85rem; font-weight: 900; color: #2c1a04; margin-bottom: 12px; background: #fffdf9; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(170,124,17,0.2); box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);"></div>
+          <div style="font-size: 0.65rem; color: #825e0c; font-weight: 900; margin-bottom: 4px;">비법 제목 (AI 초안 - 직접 수정 가능 ✍️)</div>
+          <input type="text" id="ai-preview-title" class="scroll-text-input" style="font-size: 0.85rem; font-weight: 900; color: #2c1a04; margin-bottom: 12px; background: #ffffff; border: 1.5px solid rgba(170,124,17,0.35); box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; border-radius: 10px; padding: 10px;">
           
-          <div style="font-size: 0.65rem; color: #825e0c; font-weight: 900; margin-bottom: 4px;">비법 내용</div>
-          <div id="ai-preview-content" style="font-size: 0.78rem; font-weight: 700; color: #2c1a04; max-height: 160px; overflow-y: auto; background: #fffdf9; padding: 12px; border-radius: 10px; border: 1px solid rgba(170,124,17,0.2); white-space: pre-wrap; margin-bottom: 15px; line-height: 1.45; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);"></div>
+          <div style="font-size: 0.65rem; color: #825e0c; font-weight: 900; margin-bottom: 4px;">비법 내용 (AI 초안 - 직접 수정 가능 ✍️)</div>
+          <textarea id="ai-preview-content" class="scroll-textarea" style="font-size: 0.78rem; font-weight: 700; color: #2c1a04; height: 180px; background: #ffffff; border: 1.5px solid rgba(170,124,17,0.35); box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; border-radius: 12px; padding: 12px; resize: none; margin-bottom: 15px; line-height: 1.45;"></textarea>
           
           <button class="scroll-submit-btn" id="ai-approve-btn" onclick="approveAndPublishAiDraft()" style="background: linear-gradient(135deg, #aa7c11 0%, #2c1a04 100%); color: #f7e7c4; box-shadow: 0 5px 15px rgba(170, 124, 17, 0.2);">🏺 이대로 소장 선포</button>
         </div>
@@ -956,9 +956,9 @@
         const jsonText = data.candidates[0].content.parts[0].text;
         const result = JSON.parse(jsonText);
         
-        // 결과 표시
-        document.getElementById('ai-preview-title').innerText = result.title;
-        document.getElementById('ai-preview-content').innerText = result.content;
+        // 결과 표시 (수정 가능한 인풋/텍스트에리어 밸류로 매핑)
+        document.getElementById('ai-preview-title').value = result.title;
+        document.getElementById('ai-preview-content').value = result.content;
         
         // 이미지 설정
         const previewImageBox = document.getElementById('ai-preview-image-box');
@@ -986,13 +986,14 @@
     }
 
     function approveAndPublishAiDraft() {
-      const title = document.getElementById('ai-preview-title').innerText.trim();
-      const content = document.getElementById('ai-preview-content').innerText.trim();
+      // ✍️ 원장님이 수정한 최종 제목과 본문 값(value)을 읽어옵니다!
+      const title = document.getElementById('ai-preview-title').value.trim();
+      const content = document.getElementById('ai-preview-content').value.trim();
       const category = document.getElementById('scroll-category-select').value;
       const image = window.lastAiGeneratedImageUrl || "";
 
       if (!title || !content) {
-        alert("AI가 작성한 제목과 본문을 찾을 수 없습니다. 다시 소환해 주십시오.");
+        alert("제목과 본문을 작성 또는 소환해 주십시오.");
         return;
       }
 
@@ -1001,7 +1002,7 @@
       google.script.run.withSuccessHandler(res => {
         hideLoading();
         if (res.success) {
-          alert("🔮 지니 AI가 작명하고 그려낸 명품 비법서가 지혜의 보물고에 영구히 소장되었습니다! 📜✨");
+          alert("🔮 지니 AI가 작명하고 원장님이 최종 감수한 명품 비법서가 지혜의 보물고에 영구히 소장되었습니다! 📜✨");
           closeEditor();
         } else {
           alert("보존 실패: " + res.error);
@@ -1017,6 +1018,11 @@
     function closeEditor() {
       document.getElementById('scroll-editor-modal').style.display = 'none';
       document.getElementById('scroll-ai-keywords-input').value = '';
+      
+      // AI 편집 입력창 값 비우기 및 초기화
+      document.getElementById('ai-preview-title').value = '';
+      document.getElementById('ai-preview-content').value = '';
+      
       document.getElementById('ai-preview-area').style.display = 'none';
       document.getElementById('ai-preview-image-box').style.display = 'none';
       document.getElementById('ai-preview-img').src = '';
