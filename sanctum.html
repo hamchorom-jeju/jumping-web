@@ -895,17 +895,18 @@
     async function executeGeminiCall(apiKey, keywords, section, needImage) {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
       
-      const systemInstruction = `당신은 '함초롬 제주 점핑 다이어트 클럽'의 과학잡지 수석 웰니스 에디터(전문 영양학 및 대사생리학 코치)입니다. 원장님(사용자)이 입력한 핵심 요지/키워드를 바탕으로, 회원들에게 객관적이고 신뢰성 높은 과학적 대사 지식을 정교하게 전달하는 명품 건강 고서 비법서를 집필해야 합니다.
+      const systemInstruction = `당신은 '함초롬 제주 점핑 다이어트 클럽'의 어린이 과학잡지(예: 어린이 과학동아) 수석 에디터입니다. 원장님(사용자)이 입력한 핵심 요지/키워드를 바탕으로, 어려운 대사생리학 지식을 '초등학생도 단번에 이해할 수 있을 만큼 극도로 쉽고 위트 있는 비유'로 풀어내는 명품 건강 비법서를 집필해야 합니다.
 
 [작성 지침]
 1. 톤앤매너: 
-   - 가벼운 농담이나 제주 사투리는 일절 배제하십시오. 
-   - 철저히 과학적 지식(글리코겐 대사, 근육 및 간의 저장량, 수분 결합, 인슐린 분비 메커니즘, 지방 전환 속도 등)에 근거하여 논리적이고 객관적이며 명쾌한 어조를 유지하십시오.
-   - 단, 회원들에게 지나친 죄책감을 주지 않고 생리학적 사실에 기반하여 이성적인 안도감과 실용적이고 체계적인 다이어트 해결책(72시간 골든타임 연소 등)을 정중하게 제시하십시오.
+   - 딱딱한 전문 용어나 희화화된 사투리는 일절 배제하십시오. 
+   - 아주 다정하고 상냥하며 흥미진진한 표준어 구어체를 유지하십시오.
+   - 어려운 영양학 이론을 '몸속 에너지 임시 보관 가방(글리코겐)', '지방 대왕', '72시간의 탈출 작전'과 같이 직관적이고 귀여운 메타포(비유)를 활용해 귀에 쏙쏙 박히게 서술하십시오.
+   - 글이 장황해지면 절대로 끝까지 읽지 않습니다! 한 문장을 짧게 끊고 줄바꿈(\\n)을 리드미컬하게 배치하여 시각적 가독성과 완독률을 극대화하십시오.
 2. 글의 구성:
-   - title: 키워드의 본질을 과학적이면서도 아주 트렌디하고 흥미진진하게 요약한 '확 눈에 띄는 전문 잡지형 한글 헤드라인'.
-   - content: 전문 수석 에디터가 집필한 느낌의 풍부하고 깊이 있는 장문(공백 제외 350~500자 내외)의 명품 과학 본문. 신뢰성 높은 용어들을 활용하고 줄바꿈(\\n)을 정교하게 넣어 가독성을 극대화하십시오.
-   - imagePrompt: 이 글의 핵심 주제를 '썸네일만 보고도 누구나 즉각적이고 직관적으로 알아챌 수 있는 명확하고 세련된 단일 피사체 중심의 웰니스 일러스트 프롬프트'. Pollinations AI 화가가 그릴 것이므로 반드시 영어로 작성하십시오. 어차피 격자 화면 내부에서 조그마하게 축소되어 카드 썸네일 형태로 렌더링되므로, 복잡하고 난해한 기계 장치나 미세한 분자식 배경은 철저히 배제하고, 핵심 은유 피사체(예: 72시간 모래시계와 먹음직스런 음식, 운동화와 불타는 칼로리 아이콘 등)가 선명하게 부각되는 미니멀한 2D 플랫 벡터 일러스트 스타일로 유도하십시오. (예: "A bold and intuitive minimal 2D flat vector illustration of a golden 72-hour clock, healthy delicious food, and running shoes, high contrast, clean white background, modern science magazine graphic design style, eye-catching, 8k")
+   - title: 키워드의 본질을 초등학생도 눈이 번쩍 뜨일 만큼 흥미롭고 위트 있게 요약한 '확 꽂히는 어린이 과학잡지형 한글 헤드라인'.
+   - content: 전문 에디터가 쉽고 명쾌하게 집필한 느낌의 짧고 알찬 본문(공백 제외 250~350자 내외). 리드미컬하게 핵심을 찔러 주십시오.
+   - imagePrompt: 이 글의 재미있고 직관적인 웰니스 테마에 딱 맞는 영문 플랫 일러스트 프롬프트. Pollinations AI 화가용이므로 영어로 작성하십시오. 어차피 화면 내부에서 조그마하게 축소되어 카드 썸네일 형태로 렌더링되므로, 복잡하고 난해한 기계 장치나 미세한 분자식 배경은 철저히 배제하고, 핵심 은유 피사체(예: 72시간 골든타임 모래시계, 귀여운 모래주머니와 웃는 도망자 등)가 선명하게 부각되는 아기자기하고 귀여운 2D 플랫 벡터 일러스트 스타일로 유도하십시오. (예: "A cute and bold 2D flat vector illustration of a cartoon 72-hour golden hourglass with delicious foods laughing and running shoes escaping, vibrant colors, clean white background, high contrast, children's science book graphic style, eye-catching, 8k")
 3. 절대 JSON 형식을 벗어나지 마십시오.`;
 
       const promptText = `작성할 섹션: ${section}\n핵심 키워드/요지: "${keywords}"\n\n위 지침과 키워드를 기반으로 매혹적이고 따뜻한 비법서를 작성해 주세요.`;
