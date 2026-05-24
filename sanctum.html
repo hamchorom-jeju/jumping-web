@@ -249,7 +249,7 @@
     
     <!-- 🔮 수정구 (실시간 마을 정세) -->
     <div class="crystal-ball" id="section-status">
-      <div class="village-stats">
+      <div class="village-stats" style="grid-template-columns: repeat(2, 1fr);">
         <div class="stat-box">
           <span class="stat-val" id="v-active">0</span>
           <span class="stat-label">오늘의 모험가</span>
@@ -258,7 +258,7 @@
           <span class="stat-val" id="v-exp">0</span>
           <span class="stat-label">하사한 경험치</span>
         </div>
-        <div class="stat-box">
+        <div class="stat-box" style="display: none;">
           <span class="stat-val" id="v-bless">0</span>
           <span class="stat-label">대기 중인 축복</span>
         </div>
@@ -373,7 +373,7 @@
     </div>
 
     <!-- ✨ 이장의 축복 (MIRACLE인증) -->
-    <div class="manager-card" id="section-blessings">
+    <div class="manager-card" id="section-blessings" style="display: none;">
       <div class="section-title"><i class="fa-solid fa-circle-check"></i> 이장의 축복 (MIRACLE인증 승인)</div>
       <p style="font-size: 0.72rem; color: var(--text-sub); margin-bottom: 15px; font-weight: 700;">기본 점수는 이미 지급되었습니다. 특별히 훌륭하게 수행한 사진 피드에 이장의 축복 보너스를 주세요!</p>
       <div class="blessing-list" id="blessing-list">
@@ -393,7 +393,7 @@
       <span class="tab-icon">📅</span>
       <span>퀘스트</span>
     </div>
-    <div class="tab-item" onclick="scrollToSec('section-blessings')">
+    <div class="tab-item" onclick="scrollToSec('section-blessings')" style="display: none;">
       <span class="tab-icon">✨</span>
       <span>인증축복</span>
     </div>
@@ -478,7 +478,7 @@
 
     window.onload = function() {
       loadSanctumData();
-      loadRecentCerts();
+      // loadRecentCerts(); // [임시 비활성화] 이장의 축복(인증 승인) 기능 잠정 중단에 따른 호출 정지
       loadScheduledQuests();
       loadEnvironmentSettings();
     };
