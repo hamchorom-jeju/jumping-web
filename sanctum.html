@@ -191,6 +191,38 @@
     .tab-item { color: var(--text-sub); text-decoration: none; font-size: 0.65rem; font-weight: 800; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
     .tab-item.active { color: var(--sanctum-gold-light); }
     .tab-icon { font-size: 1.3rem; }
+
+    /* 🔮 골든 스크롤 탭 디자인 */
+    .scroll-tab-container {
+      display: flex;
+      background: rgba(170, 124, 17, 0.08);
+      border: 1.5px solid rgba(170, 124, 17, 0.25);
+      border-radius: 14px;
+      margin-bottom: 15px;
+      overflow: hidden;
+    }
+    .scroll-tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px 5px;
+      font-size: 0.78rem;
+      font-weight: 900;
+      cursor: pointer;
+      color: #aa7c11;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .scroll-tab.active {
+      background: linear-gradient(135deg, #aa7c11 0%, #785303 100%);
+      color: #fdfaf2;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .scroll-tab:not(.active):hover {
+      background: rgba(170, 124, 17, 0.15);
+    }
   </style>
 </head>
 <body>
@@ -372,7 +404,7 @@
         <i class="fa-solid fa-scroll"></i> 황금 두루마리 집필실
       </div>
       
-      <!-- Category select for Tip -->
+      <!-- Category select for Tip (공통) -->
       <select id="scroll-category-select" class="scroll-text-input">
         <option value="섹션 1">섹션 1: 메인 헤드라인 커버 📰</option>
         <option value="섹션 2">섹션 2: 서브 칼럼 A 🍱</option>
@@ -380,12 +412,59 @@
         <option value="섹션 4">섹션 4: 건강 단신 A (텍스트) 🧘</option>
         <option value="섹션 5">섹션 5: 건강 단신 B (텍스트) 🛡️</option>
       </select>
+
+      <!-- 🔮 탭 스위치 컨테이너 -->
+      <div class="scroll-tab-container" id="scroll-editor-tabs">
+        <div class="scroll-tab active" onclick="setEditorTab('direct')">
+          <i class="fa-solid fa-pen-nib"></i> 직접 타이핑
+        </div>
+        <div class="scroll-tab" id="ai-tab-btn" onclick="setEditorTab('ai')">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> 지니 AI 마법 집필
+        </div>
+      </div>
       
-      <input type="text" id="scroll-title-input" class="scroll-text-input" placeholder="비법서 제목을 쓰세요...">
-      <input type="text" id="scroll-image-input" class="scroll-text-input" placeholder="사진 이미지 URL (선택사항, 생략 가능)...">
-      <textarea id="scroll-content-input" class="scroll-textarea" placeholder="비법 내용을 고서 양식에 맞추어 자세하게 기록해 주십시오..."></textarea>
-      
-      <button class="scroll-submit-btn" id="scroll-submit-btn" onclick="submitScroll()">보물고에 소장하기 🏺</button>
+      <!-- ✍️ 직접 타이핑 작성 영역 -->
+      <div id="direct-write-container">
+        <input type="text" id="scroll-title-input" class="scroll-text-input" placeholder="비법서 제목을 쓰세요...">
+        <input type="text" id="scroll-image-input" class="scroll-text-input" placeholder="사진 이미지 URL (선택사항, 생략 가능)...">
+        <textarea id="scroll-content-input" class="scroll-textarea" placeholder="비법 내용을 고서 양식에 맞추어 자세하게 기록해 주십시오..."></textarea>
+        <button class="scroll-submit-btn" id="scroll-submit-btn" onclick="submitScroll()">보물고에 소장하기 🏺</button>
+      </div>
+
+      <!-- 🔮 지니 AI 마법 집필 영역 -->
+      <div id="ai-write-container" style="display: none;">
+        <textarea id="scroll-ai-keywords-input" class="scroll-textarea" style="height: 100px; margin-bottom: 12px;" placeholder="작성하고 싶은 내용의 핵심 요지나 키워드를 자유롭게 적어주세요... (예: 폭식을 해도 걱정하지 말아라)"></textarea>
+        
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; padding: 0 5px;">
+          <input type="checkbox" id="scroll-ai-image-check" checked style="width: 18px; height: 18px; accent-color: #aa7c11; cursor: pointer;">
+          <label for="scroll-ai-image-check" style="font-size: 0.78rem; font-weight: 800; color: #4a2c00; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+            📸 지니 AI 삽화 화가 소환 (실시간 AI 이미지 자동 생성)
+          </label>
+        </div>
+        
+        <button class="scroll-submit-btn" id="ai-summon-btn" onclick="summonAiDraft()" style="background: linear-gradient(135deg, #7c2ae8 0%, #5c1b9b 100%); color: white; margin-bottom: 15px; box-shadow: 0 5px 15px rgba(124, 42, 232, 0.25);">비법서 소환 🔮</button>
+        
+        <!-- AI 생성 미리보기 영역 -->
+        <div id="ai-preview-area" style="display: none; background: rgba(170,124,17,0.04); border: 2px dashed rgba(170,124,17,0.35); border-radius: 16px; padding: 15px; margin-top: 10px;">
+          <div style="font-size: 0.72rem; font-weight: 900; color: #aa7c11; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1.5px solid rgba(170,124,17,0.15); padding-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> 지니 AI 비법서 초안 미리보기
+          </div>
+          
+          <!-- 이미지 미리보기 박스 -->
+          <div id="ai-preview-image-box" style="display: none; margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1.5px solid rgba(170,124,17,0.25); background: #000; aspect-ratio: 16/9; position: relative;">
+            <img id="ai-preview-img" src="" alt="AI generated illustration" style="width: 100%; height: 100%; object-fit: cover;">
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.65); color: #fff; font-size: 0.6rem; text-align: center; padding: 5px; font-weight: 800; letter-spacing: 0.5px;">Pollinations AI 화가의 즉석 맞춤 삽화</div>
+          </div>
+          
+          <div style="font-size: 0.65rem; color: #825e0c; font-weight: 900; margin-bottom: 4px;">비법 제목</div>
+          <div id="ai-preview-title" style="font-size: 0.85rem; font-weight: 900; color: #2c1a04; margin-bottom: 12px; background: #fffdf9; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(170,124,17,0.2); box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);"></div>
+          
+          <div style="font-size: 0.65rem; color: #825e0c; font-weight: 900; margin-bottom: 4px;">비법 내용</div>
+          <div id="ai-preview-content" style="font-size: 0.78rem; font-weight: 700; color: #2c1a04; max-height: 160px; overflow-y: auto; background: #fffdf9; padding: 12px; border-radius: 10px; border: 1px solid rgba(170,124,17,0.2); white-space: pre-wrap; margin-bottom: 15px; line-height: 1.45; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);"></div>
+          
+          <button class="scroll-submit-btn" id="ai-approve-btn" onclick="approveAndPublishAiDraft()" style="background: linear-gradient(135deg, #aa7c11 0%, #2c1a04 100%); color: #f7e7c4; box-shadow: 0 5px 15px rgba(170, 124, 17, 0.2);">🏺 이대로 소장 선포</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -705,10 +784,18 @@
       const titleInput = document.getElementById('scroll-title-input');
       const contentInput = document.getElementById('scroll-content-input');
       const imageInput = document.getElementById('scroll-image-input');
+      const tabContainer = document.getElementById('scroll-editor-tabs');
 
       titleInput.value = '';
       contentInput.value = '';
       if (imageInput) imageInput.value = '';
+      
+      // AI 관련 필드 초기화
+      document.getElementById('scroll-ai-keywords-input').value = '';
+      document.getElementById('ai-preview-area').style.display = 'none';
+      document.getElementById('ai-preview-image-box').style.display = 'none';
+      document.getElementById('ai-preview-img').src = '';
+      window.lastAiGeneratedImageUrl = "";
 
       if (type === 'tip') {
         titleEl.innerHTML = `<i class="fa-solid fa-scroll"></i> 황금 두루마리 집필실`;
@@ -724,6 +811,10 @@
         titleInput.placeholder = "비법서 제목을 입력하십시오...";
         contentInput.placeholder = "비법의 상세한 내용을 아낌없이 집필해주십시오...";
         submitBtn.innerText = '보물고에 소장하기 🏺';
+        
+        // 🔮 AI 탭 노출 및 직접작성 기본 셋
+        tabContainer.style.display = 'flex';
+        setEditorTab('direct');
       } else {
         titleEl.innerHTML = `<i class="fa-solid fa-bullhorn"></i> 마을 중대사 선포`;
         categorySelect.innerHTML = `
@@ -736,13 +827,196 @@
         titleInput.placeholder = "전령의 기둥(배너)에 띄울 요약 제목을 입력하십시오...";
         contentInput.placeholder = "상세한 공지 내용을 집필해주십시오. (제목과 상세 내용은 자동으로 구분되어 공지 기록장에 저장됩니다!)";
         submitBtn.innerText = '전령의 기둥에 새기기 📢';
+        
+        // 📢 공지 선포 시 AI 탭 비활성화/숨김 및 직접 타이핑 고정
+        tabContainer.style.display = 'none';
+        setEditorTab('direct');
       }
 
       modal.style.display = 'flex';
     }
 
+    function setEditorTab(mode) {
+      const directTab = document.querySelector('.scroll-tab[onclick="setEditorTab(\'direct\')"]');
+      const aiTab = document.getElementById('ai-tab-btn');
+      
+      const directContainer = document.getElementById('direct-write-container');
+      const aiContainer = document.getElementById('ai-write-container');
+      
+      if (mode === 'direct') {
+        directTab.classList.add('active');
+        if (aiTab) aiTab.classList.remove('active');
+        directContainer.style.display = 'block';
+        aiContainer.style.display = 'none';
+      } else {
+        if (aiTab) aiTab.classList.add('active');
+        directTab.classList.remove('active');
+        directContainer.style.display = 'none';
+        aiContainer.style.display = 'block';
+      }
+    }
+
+    function summonAiDraft() {
+      const keywords = document.getElementById('scroll-ai-keywords-input').value.trim();
+      const section = document.getElementById('scroll-category-select').value;
+      const needImage = document.getElementById('scroll-ai-image-check').checked;
+
+      if (!keywords) {
+        alert("🔮 마법을 부릴 핵심 키워드나 요지를 적어 주십시오!");
+        return;
+      }
+
+      showLoading("지니 AI가 우주의 기운을 모아 비법서를 작성 중...");
+
+      if (typeof google === 'undefined') {
+        hideLoading();
+        alert("⚠️ 구글 Apps Script 로컬 실행 환경에서는 소환 마법을 사용할 수 없습니다.");
+        return;
+      }
+
+      // 구글 백엔드 안전 금고에서 Gemini API Key 꺼내오기
+      google.script.run
+        .withSuccessHandler(res => {
+          if (!res.success || !res.key) {
+            hideLoading();
+            alert("⚠️ 구글 시트 또는 스크립트 속성에 GEMINI_API_KEY가 설정되어 있지 않습니다. 설정 완료 후 다시 강림시켜 주십시오.");
+            return;
+          }
+          const apiKey = res.key;
+          executeGeminiCall(apiKey, keywords, section, needImage);
+        })
+        .withFailureHandler(err => {
+          hideLoading();
+          alert("구글 금고 통신 실패: " + err.toString());
+        })
+        .getGeminiApiKey();
+    }
+
+    async function executeGeminiCall(apiKey, keywords, section, needImage) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+      
+      const systemInstruction = `당신은 '함초롬 제주 점핑 다이어트 클럽'의 마을 이장(친근하고 격려가 넘치며 죄책감을 해소해 주는 웰니스 영양사 코치)입니다. 원장님(사용자)이 입력한 핵심 요지/키워드를 바탕으로, 회원들의 건강과 마음을 보듬는 명품 매거진 칼럼 비법서를 집필해야 합니다.
+[작성 지침]
+1. 톤앤매너: 3인칭의 따뜻하고 위트 있는 이장 어조로, 친근하고 격려가 넘치며, 특히 회원들이 건강에 가질 수 있는 죄책감을 완벽히 해소해 주는 웰니스 영양사 코치의 톤으로 작성하십시오. (예: "우리 사랑스러운 모험가 여러분, 폭식했다고 자책하지 말아요! 이장이 있잖아요~")
+2. 글의 구성:
+   - title: 키워드에 딱 맞으면서도 마음을 확 사로잡는 장엄하고 매력적인 한글 제목.
+   - content: 웰니스 지식과 이장으로서의 사랑이 듬뿍 담긴 풍부하고 장문(공백 제외 300~500자 내외)의 따뜻한 명품 본문. 줄바꿈(\\n)을 활용해 가독성 있게 작성하십시오.
+   - imagePrompt: 이 글의 분위기에 딱 맞고 독창적인 영문 일러스트 프롬프트. Pollinations AI용으로 쓸 것이므로, 구체적이고 화사하며 따뜻한 일러스트 느낌의 영어 단어/구절들로 작성하십시오. (예: "A warm watercolor illustration of a happy person enjoying a healthy meal with a glowing mystical light, cozy atmosphere, pastel colors, 4k")
+3. 절대 JSON 형식을 벗어나지 마십시오.`;
+
+      const promptText = `작성할 섹션: ${section}\n핵심 키워드/요지: "${keywords}"\n\n위 지침과 키워드를 기반으로 매혹적이고 따뜻한 비법서를 작성해 주세요.`;
+
+      const payload = {
+        contents: [{
+          parts: [{
+            text: promptText
+          }]
+        }],
+        systemInstruction: {
+          parts: [{
+            text: systemInstruction
+          }]
+        },
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              title: { type: "STRING" },
+              content: { type: "STRING" },
+              imagePrompt: { type: "STRING" }
+            },
+            required: ["title", "content", "imagePrompt"]
+          }
+        }
+      };
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error(`Gemini API 호출 실패 (상태 코드: ${response.status})`);
+        }
+
+        const data = await response.json();
+        if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content || !data.candidates[0].content.parts || data.candidates[0].content.parts.length === 0) {
+          throw new Error("Gemini API가 빈 응답을 반환했습니다.");
+        }
+        
+        const jsonText = data.candidates[0].content.parts[0].text;
+        const result = JSON.parse(jsonText);
+        
+        // 결과 표시
+        document.getElementById('ai-preview-title').innerText = result.title;
+        document.getElementById('ai-preview-content').innerText = result.content;
+        
+        // 이미지 설정
+        const previewImageBox = document.getElementById('ai-preview-image-box');
+        const previewImg = document.getElementById('ai-preview-img');
+        
+        if (needImage && result.imagePrompt) {
+          const randomSeed = Math.floor(Math.random() * 1000000);
+          const encodedPrompt = encodeURIComponent(result.imagePrompt);
+          const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=500&nologo=true&private=true&feed=false&seed=${randomSeed}`;
+          
+          previewImg.src = imageUrl;
+          previewImageBox.style.display = 'block';
+          window.lastAiGeneratedImageUrl = imageUrl;
+        } else {
+          previewImageBox.style.display = 'none';
+          window.lastAiGeneratedImageUrl = "";
+        }
+        
+        document.getElementById('ai-preview-area').style.display = 'block';
+        hideLoading();
+      } catch (err) {
+        hideLoading();
+        alert("🔮 비법서 소환 중 마법 장벽에 부딪혔습니다 (에러): " + err.toString());
+      }
+    }
+
+    function approveAndPublishAiDraft() {
+      const title = document.getElementById('ai-preview-title').innerText.trim();
+      const content = document.getElementById('ai-preview-content').innerText.trim();
+      const category = document.getElementById('scroll-category-select').value;
+      const image = window.lastAiGeneratedImageUrl || "";
+
+      if (!title || !content) {
+        alert("AI가 작성한 제목과 본문을 찾을 수 없습니다. 다시 소환해 주십시오.");
+        return;
+      }
+
+      showLoading("이장의 계시를 안전하게 봉인하여 보물고에 박제하는 중...");
+
+      google.script.run.withSuccessHandler(res => {
+        hideLoading();
+        if (res.success) {
+          alert("🔮 지니 AI가 작명하고 그려낸 명품 비법서가 지혜의 보물고에 영구히 소장되었습니다! 📜✨");
+          closeEditor();
+        } else {
+          alert("보존 실패: " + res.error);
+        }
+      }).saveWisdomTip({
+        title: title,
+        content: content,
+        category: category,
+        image: image
+      });
+    }
+
     function closeEditor() {
       document.getElementById('scroll-editor-modal').style.display = 'none';
+      document.getElementById('scroll-ai-keywords-input').value = '';
+      document.getElementById('ai-preview-area').style.display = 'none';
+      document.getElementById('ai-preview-image-box').style.display = 'none';
+      document.getElementById('ai-preview-img').src = '';
+      window.lastAiGeneratedImageUrl = "";
     }
 
     function submitScroll() {

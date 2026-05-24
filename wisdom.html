@@ -50,7 +50,7 @@
         .wisdom-container {
             max-width: 500px;
             margin: 0 auto;
-            padding: 0 15px 120px 15px;
+            padding: 20px 15px 120px 15px;
         }
 
         /* 📰 신문/잡지 격자 레이아웃 */
@@ -130,6 +130,64 @@
             position: absolute;
             top: 0; left: 0; width: 6px; height: 100%;
             background: linear-gradient(to bottom, var(--wisdom-gold) 0%, var(--wisdom-gold-dark) 100%);
+        }
+
+        /* 🎨 각 섹션별 은은하고 차별화된 파스텔 한지 바탕색 */
+        .magazine-item.sec-1.no-img { 
+            background: #fdfaf2; 
+            border-color: rgba(212, 175, 55, 0.4); 
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.08);
+        }
+        .magazine-item.sec-2.no-img { 
+            background: #f4fcf6; 
+            border-color: rgba(76, 175, 80, 0.25); 
+        }
+        .magazine-item.sec-3.no-img { 
+            background: #f5f9fe; 
+            border-color: rgba(33, 150, 243, 0.25); 
+        }
+        .magazine-item.sec-4.no-img { 
+            background: #fff8f8; 
+            border-color: rgba(244, 63, 94, 0.25); 
+        }
+        .magazine-item.sec-5.no-img { 
+            background: #fefdf6; 
+            border-color: rgba(234, 179, 8, 0.25); 
+        }
+
+        /* 📜 입체형 더보기(자세히 읽기) 버튼 스타일 */
+        .scroll-more-btn {
+            font-size: 0.65rem;
+            font-weight: 900;
+            padding: 5px 12px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+        .scroll-more-btn.no-img-btn {
+            background: rgba(44, 26, 4, 0.06);
+            color: var(--wisdom-wood);
+            border: 1px solid rgba(44, 26, 4, 0.1);
+        }
+        .scroll-more-btn.img-btn {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        .magazine-item:hover .scroll-more-btn.no-img-btn {
+            background: var(--wisdom-wood);
+            color: #f7e7c4;
+            transform: translateY(-1px);
+        }
+        .magazine-item:hover .scroll-more-btn.img-btn {
+            background: #fff;
+            color: var(--wisdom-wood);
+            text-shadow: none;
+            transform: translateY(-1px);
         }
 
         .scroll-category {
@@ -401,13 +459,6 @@
         </div>
     </div>
 
-    <div class="wisdom-header-banner">
-        <div style="font-size: 2.5rem; margin-bottom: 10px;">📜</div>
-        <h2 style="font-weight: 900; margin: 0 0 8px 0; font-size: 1.3rem; letter-spacing: -0.5px; color: var(--wisdom-gold);">이장님의 황금 건강 고서</h2>
-        <p style="font-weight: 800; font-size: 0.75rem; opacity: 0.85; margin: 0; word-break: keep-all; line-height: 1.4; color: #fdf4df;">
-            이장님이 집필한 건강 지식과 꿀팁을 정독하고, 공감과 깨달음을 나누며 칭찬 코멘트를 달아보세요!
-        </p>
-    </div>
 
     <div class="wisdom-container">
         
@@ -549,24 +600,35 @@
         function getCardHtml(sectionClass, t) {
             if (!t) return "";
             
-            // 본문 요약문 생성
+            // 본문 요약문 생성 및 섹션별 길이 차등화
             let excerpt = String(t.content || "");
-            if (excerpt.length > 52) excerpt = excerpt.substring(0, 52) + "...";
+            let limit = 45;
+            if (sectionClass === 'sec-1') {
+                limit = 80;
+            } else if (sectionClass === 'sec-4' || sectionClass === 'sec-5') {
+                limit = 28;
+            }
+            if (excerpt.length > limit) excerpt = excerpt.substring(0, limit) + "...";
             
             const hasImage = t.image && t.image.trim().length > 10;
             const cardStyle = hasImage 
                 ? `background-image: url('${t.image}');`
                 : ``;
                 
+            // 더보기 입체형 버튼 마크업
+            const moreBtnHtml = hasImage
+                ? `<span class="scroll-more-btn img-btn">자세히 읽기 <i class="fa-solid fa-arrow-right"></i></span>`
+                : `<span class="scroll-more-btn no-img-btn">자세히 읽기 <i class="fa-solid fa-arrow-right"></i></span>`;
+
             return `
                 <div class="magazine-item ${sectionClass} ${hasImage ? 'has-img' : 'no-img'}" style="${cardStyle}" onclick="openTipPopup(${t.id})">
-                    <div class="card-content-wrapper" style="${hasImage ? 'padding: 22px 18px 18px 18px;' : 'padding: 16px;'}">
-                        <span class="scroll-category" style="${hasImage ? 'background: rgba(212, 175, 55, 0.35); color: #fdfaf2;' : ''}">📖 ${t.category || '비법서'}</span>
-                        <h3 class="scroll-title" style="${hasImage ? 'color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,0.95);' : ''}">${t.title}</h3>
-                        <p class="scroll-excerpt" style="${hasImage ? 'color: #f7e7c4; text-shadow: 0 1px 3px rgba(0,0,0,0.9); opacity: 0.95;' : 'color: #4a3c2c;'}">${excerpt}</p>
-                        <div class="scroll-meta" style="${hasImage ? 'color: #fdfaf2; text-shadow: 0 1px 2px rgba(0,0,0,0.8);' : 'color: #7c6a56;'}">
-                            <span>✍️ ${t.author}</span>
-                            <span>📅 ${t.date ? t.date.split(" ")[0] : "오늘"}</span>
+                    <div class="card-content-wrapper" style="${hasImage ? 'padding: 22px 18px 18px 18px;' : 'padding: 18px;'}">
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <h3 class="scroll-title" style="${hasImage ? 'color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,0.95);' : ''}">${t.title}</h3>
+                            <p class="scroll-excerpt" style="${hasImage ? 'color: #f7e7c4; text-shadow: 0 1px 3px rgba(0,0,0,0.9); opacity: 0.95;' : 'color: #4a3c2c;'}">${excerpt}</p>
+                        </div>
+                        <div style="margin-top: auto; padding-top: 10px; display: flex; justify-content: flex-end;">
+                            ${moreBtnHtml}
                         </div>
                     </div>
                 </div>
@@ -585,6 +647,22 @@
             
             if (!t) return;
             
+            // 딱딱한 '섹션 X'를 고풍스럽고 격조 높은 감성 한글 라벨로 자동 치환
+            let friendlyCategory = String(t.category || "비법서");
+            if (friendlyCategory.indexOf("섹션 1") > -1) {
+                friendlyCategory = "이장의 메인 건강 비법 📰";
+            } else if (friendlyCategory.indexOf("섹션 2") > -1) {
+                friendlyCategory = "이장의 건강 식단 칼럼 🍱";
+            } else if (friendlyCategory.indexOf("섹션 3") > -1) {
+                friendlyCategory = "이장의 홈트 운동 가이드 🏃";
+            } else if (friendlyCategory.indexOf("섹션 4") > -1) {
+                friendlyCategory = "이장의 힐링 케어 단신 🧘";
+            } else if (friendlyCategory.indexOf("섹션 5") > -1) {
+                friendlyCategory = "이장의 건강 수호 방책 🛡️";
+            } else if (friendlyCategory.indexOf("섹션") > -1) {
+                friendlyCategory = "이장의 황금 건강 비법 📜";
+            }
+
             const modal = document.getElementById('tip-detail-modal');
             const container = document.getElementById('tip-detail-container');
             
@@ -598,7 +676,7 @@
             const hasImage = t.image && t.image.trim().length > 10;
             
             container.innerHTML = `
-                <span class="scroll-category">📖 ${t.category}</span>
+                <span class="scroll-category">📖 ${friendlyCategory}</span>
                 <h2 style="font-size: 1.2rem; font-weight: 900; color: var(--wisdom-wood); margin: 8px 0 10px 0; line-height: 1.4; word-break: keep-all;">${t.title}</h2>
                 <div class="scroll-meta" style="margin-bottom: 20px;">
                     <span>✍️ 작성자: ${t.author}</span>
