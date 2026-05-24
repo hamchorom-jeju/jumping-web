@@ -53,67 +53,132 @@
             padding: 0 15px 120px 15px;
         }
 
-        .scroll-card {
-            background: var(--wisdom-paper);
-            border-radius: 25px;
-            padding: 25px;
-            border: 2px solid var(--wisdom-border);
-            box-shadow: 0 10px 25px rgba(44, 26, 4, 0.05);
-            margin-bottom: 25px;
-            position: relative;
-            overflow: hidden;
+        /* 📰 신문/잡지 격자 레이아웃 */
+        .magazine-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
         }
 
-        .scroll-card::before {
+        .magazine-item {
+            background: var(--wisdom-paper);
+            border-radius: 24px;
+            border: 2px solid var(--wisdom-border);
+            box-shadow: 0 8px 20px rgba(44, 26, 4, 0.04);
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        .magazine-item:active {
+            transform: scale(0.97);
+            box-shadow: 0 4px 10px rgba(44, 26, 4, 0.02);
+        }
+
+        /* 각 섹션별 크기 정의 */
+        .magazine-item.sec-1 {
+            grid-column: span 2;
+            min-height: 220px;
+        }
+
+        .magazine-item.sec-2, 
+        .magazine-item.sec-3 {
+            grid-column: span 1;
+            min-height: 180px;
+        }
+
+        .magazine-item.sec-4, 
+        .magazine-item.sec-5 {
+            grid-column: span 2;
+            min-height: 110px;
+        }
+
+        /* 사진 카드 전용 스타일 */
+        .magazine-item.has-img {
+            justify-content: flex-end;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .magazine-item.has-img::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 8px;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to top, rgba(44, 26, 4, 0.92) 0%, rgba(44, 26, 4, 0.5) 50%, rgba(44, 26, 4, 0.25) 100%);
+            z-index: 1;
+        }
+
+        .card-content-wrapper {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
             height: 100%;
+            justify-content: space-between;
+        }
+
+        /* 텍스트 전용 카드에는 한지 느낌의 왼쪽 금빛 띠 */
+        .magazine-item.no-img::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 6px; height: 100%;
             background: linear-gradient(to bottom, var(--wisdom-gold) 0%, var(--wisdom-gold-dark) 100%);
         }
 
         .scroll-category {
-            font-size: 0.65rem;
+            font-size: 0.62rem;
             font-weight: 900;
             color: var(--wisdom-gold-dark);
             background: rgba(212, 175, 55, 0.15);
-            padding: 4px 10px;
+            padding: 3px 9px;
             border-radius: 20px;
             display: inline-block;
-            margin-bottom: 12px;
+            align-self: flex-start;
+            margin-bottom: 8px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .scroll-title {
-            font-size: 1.05rem;
+            font-size: 0.95rem;
             font-weight: 900;
             color: var(--wisdom-wood);
-            margin-bottom: 10px;
-            line-height: 1.4;
-        }
-
-        .scroll-meta {
-            font-size: 0.68rem;
-            color: #7c6a56;
-            font-weight: 800;
-            margin-bottom: 15px;
-            display: flex;
-            gap: 12px;
-        }
-
-        .scroll-content {
-            font-size: 0.82rem;
-            font-weight: 700;
-            color: #4a3c2c;
-            line-height: 1.7;
-            white-space: pre-wrap;
-            margin-bottom: 20px;
+            margin: 0 0 6px 0;
+            line-height: 1.35;
             word-break: keep-all;
         }
 
+        .scroll-excerpt {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #5c4a37;
+            margin: 0 0 10px 0;
+            line-height: 1.5;
+            word-break: keep-all;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .scroll-meta {
+            font-size: 0.62rem;
+            color: #7c6a56;
+            font-weight: 800;
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        /* 👍 리액션 및 모달 상세 영역 */
         .scroll-reactions {
             display: flex;
             gap: 10px;
@@ -127,8 +192,8 @@
             flex: 1;
             background: white;
             border: 1.5px solid var(--wisdom-border);
-            padding: 8px;
-            border-radius: 12px;
+            padding: 10px;
+            border-radius: 14px;
             font-size: 0.75rem;
             font-weight: 800;
             color: var(--wisdom-wood);
@@ -157,13 +222,13 @@
         }
 
         .comments-section {
-            background: rgba(44, 26, 4, 0.02);
-            border-radius: 15px;
+            background: rgba(44, 26, 4, 0.03);
+            border-radius: 18px;
             padding: 15px;
         }
 
         .comment-item {
-            border-bottom: 1px solid rgba(44, 26, 4, 0.05);
+            border-bottom: 1px solid rgba(44, 26, 4, 0.06);
             padding: 8px 0;
             font-size: 0.75rem;
             font-weight: 700;
@@ -212,6 +277,101 @@
             font-size: 0.75rem;
             cursor: pointer;
         }
+
+        /* 🚪 GOLDEN SCROLL DETAIL / ARCHIVE MODAL */
+        .scroll-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 26, 4, 0.6); backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 2000; padding: 15px; box-sizing: border-box;
+        }
+
+        .scroll-body {
+            background: #fdfaf2; border: 3px solid #aa7c11; border-radius: 30px;
+            width: 100%; max-width: 480px; padding: 25px; color: #2c1a04;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4); position: relative;
+            background-image: url('https://www.transparenttextures.com/patterns/lined-paper-2.png');
+            box-sizing: border-box;
+            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .scroll-body::before {
+            content: ''; position: absolute; left: 8px; top: 0; height: 100%; width: 5px;
+            background: linear-gradient(to bottom, #d4af37, #aa7c11);
+        }
+
+        .scroll-modal-title { font-size: 1.1rem; font-weight: 900; color: #4a2c00; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+
+        .scroll-close-btn {
+            position: absolute; top: 15px; right: 15px; width: 28px; height: 28px;
+            background: #ef4444; border-radius: 50%; color: white; font-weight: 900;
+            display: flex; align-items: center; justify-content: center; border: 2px solid white; cursor: pointer;
+            z-index: 100;
+            font-size: 0.8rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* 🏛️ 아카이브 드로어 전용 스타일 */
+        .archive-row-item {
+            background: white;
+            border: 1.5px solid var(--wisdom-border);
+            border-radius: 16px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 800;
+            box-shadow: 0 4px 10px rgba(44, 26, 4, 0.02);
+            box-sizing: border-box;
+        }
+
+        .archive-row-item:active {
+            transform: scale(0.98);
+        }
+
+        .archive-row-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--wisdom-gold-dark);
+            margin-bottom: 5px;
+            font-weight: 900;
+        }
+
+        .archive-row-title {
+            font-size: 0.85rem;
+            color: var(--wisdom-wood);
+            line-height: 1.35;
+            word-break: keep-all;
+        }
+
+        /* 🏷️ 명품 아카이브 선포 버튼 */
+        .btn-open-archive {
+            background: linear-gradient(135deg, var(--wisdom-wood) 0%, #170d02 100%);
+            border: 2px solid var(--wisdom-gold);
+            color: #f7e7c4;
+            width: 100%;
+            padding: 16px;
+            border-radius: 20px;
+            font-weight: 900;
+            font-size: 0.88rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 6px 20px rgba(44, 26, 4, 0.15);
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-open-archive:active {
+            transform: scale(0.98);
+        }
     </style>
 </head>
 <body style="margin:0; padding:0;">
@@ -251,11 +411,41 @@
 
     <div class="wisdom-container">
         
-        <!-- 📜 고서 목록 컨테이너 -->
-        <div id="wisdom-tips-list">
-            <!-- Dynamic Tip Cards will be injected here -->
+        <!-- 📰 황금 건강 매거진 그리드 리스트 -->
+        <div class="magazine-grid" id="wisdom-magazine-grid">
+            <!-- Dynamic Grid Items will be injected here -->
         </div>
 
+        <!-- 🏛️ 지난 황금 고서첩 펼치기 버튼 -->
+        <button class="btn-open-archive" onclick="openArchiveList()">
+            🏛️ 지난 황금 고서첩 펼치기 <i class="fa-solid fa-chevron-right" style="font-size:0.75rem;"></i>
+        </button>
+
+    </div>
+
+    <!-- 📜 고서 상세 정독 모달 팝업 -->
+    <div id="tip-detail-modal" class="scroll-modal" style="display: none;">
+        <div class="scroll-body" style="max-height: 88vh; overflow-y: auto;">
+            <div class="scroll-close-btn" onclick="closeTipPopup()">X</div>
+            <div id="tip-detail-container">
+                <!-- Detailed content will be injected dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 🏛️ 지난 황금 고서첩 (과거 목록) 드로어 모달 -->
+    <div id="archive-list-modal" class="scroll-modal" style="display: none; align-items: flex-end; padding: 0;">
+        <div class="scroll-body" style="max-width: 500px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 30px; border-top-right-radius: 30px; border-bottom: none; max-height: 78vh; overflow-y: auto; margin-bottom: 0; padding-bottom: 60px; width: 100%;">
+            <div class="scroll-close-btn" onclick="closeArchiveList()" style="top: 18px; right: 18px;">X</div>
+            
+            <div class="scroll-modal-title" style="color: var(--wisdom-wood); font-weight: 900; margin-bottom: 20px;">
+                🏛️ 지난 황금 고서첩 목록
+            </div>
+            
+            <div id="archive-tips-list" style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Historical items row will be injected here -->
+            </div>
+        </div>
     </div>
 
     <!-- 📱 GLOBAL VILLAGE NAV -->
@@ -285,6 +475,13 @@
     <script src="bridge.js"></script>
     <script>
         let currentUser = { name: '', phone: '' };
+        
+        // 초기 기본 고정 섹션 (데이터가 한 건도 없을 때 디폴트 플레이스홀더)
+        const defaultTips = {
+            "섹션 1": { id: 0, title: "이장님의 계시를 기다리는 중 📜", content: "이장의 집에서 '섹션 1' 카테고리로 건강 고서를 집필하여 마을의 건강 지식을 밝혀주세요!", category: "섹션 1", author: "길드마스터", date: "2026-05-24", likes: 0, insights: 0, comments: [] },
+            "섹션 2": { id: 0, title: "건강 비법 준비 중 🍱", content: "이장의 집에서 '섹션 2' 카테고리로 새로운 식단 비법을 집필해 주세요!", category: "섹션 2", author: "길드마스터", date: "2026-05-24", likes: 0, insights: 0, comments: [] },
+            "섹션 3": { id: 0, title: "항상성 운동 준비 중 🏃", content: "이장의 집에서 '섹션 3' 카테고리로 새로운 홈트레이닝 꿀팁을 집필해 주세요!", category: "섹션 3", author: "길드마스터", date: "2026-05-24", likes: 0, insights: 0, comments: [] }
+        };
 
         function renderLoginStatus() {
             const uName = localStorage.getItem('v44_user_name');
@@ -309,76 +506,178 @@
             showLoading("지혜의 도서관에서 고서를 가져오는 중...");
             if (typeof google === 'undefined') {
                 hideLoading();
+                // 오프라인/개발 환경 테스트용 모킹 렌더링
+                renderMagazine([]);
                 return;
             }
             google.script.run
                 .withSuccessHandler(tips => {
                     hideLoading();
-                    renderTips(tips);
+                    window.allWisdomTips = tips || [];
+                    renderMagazine(tips || []);
                 })
                 .getWisdomTipsWithReactions();
         }
 
-        function renderTips(tips) {
-            const container = document.getElementById('wisdom-tips-list');
-            if (!tips || tips.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align:center; padding:40px; background:#fff; border-radius:20px; border:2px solid var(--wisdom-border); color:#7c6a56; font-weight:800; font-size:0.8rem;">
-                        📜 아직 이장님이 집필한 고서가 보물고에 없습니다.<br>첫 집필을 기다려 주세요!
+        function renderMagazine(tips) {
+            const gridContainer = document.getElementById('wisdom-magazine-grid');
+            
+            // 각 섹션별 최신 글 1개 매핑
+            // tips는 백엔드에서 이미 reverse() (최신순)되어 반환되므로 find가 항상 최신을 고릅니다.
+            const sec1Tip = tips.find(t => t.category === '섹션 1') || defaultTips["섹션 1"];
+            const sec2Tip = tips.find(t => t.category === '섹션 2') || defaultTips["섹션 2"];
+            const sec3Tip = tips.find(t => t.category === '섹션 3') || defaultTips["섹션 3"];
+            
+            // 섹션 4와 5는 유동적 (없으면 렌더링 배제)
+            const sec4Tip = tips.find(t => t.category === '섹션 4');
+            const sec5Tip = tips.find(t => t.category === '섹션 5');
+
+            let html = "";
+            
+            // 섹션 1, 2, 3은 상시 렌더링
+            html += getCardHtml("sec-1", sec1Tip);
+            html += getCardHtml("sec-2", sec2Tip);
+            html += getCardHtml("sec-3", sec3Tip);
+            
+            // 섹션 4와 5는 유동적 바인딩
+            if (sec4Tip) html += getCardHtml("sec-4", sec4Tip);
+            if (sec5Tip) html += getCardHtml("sec-5", sec5Tip);
+
+            gridContainer.innerHTML = html;
+        }
+
+        function getCardHtml(sectionClass, t) {
+            if (!t) return "";
+            
+            // 본문 요약문 생성
+            let excerpt = String(t.content || "");
+            if (excerpt.length > 52) excerpt = excerpt.substring(0, 52) + "...";
+            
+            const hasImage = t.image && t.image.trim().length > 10;
+            const cardStyle = hasImage 
+                ? `background-image: url('${t.image}');`
+                : ``;
+                
+            return `
+                <div class="magazine-item ${sectionClass} ${hasImage ? 'has-img' : 'no-img'}" style="${cardStyle}" onclick="openTipPopup(${t.id})">
+                    <div class="card-content-wrapper" style="${hasImage ? 'padding: 22px 18px 18px 18px;' : 'padding: 16px;'}">
+                        <span class="scroll-category" style="${hasImage ? 'background: rgba(212, 175, 55, 0.35); color: #fdfaf2;' : ''}">📖 ${t.category || '비법서'}</span>
+                        <h3 class="scroll-title" style="${hasImage ? 'color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,0.95);' : ''}">${t.title}</h3>
+                        <p class="scroll-excerpt" style="${hasImage ? 'color: #f7e7c4; text-shadow: 0 1px 3px rgba(0,0,0,0.9); opacity: 0.95;' : 'color: #4a3c2c;'}">${excerpt}</p>
+                        <div class="scroll-meta" style="${hasImage ? 'color: #fdfaf2; text-shadow: 0 1px 2px rgba(0,0,0,0.8);' : 'color: #7c6a56;'}">
+                            <span>✍️ ${t.author}</span>
+                            <span>📅 ${t.date ? t.date.split(" ")[0] : "오늘"}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 📜 고서 상세 모달 팝업 열기
+        function openTipPopup(id) {
+            let t = (window.allWisdomTips || []).find(item => item.id === id);
+            
+            // 만약 디폴트 플레이스홀더 카드 클릭 시 예외 처리
+            if (!t && id === 0) {
+                const allDefaults = Object.values(defaultTips);
+                t = allDefaults.find(item => item.title.indexOf("대기 중") > -1 || item.title.indexOf("준비 중") > -1);
+            }
+            
+            if (!t) return;
+            
+            const modal = document.getElementById('tip-detail-modal');
+            const container = document.getElementById('tip-detail-container');
+            
+            const commentMarkup = (t.comments || []).map(c => `
+                <div class="comment-item">
+                    <span class="comment-author">👤 ${c.author}:</span>
+                    <span>${c.content}</span>
+                </div>
+            `).join('');
+            
+            const hasImage = t.image && t.image.trim().length > 10;
+            
+            container.innerHTML = `
+                <span class="scroll-category">📖 ${t.category}</span>
+                <h2 style="font-size: 1.2rem; font-weight: 900; color: var(--wisdom-wood); margin: 8px 0 10px 0; line-height: 1.4; word-break: keep-all;">${t.title}</h2>
+                <div class="scroll-meta" style="margin-bottom: 20px;">
+                    <span>✍️ 작성자: ${t.author}</span>
+                    <span>📅 날짜: ${t.date}</span>
+                </div>
+                
+                ${hasImage ? `<img src="${t.image}" style="width: 100%; border-radius: 18px; margin-bottom: 20px; border: 1.5px solid var(--wisdom-border); box-shadow: 0 6px 15px rgba(0,0,0,0.06);" />` : ''}
+                
+                <div class="scroll-content" style="font-size: 0.85rem; line-height: 1.8; color: #2c1a04; white-space: pre-wrap; word-break: keep-all; margin-bottom: 25px; font-weight: 700;">${t.content}</div>
+                
+                <!-- 👍 리액션 패널 -->
+                <div class="scroll-reactions">
+                    <button class="reaction-btn" onclick="sendReaction(${t.id}, 'like', this)">
+                        ❤️ 공감하기 (<span class="like-cnt">${t.likes || 0}</span>)
+                    </button>
+                    <button class="reaction-btn" onclick="sendReaction(${t.id}, 'insight', this)">
+                        💡 깊은 깨달음 (<span class="insight-cnt">${t.insights || 0}</span>)
+                    </button>
+                </div>
+                
+                <!-- 💬 칭찬 코멘트 패널 -->
+                <div class="comments-section" style="margin-top: 20px;">
+                    <div style="font-weight:900; font-size:0.75rem; color:var(--wisdom-wood); margin-bottom:10px;">
+                        <i class="fa-regular fa-comment-dots"></i> 모험가들의 칭찬 코멘트 (${t.comments ? t.comments.length : 0})
+                    </div>
+                    <div class="comments-list" id="comments-list-${t.id}">
+                        ${commentMarkup || '<div style="font-size:0.7rem; color:#999; text-align:center; padding:15px 0;">첫 칭찬 코멘트를 남겨보세요!</div>'}
+                    </div>
+                    
+                    ${t.id > 0 ? `
+                    <div class="comment-input-container">
+                        <input type="text" id="comment-input-${t.id}" class="comment-input" placeholder="칭찬 한마디와 건강 다짐을 적으세요...">
+                        <button class="comment-submit-btn" onclick="submitComment(${t.id})">보내기</button>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+        }
+
+        function closeTipPopup() {
+            document.getElementById('tip-detail-modal').style.display = 'none';
+        }
+
+        // 🏛️ 지난 황금 고서첩 (과거 목록) 드로어 열기
+        function openArchiveList() {
+            const modal = document.getElementById('archive-list-modal');
+            const listContainer = document.getElementById('archive-tips-list');
+            
+            const tips = window.allWisdomTips || [];
+            
+            if (tips.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="text-align:center; padding:30px; font-size:0.75rem; color:#7c6a56; font-weight:800;">
+                        📜 아직 소장된 과거 비법서가 없습니다.
                     </div>
                 `;
-                return;
-            }
-
-            container.innerHTML = tips.map(t => {
-                const commentMarkup = t.comments.map(c => `
-                    <div class="comment-item">
-                        <span class="comment-author">👤 ${c.author}:</span>
-                        <span>${c.content}</span>
+            } else {
+                listContainer.innerHTML = tips.map(t => `
+                    <div class="archive-row-item" onclick="closeArchiveList(); openTipPopup(${t.id})">
+                        <div class="archive-row-meta">
+                            <span>📖 ${t.category}</span>
+                            <span>📅 ${t.date ? t.date.split(" ")[0] : ""}</span>
+                        </div>
+                        <div class="archive-row-title">${t.title}</div>
                     </div>
                 `).join('');
+            }
+            
+            modal.style.display = 'flex';
+        }
 
-                return `
-                    <div class="scroll-card" id="tip-card-${t.id}">
-                        <span class="scroll-category">📖 ${t.category || '건강꿀팁'}</span>
-                        <div class="scroll-title">${t.title}</div>
-                        <div class="scroll-meta">
-                            <span>✍️ 작성자: ${t.author}</span>
-                            <span>📅 ${t.date}</span>
-                        </div>
-                        <div class="scroll-content">${t.content}</div>
-                        
-                        <!-- 👍 리액션 패널 -->
-                        <div class="scroll-reactions">
-                            <button class="reaction-btn" onclick="sendReaction(${t.id}, 'like', this)">
-                                ❤️ 공감하기 (<span class="like-cnt">${t.likes || 0}</span>)
-                            </button>
-                            <button class="reaction-btn" onclick="sendReaction(${t.id}, 'insight', this)">
-                                💡 깊은 깨달음 (<span class="insight-cnt">${t.insights || 0}</span>)
-                            </button>
-                        </div>
-                        
-                        <!-- 💬 칭찬 코멘트 패널 -->
-                        <div class="comments-section">
-                            <div style="font-weight:900; font-size:0.75rem; color:var(--wisdom-wood); margin-bottom:8px;">
-                                <i class="fa-regular fa-comment-dots"></i> 모험가들의 칭찬 코멘트 (${t.comments.length})
-                            </div>
-                            <div class="comments-list" id="comments-list-${t.id}">
-                                ${commentMarkup || '<div style="font-size:0.7rem; color:#999; text-align:center; padding:10px 0;">첫 칭찬 코멘트를 남겨보세요!</div>'}
-                            </div>
-                            
-                            <!-- 댓글 입력 창 -->
-                            <div class="comment-input-container">
-                                <input type="text" id="comment-input-${t.id}" class="comment-input" placeholder="칭찬 한마디와 건강 다짐을 적으세요...">
-                                <button class="comment-submit-btn" onclick="submitComment(${t.id})">보내기</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+        function closeArchiveList() {
+            document.getElementById('archive-list-modal').style.display = 'none';
         }
 
         function sendReaction(tipId, type, btnEl) {
+            if (tipId === 0) return alert("플레이스홀더 고서에는 리액션을 남길 수 없습니다. 🏺");
             if (typeof google === 'undefined') return;
             
             // UI 낙관적 반영
@@ -399,6 +698,7 @@
         }
 
         function submitComment(tipId) {
+            if (tipId === 0) return alert("플레이스홀더 고서에는 코멘트를 남길 수 없습니다. 🏺");
             const input = document.getElementById(`comment-input-${tipId}`);
             const text = input.value.trim();
             if (!text) {
@@ -420,7 +720,13 @@
                         hideLoading();
                         if (res.success) {
                             input.value = '';
-                            loadWisdomTips(); // Reload complete list to get fresh comments
+                            
+                            // 실시간 상세 팝업 내부 댓글 즉시 갱신
+                            google.script.run.withSuccessHandler(newTips => {
+                                window.allWisdomTips = newTips;
+                                // 팝업 리렌더링
+                                openTipPopup(tipId);
+                            }).getWisdomTipsWithReactions();
                         } else {
                             alert("코멘트 기록 실패: " + res.error);
                         }

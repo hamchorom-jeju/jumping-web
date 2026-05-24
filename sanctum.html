@@ -374,13 +374,15 @@
       
       <!-- Category select for Tip -->
       <select id="scroll-category-select" class="scroll-text-input">
-        <option value="식단비법">식단비법 🍱</option>
-        <option value="홈트레이닝">홈트레이닝 🏃</option>
-        <option value="마음다스림">마음다스림 🧘</option>
-        <option value="요요방패">요요방패 🛡️</option>
+        <option value="섹션 1">섹션 1: 메인 헤드라인 커버 📰</option>
+        <option value="섹션 2">섹션 2: 서브 칼럼 A 🍱</option>
+        <option value="섹션 3">섹션 3: 서브 칼럼 B 🏃</option>
+        <option value="섹션 4">섹션 4: 건강 단신 A (텍스트) 🧘</option>
+        <option value="섹션 5">섹션 5: 건강 단신 B (텍스트) 🛡️</option>
       </select>
       
       <input type="text" id="scroll-title-input" class="scroll-text-input" placeholder="비법서 제목을 쓰세요...">
+      <input type="text" id="scroll-image-input" class="scroll-text-input" placeholder="사진 이미지 URL (선택사항, 생략 가능)...">
       <textarea id="scroll-content-input" class="scroll-textarea" placeholder="비법 내용을 고서 양식에 맞추어 자세하게 기록해 주십시오..."></textarea>
       
       <button class="scroll-submit-btn" id="scroll-submit-btn" onclick="submitScroll()">보물고에 소장하기 🏺</button>
@@ -702,19 +704,23 @@
       const submitBtn = document.getElementById('scroll-submit-btn');
       const titleInput = document.getElementById('scroll-title-input');
       const contentInput = document.getElementById('scroll-content-input');
+      const imageInput = document.getElementById('scroll-image-input');
 
       titleInput.value = '';
       contentInput.value = '';
+      if (imageInput) imageInput.value = '';
 
       if (type === 'tip') {
         titleEl.innerHTML = `<i class="fa-solid fa-scroll"></i> 황금 두루마리 집필실`;
         categorySelect.innerHTML = `
-          <option value="식단비법">식단비법 🍱</option>
-          <option value="홈트레이닝">홈트레이닝 🏃</option>
-          <option value="마음다스림">마음다스림 🧘</option>
-          <option value="요요방패">요요방패 🛡️</option>
+          <option value="섹션 1">섹션 1: 메인 헤드라인 커버 📰</option>
+          <option value="섹션 2">섹션 2: 서브 칼럼 A 🍱</option>
+          <option value="섹션 3">섹션 3: 서브 칼럼 B 🏃</option>
+          <option value="섹션 4">섹션 4: 건강 단신 A (텍스트) 🧘</option>
+          <option value="섹션 5">섹션 5: 건강 단신 B (텍스트) 🛡️</option>
         `;
         categorySelect.style.display = 'block';
+        if (imageInput) imageInput.style.display = 'block';
         titleInput.placeholder = "비법서 제목을 입력하십시오...";
         contentInput.placeholder = "비법의 상세한 내용을 아낌없이 집필해주십시오...";
         submitBtn.innerText = '보물고에 소장하기 🏺';
@@ -726,6 +732,7 @@
           <option value="이벤트">🎁 깜짝 마을 이벤트</option>
         `;
         categorySelect.style.display = 'block';
+        if (imageInput) imageInput.style.display = 'none';
         titleInput.placeholder = "전령의 기둥(배너)에 띄울 요약 제목을 입력하십시오...";
         contentInput.placeholder = "상세한 공지 내용을 집필해주십시오. (제목과 상세 내용은 자동으로 구분되어 공지 기록장에 저장됩니다!)";
         submitBtn.innerText = '전령의 기둥에 새기기 📢';
@@ -742,6 +749,7 @@
       const title = document.getElementById('scroll-title-input').value.trim();
       const content = document.getElementById('scroll-content-input').value.trim();
       const category = document.getElementById('scroll-category-select').value;
+      const image = document.getElementById('scroll-image-input') ? document.getElementById('scroll-image-input').value.trim() : "";
 
       if (!title || !content) {
         alert("제목과 내용을 채워 주십시오!");
@@ -762,7 +770,8 @@
         }).saveWisdomTip({
           title: title,
           content: content,
-          category: category
+          category: category,
+          image: image
         });
       } else {
         google.script.run.withSuccessHandler(res => {
