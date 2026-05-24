@@ -716,10 +716,20 @@
             `;
             
             modal.style.display = 'flex';
+            
+            // 🌌 [Global Backbutton] 뒤로가기 모달 백스택 감지 등록
+            if (window.registerModalOpen) {
+                window.registerModalOpen(closeTipPopup);
+            }
         }
 
-        function closeTipPopup() {
+        function closeTipPopup(isFromPopState) {
             document.getElementById('tip-detail-modal').style.display = 'none';
+            
+            // 🌌 [Global Backbutton] 수동(X 버튼)으로 닫았을 때 백스택에서 안전하게 해제
+            if (!isFromPopState && window.registerModalClose) {
+                window.registerModalClose(closeTipPopup);
+            }
         }
 
         // 🏛️ 지난 황금 고서첩 (과거 목록) 드로어 열기
@@ -748,10 +758,20 @@
             }
             
             modal.style.display = 'flex';
+            
+            // 🌌 [Global Backbutton] 뒤로가기 드로어 백스택 감지 등록
+            if (window.registerModalOpen) {
+                window.registerModalOpen(closeArchiveList);
+            }
         }
 
-        function closeArchiveList() {
+        function closeArchiveList(isFromPopState) {
             document.getElementById('archive-list-modal').style.display = 'none';
+            
+            // 🌌 [Global Backbutton] 수동(X 버튼)으로 닫았을 때 백스택에서 안전하게 해제
+            if (!isFromPopState && window.registerModalClose) {
+                window.registerModalClose(closeArchiveList);
+            }
         }
 
         function sendReaction(tipId, type, btnEl) {

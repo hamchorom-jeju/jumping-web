@@ -785,6 +785,10 @@ window.addEventListener('popstate', function(e) {
       showAppConfirm("⚔️ 모험가의 기록소에서 퇴장하여 메인 광장으로 이동하시겠습니까?", function() {
         window.location.replace('index.html');
       }, "⚔️");
+    } else if (pageName === 'wisdom.html') {
+      showAppConfirm("📜 지식창고에서 퇴장하여 메인 광장으로 이동하시겠습니까?", function() {
+        window.location.replace('index.html');
+      }, "📜");
     } else if (pageName === 'index.html' || pageName === '') {
       showAppConfirm("🏰 지니 월드(노형 빌리지)에서 완전히 퇴장하시겠습니까?", function() {
         const logoutBtn = document.getElementById('btn-logout');
