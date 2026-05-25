@@ -4670,8 +4670,8 @@
           <div style="font-weight:700; font-size:1.1rem; color:#2d3748;" id="smsTargetPhone">${log.phone}</div>
         </div>
         <div style="background:#f0f7ff; padding:15px; border-radius:12px; border:1px solid #bee3f8;">
-          <div style="font-size:0.8rem; color:#2b6cb0; margin-bottom:4px;">생성된 문자 내용</div>
-          <div style="font-size:0.95rem; color:#2d3748; white-space:pre-wrap; line-height:1.6;" id="smsTargetContent">${log.content}</div>
+          <div style="font-size:0.8rem; color:#2b6cb0; margin-bottom:6px; font-weight:800;">✍️ 생성된 문자 내용 (직접 수정 가능)</div>
+          <textarea id="smsTargetContent" style="width: 100%; height: 180px; background: white; border: 1px solid #cbd5e0; border-radius: 8px; padding: 10px; font-size: 0.95rem; color: #2d3748; line-height: 1.6; resize: vertical; outline: none; font-family: inherit; font-weight: 500; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);">${log.content}</textarea>
         </div>
       `;
 
@@ -4691,7 +4691,7 @@
       if (type === 'phone') {
         text = document.getElementById('smsTargetPhone').innerText;
       } else {
-        text = document.getElementById('smsTargetContent').innerText;
+        text = document.getElementById('smsTargetContent').value;
       }
 
       // 모바일 브라우저 호환성을 위한 복사 로직
@@ -4709,7 +4709,8 @@
     }
 
     function markSmsSent(rowIdx) {
-      showAdminConfirm("발송 완료 처리할까요? 목록에서 사라집니다.", function () {
+      const finalContent = document.getElementById('smsTargetContent').value;
+      showAdminConfirm("발송 완료 처리할까요? 수정하신 문구와 완료 상태가 시트에 함께 동기화됩니다.", function () {
         google.script.run.withSuccessHandler(function (res) {
           if (res.error) {
             showAdminErrorModal(res.error);
@@ -4719,7 +4720,7 @@
             loadSmsLogData(); // 목록 새로고침
             updatePendingSmsCount(); // 상단 알림 바 갱신
           }
-        }).updateSmsStatus(rowIdx, "완료");
+        }).updateSmsContentAndStatus(rowIdx, finalContent, "완료");
       });
     }
 

@@ -5030,6 +5030,23 @@ function updateSmsStatus(rowIdx, status) {
 }
 
 /**
+ * [관리자 전용] 문자발송 내용 및 상태 동시 업데이트 (완료 등)
+ */
+function updateSmsContentAndStatus(rowIdx, content, status) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("문자발송");
+    if (!sheet) return { error: "시트를 찾을 수 없습니다." };
+    
+    sheet.getRange(rowIdx, 5).setValue(content); // 5열: 생성된문자내용
+    sheet.getRange(rowIdx, 6).setValue(status);  // 6열: 상태
+    return { success: true, message: "내용 수정 및 상태가 " + status + "(으)로 안전하게 업데이트되었습니다." };
+  } catch (e) {
+    return { error: "수정 및 업데이트 실패: " + e.toString() };
+  }
+}
+
+/**
  * [관리자 전용] 7일 이상 미방문 회원 추출 및 문자 생성
  */
 function checkLongTermAbsentees() {
