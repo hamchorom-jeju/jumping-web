@@ -5102,6 +5102,39 @@ function checkLongTermAbsentees() {
         }
       }
     }
+
+    // 2-2. [v64.60] 회원별 보유 회원권 목록 및 출석 횟수 사전 집계 (정밀 성향 분석용)
+    var memberMembershipNamesMap = {}; // { phone: [membership1, membership2, ...] }
+    for (var k = 1; k < regData.length; k++) {
+      var status = String(regData[k][regCols.status]).trim();
+      if (status !== "진행중" && status !== "진행 중") continue;
+      var phone = String(regData[k][regCols.phone] || "").replace(/[^0-9]/g, "");
+      var membership = String(regData[k][regCols.membership] || "").trim();
+      if (!phone || !membership) continue;
+      
+      if (!memberMembershipNamesMap[phone]) {
+        memberMembershipNamesMap[phone] = [];
+      }
+      if (memberMembershipNamesMap[phone].indexOf(membership) === -1) {
+        memberMembershipNamesMap[phone].push(membership);
+      }
+    }
+
+    var memberAttendanceTypeMap = {}; // { phone: { therapy: 0, jumping: 0 } }
+    for (var l = 1; l < logData.length; l++) {
+      var lPhone = String(logData[l][logCols.phone] || "").replace(/[^0-9]/g, "");
+      var lType = String(logData[l][logCols.type] || ""); // 출석유형
+      if (!lPhone) continue;
+      
+      if (!memberAttendanceTypeMap[lPhone]) {
+        memberAttendanceTypeMap[lPhone] = { therapy: 0, jumping: 0 };
+      }
+      if (lType.indexOf("테라피") !== -1 || lType.indexOf("원적외선") !== -1 || lType.indexOf("반신욕") !== -1) {
+        memberAttendanceTypeMap[lPhone].therapy++;
+      } else {
+        memberAttendanceTypeMap[lPhone].jumping++;
+      }
+    }
     
     // 3. 미방문자 추출 및 문자/쪽지 생성 (양동작전)
     var count = 0;
@@ -5151,17 +5184,10 @@ function checkLongTermAbsentees() {
         
         var formattedPhone = formatPhoneForSms(regData[k][regCols.phone]);
         
-        // 🚨 [v64.50] 장기미방문 결석 회원도 이용권 명칭 기반 성향 역산 반영
-        var regClass = "general";
-        var memUpper = String(membership).toLowerCase();
-        if (memUpper.indexOf("테라피") !== -1 || memUpper.indexOf("원적외선") !== -1 || memUpper.indexOf("반신욕") !== -1) {
-          regClass = "therapy";
-          if (memUpper.indexOf("점핑") !== -1) {
-            regClass = "complex";
-          }
-        } else if (memUpper.indexOf("점핑") !== -1) {
-          regClass = "jumping";
-        }
+        // 🚨 [v64.60] 장기미방문 결석 회원도 복합 회원권 및 다중 보유 성향 분석 반영 (공용 헬퍼 적용)
+        var mTypes = memberMembershipNamesMap[phone] || [membership];
+        var attStats = memberAttendanceTypeMap[phone] || { therapy: 0, jumping: 0 };
+        var regClass = determineMemberClassInfo(mTypes, attStats);
         
         // 🤖 [v64.50] 제미나이 AI 기반 히스토리-성향-맥락 융합 본문 2채널 동적 생성
         var msg = generateWellnessAiSms(cleanName, remain, absentDays, "장기미방문", formattedPhone, "sms", regClass);
@@ -5410,33 +5436,10 @@ function checkInactiveMembers() {
         var totalRemain = m.totalRemain;
         var formattedPhone = formatPhoneForSms(m.phoneRaw);
         
-        // 🚨 [회원 이용 성향 스마트 분석 알고리즘]
-        var regClass = "general";
-        var hasTherapyTicket = false;
-        var hasJumpingTicket = false;
-        
+        // 🚨 [회원 이용 성향 스마트 분석 알고리즘 - v64.60 공용 헬퍼 적용]
         var mTypes = m.memberships || [];
-        for (var tIdx = 0; tIdx < mTypes.length; tIdx++) {
-          var tName = mTypes[tIdx];
-          if (tName.indexOf("테라피") !== -1) hasTherapyTicket = true;
-          if (tName.indexOf("점핑") !== -1 || tName.indexOf("운동") !== -1 || tName.indexOf("월권") !== -1) hasJumpingTicket = true;
-        }
-        
         var attStats = memberAttendanceTypeMap[phones[pIdx]] || { therapy: 0, jumping: 0 };
-        
-        if (hasTherapyTicket && !hasJumpingTicket) {
-          regClass = "therapy";
-        } else if (hasJumpingTicket && !hasTherapyTicket) {
-          regClass = "jumping";
-        } else if (attStats.therapy > 0 && attStats.jumping === 0) {
-          regClass = "therapy";
-        } else if (attStats.jumping > 0 && attStats.therapy === 0) {
-          regClass = "jumping";
-        } else if (attStats.therapy > 0 && attStats.jumping > 0) {
-          regClass = "complex";
-        } else if (hasTherapyTicket && hasJumpingTicket) {
-          regClass = "complex";
-        }
+        var regClass = determineMemberClassInfo(mTypes, attStats);
         
         // 🚨 [원장님 스마트 가드] 4~6일차 만료 회원 하이브리드 발송 분기
         var isAppActive = hasMemberActiveInApp(phones[pIdx], 3); // 최근 3일 내 앱 활동 여부
@@ -10798,6 +10801,79 @@ function getSalesHistory() {
   } catch (e) {
     return { error: "손익 내역 조회 오류: " + e.toString() };
   }
+}
+
+/**
+ * 🎫 [v64.60] 회원의 회원권 종류 이름들과 출석 이력을 기반으로 정밀 이용 성향(jumping / therapy / complex / general)을 판별합니다.
+ * - 운동만 / 월권: 점핑만 가능 (jumping)
+ * - 테라피: 테라피만 가능 (therapy)
+ * - 점핑 30회, 점핑 50회: 점핑 & 테라피 둘 다 가능 (complex)
+ * - 상호 상반된 회원권을 동시에 여러 개 보유한 경우: 복합 (complex)
+ * - 실제 출석 통계가 있는 경우 이용자의 행동 패턴에 맞춰 세분화
+ */
+function determineMemberClassInfo(membershipNames, attendanceStats) {
+  var hasTherapyTicket = false;
+  var hasJumpingOnlyTicket = false;
+  var hasComplexTicket = false;
+  var hasGeneralJumpingTicket = false;
+  
+  if (membershipNames && Array.isArray(membershipNames)) {
+    for (var i = 0; i < membershipNames.length; i++) {
+      var mName = String(membershipNames[i] || "").trim();
+      if (!mName) continue;
+      
+      // 1. 점핑 30회, 점핑 50회 등 횟수제 복합 회원권 검출 (둘 다 가능)
+      if (mName.indexOf("30회") !== -1 || mName.indexOf("50회") !== -1) {
+        hasComplexTicket = true;
+      }
+      // 2. 테라피 전용 회원권 검출 (테라피, 원적외선, 반신욕 등)
+      else if (mName.indexOf("테라피") !== -1 || mName.indexOf("원적외선") !== -1 || mName.indexOf("반신욕") !== -1) {
+        hasTherapyTicket = true;
+      }
+      // 3. 운동만 / 월권 등 점핑 전용 회원권 검출
+      else if (mName.indexOf("운동만") !== -1 || mName.indexOf("월권") !== -1) {
+        hasJumpingOnlyTicket = true;
+      }
+      // 4. 일반적인 점핑/운동 회원권 검출
+      else if (mName.indexOf("점핑") !== -1 || mName.indexOf("운동") !== -1) {
+        hasGeneralJumpingTicket = true;
+      }
+    }
+  }
+  
+  // 기본 판별 등급
+  var regClass = "general";
+  
+  // 회원권 구성을 통한 성향 분석
+  if (hasComplexTicket) {
+    regClass = "complex";
+  } else if (hasTherapyTicket && (hasJumpingOnlyTicket || hasGeneralJumpingTicket)) {
+    // 테라피권과 점핑권을 동시에 둘 다 가진 경우 -> complex
+    regClass = "complex";
+  } else if (hasTherapyTicket && !hasJumpingOnlyTicket && !hasGeneralJumpingTicket) {
+    regClass = "therapy";
+  } else if ((hasJumpingOnlyTicket || hasGeneralJumpingTicket) && !hasTherapyTicket) {
+    regClass = "jumping";
+  }
+  
+  // 실제 출석 이력(성향) 데이터가 있다면 정밀 보정
+  if (attendanceStats) {
+    var tCount = attendanceStats.therapy || 0;
+    var jCount = attendanceStats.jumping || 0;
+    
+    if (tCount > 0 && jCount > 0) {
+      // 둘 다 활발히 이용 중인 경우
+      regClass = "complex";
+    } else if (tCount > 0 && jCount === 0) {
+      // 회원권이 복합(complex)이나 일반(general)이더라도 실제 테라피만 이용했다면 테라피에 포커싱
+      regClass = "therapy";
+    } else if (jCount > 0 && tCount === 0) {
+      // 실제 점핑만 이용했다면 점핑에 포커싱
+      regClass = "jumping";
+    }
+  }
+  
+  return regClass;
 }
 
 
