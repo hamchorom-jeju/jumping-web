@@ -2526,6 +2526,45 @@ function formatDateSafely(dateVal) {
 }
 
 /**
+ * ⏰ [v64.40] 기상천외한 타임스탬프/날짜 형식(Date 객체, 한글 점 포맷, 슬래시 포맷 등)을 
+ * 무조건 무결한 표준 Date 객체로 강제 리턴하는 초강력 헬퍼
+ */
+function parseDateTimeSafely(val) {
+  if (!val) return new Date();
+  if (val instanceof Date) return val;
+  
+  var str = String(val).trim();
+  
+  // 1. 구글 스프레드시트에서 가끔 "오후 11:50:00" 처럼 올 때 처리
+  var isPM = str.indexOf("오후") !== -1 || str.indexOf("PM") !== -1;
+  var isAM = str.indexOf("오전") !== -1 || str.indexOf("AM") !== -1;
+  
+  // 모든 점(.), 슬래시(/), 오전/오후 텍스트를 정규화하여 숫자 배열만 추출
+  var digits = str.replace(/[오전후APM]/g, "").match(/\d+/g);
+  if (!digits || digits.length < 3) {
+    return new Date(); 
+  }
+  
+  var y = digits[0];
+  if (y.length === 2) y = "20" + y; // "26" -> "2026"
+  var m = parseInt(digits[1], 10) - 1; // 월은 0부터 시작
+  var d = parseInt(digits[2], 10);
+  
+  var hh = digits.length > 3 ? parseInt(digits[3], 10) : 0;
+  var mm = digits.length > 4 ? parseInt(digits[4], 10) : 0;
+  var ss = digits.length > 5 ? parseInt(digits[5], 10) : 0;
+  
+  if (isPM && hh < 12) hh += 12;
+  if (isAM && hh === 12) hh = 0;
+  
+  try {
+    return new Date(parseInt(y, 10), m, d, hh, mm, ss);
+  } catch (e) {
+    return new Date();
+  }
+}
+
+/**
  * 🏰 관리자 대시보드 데이터를 불러오기 위한 메인 라우터 (Dual-Core Switch)
  */
 function getAdminDashboardData() {
@@ -8643,34 +8682,20 @@ function getPersonalNotifications(payload) {
           var isRead = readAt.length > 0;
           
           var keepNotification = true;
-          if (isRead) {
-            try {
-              var parts = readAt.split(/[ \-:]/);
-              if (parts.length >= 6) {
-                var readDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
-                var diffTime = now.getTime() - readDate.getTime();
-                var diffHours = diffTime / (1000 * 60 * 60);
-                if (diffHours > 24) keepNotification = false;
-              } else {
-                keepNotification = false;
-              }
-            } catch (err) {
-              keepNotification = false;
+          try {
+            var createDate = parseDateTimeSafely(createdAt);
+            var diffHours = (now.getTime() - createDate.getTime()) / (1000 * 60 * 60);
+            
+            if (isRead) {
+              var readDate = parseDateTimeSafely(readAt);
+              var readDiffHours = (now.getTime() - readDate.getTime()) / (1000 * 60 * 60);
+              if (readDiffHours > 24) keepNotification = false;
+            } else {
+              if (diffHours > 72) keepNotification = false;
             }
-          } else {
-            try {
-              var parts = createdAt.split(/[ \-:]/);
-              if (parts.length >= 6) {
-                var createDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
-                var diffTime = now.getTime() - createDate.getTime();
-                var diffHours = diffTime / (1000 * 60 * 60);
-                if (diffHours > 72) keepNotification = false;
-              } else {
-                keepNotification = false;
-              }
-            } catch (err) {
-              keepNotification = false;
-            }
+          } catch (err) {
+            // 날짜 파싱이 어떤 기형적인 이유로 실패하더라도 쪽지를 억울하게 증발시키지 않고 노출 우선 처리!
+            keepNotification = true;
           }
           
           if (keepNotification) {
@@ -8688,57 +8713,41 @@ function getPersonalNotifications(payload) {
       }
     }
     
-    // 2. 📢 전체 공용 쪽지 긁어와서 병합하기 (원장님표 번호 이어붙이기 수신확인 기법 적용)
-    var globalSheet = checkAndCreateGlobalNotificationSheet();
-    var globalLastRow = globalSheet.getLastRow();
-    if (globalLastRow >= 2) {
-      var globalData = globalSheet.getRange(2, 1, globalLastRow - 1, 6).getDisplayValues();
-      for (var j = 0; j < globalData.length; j++) {
-        var gRow = globalData[j];
-        var gNotiId = String(gRow[0] || "");
-        var gCreatedAt = String(gRow[1] || "");
-        var gType = String(gRow[2] || "admin");
-        var gTitle = String(gRow[3] || "");
-        var gContent = String(gRow[4] || "");
-        var gReceivers = String(gRow[5] || ""); // 수신확인에 전화번호가 이어붙여짐
-        
-        // 내 전화번호가 수신확인에 포함되어 있으면 읽음 처리!
-        var gIsRead = gReceivers.indexOf(phone) !== -1;
-        var gReadAt = gIsRead ? gCreatedAt : ""; // 대략적인 읽음 시각
-        
-        // 라이프사이클 동일 적용 (읽음 24시간, 안읽음 72시간 소멸)
-        var keepGlobal = true;
-        if (gIsRead) {
+    // 2. 📢 전체 공용 쪽지 긁어와서 병합하기 (원장님표 번호 이어붙이기 수신확인 기법 적용 - 3중 시트 가드 지원)
+    var globalSheet = ss.getSheetByName("전체_알림_목록") || ss.getSheetByName("전체알림목록") || ss.getSheetByName("전체알림");
+    if (globalSheet) {
+      var globalLastRow = globalSheet.getLastRow();
+      if (globalLastRow >= 2) {
+        var globalData = globalSheet.getRange(2, 1, globalLastRow - 1, 6).getDisplayValues();
+        for (var j = 0; j < globalData.length; j++) {
+          var gRow = globalData[j];
+          var gNotiId = String(gRow[0] || "");
+          var gCreatedAt = String(gRow[1] || "");
+          var gType = String(gRow[2] || "admin");
+          var gTitle = String(gRow[3] || "");
+          var gContent = String(gRow[4] || "");
+          var gReceivers = String(gRow[5] || ""); // 수신확인에 전화번호가 이어붙여짐
+          
+          // 내 전화번호가 수신확인에 포함되어 있으면 읽음 처리!
+          var gIsRead = gReceivers.indexOf(phone) !== -1;
+          var gReadAt = gIsRead ? gCreatedAt : ""; // 대략적인 읽음 시각
+          
+          // 라이프사이클 동일 적용 (읽음 24시간, 안읽음 72시간 소멸)
+          var keepGlobal = true;
           try {
-            var parts = gCreatedAt.split(/[ \-:]/);
-            if (parts.length >= 6) {
-              var gDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
-              var diffTime = now.getTime() - gDate.getTime();
-              var diffHours = diffTime / (1000 * 60 * 60);
-              if (diffHours > 24) keepGlobal = false;
+            var gDate = parseDateTimeSafely(gCreatedAt);
+            var gDiffHours = (now.getTime() - gDate.getTime()) / (1000 * 60 * 60);
+            
+            if (gIsRead) {
+              if (gDiffHours > 24) keepGlobal = false;
             } else {
-              keepGlobal = false;
+              if (gDiffHours > 72) keepGlobal = false;
             }
           } catch (err) {
-            keepGlobal = false;
+            keepGlobal = true;
           }
-        } else {
-          try {
-            var parts = gCreatedAt.split(/[ \-:]/);
-            if (parts.length >= 6) {
-              var gDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
-              var diffTime = now.getTime() - gDate.getTime();
-              var diffHours = diffTime / (1000 * 60 * 60);
-              if (diffHours > 72) keepGlobal = false;
-            } else {
-              keepGlobal = false;
-            }
-          } catch (err) {
-            keepGlobal = false;
-          }
-        }
-        
-        if (keepGlobal) {
+          
+          if (keepGlobal) {
           notifications.push({
             id: gNotiId,
             type: gType,
