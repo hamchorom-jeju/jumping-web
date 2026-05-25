@@ -10004,7 +10004,7 @@ function getSalesHistory() {
       "공과금",
       "렌탈료",
       "운영비",
-      "기타"
+      "기타지출"
     ];
     
     var salesGroup = {};

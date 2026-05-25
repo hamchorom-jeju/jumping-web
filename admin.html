@@ -1994,14 +1994,14 @@
             <option value="제품판매">제품판매 (수입)</option>
             <option value="점핑PT">점핑PT (수입)</option>
             <option value="체험비">체험비 (수입)</option>
-            <option value="기타">기타 수입 (수입)</option>
+            <option value="기타수입">기타 수입 (수입)</option>
           </optgroup>
           <optgroup label="💸 지출 (영업 비용)">
             <option value="임대료&관리비">🏢 임대료&관리비 (지출)</option>
             <option value="공과금">⚡ 공과금 (지출)</option>
             <option value="렌탈료">🚴 렌탈료 (지출)</option>
             <option value="운영비">🛠️ 운영비 (지출)</option>
-            <option value="기타">💸 기타 지출 (지출)</option>
+            <option value="기타지출">💸 기타 지출 (지출)</option>
           </optgroup>
         </select>
       </div>
@@ -2923,7 +2923,7 @@
           buyer: "예: 체험자 이름 (홍길동)",
           item: "예: 점핑 체험, 테라피 체험..."
         },
-        "기타": {
+        "기타수입": {
           buyer: "예: 입금자/구매 회원 이름 (홍길동)",
           item: "예: 찜질복1, 채소공구1킬로..."
         },
@@ -2942,14 +2942,18 @@
           item: "예: 정수기, 점핑캣, 카드단말기 렌탈비..."
         },
         "운영비": {
-          buyer: "예: 구매처 또는 보수/홍보 업체 (다이소, 인쇄소 등)",
-          item: "예: 클럽 소모품 구매, 전단지 홍보비 등"
+          buyer: "예: 구입처 또는 철물점/인쇄소",
+          item: "예: 기타 소모품, 홍보비"
+        },
+        "기타지출": {
+          buyer: "예: 지급처 또는 구매처",
+          item: "예: 잡비, 또는 모호한 항목"
         }
       };
       
       var defaultHint = {
         buyer: "예: 홍길동 / 지급처",
-        item: "예: 잡비, 경조사비 또는 모호한 지출 항목..."
+        item: "예: 세부 내역 및 지출 용도 상세 입력"
       };
       
       var activeHint = hints[cat] || defaultHint;
@@ -3072,7 +3076,7 @@
               "공과금",
               "렌탈료",
               "운영비",
-              "기타"
+              "기타지출"
             ];
 
             var detailHtml = '';
@@ -3157,7 +3161,7 @@
         "공과금",
         "렌탈료",
         "운영비",
-        "기타"
+        "기타지출"
       ];
       var isExpense = expenseCategories.indexOf(category) !== -1 || category.indexOf("지출") !== -1;
 
