@@ -7483,7 +7483,7 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
   var channelInfo = targetChannel === "noti" ? "인앱 쪽지(알림)" : "오프라인 SMS 일반 문자";
   var classInfo = memberClassInfo || "general";
   
-  // 🚨 [회원권 성향별 맞춤 가이드 주입]
+  // 🚨 [회원권 성향별 맞춤 가이드 주입 - v64.70 신규 미출석 무기록 가이드 탑재]
   var classDesc = "";
   if (classInfo === "therapy") {
     classDesc = "★[회원 성향 맞춤] 이 회원은 점핑 운동을 하지 않고 '원적외선 테라피(반신욕/테라피룸 편백 힐링)'만을 이용하던 힐링 전용 회원입니다. 절대 격렬한 점핑 운동 복귀나 트램폴린 뛰기 등을 언급하지 마시고, 편안하고 따뜻하게 땀 빼며 쉴 수 있는 편백 원적외선 테라피실의 안부와 여유를 핵심 주제로 삼아 작성하십시오.";
@@ -7491,6 +7491,8 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
     classDesc = "★[회원 성향 맞춤] 이 회원은 테라피를 이용하지 않고 오직 '트램폴린 점핑 운동'만을 열심히 하던 운동 전용 회원입니다. 원적외선 테라피나 반신욕실 언급은 완전히 배제하시고, 신나는 음악과 강력한 칼로리 소모, 체력 회복의 '점핑 운동 에너지'를 중심으로 복귀를 독려하십시오.";
   } else if (classInfo === "complex") {
     classDesc = "★[회원 성향 맞춤] 이 회원은 신나는 '트램폴린 점핑 운동'과 편안한 '원적외선 테라피 힐링'을 모두 즐기던 복합(하이브리드) 회원입니다. 점핑 운동의 활기찬 땀방울과 테라피의 따뜻한 피로 회복, 두 가지 매력을 조화롭고 자연스럽게 녹여서 감성 메시지를 조립하십시오.";
+  } else if (classInfo === "new_no_record") {
+    classDesc = "★[회원 성향 맞춤] 이 회원은 노형점핑클럽에 등록은 되어 있으나, 시스템 상에 과거 출석 기록이 아예 존재하지 않는 신규 또는 이관(마이그레이션) 무기록 회원입니다. '이전에 오셨을 때 편안하셨길 바란다'거나 '다시 온다'는 식의 유경험 뉘앙스 표현은 절대 쓰지 마십시오. 대신 '등록하신 이후 아직 클럽에서 첫 걸음을 내딛지 못하셨거나 첫 운동을 어색함으로 주저하고 계신 것 같다'며, '코치와 함께하는 첫 번째 신나는 점핑 또는 따뜻한 테라피의 웰니스 여정'을 설렘 가득하고 따뜻하게 열어드리는 웰커밍 메시지(환대 및 유도)로 독려하십시오.";
   } else {
     classDesc = "★[회원 성향 맞춤] 이 회원은 일반 점핑클럽 회원입니다. 활력 넘치는 점핑 운동 또는 따뜻한 테라피 힐링 안부를 편안하고 균형감 있게 터치하며 소통하십시오.";
   }
@@ -7516,13 +7518,16 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
   
   // 🛡️ [원장님 스마트 가드] 출석 기록이 아예 없어 999일로 기입되는 회원에 대한 AI 프롬프트 정밀 가드
   var elapsedDaysPromptVal = (elapsedDays === 999) ? "기록 없음 (오랫동안 미방문 상태)" : elapsedDays + "일";
+  if (classInfo === "new_no_record") {
+    elapsedDaysPromptVal = "기록 없음 (신규/무기록 회원)";
+  }
   
   var prompt = "■ 회원 상황 정보\n" +
                "- 회원 이름: " + cleanName + "\n" +
                "- 미출석/만료 경과일: " + elapsedDaysPromptVal + "\n" +
                "- 회원권 잔여 횟수: " + remain + "회\n" +
                "- 분류 유형: " + type + " (" + (type === "장기미방문" ? "결석 중 (남은 회원권 소진 독려 대상)" : "수강 마감 상태 (재등록 유치 대상)") + ")\n" +
-               "- 회원 이용 성향: " + classInfo + " (" + (classInfo === "therapy" ? "테라피 전용" : classInfo === "jumping" ? "점핑 운동 전용" : classInfo === "complex" ? "점핑 및 테라피 복합" : "일반 회원") + ")\n" +
+               "- 회원 이용 성향: " + classInfo + " (" + (classInfo === "therapy" ? "테라피 전용" : classInfo === "jumping" ? "점핑 운동 전용" : classInfo === "complex" ? "점핑 및 테라피 복합" : classInfo === "new_no_record" ? "신규 가입 무기록 회원" : "일반 회원") + ")\n" +
                "- 발송 예정 채널: " + channelInfo + "\n\n" +
                "■ [중요] 최근 메시지 발송 이력 (시공간 순)\n" +
                recentHistoryText + "\n\n" +
@@ -7531,15 +7536,18 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
                "- 분류 유형이 '장기미방문'인 경우 무료 혜택이나 보너스 선물 언급을 100% 배제하고 '남은 회원권을 기간 내에 쓰시라'는 취지만 따뜻하게 작성하십시오.\n" +
                "- 분류 유형이 '복귀권유'이고 경과일이 오래된 장기 미등록 회원의 경우 절대 '며칠 전 이용권이 마감되었다'고 쓰지 말고 오랜 소식을 여쭙는 감성 멘트를 쓰십시오.\n" +
                "- 잔여 횟수가 7회 미만이면 횟수 살려주겠다는 보너스 복구 제안을 절대 하지 마십시오.\n" +
-               "- 잔여 횟수가 7회 이상이면 '남은 횟수가 많아 마음 아팠다'고 언급하고 '다시 시작하시면 넉넉히 보너스 횟수를 챙겨 보태겠다'며 절대 100% 다 살려준다는 명시적 단어 없이 은근하고 포근하게 작성하십시오.\n" +
-               "- 경과일이 '기록 없음 (오랫동안 미방문 상태)'인 경우 구체적인 일수(예: 999일 등)를 절대 문장에 언급하지 마십시오.\n" +
-               "- 회원의 이용 성향(" + classInfo + ")에 집중하여 테라피 전용 회원은 점핑 운동 언급을 완전히 배제하고, 점핑 전용 회원은 원적외선 테라피 언급을 완전히 배제한 채 정성껏 안부를 작성하십시오.";
+               "- 잔여 횟수가 7회 이상이면 '남은 횟수가 많아 마음 아팠다'~과 같이 언급하고 '다시 시작하시면 넉넉히 보너스 횟수를 챙겨 보태겠다'며 절대 100% 다 살려준다는 명시적 단어 없이 은근하고 포근하게 작성하십시오.\n" +
+               "- 경과일이 '기록 없음'이거나 무기록인 경우 구체적인 일수(예: 999일 등)를 절대 문장에 언급하지 마십시오.\n" +
+               "- 회원의 이용 성향(" + classInfo + ")에 집중하여 테라피 전용 회원은 점핑 운동 언급을 완전히 배제하고, 점핑 전용 회원은 원적외선 테라피 언급을 완전히 배제하고, new_no_record는 첫 방문 환대 언급으로 작성하십시오.";
   
   var aiMsg = callGeminiBackend(prompt, systemInstruction);
   
   // 만약 API 호출 실패 시 감성 템플릿(Fallback 백업)으로 안전 복구
   if (!aiMsg) {
-    if (type === "장기미방문") {
+    if (classInfo === "new_no_record") {
+      var newThemeText = "신나고 짜릿한 점핑 운동과 몸을 사르르 녹여주는 따뜻한 테라피 힐링";
+      aiMsg = cleanName + "회원님, 노형점핑클럽입니다. 😊 저희 클럽에 소중한 첫 발걸음을 딛으신 이후로, 아직 한 번도 뵙지 못한 것 같아 설레는 마음 반, 걱정스러운 마음 반으로 조심스레 안부 전합니다. 💖 혹시 첫 운동이 낯설거나 시작이 망설여지셨다면 부담은 완전히 내려놓고 놀러오세요! " + newThemeText + "을 코치가 아주 친절하고 재미있게 경험하실 수 있도록 에스코트해 드릴게요. 함께 건강한 첫 걸음을 웰니스 코치와 시작해 보시는 건 어떨까요? 기다리고 있겠습니다! ❤️";
+    } else if (type === "장기미방문") {
       var elapsedTextFallback = (elapsedDays === 999) ? "오랫동안 소식이 닿지 않아 무척 궁금했답니다." : "뵙지 못한 지 벌써 " + elapsedDays + "일이나 지났네요! 😢";
       
       var defaultTheme = "가벼운 점핑 운동이나 따뜻한 테라피";
@@ -10857,20 +10865,29 @@ function determineMemberClassInfo(membershipNames, attendanceStats) {
   }
   
   // 실제 출석 이력(성향) 데이터가 있다면 정밀 보정
+  var hasAttendance = false;
   if (attendanceStats) {
     var tCount = attendanceStats.therapy || 0;
     var jCount = attendanceStats.jumping || 0;
     
-    if (tCount > 0 && jCount > 0) {
-      // 둘 다 활발히 이용 중인 경우
-      regClass = "complex";
-    } else if (tCount > 0 && jCount === 0) {
-      // 회원권이 복합(complex)이나 일반(general)이더라도 실제 테라피만 이용했다면 테라피에 포커싱
-      regClass = "therapy";
-    } else if (jCount > 0 && tCount === 0) {
-      // 실제 점핑만 이용했다면 점핑에 포커싱
-      regClass = "jumping";
+    if (tCount > 0 || jCount > 0) {
+      hasAttendance = true;
+      if (tCount > 0 && jCount > 0) {
+        // 둘 다 활발히 이용 중인 경우
+        regClass = "complex";
+      } else if (tCount > 0 && jCount === 0) {
+        // 회원권이 복합(complex)이나 일반(general)이더라도 실제 테라피만 이용했다면 테라피에 포커싱
+        regClass = "therapy";
+      } else if (jCount > 0 && tCount === 0) {
+        // 실제 점핑만 이용했다면 점핑에 포커싱
+        regClass = "jumping";
+      }
     }
+  }
+  
+  // 만약 출석 이력이 아예 없는 신규 무기록 회원인 경우!
+  if (!hasAttendance) {
+    return "new_no_record";
   }
   
   return regClass;
