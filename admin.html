@@ -759,17 +759,20 @@
   <div class="modal-overlay" id="inBodyRegModal">
     <div class="modal-content" style="max-width:400px;">
       <div class="modal-header">✍️ 인바디 기록 등록</div>
-      <div class="form-group" style="position: relative;">
+      <div class="form-group">
         <label>회원 검색 *</label>
-        <input type="text" id="ibSearchName" class="form-control" placeholder="회원 이름 입력"
-          oninput="searchInBodyMember(this.value)">
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="ibSearchName" class="form-control" placeholder="회원 이름 입력"
+            style="flex: 1; margin-bottom: 0;" oninput="searchInBodyMember(this.value)">
+        </div>
+        <!-- 💡 [동명이인 완벽 구별] 절대좌표 드롭다운이 아닌, 화면에 시원하게 바로 펼쳐지는 친모바일 블록 리스트로 개조! -->
         <div id="ibSearchResults"
-          style="position: absolute; top: 100%; left: 0; right: 0; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; z-index: 100; display: none; max-height: 200px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+          style="display: none; margin-top: 8px; background: #f8fafc; border: 1.5px solid #edf2f7; border-radius: 12px; max-height: 160px; overflow-y: auto; padding: 6px;">
         </div>
       </div>
       <div id="ibTargetInfo"
-        style="margin-bottom:15px; padding:10px; background:#f7fafc; border-radius:10px; display:none;">
-        <strong id="ibTargetName">회원명</strong> (<span id="ibTargetPhone">0000</span>)
+        style="margin-bottom:15px; padding:12px; background:rgba(138,43,226,0.06); border:1.5px solid rgba(138,43,226,0.15); border-radius:12px; display:none; text-align:center;">
+        🎯 선택된 회원: <strong id="ibTargetName" style="color:var(--primary); font-size:1.05rem;">회원명</strong> <span id="ibTargetPhone" style="color:#4a5568; font-weight:bold;">(0000)</span>
         <input type="hidden" id="ibTargetPhoneRaw">
       </div>
       <div class="form-group">
@@ -2632,8 +2635,9 @@
           } else {
             let html = '';
             results.forEach(m => {
-              html += `<div onclick="selectInBodyMember('${m.name}', '${m.phone}')" style="padding:12px; border-bottom:1px solid #edf2f7; cursor:pointer; font-size:0.9rem;">
-                <strong>${m.name}</strong> (${m.phone.slice(-4)})
+              html += `<div onclick="selectInBodyMember('${m.name}', '${m.phone}')" style="padding:10px 12px; border-bottom:1px solid #edf2f7; cursor:pointer; font-size:0.9rem; display:flex; justify-content:space-between; align-items:center; background:white; border-radius:8px; margin-bottom:4px; transition:background 0.2s;">
+                <strong style="color:#2d3748;">${m.name}</strong> 
+                <span style="color:#718096; font-size:0.8rem; font-weight:700; background:#edf2f7; padding:2px 8px; border-radius:6px;">📱 뒷자리: ${m.phone.slice(-4)}</span>
               </div>`;
             });
             document.getElementById('ibSearchResults').innerHTML = html;
