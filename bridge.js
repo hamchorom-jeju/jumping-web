@@ -377,7 +377,7 @@ function showAppAlert(msg, type = "success", customTitle = "") {
 /**
  * [공용] 프리미엄 확인창 (Confirm)
  */
-function showAppConfirm(msg, onConfirm, customIcon = "❓") {
+function showAppConfirm(msg, onConfirm, customIcon = "❓", cancelLabel = "취소", confirmLabel = "진행하기") {
   const modal = document.createElement('div');
   modal.className = 'app-modal-overlay';
   modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center; z-index:10000; opacity:0; transition:opacity 0.3s;";
@@ -388,8 +388,8 @@ function showAppConfirm(msg, onConfirm, customIcon = "❓") {
       <h2 style="font-size:1.6rem; margin-bottom:12px; color:#1a202c; font-weight:800; font-family: sans-serif;">확인해주세요</h2>
       <p style="font-size:1.05rem; color:#4a5568; margin-bottom:30px; line-height:1.6; word-break:keep-all; font-family: sans-serif;">${msg}</p>
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-        <button onclick="closeAppModal(this)" style="padding:18px; background:#f8fafc; color:#4a5568; border:1px solid #e2e8f0; border-radius:16px; font-size:1.1rem; font-weight:700; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#edf2f7'" onmouseout="this.style.background='#f8fafc'">취소</button>
-        <button id="appConfirmOk" style="padding:18px; background:#6b46c1; color:#fff; border:none; border-radius:16px; font-size:1.1rem; font-weight:700; cursor:pointer; box-shadow: 0 8px 20px rgba(107,70,193,0.2); transition:all 0.2s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">진행하기</button>
+        <button onclick="closeAppModal(this)" style="padding:18px; background:#f8fafc; color:#4a5568; border:1px solid #e2e8f0; border-radius:16px; font-size:1.1rem; font-weight:700; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#edf2f7'" onmouseout="this.style.background='#f8fafc'">${cancelLabel}</button>
+        <button id="appConfirmOk" style="padding:18px; background:#6b46c1; color:#fff; border:none; border-radius:16px; font-size:1.1rem; font-weight:700; cursor:pointer; box-shadow: 0 8px 20px rgba(107,70,193,0.2); transition:all 0.2s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">${confirmLabel}</button>
       </div>
     </div>
   `;
@@ -778,31 +778,32 @@ window.addEventListener('popstate', function(e) {
     const path = window.location.pathname;
     const pageName = path.substring(path.lastIndexOf('/') + 1) || 'index.html';
 
+    // 💡 [원상 복귀] 테라피 예약 화면(reservation.html)은 원래대로 로컬 popstate가 통제하도록 글로벌 가드 bypass!
+    if (pageName === 'reservation.html') {
+      return;
+    }
+
     // 열려있는 모달이 하나도 없을 때, 현재 화면에 알맞게 안전 퇴장 컨펌 작동!
     history.pushState(null, null, location.href); // 히스토리 밀림 복구
     
     if (pageName === 'admin.html') {
-      showAppConfirm("👑 점핑 관리자 화면을 닫고 메인 대시보드에서 퇴장하시겠습니까?", function() {
+      showAppConfirm("👑 점핑관리자 앱을 종료하시겠습니까?", function() {
         localStorage.removeItem('v44_user_name');
         localStorage.removeItem('v44_user_phone');
         window.location.replace('login.html');
-      }, "👑");
+      }, "👑", "아니오(머무르기)", "예(앱종료)");
     } else if (pageName === 'attendance.html') {
-      showAppConfirm("⚙️ 출석 패드를 종료하고 안전하게 퇴장하시겠습니까?", function() {
+      showAppConfirm("⚙️ 출석체크 앱을 종료하시겠습니까?", function() {
         window.location.replace('login.html');
-      }, "⚙️");
+      }, "⚙️", "아니오(머무르기)", "예(앱종료)");
     } else if (pageName === 'registration.html') {
-      showAppConfirm("⚙️ 신규 회원 가입 신청 화면에서 퇴장하시겠습니까?<br>(입력 중인 신청서는 저장되지 않습니다)", function() {
+      showAppConfirm("⚙️ 회원등록앱을 종료하시겠습니까?", function() {
         window.location.replace('login.html');
-      }, "⚙️");
+      }, "⚙️", "아니오(머무르기)", "예(저장취소)");
     } else if (pageName === 'renewal.html' || pageName.indexOf('renewal') !== -1) {
-      showAppConfirm("⚙️ 회원 재등록 신청 화면에서 퇴장하시겠습니까?<br>(입력 중인 신청서는 저장되지 않습니다)", function() {
+      showAppConfirm("⚙️ 회원등록앱을 종료하시겠습니까?", function() {
         window.location.replace('login.html');
-      }, "⚙️");
-    } else if (pageName === 'reservation.html') {
-      showAppConfirm("🌿 테라피 예약 화면에서 나가시겠습니까?", function() {
-        window.location.replace('index.html');
-      }, "🌿");
+      }, "⚙️", "아니오(머무르기)", "예(저장취소)");
     } else if (pageName === 'oasis.html') {
       showAppConfirm("🌴 오아시스에서 퇴장하여 메인 광장으로 이동하시겠습니까?", function() {
         window.location.replace('index.html');
