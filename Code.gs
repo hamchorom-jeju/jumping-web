@@ -5093,26 +5093,20 @@ function checkLongTermAbsentees() {
         var remain = regData[k][regCols.remain] || "0";
         var expWarn = "\n🎫 회원님의 [" + membership + "] 만료일은 " + expire + "까지이며, 현재 잔여 횟수가 " + remain + "회 남아있습니다. 소중한 이용권이 마감되어 소멸되기 전에 꼭 오셔서 알차게 사용하시길 바랄게요! 😊";
         
-        var msg = "";
+        var msg = generateWellnessAiSms(cleanName, remain, absentDays, "장기미방문");
         var notiTitle = "";
         var notiContent = "";
         
         if (absentDays >= 7 && absentDays <= 13) {
           notiTitle = "회원님, 가벼운 시작으로 에너지를 찾아보세요!";
           notiContent = cleanName + "회원님, 점핑클럽입니다! 😊 클럽에서 뵙지 못한 지 벌써 일주일이 지났네요! 😢 많이 바쁘시더라도 가벼운 점핑 운동이나 따뜻한 테라피로 다시 건강 리듬을 회복해보시는 건 어떨까요?\n\n모바일 앱에 매일 로그인하셔서 소중한 일상 건강 기록을 남겨보시는 것도 큰 도움이 됩니다. 오늘 꼭 앱 접속이나 클럽 방문으로 건강 충전을 위한 첫 걸음을 내딛어 보세요! 화이팅! ❤️" + expWarn;
-          
-          msg = cleanName + "회원님, 노형 점핑클럽입니다. 😊 클럽에서 뵙지 못한 지 벌써 일주일이 지났네요! 😢 많이 바쁘시더라도 가벼운 점핑 운동이나 테라피로 다시 건강 리듬을 회복해보시는 건 어떨까요? 모바일 앱에 매일 로그인하셔서 일상 건강 기록을 남겨보시는 것도 큰 도움이 됩니다. 오늘 꼭 앱 접속이나 클럽 방문으로 첫 걸음을 내딛어 보세요! 🏃‍♀️" + expWarn;
         } else if (absentDays >= 14 && absentDays <= 29) {
           notiTitle = "회원님의 신나는 에너지가 너무나도 그립습니다.";
           notiContent = cleanName + "회원님, 점핑클럽입니다! 😊 회원님의 활기차고 건강한 에너지가 클럽에서 너무나도 그립습니다. 😢\n\n몸과 마음의 피로를 사르르 녹여줄 편안한 원적외선 테라피라도 받으러 클럽에 들러주세요. 운동하기 부쩍 망설여지신다면 따뜻한 차 한 잔 나누러 오셔도 대환영입니다! 이번 주에는 꼭 클럽에서 소중한 회원님의 얼굴을 뵈었으면 좋겠습니다. ❤️" + expWarn;
-          
-          msg = cleanName + "회원님, 노형 점핑클럽입니다. 😊 회원님의 활기차고 건강한 에너지가 클럽에서 너무나도 그립습니다. 😢 몸과 마음의 피로를 사르르 녹여줄 편안한 원적외선 테라피라도 받으러 가볍게 들러주세요. 운동이 망설여지신다면 따뜻한 차 한 잔 나누러 오셔도 대환영입니다! 이번 주에는 꼭 얼굴 뵀으면 좋겠어요. ❤️" + expWarn;
         } else {
           // 30일 이상 또는 기록 없음
           notiTitle = "회원님, 건강한 습관을 끝까지 지키시길 응원합니다!";
           notiContent = cleanName + "회원님, 점핑클럽입니다! 😊 오랫동안 뵙지 못해 회원님의 건강과 일상이 늘 궁금하고 걱정됩니다. 😢\n\n비록 바쁜 일상 때문에 클럽 출석은 잠시 뜸하시더라도, 웰니스 다이어리에 하루 건강을 차근차근 기록하면서 건강한 마인드와 습관을 놓지 않으시길 진심으로 응원합니다. 언제든 저희 클럽 문은 활짝 열려있으니 다시 웃는 얼굴로 뛸 날을 손꼽아 기다리겠습니다. 늘 건강하고 행복하세요! ❤️" + expWarn;
-          
-          msg = cleanName + "회원님, 노형 점핑클럽입니다. 😊 오랫동안 뵙지 못해 회원님의 건강과 일상이 늘 궁금하고 걱정됩니다. 😢 비록 바쁜 시기라 클럽 출석은 어렵더라도, 언제 어디서나 건강만큼은 웰니스 다이어리에 꾸준히 기록하면서 건강한 습관을 유지해 나가시길 진심으로 응원합니다. 다시 함께 신나게 뛸 날을 기다리겠습니다. 늘 건강하세요! ❤️" + expWarn;
         }
         
         var formattedPhone = formatPhoneForSms(regData[k][regCols.phone]);
@@ -5300,38 +5294,8 @@ function checkInactiveMembers() {
         if (elapsedDays < 1) continue;
         
         var cleanName = m.name.replace(/\d{4}$/, ""); // 이름 끝 번호 제거
-        var msg = "";
         var totalRemain = m.totalRemain;
-        
-        if (totalRemain === 0) {
-          // ----------------------------------------------------
-          // [수강권 만료 시 횟수를 다 쓴 영웅들] - 3단계 경과 일수 분기
-          // ----------------------------------------------------
-          if (elapsedDays >= 1 && elapsedDays <= 6) {
-            // A. 만료 1~6일 (조기 케어)
-            msg = cleanName + "회원님, 노형점핑클럽입니다! 😊 며칠 전 회원님의 신나는 운동 이용권(수강권)이 모두 마감되었네요. 혹시 깜빡하고 재등록을 놓치고 계신 건 아닌가요? 😢 겨우 다져놓은 체력과 건강한 루틴이 아깝게 멈춰 서기 전에 꼭 다시 함께 뛰었으면 좋겠습니다. 가벼운 마음으로 클럽 들러주시면 뜨겁게 환영해 드릴게요! ❤️";
-          } else if (elapsedDays >= 7 && elapsedDays <= 29) {
-            // B. 만료 7~29일 (중기 케어)
-            msg = cleanName + "회원님, 노형점핑클럽입니다. 😊 이용권이 마감된 지 벌써 시간이 꽤 흘렀네요! 문득 회원님과 함께 활기차게 운동하던 열정 넘치던 시간이 생각나 안부 전해요. 🏃‍♀️ 다시 한번 점핑 트램폴린 위에서 땀을 쫙 빼며 몸의 활력을 깨워보시는 건 어떨까요? 언제든 편하게 놀러 오세요! ❤️";
-          } else {
-            // C. 만료 30일 이상 (장기 미등록)
-            msg = cleanName + "회원님, 노형점핑클럽입니다! 😊 오랫동안 뵙지 못했지만 회원님의 밝고 활기찬 에너지는 여전히 클럽에 따뜻한 온기로 남아있습니다. 비록 클럽 출석은 잠시 쉬어가고 계시더라도, 모바일 앱에서 다이어리 체크를 꾸준히 하시면서 하루 식단과 루틴을 멋지게 이어가시길 진심으로 응원합니다. 늘 건강하세요. ❤️";
-          }
-        } else {
-          // ----------------------------------------------------
-          // [수강권 만료 시 잔여 횟수가 아깝게 남아 잠긴 영웅들] - 3단계 경과 일수 분기
-          // ----------------------------------------------------
-          if (elapsedDays >= 1 && elapsedDays <= 6) {
-            // A. 만료 1~6일 (조기 구제 특급 딜)
-            msg = cleanName + "회원님! 노형점핑클럽입니다. 😊 며칠 전 이용권이 마감되었는데, 소중한 남은 횟수(" + totalRemain + "회)가 아깝게 잠겨버렸네요! 😢 이대로 아쉽게 소멸되게 둘 수는 없죠! 이번 주 안에 재등록을 하시면, 잠겨있던 잔여 횟수를 소생시켜 보너스로 넉넉하게 보태드리겠습니다. 얼른 오셔서 신나게 운동해 봐요! 🏃‍♀️";
-          } else if (elapsedDays >= 7 && elapsedDays <= 29) {
-            // B. 만료 7~29일 (중기 보너스 구제)
-            msg = cleanName + "회원님! 노형점핑클럽입니다. 😊 잘 지내고 계시죠? 지난번 이용권 만료 시 아깝게 쓰지 못하고 남았던 " + totalRemain + "회의 잔여 횟수가 저희도 내내 눈에 밟히고 마음에 남았답니다. 😢 그래서 원장님이 준비한 보너스 혜택! 다시 등록하러 클럽에 들러주시면 소중한 이전 횟수를 아낌없이 복구해 얹어드릴게요. 다시 활기차게 시작해 봐요! ❤️";
-          } else {
-            // C. 만료 30일 이상 (장기 구제 및 스페셜 웰컴)
-            msg = cleanName + "회원님, 노형점핑클럽입니다. 😊 오랫동안 뵙지 못해 회원님의 안부와 건강이 늘 염려되고 무척이나 그립습니다. 😢 예전에 미처 사용하지 못했던 남은 횟수(" + totalRemain + "회)가 잠긴 채 시간이 흘러 너무나 안타까운 마음에 특별 안부 연락을 드립니다. 다시 저희 클럽을 찾아주시면 소멸되었던 잔여 횟수를 따뜻하게 복구해 드릴게요! 가볍게 다시 문을 두드려 주세요. 늘 환영합니다! ❤️";
-          }
-        }
+        var msg = generateWellnessAiSms(cleanName, totalRemain, elapsedDays, "복귀권유");
         
         // 휴대폰 번호 보정 (0 누락 방지)
         var formattedPhone = formatPhoneForSms(m.phoneRaw);
@@ -7152,6 +7116,117 @@ function setGeminiApiKey(newKey) {
   } catch (e) {
     return { success: false, error: e.toString() };
   }
+}
+
+/**
+ * 🤖 [v64.30] 지니 웰니스 AI 비서 (Gemini 1.5 Flash) 백엔드 API 직접 호출 엔진
+ */
+function callGeminiBackend(prompt, systemInstruction) {
+  try {
+    var apiKeyRes = getGeminiApiKey();
+    if (!apiKeyRes.success || !apiKeyRes.key) {
+      Logger.log("🚨 Gemini API Key가 설정되지 않았습니다. 환경설정을 확인해 주세요.");
+      return null;
+    }
+    var apiKey = apiKeyRes.key;
+    
+    var url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+    
+    var payload = {
+      "contents": [
+        {
+          "role": "user",
+          "parts": [{"text": prompt}]
+        }
+      ],
+      "generationConfig": {
+        "temperature": 0.7,
+        "maxOutputTokens": 400
+      }
+    };
+    
+    if (systemInstruction) {
+      payload["systemInstruction"] = {
+        "parts": [{"text": systemInstruction}]
+      };
+    }
+    
+    var options = {
+      "method": "post",
+      "contentType": "application/json",
+      "payload": JSON.stringify(payload),
+      "muteHttpExceptions": true
+    };
+    
+    var response = UrlFetchApp.fetch(url, options);
+    var responseCode = response.getResponseCode();
+    var responseText = response.getContentText();
+    
+    if (responseCode === 200) {
+      var json = JSON.parse(responseText);
+      if (json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts[0]) {
+        return json.candidates[0].content.parts[0].text.trim();
+      }
+    }
+    Logger.log("🚨 Gemini API 호출 에러 (" + responseCode + "): " + responseText);
+    return null;
+  } catch (e) {
+    Logger.log("🚨 callGeminiBackend 익셉션: " + e.toString());
+    return null;
+  }
+}
+
+/**
+ * 🤖 [v64.30] 지니 웰니스 AI 문자 생성기 (Gemini API 융합형)
+ * 회원의 상황(이름, 남은횟수, 경과일수, 유형)을 받아, 따뜻하고 설득력 있는 맞춤형 복귀 권유/안부 문구를 생성합니다.
+ */
+function generateWellnessAiSms(name, remain, elapsedDays, type) {
+  var cleanName = name.replace(/\d{4}$/, ""); // 이름 끝 숫자 제거
+  var systemInstruction = "당신은 제주 노형점핑클럽의 친근하고 열정적인 '이장님(원장님)'이자 최고의 웰니스 헬스 코치입니다. " +
+                          "마을 주민(회원)들의 건강을 진심으로 걱정하고 다시 클럽으로 복귀하도록 이끄는 따뜻하고 감성 넘치는 메시지를 작성해 주세요. " +
+                          "글자수는 SMS 문자 발송용이므로 150자~250자 내외로 간결하게 작성하고, 격려와 친근함을 담아 이모티콘(😊, ❤️, 🏃‍♀️, 🔥)을 적절히 융합해 주세요. 절대 딱딱하거나 기계적인 말투를 쓰지 마세요.";
+  
+  var prompt = "";
+  
+  if (type === "장기미방문") {
+    prompt = "회원 이름: " + cleanName + "\n" +
+             "미출석(결석) 기간: " + elapsedDays + "일\n" +
+             "회원권 남은 횟수: " + remain + "회\n\n" +
+             "현재 이 회원은 수강 기간 중인데 오랜 기간(벌써 " + elapsedDays + "일째) 클럽에 나오지 않고 계십니다. " +
+             "소중한 남은 횟수가 아깝게 소멸되기 전에 얼른 복귀하여 따뜻한 원적외선 테라피나 신나는 점핑으로 다시 체력 리듬을 찾을 수 있도록 감동적이고 다정한 안부 메시지를 작성해 주세요.";
+  } else if (type === "복귀권유") {
+    // 장기 미등록 (만료 회원)
+    if (remain === 0) {
+      prompt = "회원 이름: " + cleanName + "\n" +
+               "수강권 만료 경과일: " + elapsedDays + "일\n" +
+               "남은 횟수: 0회 (다 씀)\n\n" +
+               "이 회원은 수강 기간이 종료되었고 횟수도 다 썼는데, 마감된 지 " + elapsedDays + "일 동안 아직 재등록을 하지 않고 계십니다. " +
+               "다져놓은 운동 습관과 건강한 루틴이 멈추지 않도록, 부담을 주지 않으면서 다시 함께 땀 흘리던 열정을 회복하여 재등록하고 복귀할 수 있도록 친근하고 자연스럽게 마음을 끄는 메시지를 써주세요.";
+    } else {
+      prompt = "회원 이름: " + cleanName + "\n" +
+               "수강권 만료 경과일: " + elapsedDays + "일\n" +
+               "남은 횟수: " + remain + "회 (아깝게 남은 상태로 만료됨)\n\n" +
+               "이 회원은 수강 기간이 만료되었는데 소중한 남은 횟수(" + remain + "회)가 잠겨버린 지 벌써 " + elapsedDays + "일이 지났습니다. " +
+               "이번 주 내로 복귀(재등록)하시면 원장님 특별 웰컴백 서비스로 잠겨있는 횟수를 전량 보너스로 되살려 얹어드리겠다는 특급 혜택을 다정하고 위트 있게 안내하며 복귀를 소생시키는 메시지를 써주세요.";
+    }
+  }
+  
+  var aiMsg = callGeminiBackend(prompt, systemInstruction);
+  
+  // 만약 API 호출 실패 시 감성 템플릿(Fallback 백업)으로 안전 복구
+  if (!aiMsg) {
+    if (type === "장기미방문") {
+      aiMsg = cleanName + "회원님, 노형점핑클럽입니다. 😊 클럽에서 뵙지 못한 지 벌써 " + elapsedDays + "일이 지났네요! 😢 많이 바쁘시더라도 가벼운 점핑 운동이나 따뜻한 테라피로 다시 건강 리듬을 회복해보시는 건 어떨까요? 소중한 회원님의 수강 만료일은 " + remain + "회 남았습니다. 소멸되기 전에 꼭 와주세요! ❤️";
+    } else {
+      if (remain === 0) {
+        aiMsg = cleanName + "회원님, 노형점핑클럽입니다! 😊 며칠 전 회원님의 신나는 운동 이용권(수강권)이 모두 마감되었네요. 혹시 깜빡하고 재등록을 놓치고 계신 건 아닌가요? 😢 겨우 다져놓은 체력과 건강한 루틴이 아깝게 멈춰 서기 전에 꼭 다시 함께 뛰었으면 좋겠습니다. 가벼운 마음으로 클럽 들러주시면 뜨겁게 환영해 드릴게요! ❤️";
+      } else {
+        aiMsg = cleanName + "회원님! 노형점핑클럽입니다. 😊 며칠 전 이용권이 마감되었는데, 소중한 남은 횟수(" + remain + "회)가 아깝게 잠겨버렸네요! 😢 이대로 아쉽게 소멸되게 둘 수는 없죠! 이번 주 안에 재등록을 하시면, 잠겨있던 잔여 횟수를 소생시켜 보너스로 넉넉하게 보태드리겠습니다. 얼른 오셔서 신나게 운동해 봐요! 🏃‍♀️";
+      }
+    }
+  }
+  
+  return aiMsg;
 }
 
 /**
