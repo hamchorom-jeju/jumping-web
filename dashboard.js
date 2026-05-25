@@ -1110,7 +1110,7 @@ const Village = {
         this.lastSettings = settings; // 토글 시 재참조용으로 보관
         
         // [v65.0] 마스터 환경 마법 일괄 제어 토글 처리 (원장님 일괄 차단 지시 수용)
-        const magicEnabled = settings.magicEnabled === undefined || settings.magicEnabled.toString().toLowerCase() === 'true';
+        const magicEnabled = settings.magicEnabled === undefined || settings.magicEnabled === null || settings.magicEnabled.toString().toLowerCase() !== 'false';
         if (!magicEnabled) {
             console.log("🚫 [Dashboard Environment] Globally disabled by the Chief.");
             const oldWrap = document.getElementById('village-weather-wrapper');
@@ -1487,7 +1487,7 @@ const Village = {
         
         // [v65.0] 마스터 환경 마법 일괄 제어 토글 처리
         const settings = this.lastSettings || {};
-        const magicEnabled = settings.magicEnabled === undefined || settings.magicEnabled.toString().toLowerCase() === 'true';
+        const magicEnabled = settings.magicEnabled === undefined || settings.magicEnabled === null || settings.magicEnabled.toString().toLowerCase() !== 'false';
         if (!magicEnabled) {
             showAppAlert("🪄 현재 마을 마법 환경이 전원 꺼진 상태(일괄 정지)입니다. 생텀에서 [🪄 마을 마법 환경 일괄 활성화] 체크 후 저장해 주세요.", "error", "마법 제어 불가");
             return;
@@ -1508,7 +1508,6 @@ const Village = {
             }
         }
         
-        const settings = this.lastSettings || {};
         const weather = newVal ? 'sun' : (settings.weather || 'sun');
         const windSpeed = newVal ? 0 : (parseFloat(settings.realJejuWind) || 0);
         this.renderWeatherParticles(weather, windSpeed);
