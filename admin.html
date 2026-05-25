@@ -1987,7 +1987,7 @@
     <div class="modal-content" style="max-height:85vh; overflow-y:auto; background:#ffffff;">
       <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; margin-bottom: 20px;">
         <span style="font-size: 1.15rem; font-weight: 800;">💰 일일 매출/지출 등록</span>
-        <button onclick="closeSalesModal(); setTimeout(function() { openSalesHistoryModal(); }, 150);" 
+        <button onclick="closeSalesModal(); setTimeout(function() { openSalesHistoryModal(true); }, 150);" 
                 style="background: #3182ce; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: background 0.2s;">
           📁 매출조회
         </button>
@@ -3002,8 +3002,15 @@
     // --- 통합 손익 역사 조회 모듈 ---
     let lastSalesLogs = [];
     let currentSalesTab = 'daily'; // daily, monthly, range
+    let openedFromSalesRegister = false;
 
-    function openSalesHistoryModal() {
+    function openSalesHistoryModal(fromRegister) {
+      if (fromRegister) {
+        openedFromSalesRegister = true;
+      } else {
+        openedFromSalesRegister = false;
+      }
+      
       // 탭 기본값 복원
       currentSalesTab = 'daily';
       document.querySelectorAll('#salesTabGrid .select-btn').forEach(btn => btn.classList.remove('active'));
@@ -3245,6 +3252,14 @@
       document.getElementById('salesHistoryModal').classList.remove('show');
       if (!isPopstate && window.registerModalClose) {
         window.registerModalClose(closeSalesHistoryModal);
+      }
+      
+      // 💡 [원장님 UX 극대화 지침] 매출 등록창에서 장부 조회로 넘어왔던 경우, 닫을 때 자동으로 등록창으로 자연 복귀 체인 작동!
+      if (openedFromSalesRegister) {
+        openedFromSalesRegister = false; // 플래그 즉시 초기화
+        setTimeout(function() {
+          openSalesModal();
+        }, 150);
       }
     }
 
