@@ -954,8 +954,7 @@
           style="flex:1; border:none; padding:10px 5px; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;">등록
           안내</button>
         <button class="sms-tab-btn" id="tab-sms-absent" onclick="setSmsCategory('absent')"
-          style="flex:1; border:none; padding:10px 5px; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;">장기
-          미방문</button>
+          style="flex:1; border:none; padding:10px 5px; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;">미방문/디버프</button>
         <button class="sms-tab-btn" id="tab-sms-return" onclick="setSmsCategory('return')"
           style="flex:1; border:none; padding:10px 5px; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;">장기
           미등록</button>
@@ -4612,10 +4611,10 @@
       const pendingLogs = allSmsLogs.filter(log => String(log.status || "").trim() === '대기');
 
       if (currentSmsTab === 'registration') {
-        filteredLogs = pendingLogs.filter(log => log.category !== '장기미방문' && log.category !== '복귀권유');
+        filteredLogs = pendingLogs.filter(log => log.category !== '장기미방문' && log.category !== '복귀권유' && log.category !== '출석디버프');
         limit = 15;
       } else if (currentSmsTab === 'absent') {
-        filteredLogs = pendingLogs.filter(log => log.category === '장기미방문');
+        filteredLogs = pendingLogs.filter(log => log.category === '장기미방문' || log.category === '출석디버프');
       } else if (currentSmsTab === 'return') {
         filteredLogs = pendingLogs.filter(log => log.category === '복귀권유');
       }
