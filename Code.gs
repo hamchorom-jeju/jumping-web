@@ -5151,8 +5151,20 @@ function checkLongTermAbsentees() {
         
         var formattedPhone = formatPhoneForSms(regData[k][regCols.phone]);
         
-        // 🤖 [v64.40] 제미나이 AI 기반 히스토리-맥락 융합 본문 2채널 동적 생성
-        var msg = generateWellnessAiSms(cleanName, remain, absentDays, "장기미방문", formattedPhone, "sms");
+        // 🚨 [v64.50] 장기미방문 결석 회원도 이용권 명칭 기반 성향 역산 반영
+        var regClass = "general";
+        var memUpper = String(membership).toLowerCase();
+        if (memUpper.indexOf("테라피") !== -1 || memUpper.indexOf("원적외선") !== -1 || memUpper.indexOf("반신욕") !== -1) {
+          regClass = "therapy";
+          if (memUpper.indexOf("점핑") !== -1) {
+            regClass = "complex";
+          }
+        } else if (memUpper.indexOf("점핑") !== -1) {
+          regClass = "jumping";
+        }
+        
+        // 🤖 [v64.50] 제미나이 AI 기반 히스토리-성향-맥락 융합 본문 2채널 동적 생성
+        var msg = generateWellnessAiSms(cleanName, remain, absentDays, "장기미방문", formattedPhone, "sms", regClass);
         
         var notiTitle = "회원님, 에너지를 다시 채워드릴게요! ❤️";
         if (absentDays >= 14 && absentDays <= 29) {
@@ -5161,7 +5173,7 @@ function checkLongTermAbsentees() {
           notiTitle = "회원님, 건강한 습관을 항상 응원합니다! 🌟";
         }
         
-        var notiContent = generateWellnessAiSms(cleanName, remain, absentDays, "장기미방문", formattedPhone, "noti") + expWarn;
+        var notiContent = generateWellnessAiSms(cleanName, remain, absentDays, "장기미방문", formattedPhone, "noti", regClass) + expWarn;
         
         // A. 오프라인 문자 적재
         smsSheet.appendRow([
@@ -5265,16 +5277,40 @@ function checkInactiveMembers() {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var regSheet = ss.getSheetByName("등록 현황");
     var smsSheet = ss.getSheetByName("문자발송");
+    var logSheet = ss.getSheetByName("출석기록");
     
     if (!regSheet || !smsSheet) return { error: "필요한 시트(등록현황/문자발송)가 없습니다." };
     
     var regData = regSheet.getDataRange().getDisplayValues();
     var smsData = smsSheet.getDataRange().getDisplayValues();
+    var logData = logSheet ? logSheet.getDataRange().getDisplayValues() : [];
+    
     var regCols = getRegColumnIndices(regSheet);
+    var logCols = logSheet ? getAttendanceColumnIndices(logSheet) : null;
     
     var now = new Date();
     
-    // 1. 회원별 상태 체크 (가장 최근 만료일 및 활성 여부)
+    // 1. 회원별 출석기록에서 테라피/점핑 횟수 집계 (출석 성향 분석용)
+    var memberAttendanceTypeMap = {}; // { phone: { therapy: 0, jumping: 0 } }
+    if (logSheet && logData.length >= 2 && logCols) {
+      for (var l = 1; l < logData.length; l++) {
+        var lPhone = String(logData[l][logCols.phone] || "").replace(/[^0-9]/g, "");
+        var lType = String(logData[l][logCols.type] || ""); // 출석유형
+        if (!lPhone) continue;
+        
+        if (!memberAttendanceTypeMap[lPhone]) {
+          memberAttendanceTypeMap[lPhone] = { therapy: 0, jumping: 0 };
+        }
+        
+        if (lType.indexOf("테라피") !== -1 || lType.indexOf("보너스") !== -1) {
+          memberAttendanceTypeMap[lPhone].therapy++;
+        } else if (lType.indexOf("점핑") !== -1 || lType.indexOf("운동") !== -1 || lType.indexOf("기본") !== -1) {
+          memberAttendanceTypeMap[lPhone].jumping++;
+        }
+      }
+    }
+    
+    // 2. 회원별 상태 체크 (가장 최근 만료일, 활성 여부 및 회원권 종류 취합)
     var memberInfoMap = {};
     for (var i = 1; i < regData.length; i++) {
       var phone = String(regData[i][regCols.phone] || "").replace(/[^0-9]/g, "");
@@ -5282,6 +5318,7 @@ function checkInactiveMembers() {
       var expireDateStr = regData[i][regCols.expire];
       var name = regData[i][regCols.name];
       var remain = parseInt(regData[i][regCols.remain]) || 0;
+      var membership = String(regData[i][regCols.membership] || "");
       
       if (!phone) continue;
       
@@ -5291,7 +5328,8 @@ function checkInactiveMembers() {
           lastExpire: new Date(0), 
           name: name, 
           phoneRaw: regData[i][regCols.phone],
-          totalRemain: 0 
+          totalRemain: 0,
+          memberships: []
         };
       }
       
@@ -5308,8 +5346,12 @@ function checkInactiveMembers() {
         }
       }
       
-      // 잔여 횟수 합산 (해당 폰 번호의 만료된 건들 포함 전체 횟수 합)
+      // 잔여 횟수 합산
       memberInfoMap[phone].totalRemain += remain;
+      
+      if (membership) {
+        memberInfoMap[phone].memberships.push(membership);
+      }
     }
     
     // 2. 이미 문자함에 "대기" 중인 건이 있거나 최근 완료된 건 확인 (Standby 중복 생성 원천 가드 & 7일 재발송 주기 방어)
@@ -5368,6 +5410,34 @@ function checkInactiveMembers() {
         var totalRemain = m.totalRemain;
         var formattedPhone = formatPhoneForSms(m.phoneRaw);
         
+        // 🚨 [회원 이용 성향 스마트 분석 알고리즘]
+        var regClass = "general";
+        var hasTherapyTicket = false;
+        var hasJumpingTicket = false;
+        
+        var mTypes = m.memberships || [];
+        for (var tIdx = 0; tIdx < mTypes.length; tIdx++) {
+          var tName = mTypes[tIdx];
+          if (tName.indexOf("테라피") !== -1) hasTherapyTicket = true;
+          if (tName.indexOf("점핑") !== -1 || tName.indexOf("운동") !== -1 || tName.indexOf("월권") !== -1) hasJumpingTicket = true;
+        }
+        
+        var attStats = memberAttendanceTypeMap[phones[pIdx]] || { therapy: 0, jumping: 0 };
+        
+        if (hasTherapyTicket && !hasJumpingTicket) {
+          regClass = "therapy";
+        } else if (hasJumpingTicket && !hasTherapyTicket) {
+          regClass = "jumping";
+        } else if (attStats.therapy > 0 && attStats.jumping === 0) {
+          regClass = "therapy";
+        } else if (attStats.jumping > 0 && attStats.therapy === 0) {
+          regClass = "jumping";
+        } else if (attStats.therapy > 0 && attStats.jumping > 0) {
+          regClass = "complex";
+        } else if (hasTherapyTicket && hasJumpingTicket) {
+          regClass = "complex";
+        }
+        
         // 🚨 [원장님 스마트 가드] 4~6일차 만료 회원 하이브리드 발송 분기
         var isAppActive = hasMemberActiveInApp(phones[pIdx], 3); // 최근 3일 내 앱 활동 여부
         var targetChannel = "sms"; // 기본값 SMS
@@ -5380,8 +5450,8 @@ function checkInactiveMembers() {
           }
         }
         
-        // AI 본문 동적 생성 (과거 히스토리 맥락 인지형)
-        var msg = generateWellnessAiSms(cleanName, totalRemain, elapsedDays, "복귀권유", formattedPhone, targetChannel);
+        // AI 본문 동적 생성 (과거 히스토리 + 회원 이용 성향 맥락 인지형)
+        var msg = generateWellnessAiSms(cleanName, totalRemain, elapsedDays, "복귀권유", formattedPhone, targetChannel, regClass);
         
         if (targetChannel === "noti") {
           // 무료 개인 쪽지 즉시 발송
@@ -7403,11 +7473,24 @@ function getMemberMessageHistory(phone) {
  * 회원의 상황(이름, 남은횟수, 경과일수, 유형, 번호, 발송채널)을 받아, 과거 발송 이력을 읽은 제미나이가
  * 회원이 스팸처럼 느끼지 않고 따뜻한 안부를 체감하도록 최적화된 맞춤형 복귀 권유/안부 문구를 실시간 창조합니다.
  */
-function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetChannel) {
+function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetChannel, memberClassInfo) {
   var cleanName = name.replace(/\d{4}$/, ""); // 이름 끝 숫자 제거
   var recentHistoryText = getMemberMessageHistory(phone); // 최근 3~5건의 문자+쪽지 발송 내역 취합
   
   var channelInfo = targetChannel === "noti" ? "인앱 쪽지(알림)" : "오프라인 SMS 일반 문자";
+  var classInfo = memberClassInfo || "general";
+  
+  // 🚨 [회원권 성향별 맞춤 가이드 주입]
+  var classDesc = "";
+  if (classInfo === "therapy") {
+    classDesc = "★[회원 성향 맞춤] 이 회원은 점핑 운동을 하지 않고 '원적외선 테라피(반신욕/테라피룸 편백 힐링)'만을 이용하던 힐링 전용 회원입니다. 절대 격렬한 점핑 운동 복귀나 트램폴린 뛰기 등을 언급하지 마시고, 편안하고 따뜻하게 땀 빼며 쉴 수 있는 편백 원적외선 테라피실의 안부와 여유를 핵심 주제로 삼아 작성하십시오.";
+  } else if (classInfo === "jumping") {
+    classDesc = "★[회원 성향 맞춤] 이 회원은 테라피를 이용하지 않고 오직 '트램폴린 점핑 운동'만을 열심히 하던 운동 전용 회원입니다. 원적외선 테라피나 반신욕실 언급은 완전히 배제하시고, 신나는 음악과 강력한 칼로리 소모, 체력 회복의 '점핑 운동 에너지'를 중심으로 복귀를 독려하십시오.";
+  } else if (classInfo === "complex") {
+    classDesc = "★[회원 성향 맞춤] 이 회원은 신나는 '트램폴린 점핑 운동'과 편안한 '원적외선 테라피 힐링'을 모두 즐기던 복합(하이브리드) 회원입니다. 점핑 운동의 활기찬 땀방울과 테라피의 따뜻한 피로 회복, 두 가지 매력을 조화롭고 자연스럽게 녹여서 감성 메시지를 조립하십시오.";
+  } else {
+    classDesc = "★[회원 성향 맞춤] 이 회원은 일반 점핑클럽 회원입니다. 활력 넘치는 점핑 운동 또는 따뜻한 테라피 힐링 안부를 편안하고 균형감 있게 터치하며 소통하십시오.";
+  }
   
   var systemInstruction = "당신은 제주 노형점핑클럽의 친근하고 열정적인 최고의 '웰니스 코치'입니다. " +
                           "마을 주민(회원)들의 건강을 진심으로 걱정하고 다시 클럽으로 복귀하도록 이끄는 따뜻하고 감성 넘치는 메시지를 작성해 주세요. " +
@@ -7425,7 +7508,8 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
                           "   - [중요: 잔여 횟수에 따른 혜택 통제 규칙]\n" +
                           "     * 잔여 횟수가 7회 미만(0회~6회)인 경우: 잔여 횟수 소생이나 보너스 복구 등의 언급을 절대 하지 마십시오. 5회 이하 등의 소량은 소생 멘트 없이 '체력 루틴 복귀 및 테라피 힐링 안부' 중심으로 재등록만 따뜻하게 유치하십시오.\n" +
                           "     * 잔여 횟수가 7회 이상인 경우: 남은 횟수가 많아 안타깝다는 아쉬움은 따뜻하게 언급(예: '이용권 마감 당시 쓰지 못하셨던 잔여 횟수들이 꽤 많이 남았어서 마음이 아프다')하되, '이걸 다 살려주겠다'는 100% 직접적 복구 표현은 나중에 분란의 소지가 있으므로 절대 금지하십시오! 대신 '이번에 다시 오셔서 시작하시면 코치가 안타까운 마음을 채워드릴 수 있게 넉넉한 보너스 횟수를 챙겨서 보태드리겠다'는 식의 넉넉하고 두루뭉술한 혜택 보너스 표현으로 작성하십시오.\n\n" +
-                          "3. 제공되는 [최근 메시지 발송 이력]을 반드시 분석하여, 이전과 겹치지 않는 신선한 멘트를 창출하십시오.";
+                          "3. 제공되는 [최근 메시지 발송 이력]을 반드시 분석하여, 이전과 겹치지 않는 신선한 멘트를 창출하십시오.\n" +
+                          "4. " + classDesc;
   
   // 🛡️ [원장님 스마트 가드] 출석 기록이 아예 없어 999일로 기입되는 회원에 대한 AI 프롬프트 정밀 가드
   var elapsedDaysPromptVal = (elapsedDays === 999) ? "기록 없음 (오랫동안 미방문 상태)" : elapsedDays + "일";
@@ -7435,6 +7519,7 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
                "- 미출석/만료 경과일: " + elapsedDaysPromptVal + "\n" +
                "- 회원권 잔여 횟수: " + remain + "회\n" +
                "- 분류 유형: " + type + " (" + (type === "장기미방문" ? "결석 중 (남은 회원권 소진 독려 대상)" : "수강 마감 상태 (재등록 유치 대상)") + ")\n" +
+               "- 회원 이용 성향: " + classInfo + " (" + (classInfo === "therapy" ? "테라피 전용" : classInfo === "jumping" ? "점핑 운동 전용" : classInfo === "complex" ? "점핑 및 테라피 복합" : "일반 회원") + ")\n" +
                "- 발송 예정 채널: " + channelInfo + "\n\n" +
                "■ [중요] 최근 메시지 발송 이력 (시공간 순)\n" +
                recentHistoryText + "\n\n" +
@@ -7444,7 +7529,8 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
                "- 분류 유형이 '복귀권유'이고 경과일이 오래된 장기 미등록 회원의 경우 절대 '며칠 전 이용권이 마감되었다'고 쓰지 말고 오랜 소식을 여쭙는 감성 멘트를 쓰십시오.\n" +
                "- 잔여 횟수가 7회 미만이면 횟수 살려주겠다는 보너스 복구 제안을 절대 하지 마십시오.\n" +
                "- 잔여 횟수가 7회 이상이면 '남은 횟수가 많아 마음 아팠다'고 언급하고 '다시 시작하시면 넉넉히 보너스 횟수를 챙겨 보태겠다'며 절대 100% 다 살려준다는 명시적 단어 없이 은근하고 포근하게 작성하십시오.\n" +
-               "- 경과일이 '기록 없음 (오랫동안 미방문 상태)'인 경우 구체적인 일수(예: 999일 등)를 절대 문장에 언급하지 마십시오.";
+               "- 경과일이 '기록 없음 (오랫동안 미방문 상태)'인 경우 구체적인 일수(예: 999일 등)를 절대 문장에 언급하지 마십시오.\n" +
+               "- 회원의 이용 성향(" + classInfo + ")에 집중하여 테라피 전용 회원은 점핑 운동 언급을 완전히 배제하고, 점핑 전용 회원은 원적외선 테라피 언급을 완전히 배제한 채 정성껏 안부를 작성하십시오.";
   
   var aiMsg = callGeminiBackend(prompt, systemInstruction);
   
@@ -7452,7 +7538,12 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
   if (!aiMsg) {
     if (type === "장기미방문") {
       var elapsedTextFallback = (elapsedDays === 999) ? "오랫동안 소식이 닿지 않아 무척 궁금했답니다." : "뵙지 못한 지 벌써 " + elapsedDays + "일이나 지났네요! 😢";
-      aiMsg = cleanName + "회원님, 노형점핑클럽입니다. 😊 클럽에서 " + elapsedTextFallback + " 많이 바쁘시더라도 가벼운 점핑 운동이나 따뜻한 테라피로 다시 건강 리듬을 회복해보시는 건 어떨까요? 소중한 회원님의 잔여 회원권이 아직 " + remain + "회나 남았습니다. 아깝게 소멸되기 전에 얼른 오셔서 신나게 함께 뛰어보아요! ❤️";
+      
+      var defaultTheme = "가벼운 점핑 운동이나 따뜻한 테라피";
+      if (classInfo === "therapy") defaultTheme = "편안하고 따뜻한 원적외선 테라피실 힐링";
+      else if (classInfo === "jumping") defaultTheme = "신나고 에너지 넘치는 점핑 운동";
+      
+      aiMsg = cleanName + "회원님, 노형점핑클럽입니다. 😊 클럽에서 " + elapsedTextFallback + " 많이 바쁘시더라도 " + defaultTheme + "로 다시 건강 리듬을 회복해보시는 건 어떨까요? 소중한 회원님의 잔여 회원권이 아직 " + remain + "회나 남았습니다. 아깝게 소멸되기 전에 얼른 오셔서 함께 건강을 가꾸어보아요! ❤️";
     } else {
       // 1. 복귀 권유(마감된 회원) 기간별 문조 설정
       var periodText = "최근에 이용권(수강권)이 마감되었네요. 혹시 깜빡 잊고 계셨던 건 아닌지 궁금해요! 😊";
@@ -7461,15 +7552,25 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
       } else if (elapsedDays >= 61 || elapsedDays === 999) {
         periodText = "마지막으로 뵌 지도 벌써 오랜 시간이 흘렀네요! 오랫동안 소식을 여쭙지 못해 늘 마음 한켠으로 보고 싶었답니다. 😊";
       }
+      
+      // 2. 이용 성향별 문구 테마 설정 (테라피 전용, 점핑 전용, 복합형)
+      var themeText = "가벼운 운동과 따뜻한 테라피실에서 건강 에너지를 다시 충전해보시는 건 어떨까요?";
+      if (classInfo === "therapy") {
+        themeText = "따뜻한 편백나무 원적외선 테라피실에서 개운하게 땀 빼며 힐링과 여유를 다시 만끽해보시는 건 어떨까요?";
+      } else if (classInfo === "jumping") {
+        themeText = "신나는 음악과 함께 트램폴린을 뛰며 스트레스도 날리고 활기찬 운동 리듬을 다시 회복해보시는 건 어떨까요?";
+      } else if (classInfo === "complex") {
+        themeText = "신나게 점핑 운동을 뛰며 땀을 쫙 흘리고, 따뜻한 원적외선 테라피실에서 온몸을 사르르 녹여보시는 건 어떨까요?";
+      }
 
-      // 2. 7회 기준 혜택 분기 조립
+      // 3. 7회 기준 혜택 분기 조립
       if (remain >= 7) {
-        aiMsg = cleanName + "회원님, 노형점핑클럽입니다. " + periodText + " 마감될 당시에 사용하지 못하셨던 아까운 잔여 횟수가 꽤 많이 남았던 게 계속 마음에 걸렸어요. 😢 이번에 다시 오셔서 기분 좋게 운동을 새로 시작하시면, 아쉬우셨던 마음까지 채워드릴 수 있도록 제가 넉넉한 보너스 횟수를 기분 좋게 선물로 보태드리겠습니다. 얼른 오셔서 함께 건강 리듬을 회복해보아요! ❤️";
+        aiMsg = cleanName + "회원님, 노형점핑클럽입니다. " + periodText + " 마감될 당시에 사용하지 못하셨던 아까운 잔여 횟수가 꽤 많이 남았던 게 계속 마음에 걸렸어요. 😢 이번에 다시 오셔서 기분 좋게 새로 시작하시고 " + themeText.replace(" 어떨까요?", "") + "면, 아쉬우셨던 마음까지 채워드릴 수 있도록 제가 넉넉한 보너스 횟수를 기분 좋게 선물로 보태드리겠습니다. 어서 편하게 들러주세요! ❤️";
       } else {
         if (remain === 0) {
-          aiMsg = cleanName + "회원님, 노형점핑클럽입니다. " + periodText + " 겨우 다져놓았던 체력과 건강한 점핑 루틴이 이대로 멈춰서기엔 너무 아깝잖아요. 😢 가벼운 마음으로 다시 클럽에 들러주시면, 웰니스 코치가 두 팔 벌려 따뜻하게 맞이해 드리고 정성껏 케어해 드릴게요. 얼른 다시 뵙고 싶습니다! ❤️";
+          aiMsg = cleanName + "회원님, 노형점핑클럽입니다. " + periodText + " 겨우 다져놓았던 건강한 리듬과 " + (classInfo === "therapy" ? "테라피 힐링 루틴" : "점핑 운동 루틴") + "이 이대로 멈춰서기엔 너무 아깝잖아요. 😢 " + themeText + " 가벼운 마음으로 다시 클럽에 들러주시면 코치가 최선을 다해 정성껏 웰니스 케어를 도와드리겠습니다. 얼른 다시 뵙고 싶어요! ❤️";
         } else {
-          aiMsg = cleanName + "회원님, 노형점핑클럽입니다. " + periodText + " 아깝게 이용권 기한이 다해 멈췄던 점핑 루틴이 너무 아쉽네요. 😢 이번 기회에 다시 클럽으로 복귀하셔서 가벼운 운동과 함께 에너지를 재충전해보시는 건 어떨까요? 코치가 최선을 다해 건강 파트너가 되어드릴 테니, 편하게 얼굴 보여주러 오세요! ❤️";
+          aiMsg = cleanName + "회원님, 노형점핑클럽입니다. " + periodText + " 아깝게 이용권 기한이 다해 멈췄던 루틴이 너무 아쉽네요. 😢 이번 기회에 다시 클럽으로 복귀하셔서 " + themeText + " 코치가 최선을 다해 건강 파트너가 되어드릴 테니, 부담 없이 얼굴 보여주러 오세요! ❤️";
         }
       }
     }
