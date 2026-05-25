@@ -486,6 +486,17 @@ window.applySharedEnvironment = function(settings) {
     return;
   }
   
+  // [v65.0] 마스터 환경 마법 일괄 제어 토글 처리 (원장님 일괄 차단 지시 수용)
+  const magicEnabled = settings.magicEnabled === undefined || settings.magicEnabled.toString().toLowerCase() === 'true';
+  if (!magicEnabled) {
+    console.log("🚫 [Shared Environment] Village environment magic is globally disabled by the Chief.");
+    const oldWrap = document.getElementById('village-weather-wrapper');
+    if (oldWrap) oldWrap.remove();
+    // BGM 정지 호출
+    window.handleSharedBgm(false, '');
+    return;
+  }
+  
   const weatherDisabled = localStorage.getItem('village_weather_disabled') === 'true';
   const weather = weatherDisabled ? 'sun' : (settings.resolvedWeather || settings.weather || 'sun');
   const windSpeed = weatherDisabled ? 0 : (parseFloat(settings.realJejuWind) || 0);

@@ -269,6 +269,23 @@
     <div class="manager-card">
       <div class="section-title"><i class="fa-solid fa-cloud-sun"></i> 마을 기후 및 음악 마법 환경 제어</div>
       
+      <!-- 🔮 [원장님 피드백 반영] 마법 환경 제어장치 일괄 켜기/끄기 마스터 스위치 -->
+      <div style="margin-bottom: 20px; padding: 14px 16px; background: rgba(92, 27, 155, 0.18); border: 2.2px solid var(--sanctum-gold); border-radius: 20px; box-shadow: 0 4px 15px rgba(217, 119, 6, 0.15); transition: all 0.3s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="flex: 1; padding-right: 10px;">
+            <span style="font-size: 0.82rem; font-weight: 900; color: var(--sanctum-gold-light); display: flex; align-items: center; gap: 6px;">
+              🪄 마을 마법 환경 일괄 활성화
+            </span>
+            <span style="font-size: 0.65rem; color: var(--text-sub); font-weight: 700; margin-top: 3px; display: block; line-height: 1.35;">
+              이 옵션을 끄면 마을 전체의 기후 애니메이션 효과(눈, 비, 낙엽, 비눗방울 등)와 배경 음악 재생 기능이 전면 일괄 정지(차단)됩니다.
+            </span>
+          </div>
+          <div style="display: flex; align-items: center;">
+            <input type="checkbox" id="magic-master-enabled" checked style="width: 22px; height: 22px; accent-color: var(--sanctum-gold); cursor: pointer; transform: scale(1.15);">
+          </div>
+        </div>
+      </div>
+      
       <div class="env-grid">
         <div class="env-btn" id="env-sun" onclick="setWeather('sun')">☀️<span>기본 맑음<br>(여름/겨울)</span></div>
         <div class="env-btn" id="env-rain" onclick="setWeather('rain')">🌧️<span>비 내림</span></div>
@@ -517,6 +534,7 @@
         if (settings) {
           activeWeather = settings.weather || 'sun';
           updateWeatherUI();
+          document.getElementById('magic-master-enabled').checked = settings.magicEnabled === undefined || settings.magicEnabled.toString().toLowerCase() === 'true';
           document.getElementById('bgm-enabled-check').checked = settings.bgmEnabled && settings.bgmEnabled.toString().toLowerCase() === 'true';
           document.getElementById('bgm-force-check').checked = settings.bgmForceOverride && settings.bgmForceOverride.toString().toLowerCase() === 'true';
           document.getElementById('bgm-force-input').value = settings.bgmForceUrl || '';
@@ -608,11 +626,13 @@
       document.getElementById('bgm-blossom-input').value = bgm_blossom;
       document.getElementById('bgm-leaves-input').value = bgm_leaves;
 
+      const magicEnabled = document.getElementById('magic-master-enabled').checked;
       const bgmEnabled = document.getElementById('bgm-enabled-check').checked;
       const bgmForceOverride = document.getElementById('bgm-force-check').checked;
 
       const payload = {
         weather: activeWeather,
+        magicEnabled: String(magicEnabled),
         bgmEnabled: String(bgmEnabled),
         bgmForceOverride: String(bgmForceOverride),
         bgmForceUrl: bgmForceUrl,
@@ -712,7 +732,19 @@
         container.innerHTML = '<div style="text-align:center; font-size:0.7rem; color:var(--text-sub); padding:15px; font-weight:700;">예약된 자정 자동 돌발 퀘스트가 없습니다.</div>';
         return;
       }
-      container.innerHTML = list.map(q => {
+      
+      // 📅 [원장님 피드백 반영] 오늘을 포함한 미래의 돌발 퀘스트만 필터링하여 노출 (지나간 과거 퀘스트는 제외)
+      const now = new Date();
+      const offset = now.getTimezoneOffset() * 60000;
+      const todayStr = new Date(Date.now() - offset).toISOString().split('T')[0];
+      const activeQuests = list.filter(q => q.date >= todayStr);
+
+      if (activeQuests.length === 0) {
+        container.innerHTML = '<div style="text-align:center; font-size:0.7rem; color:var(--text-sub); padding:15px; font-weight:700;">진행 대기 또는 예정된 돌발 퀘스트가 없습니다. 📅</div>';
+        return;
+      }
+
+      container.innerHTML = activeQuests.map(q => {
         const methodBadge = q.method === '게시판' 
           ? `<span style="background: rgba(225, 29, 72, 0.2); border: 1px solid #f43f5e; color: #f43f5e; font-size: 0.65rem; padding: 2px 6px; border-radius: 6px; font-weight: 900; margin-left: 6px; display: inline-flex; align-items: center; gap: 2px;">📝 글쓰기</span>` 
           : `<span style="background: rgba(14, 165, 233, 0.2); border: 1px solid #0ea5e9; color: #38bdf8; font-size: 0.65rem; padding: 2px 6px; border-radius: 6px; font-weight: 900; margin-left: 6px; display: inline-flex; align-items: center; gap: 2px;">📸 사진</span>`;

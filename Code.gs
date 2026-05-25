@@ -7557,7 +7557,8 @@ function getVillageSettings() {
       "bgm_blossom": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
       "bgm_leaves": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
       "bgmForceOverride": "false",
-      "bgmForceUrl": ""
+      "bgmForceUrl": "",
+      "magicEnabled": "true"
     };
 
     var addedNewRow = false;
@@ -7674,7 +7675,8 @@ function updateVillageSettings(payload) {
       "weather": payload.weather || "sun",
       "bgmEnabled": String(payload.bgmEnabled || "false"),
       "bgmForceOverride": String(payload.bgmForceOverride || "false"),
-      "bgmForceUrl": payload.bgmForceUrl ? resolveSunoUrl(payload.bgmForceUrl.trim()) : ""
+      "bgmForceUrl": payload.bgmForceUrl ? resolveSunoUrl(payload.bgmForceUrl.trim()) : "",
+      "magicEnabled": String(payload.magicEnabled !== undefined ? payload.magicEnabled : "true")
     };
 
     // [v48.0] 기후별 커스텀 BGM 키 동적 수신 및 매핑 저장
