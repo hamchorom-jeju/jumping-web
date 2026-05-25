@@ -2074,7 +2074,13 @@
   <!-- 업무일지 모달 -->
   <div class="modal-overlay" id="workLogModal">
     <div class="modal-content">
-      <div class="modal-header">📝 일일 업무일지 작성</div>
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; margin-bottom: 20px;">
+        <span style="font-size: 1.15rem; font-weight: 800;">📝 일일 업무일지 작성</span>
+        <button onclick="openWorkLogHistoryModal(); closeWorkLogModal();" 
+                style="background: #3182ce; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: background 0.2s;">
+          📁 일지조회
+        </button>
+      </div>
 
       <div class="form-group">
         <label class="form-label">📅 날짜 선택</label>
@@ -2117,7 +2123,7 @@
       </div>
 
       <div class="form-group"
-        style="background: #fdf2f2; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #fed7d7;">
+          style="background: #fdf2f2; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #fed7d7;">
         <h4 style="margin-bottom: 10px; color: #e53e3e;" id="statsTitle">📊 출석 통계 (자동 계산됨)</h4>
         <div id="workLogStats"
           style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.9rem; color: #4a5568;">
@@ -2126,7 +2132,6 @@
       </div>
 
       <button class="btn-submit" onclick="submitWorkLogData()">일지 제출하기</button>
-      <button class="btn-submit" onclick="openWorkLogHistoryModal(); closeWorkLogModal();" style="background:#3182ce; margin-top: 8px; margin-bottom: 8px;">📁 과거 업무일지 전체보기</button>
       <button class="btn-close" onclick="closeWorkLogModal()">닫기</button>
     </div>
   </div>
