@@ -5312,15 +5312,24 @@ function checkInactiveMembers() {
       memberInfoMap[phone].totalRemain += remain;
     }
     
-    // 2. 이미 문자함에 "대기" 중인 건이 있는지 확인 (Standby 중복 생성 원천 가드)
+    // 2. 이미 문자함에 "대기" 중인 건이 있거나 최근 완료된 건 확인 (Standby 중복 생성 원천 가드 & 7일 재발송 주기 방어)
     var pendingSmsMap = {};
+    var lastSentSmsDateMap = {};
     for (var j = 1; j < smsData.length; j++) {
       var sPhone = String(smsData[j][2] || "").replace(/[^0-9]/g, "");
       var sCategory = smsData[j][3];
       var sStatus = String(smsData[j][5]).trim();
+      var sDateStr = smsData[j][0]; // "기록시간"
       
-      if (sCategory === "복귀권유" && sStatus === "대기") {
-        pendingSmsMap[sPhone] = true;
+      if (sCategory === "복귀권유") {
+        if (sStatus === "대기") {
+          pendingSmsMap[sPhone] = true;
+        } else if (sStatus === "완료") {
+          var sDate = new Date(sDateStr);
+          if (!lastSentSmsDateMap[sPhone] || sDate > lastSentSmsDateMap[sPhone]) {
+            lastSentSmsDateMap[sPhone] = sDate;
+          }
+        }
       }
     }
     
@@ -5337,6 +5346,16 @@ function checkInactiveMembers() {
         
         // 문자함에 이미 복귀권유 "대기" 상태 문자가 들어있다면 절대 중복 생성 안 함!
         if (pendingSmsMap[phones[pIdx]]) continue;
+        
+        // 🚨 [스팸 방지 가드] 이미 복귀권유 문자가 최근 발송 완료된 이력이 있다면 7일간 재생성 차단
+        var lastSentSmsDate = lastSentSmsDateMap[phones[pIdx]];
+        if (lastSentSmsDate) {
+          var diffSmsMs = now.getTime() - lastSentSmsDate.getTime();
+          var daysSinceLastSms = diffSmsMs / (1000 * 60 * 60 * 24);
+          if (daysSinceLastSms < 7) {
+            continue; // 아직 발송 완료 후 7일이 경과하지 않았으므로 건너뜀
+          }
+        }
         
         // 만료 경과 일수 계산
         var diffMs = now.getTime() - m.lastExpire.getTime();
