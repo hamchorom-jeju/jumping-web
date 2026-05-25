@@ -753,12 +753,309 @@
       color: #64748b;
       white-space: nowrap;
     }
+
+    /* 🖨️ 명예의 전당 A4 용지 프린트용 미디어 쿼리 스타일 */
+    @media print {
+      body {
+        background: white !important;
+        color: black !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      header {
+        background: none !important;
+        padding: 20px 0 !important;
+      }
+      header h1 {
+        background: none !important;
+        -webkit-text-fill-color: black !important;
+        color: black !important;
+        font-size: 2.2rem !important;
+        font-weight: 900 !important;
+        text-shadow: none !important;
+      }
+      header p {
+        color: #000 !important;
+      }
+      .back-btn,
+      .btn-print-hof,
+      .tab-bar,
+      .live-indicator,
+      .archive-section-title,
+      .archive-section-desc,
+      .archive-container,
+      .more-btn,
+      #more-btn-wrap {
+        display: none !important;
+      }
+      .podium-container {
+        padding-top: 40px !important;
+        margin-bottom: 40px !important;
+        gap: 15px !important;
+        visibility: visible !important;
+        display: flex !important;
+      }
+      .podium-card {
+        background: #f8fafc !important;
+        border: 2px solid #000 !important;
+        box-shadow: none !important;
+        color: black !important;
+        visibility: visible !important;
+        height: auto !important;
+        min-height: 120px !important;
+        transform: none !important;
+      }
+      .podium-card.rank-1st {
+        background: #fffdf5 !important;
+        border: 3px solid #fbbf24 !important;
+        transform: scale(1.05) !important;
+      }
+      .avatar-circle {
+        background: #e2e8f0 !important;
+        color: black !important;
+        border: 2px solid black !important;
+      }
+      .user-name {
+        color: black !important;
+        font-weight: 900 !important;
+        font-size: 1rem !important;
+      }
+      .score-val, .score-val strong {
+        color: black !important;
+      }
+      .list-card {
+        background: white !important;
+        border: 2px solid #000 !important;
+        color: black !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        visibility: visible !important;
+        margin-top: 20px !important;
+      }
+      .list-item {
+        border-bottom: 1px solid #ccc !important;
+        color: black !important;
+        padding: 10px 0 !important;
+        visibility: visible !important;
+      }
+      .list-name, .list-score strong {
+        color: black !important;
+        font-weight: 800 !important;
+      }
+      .crown-icon {
+        color: #fbbf24 !important;
+        filter: none !important;
+      }
+      .podium-rank-pill {
+        border: 1px solid black !important;
+        font-weight: 900 !important;
+      }
+
+      /* 🏛️ 역대 명예의 전당 아카이브 인쇄 모드 전용 스타일 */
+      body.print-weekly,
+      body.print-monthly,
+      body.print-attendance {
+        background: white !important;
+        color: black !important;
+      }
+      
+      /* 아카이브 인쇄 시 메인 라이브 랭킹 숨기기 */
+      body.print-weekly header,
+      body.print-weekly .podium-container,
+      body.print-weekly .list-card,
+      body.print-monthly header,
+      body.print-monthly .podium-container,
+      body.print-monthly .list-card,
+      body.print-attendance header,
+      body.print-attendance .podium-container,
+      body.print-attendance .list-card {
+        display: none !important;
+      }
+
+      /* 대상 아카이브 요소들만 선명하게 노출 */
+      body.print-weekly .archive-container,
+      body.print-monthly .archive-container,
+      body.print-attendance .archive-container {
+        display: block !important;
+      }
+      
+      body.print-weekly .archive-card,
+      body.print-monthly .archive-card,
+      body.print-attendance .archive-card {
+        display: none !important; /* 다른 아카이브는 숨김 */
+      }
+
+      body.print-weekly #card-weekly-archive,
+      body.print-monthly #card-monthly-archive,
+      body.print-attendance #card-attendance-archive {
+        display: block !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      body.print-weekly #weekly-archive,
+      body.print-monthly #monthly-archive,
+      body.print-attendance #attendance-archive {
+        display: flex !important; /* 아코디언 강제 오픈 */
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      /* 아카이브 헤더(타이틀바, 화살표 등)는 인쇄 시 제외 */
+      body.print-weekly .archive-header,
+      body.print-monthly .archive-header,
+      body.print-attendance .archive-header {
+        display: none !important;
+      }
+
+      /* 프린트용 문서 내 타이틀 스타일 */
+      .print-only-title {
+        display: block !important;
+        text-align: center !important;
+        margin-bottom: 20px !important;
+      }
+      .print-only-title h1 {
+        font-size: 2.2rem !important;
+        font-weight: 900 !important;
+        color: black !important;
+        margin-bottom: 6px !important;
+      }
+      .print-only-title p {
+        font-size: 1rem !important;
+        color: #333 !important;
+        margin-bottom: 12px !important;
+      }
+      .print-only-title hr {
+        border: none !important;
+        border-top: 2px solid black !important;
+        margin: 15px 0 !important;
+      }
+
+      /* 아카이브 개별 로우 인쇄 최적화 */
+      .archive-row {
+        border-bottom: 2px solid black !important;
+        padding: 14px 0 !important;
+        color: black !important;
+        background: transparent !important;
+        page-break-inside: avoid;
+        margin: 0 !important;
+      }
+      
+      .archive-row-title {
+        color: black !important;
+        font-size: 1.15rem !important;
+        font-weight: 800 !important;
+        margin-bottom: 4px !important;
+      }
+
+      .archive-row-data {
+        color: black !important;
+        font-size: 0.95rem !important;
+        font-weight: 600 !important;
+      }
+
+      .archive-row-data .rank-1st-text {
+        color: black !important;
+        font-weight: 900 !important;
+      }
+
+      .archive-divider {
+        color: black !important;
+        font-weight: bold !important;
+      }
+
+      /* 최신 명예의 전당 (Latest Award) 인쇄 레이아웃 */
+      .archive-row.latest-award {
+        background: white !important;
+        border: 2px solid black !important;
+        border-radius: 12px !important;
+        padding: 16px !important;
+        margin: 10px 0 20px 0 !important;
+      }
+
+      .award-top3-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 12px !important;
+        width: 100% !important;
+        margin-top: 10px !important;
+      }
+
+      .award-card {
+        background: white !important;
+        border: 2px solid black !important;
+        color: black !important;
+        box-shadow: none !important;
+        transform: none !important;
+        min-height: 100px !important;
+      }
+
+      .award-card.rank-1 {
+        border: 3px solid #fbbf24 !important;
+        background: #fffdf5 !important;
+      }
+
+      .award-name {
+        color: black !important;
+        font-size: 0.9rem !important;
+        font-weight: 900 !important;
+      }
+
+      .award-score {
+        color: black !important;
+        font-size: 0.8rem !important;
+        font-weight: 700 !important;
+      }
+
+      .award-runners-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        width: 100% !important;
+        margin-top: 12px !important;
+      }
+
+      .runner-card {
+        background: white !important;
+        border: 1px solid black !important;
+        color: black !important;
+      }
+
+      .runner-badge {
+        background: #eee !important;
+        color: black !important;
+        border: 1px solid black !important;
+      }
+
+      .runner-name {
+        color: black !important;
+        font-size: 0.8rem !important;
+        font-weight: 800 !important;
+      }
+
+      .runner-score {
+        color: #444 !important;
+        font-size: 0.75rem !important;
+      }
+      
+      .btn-print-archive {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body>
   
   <header>
     <a href="javascript:void(0)" onclick="goBackToDashboard(event)" class="back-btn">← 돌아가기</a>
+    <button onclick="printHallOfFame()" class="btn-print-hof" style="position: absolute; top: 13px; right: 20px; display: flex; align-items: center; gap: 6px; color: #fbbf24; text-decoration: none; font-size: 0.9rem; font-weight: 700; padding: 8px 16px; border-radius: 30px; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.2); cursor: pointer; transition: all 0.3s; outline:none;">
+      <i class="fa-solid fa-print"></i> 🖨️ 클럽 A4 인쇄
+    </button>
     <h1>🏆 명예의 전당</h1>
     <p>노형점핑을 빛내는 웰니스 영웅들 <span class="live-indicator"><span class="live-dot"></span>실시간 라이브</span></p>
   </header>
@@ -813,7 +1110,12 @@
       <div class="archive-card" id="card-weekly-archive">
         <div class="archive-header" onclick="toggleArchiveAccordion('weekly-archive')">
           <span>🏆 주간 랭킹 명예의 전당</span>
-          <i class="fa-solid fa-chevron-down chevron-icon"></i>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <button onclick="event.stopPropagation(); printArchive('weekly');" class="btn-print-archive" style="background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; border-radius: 20px; padding: 4px 12px; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; outline: none; transition: all 0.2s;">
+              <i class="fa-solid fa-print"></i> 🖨️ A4 인쇄
+            </button>
+            <i class="fa-solid fa-chevron-down chevron-icon"></i>
+          </div>
         </div>
         <div id="weekly-archive" class="archive-content" style="display: none;">
           <!-- JS dynamic render -->
@@ -824,7 +1126,12 @@
       <div class="archive-card" id="card-monthly-archive">
         <div class="archive-header" onclick="toggleArchiveAccordion('monthly-archive')">
           <span>📅 월간 랭킹 명예의 전당</span>
-          <i class="fa-solid fa-chevron-down chevron-icon"></i>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <button onclick="event.stopPropagation(); printArchive('monthly');" class="btn-print-archive" style="background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; border-radius: 20px; padding: 4px 12px; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; outline: none; transition: all 0.2s;">
+              <i class="fa-solid fa-print"></i> 🖨️ A4 인쇄
+            </button>
+            <i class="fa-solid fa-chevron-down chevron-icon"></i>
+          </div>
         </div>
         <div id="monthly-archive" class="archive-content" style="display: none;">
           <!-- JS dynamic render -->
@@ -835,7 +1142,12 @@
       <div class="archive-card" id="card-attendance-archive">
         <div class="archive-header" onclick="toggleArchiveAccordion('attendance-archive')">
           <span>🏃 역대 출석왕 리스트</span>
-          <i class="fa-solid fa-chevron-down chevron-icon"></i>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <button onclick="event.stopPropagation(); printArchive('attendance');" class="btn-print-archive" style="background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; border-radius: 20px; padding: 4px 12px; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; outline: none; transition: all 0.2s;">
+              <i class="fa-solid fa-print"></i> 🖨️ A4 인쇄
+            </button>
+            <i class="fa-solid fa-chevron-down chevron-icon"></i>
+          </div>
         </div>
         <div id="attendance-archive" class="archive-content" style="display: none;">
           <!-- JS dynamic render -->
@@ -849,6 +1161,35 @@
   <script>
     let rawData = null;
     let currentTab = 'weekly';
+
+    function printHallOfFame() {
+      let tabName = currentTab === 'weekly' ? '주간 랭킹' : currentTab === 'monthly' ? '월간 랭킹' : '토탈 랭킹';
+      showAppAlert(`🖨️ [${tabName}] 명예의 전당 결과를 A4 클럽 게시물 규격으로 인쇄합니다.`, "success", "명예의 전당 인쇄");
+      setTimeout(() => {
+        window.print();
+      }, 500);
+    }
+
+    function printArchive(type) {
+      const content = document.getElementById(type + '-archive');
+      const card = document.getElementById('card-' + type + '-archive');
+      if (content && card) {
+        content.style.display = 'flex';
+        card.classList.add('active');
+      }
+      document.body.classList.add('print-' + type);
+      let titleName = type === 'weekly' ? '역대 주간 MVP' : type === 'monthly' ? '역대 월간 MVP' : '역대 출석왕';
+      showAppAlert(`🖨️ [${titleName}] 명예의 전당 결과를 A4 클럽 게시물 규격으로 인쇄합니다.`, "success", "역대 MVP 인쇄");
+      const cleanUp = () => {
+        document.body.classList.remove('print-' + type);
+        window.removeEventListener('afterprint', cleanUp);
+      };
+      window.addEventListener('afterprint', cleanUp);
+      setTimeout(() => {
+        window.print();
+        setTimeout(cleanUp, 1000);
+      }, 500);
+    }
     let ranksExpanded = false;
 
     // 🏛️ 과거 영웅들의 확정 기록 아카이브 데이터 모델 (지난 분기 모든 내역)
@@ -1152,7 +1493,34 @@
         return;
       }
 
-      let html = '';
+      let titleHTML = '';
+      if (containerId === 'weekly-archive') {
+        titleHTML = `
+          <div class="print-only-title">
+            <h1>🏆 역대 주간 MVP 명예의 전당 🏆</h1>
+            <p>노형점핑을 가장 뜨겁게 빛낸 주간 부문별 영웅들의 확정 기록</p>
+            <hr>
+          </div>
+        `;
+      } else if (containerId === 'monthly-archive') {
+        titleHTML = `
+          <div class="print-only-title">
+            <h1>📅 역대 월간 MVP 명예의 전당 📅</h1>
+            <p>노형점핑의 매달을 찬란하게 수놓은 월간 부문별 영웅들의 확정 기록</p>
+            <hr>
+          </div>
+        `;
+      } else if (containerId === 'attendance-archive') {
+        titleHTML = `
+          <div class="print-only-title">
+            <h1>🏃 역대 출석왕 명예의 전당 🏃</h1>
+            <p>꾸준함과 성실함으로 매일의 기적을 만든 출석 부문별 영웅들의 확정 기록</p>
+            <hr>
+          </div>
+        `;
+      }
+
+      let html = titleHTML;
       list.forEach((item, idx) => {
         const isLatest = (idx === 0 && (containerId === 'weekly-archive' || containerId === 'monthly-archive'));
         if (isLatest) {

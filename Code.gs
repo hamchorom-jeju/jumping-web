@@ -4428,41 +4428,73 @@ function saveInBodyRecord(data) {
 }
 
 /**
- * 33 챌린지 전체 기록 조회 ('인바디 입력' 시트 기준)
+ * 33 챌린지 전체 기록 조회 ('33챌린지_인바디' 시트 기준 - 관리자 고도화)
  */
 function getInBodyHistory() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("인바디 입력");
+    var sheet = ss.getSheetByName("33챌린지_인바디");
     if (!sheet) return { success: true, records: [] };
     
     var data = sheet.getDataRange().getValues();
     if (data.length <= 1) return { success: true, records: [] };
     
     var records = [];
-    // 최근 20개 정도만 가져오기
-    var start = Math.max(1, data.length - 20);
-    for (var i = data.length - 1; i >= start; i--) {
+    for (var i = 1; i < data.length; i++) {
       var row = data[i];
-      var dateVal = row[1]; // B열
+      var dateVal = row[0]; // A열: 측정 날짜
       if (dateVal instanceof Date) {
         dateVal = Utilities.formatDate(dateVal, "GMT+9", "yyyy-MM-dd");
       }
       
       records.push({
+        rowIdx: i + 1,
         date: String(dateVal || ""),
-        name: String(row[2] || ""), // C열
-        phone: String(row[3] || ""), // D열
-        weight: row[4], // E
-        muscle: row[5], // F
-        fat: row[6], // G
-        memo: String(row[7] || ""), // H
-        rowIdx: i + 1
+        name: String(row[1] || ""), // B열: 이름
+        phone: String(row[2] || ""), // C열: 연락처
+        weight: row[3] !== "" ? Number(row[3]) : 0, // D열: 체중
+        muscle: row[4] !== "" ? Number(row[4]) : 0, // E열: 골격근량
+        fat: row[5] !== "" ? Number(row[5]) : 0, // F열: 체지방률
+        score: row[6] !== "" ? Number(row[6]) : 0, // G열: 인바디점수
+        memo: String(row[7] || "") // H열: 비고/상담내용
       });
     }
+    // 최신순 정렬
+    records.reverse();
     return { success: true, records: records };
   } catch (e) {
     return { error: e.toString() };
+  }
+}
+
+/**
+ * 33 챌린지 인바디 기록 개별 수정 API
+ */
+function updateInBodyRecord(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("33챌린지_인바디");
+    if (!sheet) return { success: false, error: "시트를 찾을 수 없습니다." };
+    
+    var rowIdx = Number(payload.rowIdx);
+    if (!rowIdx || rowIdx < 2) return { success: false, error: "유효하지 않은 행 인덱스입니다." };
+    
+    // 안전한 덮어쓰기 위해 날짜 타입 변환
+    var targetDate = new Date(payload.date);
+    
+    // 시트 셀에 하나씩 매칭하여 저장
+    sheet.getRange(rowIdx, 1).setValue(targetDate);
+    sheet.getRange(rowIdx, 2).setValue(String(payload.name).trim());
+    sheet.getRange(rowIdx, 3).setValue(String(payload.phone).trim());
+    sheet.getRange(rowIdx, 4).setValue(Number(payload.weight || 0));
+    sheet.getRange(rowIdx, 5).setValue(Number(payload.muscle || 0));
+    sheet.getRange(rowIdx, 6).setValue(Number(payload.fat || 0));
+    sheet.getRange(rowIdx, 7).setValue(Number(payload.score || 0));
+    sheet.getRange(rowIdx, 8).setValue(String(payload.memo || "").trim());
+    
+    return { success: true, message: "기록이 안전하게 수정되었습니다." };
+  } catch (e) {
+    return { success: false, error: e.toString() };
   }
 }
 
