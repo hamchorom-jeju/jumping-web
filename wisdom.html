@@ -436,13 +436,13 @@
     <!-- [v44.218] 로딩 오버레이 -->
     <div id="v-loading" class="v-loading-overlay" style="display: flex;">
         <div class="v-loading-spinner"></div>
-        <div id="v-loading-msg" style="font-weight: 800; color: var(--wisdom-wood); font-size: 0.9rem;">지혜의 고서를 불러오고 있습니다...</div>
+        <div id="v-loading-msg" style="font-weight: 800; color: var(--wisdom-wood); font-size: 0.9rem;">유익한 웰니스 상식을 불러오고 있습니다...</div>
     </div>
 
     <header class="v-global-header" style="background: var(--wisdom-wood); border-bottom: 2px solid var(--wisdom-gold);">
         <div style="display:flex; justify-content:space-between; align-items:center; width:100%; max-width:500px; margin:0 auto;">
             <div style="width:40px;"></div>
-            <h1 style="color:#f7e7c4;">지혜의 보물고</h1>
+            <h1 style="color:#f7e7c4;">웰니스 지식창고</h1>
             <button class="v-header-logout" id="header-logout-btn" onclick="Auth.logout()" title="마을 퇴장" style="display: flex !important;">
                 <i class="fas fa-sign-out-alt"></i>
             </button>
@@ -467,9 +467,9 @@
             <!-- Dynamic Grid Items will be injected here -->
         </div>
 
-        <!-- 🏛️ 지난 황금 고서첩 펼치기 버튼 -->
+        <!-- 🏛️ 지난 웰니스 상식 모아보기 버튼 -->
         <button class="btn-open-archive" onclick="openArchiveList()">
-            🏛️ 지난 황금 고서첩 펼치기 <i class="fa-solid fa-chevron-right" style="font-size:0.75rem;"></i>
+            🌿 지난 웰니스 상식 모아보기 <i class="fa-solid fa-chevron-right" style="font-size:0.75rem;"></i>
         </button>
 
     </div>
@@ -484,13 +484,13 @@
         </div>
     </div>
 
-    <!-- 🏛️ 지난 황금 고서첩 (과거 목록) 드로어 모달 -->
+    <!-- 🏛️ 지난 웰니스 상식 (과거 목록) 드로어 모달 -->
     <div id="archive-list-modal" class="scroll-modal" style="display: none; align-items: flex-end; padding: 0;">
         <div class="scroll-body" style="max-width: 500px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 30px; border-top-right-radius: 30px; border-bottom: none; max-height: 80vh; overflow-y: auto; -webkit-overflow-scrolling: touch; margin-bottom: 0; padding-bottom: 120px; width: 100%;">
             <div class="scroll-close-btn" onclick="closeArchiveList()" style="top: 18px; right: 18px;">X</div>
             
             <div class="scroll-modal-title" style="color: var(--wisdom-wood); font-weight: 900; margin-bottom: 20px;">
-                🏛️ 지난 황금 고서첩 목록
+                🌿 지난 웰니스 상식 목록
             </div>
             
             <div id="archive-tips-list" style="display: flex; flex-direction: column; gap: 12px;">
@@ -529,9 +529,9 @@
         
         // 초기 기본 고정 섹션 (데이터가 한 건도 없을 때 디폴트 플레이스홀더)
         const defaultTips = {
-            "섹션 1": { id: 0, title: "이장님의 계시를 기다리는 중 📜", content: "이장의 집에서 '섹션 1' 카테고리로 건강 고서를 집필하여 마을의 건강 지식을 밝혀주세요!", category: "섹션 1", author: "길드마스터", date: "2026-05-24", likes: 0, insights: 0, comments: [] },
-            "섹션 2": { id: 0, title: "건강 비법 준비 중 🍱", content: "이장의 집에서 '섹션 2' 카테고리로 새로운 식단 비법을 집필해 주세요!", category: "섹션 2", author: "길드마스터", date: "2026-05-24", likes: 0, insights: 0, comments: [] },
-            "섹션 3": { id: 0, title: "항상성 운동 준비 중 🏃", content: "이장의 집에서 '섹션 3' 카테고리로 새로운 홈트레이닝 꿀팁을 집필해 주세요!", category: "섹션 3", author: "길드마스터", date: "2026-05-24", likes: 0, insights: 0, comments: [] }
+            "섹션 1": { id: 0, title: "수석 에디터의 칼럼을 준비하는 중 🌿", content: "관리자 화면에서 '섹션 1' 카테고리로 건강 칼럼을 집필하여 회원들의 건강 지식을 밝혀주세요!", category: "섹션 1", author: "수석에디터", date: "2026-05-24", likes: 0, insights: 0, comments: [] },
+            "섹션 2": { id: 0, title: "건강 식단 가이드 준비 중 🍱", content: "관리자 화면에서 '섹션 2' 카테고리로 새로운 식단 가이드를 집필해 주세요!", category: "섹션 2", author: "수석에디터", date: "2026-05-24", likes: 0, insights: 0, comments: [] },
+            "섹션 3": { id: 0, title: "항상성 운동 프로그램 준비 중 🏃", content: "관리자 화면에서 '섹션 3' 카테고리로 새로운 홈트레이닝 꿀팁을 집필해 주세요!", category: "섹션 3", author: "수석에디터", date: "2026-05-24", likes: 0, insights: 0, comments: [] }
         };
 
         function renderLoginStatus() {
@@ -554,7 +554,7 @@
         }
 
         function loadWisdomTips() {
-            showLoading("지혜의 도서관에서 고서를 가져오는 중...");
+            showLoading("지식창고에서 웰니스 상식을 가져오는 중...");
             if (typeof google === 'undefined') {
                 hideLoading();
                 // 오프라인/개발 환경 테스트용 모킹 렌더링
@@ -649,20 +649,20 @@
             
             if (!t) return;
             
-            // 딱딱한 '섹션 X'를 고풍스럽고 격조 높은 감성 한글 라벨로 자동 치환
-            let friendlyCategory = String(t.category || "비법서");
+            // 딱딱한 '섹션 X'를 격조 높은 웰니스 한글 라벨로 자동 치환
+            let friendlyCategory = String(t.category || "건강지식");
             if (friendlyCategory.indexOf("섹션 1") > -1) {
-                friendlyCategory = "이장의 메인 건강 비법 📰";
+                friendlyCategory = "에디터 추천 건강 비법 📰";
             } else if (friendlyCategory.indexOf("섹션 2") > -1) {
-                friendlyCategory = "이장의 건강 식단 칼럼 🍱";
+                friendlyCategory = "영양 가득 건강 식단 칼럼 🍱";
             } else if (friendlyCategory.indexOf("섹션 3") > -1) {
-                friendlyCategory = "이장의 홈트 운동 가이드 🏃";
+                friendlyCategory = "항상성 홈트 운동 가이드 🏃";
             } else if (friendlyCategory.indexOf("섹션 4") > -1) {
-                friendlyCategory = "이장의 힐링 케어 단신 🧘";
+                friendlyCategory = "마음 평온 힐링 케어 단신 🧘";
             } else if (friendlyCategory.indexOf("섹션 5") > -1) {
-                friendlyCategory = "이장의 건강 수호 방책 🛡️";
+                friendlyCategory = "신체 밸런스 건강 수호 가이드 🛡️";
             } else if (friendlyCategory.indexOf("섹션") > -1) {
-                friendlyCategory = "이장의 황금 건강 비법 📜";
+                friendlyCategory = "수석 에디터의 웰니스 건강 비법 🌿";
             }
 
             const modal = document.getElementById('tip-detail-modal');
@@ -702,10 +702,10 @@
                 <!-- 💬 칭찬 코멘트 패널 -->
                 <div class="comments-section" style="margin-top: 20px;">
                     <div style="font-weight:900; font-size:0.75rem; color:var(--wisdom-wood); margin-bottom:10px;">
-                        <i class="fa-regular fa-comment-dots"></i> 모험가들의 칭찬 코멘트 (${t.comments ? t.comments.length : 0})
+                        <i class="fa-regular fa-comment-dots"></i> 회원님들의 칭찬과 소망 한마디 (${t.comments ? t.comments.length : 0})
                     </div>
                     <div class="comments-list" id="comments-list-${t.id}">
-                        ${commentMarkup || '<div style="font-size:0.7rem; color:#999; text-align:center; padding:15px 0;">첫 칭찬 코멘트를 남겨보세요!</div>'}
+                        ${commentMarkup || '<div style="font-size:0.7rem; color:#999; text-align:center; padding:15px 0;">첫 건강 다짐 코멘트를 남겨보세요!</div>'}
                     </div>
                     
                     ${t.id > 0 ? `
@@ -744,7 +744,7 @@
             if (tips.length === 0) {
                 listContainer.innerHTML = `
                     <div style="text-align:center; padding:30px; font-size:0.75rem; color:#7c6a56; font-weight:800;">
-                        📜 아직 소장된 과거 비법서가 없습니다.
+                        🌿 아직 보관된 과거 건강 지식이 없습니다.
                     </div>
                 `;
             } else {
@@ -777,7 +777,7 @@
         }
 
         function sendReaction(tipId, type, btnEl) {
-            if (tipId === 0) return alert("플레이스홀더 고서에는 리액션을 남길 수 없습니다. 🏺");
+            if (tipId === 0) return alert("플레이스홀더 카드에는 리액션을 남길 수 없습니다. 🏺");
             if (typeof google === 'undefined') return;
             
             // UI 낙관적 반영
@@ -798,7 +798,7 @@
         }
 
         function submitComment(tipId) {
-            if (tipId === 0) return alert("플레이스홀더 고서에는 코멘트를 남길 수 없습니다. 🏺");
+            if (tipId === 0) return alert("플레이스홀더 카드에는 코멘트를 남길 수 없습니다. 🏺");
             const input = document.getElementById(`comment-input-${tipId}`);
             const text = input.value.trim();
             if (!text) {
@@ -855,7 +855,7 @@
         window.onload = function() {
             Auth.check();
             renderLoginStatus();
-            setTimeout(loadWisdomTips, 300);
+            loadWisdomTips(); // ⚡ 불필요한 300ms 로딩 딜레이를 즉시 제거하여 초기 기동 속도를 대폭 단축했습니다.
         };
     </script>
 </body>
