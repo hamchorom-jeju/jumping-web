@@ -38,19 +38,19 @@
 
     /* 🏛️ GLOBAL APP HEADER (Fixed) */
     .v-global-header {
-        background: #fff;
+        background: var(--v-wood);
         padding: 18px;
         text-align: center;
-        border-bottom: 2px solid var(--v-paper);
+        border-bottom: 2px solid var(--gold);
         position: sticky;
         top: 0;
         z-index: 1000;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
     .v-global-header h1 {
         font-size: 1.1rem;
         font-weight: 900;
-        color: var(--v-wood);
+        color: #f7e7c4;
         letter-spacing: -0.5px;
     }
 
@@ -182,31 +182,69 @@
 
     /* 하단 현황 섹션 */
     #summary-section { 
-      margin-top: 40px; background: #fff; padding: 25px; border-radius: 25px; 
-      box-shadow: var(--shadow); border: 2px solid var(--v-paper);
+      margin-top: 30px; background: #fff; padding: 25px; border-radius: 24px; 
+      box-shadow: 0 8px 30px rgba(93, 64, 55, 0.04); border: 1.5px solid rgba(93, 64, 55, 0.1);
     }
-    .summary-header { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-weight: 900; font-size: 1.1rem; color: var(--v-wood); }
+    .summary-header { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-weight: 900; font-size: 1.05rem; color: var(--v-wood); }
     
     /* 예약 현황 카드 스타일 */
     .cards-container { display: flex; flex-direction: column; gap: 15px; }
     .summary-card { 
-      background: #ffffff; border-radius: 20px; border: 1.5px solid var(--v-paper); 
-      overflow: hidden; 
+      background: #ffffff; border-radius: 20px; border: 1.5px solid rgba(93, 64, 55, 0.1); 
+      overflow: hidden; box-shadow: 0 4px 12px rgba(93, 64, 55, 0.02);
+      transition: transform 0.2s;
     }
-    .card-today { border: 2px solid var(--emerald); }
-    .card-header { padding: 12px 20px; background: var(--v-paper); display: flex; justify-content: space-between; align-items: center; }
-    .card-date { font-weight: 900; font-size: 1rem; color: var(--v-wood); }
+    .card-today { 
+      border: 2px solid var(--emerald); 
+      box-shadow: 0 6px 16px rgba(46, 204, 113, 0.12);
+    }
+    .card-header { 
+      padding: 12px 20px; background: rgba(93, 64, 55, 0.04); 
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1.5px solid rgba(93, 64, 55, 0.08);
+    }
+    .card-today .card-header {
+      background: rgba(46, 204, 113, 0.06);
+      border-bottom: 1.5px solid rgba(46, 204, 113, 0.15);
+    }
+    .card-date { font-weight: 900; font-size: 0.95rem; color: var(--v-wood); }
     .today-badge { background: var(--emerald); color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 900; }
-    .res-row { padding: 12px 15px; border-bottom: 1px dashed var(--v-border); display: grid; grid-template-columns: 80px 1fr 80px; align-items: center; font-size: 0.9rem; }
+    .res-row { 
+      padding: 14px 20px; border-bottom: 1px dashed rgba(93, 64, 55, 0.15); 
+      display: grid; grid-template-columns: 80px 1fr 100px; align-items: center; font-size: 0.88rem; 
+      transition: background 0.2s;
+    }
+    .res-row:last-child { border-bottom: none; }
+    .res-row:hover { background: rgba(93, 64, 55, 0.02); }
     .res-time { font-weight: 800; color: var(--emerald); }
-    .res-name { font-weight: 700; color: var(--v-wood); }
-    .res-room { font-size: 0.8rem; color: var(--text-dim); text-align: right; }
+    .res-name { font-weight: 800; color: var(--v-wood); }
+    .res-room { 
+      font-size: 0.78rem; color: var(--v-wood); background: rgba(93, 64, 55, 0.08); 
+      padding: 3px 8px; border-radius: 12px; text-align: center; font-weight: 800; 
+      display: inline-block;
+    }
+    .no-res {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      font-weight: 800;
+      width: 100%;
+    }
 
     .back-btn { background: var(--v-paper); border: none; border-radius: 12px; padding: 10px 15px; font-size: 0.85rem; font-weight: 800; color: var(--v-wood); cursor: pointer; }
     
     /* Profile Bar Styles */
-    .v-profile-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #fff; border-bottom: 2px solid var(--v-paper); margin-bottom: 20px; }
-    .v-status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; background: var(--v-paper); border: 1px solid var(--v-border); font-size: 0.8rem; font-weight: 800; color: var(--v-wood); }
+    .v-profile-bar { 
+      display: flex; justify-content: space-between; align-items: center; 
+      padding: 12px 20px; background: rgba(93, 64, 55, 0.06); 
+      border-bottom: 1px solid rgba(93, 64, 55, 0.12); margin-bottom: 20px; 
+    }
+    .v-status-badge { 
+      display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; 
+      border-radius: 20px; background: var(--v-wood); border: 1px solid var(--v-border); 
+      font-size: 0.8rem; font-weight: 800; color: #f7e7c4; 
+    }
     .v-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #e74c3c; transition: background 0.3s; }
     .v-logout-btn { background: none; border: none; color: #e74c3c; font-size: 1.2rem; cursor: pointer; display: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; transition: background 0.2s; }
     .v-logout-btn:active { background: #ffebee; }
@@ -215,11 +253,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-  <!-- [v44.218] 로딩 오버레이 -->
-  <div id="v-loading" class="v-loading-overlay" style="display: flex;">
-    <div class="v-loading-spinner"></div>
-    <div id="v-loading-msg" style="font-weight: 800; color: var(--v-wood); font-size: 0.9rem;">테라피 예약 정보를 확인 중...</div>
-  </div>
+  <!-- [v65.4] 로딩 오버레이 완전 제거 (원장님 지시 수용: 백그라운드 무진동 로딩 적용) -->
 
   <!-- 🏛️ GLOBAL APP HEADER (Fixed) -->
   <header class="v-global-header">
@@ -261,7 +295,7 @@
 
         <!-- 하단 현황 -->
         <div id="summary-section">
-        <div class="summary-header">🗓️ 오늘의 예약 현황</div>
+        <div class="summary-header">🗓️ 최근 주간 예약 현황</div>
         <div id="summary-list" style="font-size:0.95rem; color:var(--text-sub);">불러오는 중...</div>
         </div>
     </div>
