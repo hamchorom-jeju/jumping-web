@@ -11252,11 +11252,12 @@ function getTodayTimetableAndRooms(targetDate) {
 
       var parts = targetT.split(':');
       var h = Number(parts[0]);
-      var display = (h < 12) ? "오전 " + targetT : "오후 " + targetT;
+      var icon = (h >= 12) ? "🌙 " : "☀️ ";
+      var display = icon + targetT;
       
       validTimes.push({
         timeValue: targetT,
-        display: display + " (예약 가능)",
+        display: display,
         isFull: false
       });
     });
