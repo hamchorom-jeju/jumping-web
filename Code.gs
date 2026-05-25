@@ -7423,9 +7423,9 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
   
   // 만약 API 호출 실패 시 감성 템플릿(Fallback 백업)으로 안전 복구
   if (!aiMsg) {
-    var elapsedTextFallback = (elapsedDays === 999) ? "오랫동안" : "벌써 " + elapsedDays + "일이";
     if (type === "장기미방문") {
-      aiMsg = cleanName + "회원님, 노형점핑클럽입니다. 😊 클럽에서 뵙지 못한 지 " + elapsedTextFallback + " 지났네요! 😢 많이 바쁘시더라도 가벼운 점핑 운동이나 따뜻한 테라피로 다시 건강 리듬을 회복해보시는 건 어떨까요? 소중한 회원님의 수강 만료일은 " + remain + "회 남았습니다. 소멸되기 전에 꼭 와주세요! ❤️";
+      var elapsedTextFallback = (elapsedDays === 999) ? "오랫동안 소식이 닿지 않아 무척 궁금했답니다." : "뵙지 못한 지 벌써 " + elapsedDays + "일이나 지났네요! 😢";
+      aiMsg = cleanName + "회원님, 노형점핑클럽입니다. 😊 클럽에서 " + elapsedTextFallback + " 많이 바쁘시더라도 가벼운 점핑 운동이나 따뜻한 테라피로 다시 건강 리듬을 회복해보시는 건 어떨까요? 소중한 회원님의 잔여 회원권이 아직 " + remain + "회나 남았습니다. 아깝게 소멸되기 전에 얼른 오셔서 신나게 함께 뛰어보아요! ❤️";
     } else {
       if (remain === 0) {
         aiMsg = cleanName + "회원님, 노형점핑클럽입니다! 😊 며칠 전 회원님의 신나는 운동 이용권(수강권)이 모두 마감되었네요. 혹시 깜빡하고 재등록을 놓치고 계신 건 아닌가요? 😢 겨우 다져놓은 체력과 건강한 루틴이 아깝게 멈춰 서기 전에 꼭 다시 함께 뛰었으면 좋겠습니다. 가벼운 마음으로 클럽 들러주시면 뜨겁게 환영해 드릴게요! ❤️";
