@@ -2000,7 +2000,7 @@
   <!-- 매출 등록 모달 -->
   <div class="modal-overlay" id="salesModal">
     <div class="modal-content" style="max-height:85vh; overflow-y:auto; background:#ffffff;">
-      <div class="modal-header">💰 일일 매출 등록</div>
+      <div class="modal-header">💰 일일 수입 및 지출 등록</div>
 
       <div class="form-group">
         <label class="form-label">📅 날짜 선택</label>
@@ -2010,25 +2010,35 @@
 
       <div class="form-group">
         <label class="form-label">구분 선택</label>
-        <select id="salesCategory"
-          style="width:100%; padding:12px; font-size:1rem; border-radius:10px; background:#f7fafc; color:#1a202c; border:1px solid #e2e8f0; outline:none;">
-          <option value="회원등록">회원등록</option>
-          <option value="찜질복대여">찜질복대여</option>
-          <option value="1일체험비">1일체험비</option>
-          <option value="제품판매">제품판매</option>
-          <option value="점핑PT">점핑PT</option>
-          <option value="기타">기타</option>
+        <select id="salesCategory" onchange="handleSalesCategoryChange()"
+          style="width:100%; padding:12px; font-size:1rem; border-radius:10px; background:#f7fafc; color:#1a202c; border:1px solid #e2e8f0; outline:none; font-weight: 500;">
+          <optgroup label="📈 수입 (매출)">
+            <option value="회원등록" selected>회원등록</option>
+            <option value="찜질복대여">찜질복대여</option>
+            <option value="1일체험비">1일체험비</option>
+            <option value="제품판매">제품판매</option>
+            <option value="점핑PT">점핑PT</option>
+            <option value="기타">기타 수입</option>
+          </optgroup>
+          <optgroup label="💸 지출 (영업 비용)">
+            <option value="임차료 (년세 등)">🏢 임차료 (지출)</option>
+            <option value="가게 관리비">🧹 가게 관리비 (지출)</option>
+            <option value="공과금 (전기/수도/인터넷)">⚡ 공과금 (지출)</option>
+            <option value="장비 렌탈료">🚴 장비 렌탈료 (지출)</option>
+            <option value="클럽 운영/보수비">🛠️ 클럽 운영/보수비 (지출)</option>
+            <option value="기타지출">💸 기타지출 (지출)</option>
+          </optgroup>
         </select>
       </div>
 
       <div class="form-group">
-        <label class="form-label">구입자 이름</label>
+        <label class="form-label">👤 지급처 / 구입자 이름</label>
         <input type="text" id="salesBuyer" placeholder="예: 홍길동"
           style="width:100%; padding:12px; font-size:1rem; border-radius:10px; background:#f7fafc; color:#1a202c; border:1px solid #e2e8f0; outline:none;">
       </div>
 
       <div class="form-group">
-        <label class="form-label">항목명</label>
+        <label class="form-label">🛍️ 세부 항목명 / 지출 용도</label>
         <input type="text" id="salesItemName" placeholder="예: 점핑 30회권, 찜질복 1벌..."
           style="width:100%; padding:12px; font-size:1rem; border-radius:10px; background:#f7fafc; color:#1a202c; border:1px solid #e2e8f0; outline:none;">
       </div>
@@ -2040,7 +2050,7 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">결제수단</label>
+        <label class="form-label">결제수단 / 지급방법</label>
         <div class="select-grid" id="payMethodGrid" style="grid-template-columns: repeat(4, 1fr);">
           <div class="select-btn active" onclick="selectPayMethod(this)">카드</div>
           <div class="select-btn" onclick="selectPayMethod(this)">현금</div>
@@ -2052,10 +2062,11 @@
       <div class="form-group">
         <label class="form-label">비고 (선택)</label>
         <input type="text" id="salesMemo" placeholder="추가 메모..."
-          style="width:100%; padding:12px; font-size:1rem; border-radius:8px; background:rgba(255,255,255,0.1); color:#fff; border:1px solid var(--glass-border); outline:none;">
+          style="width:100%; padding:12px; font-size:1rem; border-radius:10px; background:#f7fafc; color:#1a202c; border:1px solid #e2e8f0; outline:none;">
       </div>
 
-      <button class="btn-submit" onclick="submitSalesData()" style="background:#4caf50;">매출 등록하기</button>
+      <button class="btn-submit" onclick="submitSalesData()" style="background:#38a169; margin-bottom: 8px;">등록 완료하기</button>
+      <button class="btn-submit" onclick="openSalesHistoryModal(); closeSalesModal();" style="background:#3182ce; margin-bottom: 8px;">📁 통합 손익 역사 목록</button>
       <button class="btn-close" onclick="closeSalesModal()">닫기</button>
     </div>
   </div>
@@ -2115,7 +2126,55 @@
       </div>
 
       <button class="btn-submit" onclick="submitWorkLogData()">일지 제출하기</button>
+      <button class="btn-submit" onclick="openWorkLogHistoryModal(); closeWorkLogModal();" style="background:#3182ce; margin-top: 8px; margin-bottom: 8px;">📁 과거 업무일지 전체보기</button>
       <button class="btn-close" onclick="closeWorkLogModal()">닫기</button>
+    </div>
+  </div>
+
+  <!-- 손익 역사 목록 모달 -->
+  <div class="modal-overlay" id="salesHistoryModal">
+    <div class="modal-content" style="max-height:85vh; overflow-y:auto; background:#ffffff; color:#1a202c; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+      <div class="modal-header" style="border-bottom: 2px solid #edf2f7; padding-bottom: 15px; font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; gap: 8px;">📊 통합 손익 역사 목록</div>
+      
+      <div id="salesHistorySummary" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 15px 0; background: #f8fafc; padding: 15px; border-radius: 16px; border: 1px solid #e2e8f0;">
+        <div style="text-align: center;">
+          <div style="font-size: 0.75rem; color: #718096; margin-bottom: 4px;">📈 총 수입</div>
+          <div id="totalSalesIncome" style="font-weight: 800; font-size: 0.95rem; color: #2f855a;">0원</div>
+        </div>
+        <div style="text-align: center; border-left: 1px solid #cbd5e0; border-right: 1px solid #cbd5e0;">
+          <div style="font-size: 0.75rem; color: #718096; margin-bottom: 4px;">💸 총 지출</div>
+          <div id="totalSalesExpense" style="font-weight: 800; font-size: 0.95rem; color: #c53030;">0원</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 0.75rem; color: #718096; margin-bottom: 4px;">👑 순수익</div>
+          <div id="totalSalesNet" style="font-weight: 800; font-size: 0.95rem; color: #4c51bf;">0원</div>
+        </div>
+      </div>
+
+      <div id="salesHistoryList" style="max-height: 50vh; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="text-align:center; padding:20px; color:#718096;">로딩 중...</div>
+      </div>
+      
+      <button class="btn-close" onclick="closeSalesHistoryModal()" style="margin-top: 15px; background: #edf2f7; color: #4a5568; font-weight: bold; border-radius: 12px; height: 48px; border: none; cursor: pointer; width: 100%;">닫기</button>
+    </div>
+  </div>
+
+  <!-- 일일 손익 상세 내역 모달 -->
+  <div class="modal-overlay" id="salesDetailModal">
+    <div class="modal-content" style="max-height:80vh; overflow-y:auto; background:#ffffff; color:#1a202c; border-radius: 20px;">
+      <div class="modal-header" id="salesDetailTitle" style="border-bottom: 2px solid #edf2f7; padding-bottom: 15px; font-weight: 800; font-size: 1.25rem;">📅 손익 상세 내역</div>
+      
+      <div id="salesDetailSummaryCard" style="display: flex; justify-content: space-around; background: #ebf8ff; border: 1px solid #bee3f8; padding: 12px; border-radius: 14px; margin: 15px 0;">
+        <span style="font-size: 0.85rem; font-weight: bold; color: #2b6cb0;">수입: <span id="detailIncomeSum" style="color: #2f855a;">0원</span></span>
+        <span style="font-size: 0.85rem; font-weight: bold; color: #2b6cb0;">지출: <span id="detailExpenseSum" style="color: #c53030;">0원</span></span>
+        <span style="font-size: 0.85rem; font-weight: bold; color: #2b6cb0;">순익: <span id="detailNetSum" style="color: #4c51bf;">0원</span></span>
+      </div>
+
+      <div id="salesDetailList" style="max-height: 45vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px;">
+        <div style="text-align:center; padding:20px; color:#718096;">데이터 불러오는 중...</div>
+      </div>
+      
+      <button class="btn-close" onclick="closeSalesDetailModal()" style="margin-top: 15px; background: #edf2f7; color: #4a5568; font-weight: bold; border-radius: 12px; height: 48px; border: none; cursor: pointer; width: 100%;">뒤로가기</button>
     </div>
   </div>
 
@@ -2830,7 +2889,7 @@
       }
     }
 
-    // --- 매출등록 ---
+    // --- 수입 및 지출 통합 등록 ---
     function openSalesModal() {
       document.getElementById('salesDate').value = getTodayDateStr();
       document.getElementById('salesCategory').value = '회원등록';
@@ -2840,9 +2899,38 @@
       document.getElementById('salesMemo').value = '';
       document.querySelectorAll('#payMethodGrid .select-btn').forEach(function (btn) { btn.classList.remove('active'); });
       document.querySelectorAll('#payMethodGrid .select-btn')[0].classList.add('active');
+      
+      // 초기 플레이스홀더 힌트 연동
+      handleSalesCategoryChange();
+      
       document.getElementById('salesModal').classList.add('show');
       if (window.registerModalOpen) {
         window.registerModalOpen(closeSalesModal);
+      }
+    }
+
+    function handleSalesCategoryChange() {
+      var cat = document.getElementById('salesCategory').value;
+      var expenseCategories = [
+        "임차료 (년세 등)",
+        "가게 관리비",
+        "공과금 (전기/수도/인터넷)",
+        "장비 렌탈료",
+        "클럽 운영/보수비",
+        "기타지출"
+      ];
+      
+      var isExpense = expenseCategories.indexOf(cat) !== -1 || cat.indexOf("지출") !== -1;
+      
+      var buyerInput = document.getElementById('salesBuyer');
+      var itemInput = document.getElementById('salesItemName');
+      
+      if (isExpense) {
+        buyerInput.placeholder = "예: 임대인(건물주), 한국전력, 삼다수...";
+        itemInput.placeholder = "예: 5월 월세, 5월 전기요금, 정수기 렌탈...";
+      } else {
+        buyerInput.placeholder = "예: 홍길동";
+        itemInput.placeholder = "예: 점핑 30회권, 찜질복 1벌...";
       }
     }
 
@@ -2850,6 +2938,179 @@
       document.getElementById('salesModal').classList.remove('show');
       if (!isPopstate && window.registerModalClose) {
         window.registerModalClose(closeSalesModal);
+      }
+    }
+
+    // --- 통합 손익 역사 조회 모듈 ---
+    let lastSalesLogs = [];
+
+    function openSalesHistoryModal() {
+      document.getElementById('salesHistoryList').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-sub);">손익 기록을 실시간 집계 중...</div>';
+      document.getElementById('totalSalesIncome').innerText = '0원';
+      document.getElementById('totalSalesExpense').innerText = '0원';
+      document.getElementById('totalSalesNet').innerText = '0원';
+      
+      document.getElementById('salesHistoryModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeSalesHistoryModal);
+      }
+
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (res.error) {
+              document.getElementById('salesHistoryList').innerHTML = '<div style="color:var(--danger); text-align:center; padding:20px;">' + res.error + '</div>';
+              return;
+            }
+            if (!res.logs || res.logs.length === 0) {
+              document.getElementById('salesHistoryList').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-sub);">기록된 손익 내역이 없습니다.</div>';
+              return;
+            }
+
+            lastSalesLogs = res.logs;
+            var html = '';
+            var totalIncome = 0;
+            var totalExpense = 0;
+
+            res.logs.forEach(function (log, idx) {
+              totalIncome += log.incomeTotal;
+              totalExpense += log.expenseTotal;
+              var netProfit = log.incomeTotal - log.expenseTotal;
+              var netColor = netProfit >= 0 ? '#4c51bf' : '#e53e3e';
+              var netPrefix = netProfit >= 0 ? '+' : '';
+
+              html += '<div onclick="openSalesDetailModal(\'' + log.date + '\')" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:15px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition: transform 0.2s;">' +
+                '<div>' +
+                '<div style="font-weight:800; color:#1a202c; font-size:1.05rem;">📅 ' + log.date + '</div>' +
+                '<div style="font-size:0.8rem; color:#718096; margin-top:4px; display:flex; gap:8px;">' +
+                '<span>수입: <strong style="color:#2f855a;">' + Number(log.incomeTotal).toLocaleString() + '원</strong></span>' +
+                '<span>|</span>' +
+                '<span>지출: <strong style="color:#c53030;">' + Number(log.expenseTotal).toLocaleString() + '원</strong></span>' +
+                '</div>' +
+                '</div>' +
+                '<div style="text-align:right; display:flex; align-items:center; gap:8px;">' +
+                '<div style="font-weight:800; font-size:0.95rem; color:' + netColor + ';">' + netPrefix + Number(netProfit).toLocaleString() + '원</div>' +
+                '<div style="color:#cbd5e0; font-size:1.1rem;">❯</div>' +
+                '</div>' +
+                '</div>';
+            });
+
+            var totalNet = totalIncome - totalExpense;
+            document.getElementById('totalSalesIncome').innerText = Number(totalIncome).toLocaleString() + '원';
+            document.getElementById('totalSalesExpense').innerText = Number(totalExpense).toLocaleString() + '원';
+            document.getElementById('totalSalesNet').innerText = (totalNet >= 0 ? '+' : '') + Number(totalNet).toLocaleString() + '원';
+            document.getElementById('totalSalesNet').style.color = totalNet >= 0 ? '#4c51bf' : '#e53e3e';
+            
+            document.getElementById('salesHistoryList').innerHTML = html;
+          })
+          .withFailureHandler(function (err) {
+            document.getElementById('salesHistoryList').innerHTML = '<div style="color:var(--danger); text-align:center; padding:20px;">서버 오류: ' + (err.message || err) + '</div>';
+          })
+          .getSalesHistory();
+      }
+    }
+
+    function closeSalesHistoryModal(isPopstate) {
+      document.getElementById('salesHistoryModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeSalesHistoryModal);
+      }
+    }
+
+    function openSalesDetailModal(dateStr) {
+      document.getElementById('salesDetailTitle').innerText = '📅 ' + dateStr + ' 손익 상세';
+      document.getElementById('salesDetailList').innerHTML = '<div style="text-align:center; padding:20px; color:#718096;">세부 내역 불러오는 중...</div>';
+      document.getElementById('detailIncomeSum').innerText = '0원';
+      document.getElementById('detailExpenseSum').innerText = '0원';
+      document.getElementById('detailNetSum').innerText = '0원';
+
+      document.getElementById('salesDetailModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeSalesDetailModal);
+      }
+
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (res.error) {
+              document.getElementById('salesDetailList').innerHTML = '<div style="color:#e53e3e; text-align:center; padding:20px;">' + res.error + '</div>';
+              return;
+            }
+            
+            var salesList = res.sales || [];
+            if (salesList.length === 0) {
+              document.getElementById('salesDetailList').innerHTML = '<div style="text-align:center; padding:30px; color:#718096;">해당 날짜에 손익 기록이 없습니다.</div>';
+              return;
+            }
+
+            var expenseCategories = [
+              "임차료 (년세 등)",
+              "가게 관리비",
+              "공과금 (전기/수도/인터넷)",
+              "장비 렌탈료",
+              "클럽 운영/보수비",
+              "기타지출"
+            ];
+
+            var detailHtml = '';
+            var dayIncome = 0;
+            var dayExpense = 0;
+
+            salesList.forEach(function (item) {
+              var amountNum = Number(item.amount || 0);
+              var cat = String(item.category || "").trim();
+              
+              var isExpense = expenseCategories.indexOf(cat) !== -1 || cat.indexOf("지출") !== -1;
+              var sign = '';
+              var signColor = '';
+              var signBg = '';
+              
+              if (isExpense) {
+                dayExpense += amountNum;
+                sign = '지출 ➖';
+                signColor = '#c53030';
+                signBg = '#fff5f5';
+              } else {
+                dayIncome += amountNum;
+                sign = '수입 ➕';
+                signColor = '#2f855a';
+                signBg = '#f0fff4';
+              }
+
+              detailHtml += '<div style="background:' + signBg + '; border:1px solid rgba(0,0,0,0.05); border-radius:12px; padding:15px; display:flex; justify-content:space-between; align-items:center;">' +
+                '<div style="flex:1;">' +
+                '<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">' +
+                '<span style="font-weight:800; color:#2d3748; font-size:0.95rem;">' + item.buyer + '</span>' +
+                '<span style="background:' + signColor + '; color:#fff; padding:2px 6px; border-radius:6px; font-size:0.65rem; font-weight:700;">' + sign + '</span>' +
+                '</div>' +
+                '<div style="font-size:0.8rem; color:#718096;">' + item.itemName + ' (' + (item.payMethod || '카드') + ')</div>' +
+                (item.memo ? '<div style="font-size:0.75rem; color:#a0aec0; margin-top:4px;">└ 비고: ' + item.memo + '</div>' : '') +
+                '</div>' +
+                '<div style="font-weight:800; font-size:1rem; color:' + signColor + ';">' + 
+                (isExpense ? '-' : '+') + Number(amountNum).toLocaleString() + '원' +
+                '</div>' +
+                '</div>';
+            });
+
+            var dayNet = dayIncome - dayExpense;
+            document.getElementById('detailIncomeSum').innerText = Number(dayIncome).toLocaleString() + '원';
+            document.getElementById('detailExpenseSum').innerText = Number(dayExpense).toLocaleString() + '원';
+            document.getElementById('detailNetSum').innerText = (dayNet >= 0 ? '+' : '') + Number(dayNet).toLocaleString() + '원';
+            document.getElementById('detailNetSum').style.color = dayNet >= 0 ? '#4c51bf' : '#e53e3e';
+
+            document.getElementById('salesDetailList').innerHTML = detailHtml;
+          })
+          .withFailureHandler(function (err) {
+            document.getElementById('salesDetailList').innerHTML = '<div style="color:#e53e3e; text-align:center; padding:20px;">서버 통신 실패</div>';
+          })
+          .getSalesByDate(dateStr);
+      }
+    }
+
+    function closeSalesDetailModal(isPopstate) {
+      document.getElementById('salesDetailModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeSalesDetailModal);
       }
     }
 
@@ -2868,7 +3129,17 @@
       var payMethod = payMethodBtn ? payMethodBtn.innerText : '카드';
       var memo = document.getElementById('salesMemo').value.trim();
 
-      if (!buyer) return showAdminAlert("구입자 이름을 입력해주세요.", "error");
+      var expenseCategories = [
+        "임차료 (년세 등)",
+        "가게 관리비",
+        "공과금 (전기/수도/인터넷)",
+        "장비 렌탈료",
+        "클럽 운영/보수비",
+        "기타지출"
+      ];
+      var isExpense = expenseCategories.indexOf(category) !== -1 || category.indexOf("지출") !== -1;
+
+      if (!buyer) return showAdminAlert(isExpense ? "지급처 이름을 입력해주세요." : "구입자 이름을 입력해주세요.", "error");
       if (!amount || Number(amount) <= 0) return showAdminAlert("금액을 입력해주세요.", "error");
 
       var btn = document.querySelector('#salesModal .btn-submit');
@@ -2889,19 +3160,19 @@
         google.script.run
           .withSuccessHandler(function (res) {
             btn.disabled = false;
-            btn.innerText = "매출 등록하기";
+            btn.innerText = "등록 완료하기";
             if (res.error) { showAdminErrorModal("등록 실패: " + res.error); }
             else { showAdminSuccessModal(res.message); closeSalesModal(); }
           })
           .withFailureHandler(function (err) {
             btn.disabled = false;
-            btn.innerText = "매출 등록하기";
+            btn.innerText = "등록 완료하기";
             showAdminErrorModal("서버 오류: " + (err.message || err));
           })
           .submitSalesRecord(data);
       } else {
         btn.disabled = false;
-        btn.innerText = "매출 등록하기";
+        btn.innerText = "등록 완료하기";
       }
     }
 
@@ -3256,19 +3527,14 @@
   <div class="modal-overlay" id="workLogMenuModal">
     <div class="modal-content">
       <div class="modal-header">📑 업무 및 매출 관리</div>
-      <div class="modal-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;">
-        <button class="m-btn m-btn-jumping" onclick="openWorkLogModal(); closeWorkLogMenuModal();" style="padding: 15px; font-size: 0.95rem; flex-direction: column; height: 100px;">✍️<br>일지 작성</button>
-        <button class="m-btn m-btn-therapy" onclick="openSalesModal(); closeWorkLogMenuModal();" style="padding: 15px; font-size: 0.95rem; flex-direction: column; height: 100px;">💰<br>매출 등록</button>
-        <button class="m-btn m-btn-combo" onclick="openWorkLogHistoryModal(); closeWorkLogMenuModal();" style="padding: 15px; font-size: 0.95rem; flex-direction: column; height: 100px;">📁<br>과거 기록</button>
-        <button class="m-btn" style="background:#6b46c1; color:white; padding: 15px; font-size: 0.95rem; flex-direction: column; height: 100px;"
-          onclick="openSmsLogModal(); closeWorkLogMenuModal();">📧<br>문자 관리</button>
-        <button class="m-btn" style="background:#4f46e5; color:white; padding: 15px; font-size: 0.95rem; grid-column: span 2; height: 75px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-direction: row;"
-          onclick="openPersonalNotiModal(); closeWorkLogMenuModal();">✉️ 개인쪽지/전령 발송</button>
-        <button class="m-btn" style="background:#ed64a6; color:white; padding: 15px; font-size: 0.95rem; flex-direction: column; height: 100px;"
-          onclick="handleAbsentees(); closeWorkLogMenuModal();">🔍<br>미방문 추출</button>
-        <button class="m-btn" style="background:#38a169; color:white; padding: 15px; font-size: 0.95rem; flex-direction: column; height: 100px;"
-          onclick="handleInactiveMembers(); closeWorkLogMenuModal();">🔄<br>복귀 추출</button>
-        <button class="m-btn m-btn-cancel" onclick="closeWorkLogMenuModal()" style="grid-column: span 2; margin-top: 10px;">닫기</button>
+      <div class="modal-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px;">
+        <button class="m-btn m-btn-jumping" onclick="openWorkLogModal(); closeWorkLogMenuModal();" style="padding: 20px; font-size: 1.05rem; flex-direction: column; height: 110px; border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: bold; background: linear-gradient(135deg, #3182ce, #2b6cb0); color: white; border: none; cursor: pointer; transition: transform 0.2s;">✍️<br>업무일지</button>
+        <button class="m-btn m-btn-therapy" onclick="openSalesModal(); closeWorkLogMenuModal();" style="padding: 20px; font-size: 1.05rem; flex-direction: column; height: 110px; border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: bold; background: linear-gradient(135deg, #38a169, #2f855a); color: white; border: none; cursor: pointer; transition: transform 0.2s;">💰<br>매출관리</button>
+        <button class="m-btn" style="background: linear-gradient(135deg, #4f46e5, #4338ca); color: white; padding: 20px; font-size: 1.05rem; flex-direction: column; height: 110px; border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: bold; border: none; cursor: pointer; transition: transform 0.2s;"
+          onclick="openPersonalNotiModal(); closeWorkLogMenuModal();">✉️<br>개인쪽지 관리</button>
+        <button class="m-btn" style="background: linear-gradient(135deg, #6b46c1, #553c9a); color: white; padding: 20px; font-size: 1.05rem; flex-direction: column; height: 110px; border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: bold; border: none; cursor: pointer; transition: transform 0.2s;"
+          onclick="openSmsLogModal(); closeWorkLogMenuModal();">📧<br>문자관리</button>
+        <button class="m-btn m-btn-cancel" onclick="closeWorkLogMenuModal()" style="grid-column: span 2; margin-top: 15px; border-radius: 12px; height: 48px; font-size: 1rem; font-weight: bold; border: 1px solid #cbd5e0; background: #edf2f7; color: #4a5568; cursor: pointer;">닫기</button>
       </div>
     </div>
   </div>

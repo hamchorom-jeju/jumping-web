@@ -4962,8 +4962,8 @@ function autoRefreshSmsLists() {
     }
     
     // 다시 추출
-    checkLongTermAbsentees();
-    checkInactiveMembers();
+
+
     checkInactivityDebuffAbsentees(); // [v46.35] 연속 미출석 결석 디버프 대기열 추가
     
     Logger.log("SMS 발송 대기 목록 자동 최신화 완료");
@@ -4991,7 +4991,7 @@ function updateSmsStatus(rowIdx, status) {
 /**
  * [관리자 전용] 7일 이상 미방문 회원 추출 및 문자 생성
  */
-function checkLongTermAbsentees() {
+function checkLongTermAbsentees() { return { success: true, count: 0, message: "동작 제외" };
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var regSheet = ss.getSheetByName("등록 현황");
@@ -5211,7 +5211,7 @@ function checkLongTermAbsentees() {
 /**
  * [관리자 전용] 등록이 끊긴 지 14일 이상 된 장기 미등록 회원 추출
  */
-function checkInactiveMembers() {
+function checkInactiveMembers() { return { success: true, count: 0, message: "동작 제외" };
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var regSheet = ss.getSheetByName("등록 현황");
@@ -9983,6 +9983,67 @@ function getChallengeArchiveData(payload) {
     return { success: true, periods: periods, records: records, dateRange: dateRange };
   } catch (e) {
     return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * [관리자 전용] 날짜별 판매(수입) 및 지출 기록 역사 요약 목록 조회
+ */
+function getSalesHistory() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var salesSheet = ss.getSheetByName("판매내역");
+    if (!salesSheet) return { error: "판매내역 시트가 없습니다." };
+    
+    var data = salesSheet.getDataRange().getValues();
+    if (data.length <= 1) return { success: true, logs: [] };
+    
+    // 지출 대표 6대 대분류
+    var expenseCategories = [
+      "임차료 (년세 등)",
+      "가게 관리비",
+      "공과금 (전기/수도/인터넷)",
+      "장비 렌탈료",
+      "클럽 운영/보수비",
+      "기타지출"
+    ];
+    
+    var salesGroup = {};
+    for (var i = 1; i < data.length; i++) {
+      var dateRaw = data[i][1];
+      var dateStr = "";
+      if (dateRaw instanceof Date) {
+        dateStr = Utilities.formatDate(dateRaw, Session.getScriptTimeZone(), "yyyy-MM-dd");
+      } else {
+        dateStr = String(dateRaw).split("T")[0].trim();
+      }
+      if (!dateStr || dateStr === "날짜") continue;
+      
+      var category = String(data[i][2] || "").trim();
+      var amount = Number(data[i][5] || 0);
+      
+      if (!salesGroup[dateStr]) {
+        salesGroup[dateStr] = { date: dateStr, incomeTotal: 0, expenseTotal: 0 };
+      }
+      
+      // 지출 카테고리에 포함되면 지출로 가산, 아니면 수입으로 가산
+      if (expenseCategories.indexOf(category) !== -1 || category.indexOf("지출") !== -1) {
+        salesGroup[dateStr].expenseTotal += amount;
+      } else {
+        salesGroup[dateStr].incomeTotal += amount;
+      }
+    }
+    
+    // 최신 날짜순 정렬
+    var salesKeys = Object.keys(salesGroup).sort().reverse();
+    var logs = [];
+    salesKeys.forEach(function(key) {
+      logs.push(salesGroup[key]);
+    });
+    
+    return { success: true, logs: logs };
+  } catch (e) {
+    return { error: "손익 내역 조회 오류: " + e.toString() };
   }
 }
 
