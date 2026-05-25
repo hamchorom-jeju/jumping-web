@@ -3103,8 +3103,8 @@
       var totalExpense = 0;
 
       if (currentSalesTab === 'daily') {
-        // 💡 [원장님 지침 수용] 최근 10일치 데이터만 필터링하여 목록 노출!
-        var limitLogs = lastSalesLogs.slice(0, 10);
+        // 💡 [원장님 지침 수용] 최근 15일치 데이터만 필터링하여 목록 노출!
+        var limitLogs = lastSalesLogs.slice(0, 15);
 
         limitLogs.forEach(function (log) {
           totalIncome += log.incomeTotal;
@@ -3129,9 +3129,9 @@
             '</div>';
         });
 
-        if (lastSalesLogs.length > 10) {
+        if (lastSalesLogs.length > 15) {
           html += '<div style="text-align:center; padding:15px; font-size:0.82rem; color:#718096; background:#f7fafc; border-radius:12px; border:1px solid #edf2f7; margin-top:10px; line-height:1.4;">' +
-            '💡 최근 10일치 내역만 표시 중입니다.<br>이전 내역은 <strong>[기간별]</strong> 탭에서 자유롭게 조회하실 수 있습니다.' +
+            '💡 최근 15일치 내역만 표시 중입니다.<br>이전 내역은 <strong>[기간별]</strong> 탭에서 자유롭게 조회하실 수 있습니다.' +
             '</div>';
         }
       } else if (currentSalesTab === 'monthly') {
@@ -3149,8 +3149,8 @@
         // 내림차순 정렬
         var sortedMonths = Object.keys(monthlyMap).sort().reverse();
         
-        // 💡 [원장님 지침 수용] 최근 6개월치 월별 합계만 필터링하여 목록 노출!
-        var limitMonths = sortedMonths.slice(0, 6);
+        // 💡 [원장님 지침 수용] 최근 12개월치 월별 합계만 필터링하여 목록 노출!
+        var limitMonths = sortedMonths.slice(0, 12);
 
         limitMonths.forEach(function (key) {
           var item = monthlyMap[key];
@@ -3179,9 +3179,9 @@
             '</div>';
         });
 
-        if (sortedMonths.length > 6) {
+        if (sortedMonths.length > 12) {
           html += '<div style="text-align:center; padding:15px; font-size:0.82rem; color:#718096; background:#f7fafc; border-radius:12px; border:1px solid #edf2f7; margin-top:10px; line-height:1.4;">' +
-            '💡 최근 6개월치 합계만 표시 중입니다.<br>이전 월별 내역은 <strong>[기간별]</strong> 탭에서 기간을 선택해 조회 가능합니다.' +
+            '💡 최근 12개월치 합계만 표시 중입니다.<br>이전 월별 내역은 <strong>[기간별]</strong> 탭에서 기간을 선택해 조회 가능합니다.' +
             '</div>';
         }
       } else if (currentSalesTab === 'range') {
