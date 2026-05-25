@@ -387,9 +387,9 @@ function showAppConfirm(msg, onConfirm, customIcon = "❓", cancelLabel = "취�
       <div style="font-size:4.5rem; margin-bottom:20px; animation: modalBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);">${customIcon}</div>
       <h2 style="font-size:1.6rem; margin-bottom:12px; color:#1a202c; font-weight:800; font-family: sans-serif;">확인해주세요</h2>
       <p style="font-size:1.05rem; color:#4a5568; margin-bottom:30px; line-height:1.6; word-break:keep-all; font-family: sans-serif;">${msg}</p>
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-        <button onclick="closeAppModal(this)" style="padding:18px; background:#f8fafc; color:#4a5568; border:1px solid #e2e8f0; border-radius:16px; font-size:1.1rem; font-weight:700; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#edf2f7'" onmouseout="this.style.background='#f8fafc'">${cancelLabel}</button>
-        <button id="appConfirmOk" style="padding:18px; background:#6b46c1; color:#fff; border:none; border-radius:16px; font-size:1.1rem; font-weight:700; cursor:pointer; box-shadow: 0 8px 20px rgba(107,70,193,0.2); transition:all 0.2s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">${confirmLabel}</button>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top: 10px;">
+        <button onclick="closeAppModal(this)" style="padding:14px 6px; background:#f8fafc; color:#4a5568; border:1px solid #e2e8f0; border-radius:16px; font-size:0.95rem; font-weight:800; cursor:pointer; transition:all 0.2s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; justify-content:center; font-family: sans-serif;" onmouseover="this.style.background='#edf2f7'" onmouseout="this.style.background='#f8fafc'">${cancelLabel}</button>
+        <button id="appConfirmOk" style="padding:14px 6px; background:#6b46c1; color:#fff; border:none; border-radius:16px; font-size:0.95rem; font-weight:800; cursor:pointer; box-shadow: 0 6px 15px rgba(107,70,193,0.15); transition:all 0.2s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; justify-content:center; font-family: sans-serif;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">${confirmLabel}</button>
       </div>
     </div>
   `;
