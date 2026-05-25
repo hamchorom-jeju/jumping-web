@@ -2066,7 +2066,7 @@
       </div>
 
       <button class="btn-submit" onclick="submitSalesData()" style="background:#38a169; margin-bottom: 8px;">등록 완료하기</button>
-      <button class="btn-submit" onclick="openSalesHistoryModal(); closeSalesModal();" style="background:#3182ce; margin-bottom: 8px;">📁 통합 손익 역사 목록</button>
+      <button class="btn-submit" onclick="closeSalesModal(); setTimeout(function() { openSalesHistoryModal(); }, 150);" style="background:#3182ce; margin-bottom: 8px;">📁 통합 손익 역사 목록</button>
       <button class="btn-close" onclick="closeSalesModal()">닫기</button>
     </div>
   </div>
@@ -2076,7 +2076,7 @@
     <div class="modal-content">
       <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; margin-bottom: 20px;">
         <span style="font-size: 1.15rem; font-weight: 800;">📝 일일 업무일지 작성</span>
-        <button onclick="openWorkLogHistoryModal(); closeWorkLogModal();" 
+        <button onclick="closeWorkLogModal(); setTimeout(function() { openWorkLogHistoryModal(); }, 150);" 
                 style="background: #3182ce; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: background 0.2s;">
           📁 일지조회
         </button>
