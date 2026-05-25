@@ -778,17 +778,32 @@ window.addEventListener('popstate', function(e) {
     const path = window.location.pathname;
     const pageName = path.substring(path.lastIndexOf('/') + 1) || 'index.html';
 
-    // 💡 [특수 설계] 예약, 출석, 가입, 관리자 화면 등 자체 히스토리 흐름을 관리하는 페이지는
-    // 로컬 history state가 남아있으면 글로벌 퇴장 방지 결계의 가동을 일시 유예합니다!
-    if (pageName === 'reservation.html' || pageName === 'attendance.html' || pageName === 'registration.html' || pageName === 'admin.html') {
-      // 로컬 popstate 리스너가 흐름을 자연스럽게 되돌리도록 통제권을 양보함
-      return;
-    }
-
     // 열려있는 모달이 하나도 없을 때, 현재 화면에 알맞게 안전 퇴장 컨펌 작동!
     history.pushState(null, null, location.href); // 히스토리 밀림 복구
     
-    if (pageName === 'oasis.html') {
+    if (pageName === 'admin.html') {
+      showAppConfirm("👑 점핑 관리자 화면을 닫고 메인 대시보드에서 퇴장하시겠습니까?", function() {
+        localStorage.removeItem('v44_user_name');
+        localStorage.removeItem('v44_user_phone');
+        window.location.replace('login.html');
+      }, "👑");
+    } else if (pageName === 'attendance.html') {
+      showAppConfirm("⚙️ 출석 패드를 종료하고 안전하게 퇴장하시겠습니까?", function() {
+        window.location.replace('login.html');
+      }, "⚙️");
+    } else if (pageName === 'registration.html') {
+      showAppConfirm("⚙️ 신규 회원 가입 신청 화면에서 퇴장하시겠습니까?<br>(입력 중인 신청서는 저장되지 않습니다)", function() {
+        window.location.replace('login.html');
+      }, "⚙️");
+    } else if (pageName === 'renewal.html' || pageName.indexOf('renewal') !== -1) {
+      showAppConfirm("⚙️ 회원 재등록 신청 화면에서 퇴장하시겠습니까?<br>(입력 중인 신청서는 저장되지 않습니다)", function() {
+        window.location.replace('login.html');
+      }, "⚙️");
+    } else if (pageName === 'reservation.html') {
+      showAppConfirm("🌿 테라피 예약 화면에서 나가시겠습니까?", function() {
+        window.location.replace('index.html');
+      }, "🌿");
+    } else if (pageName === 'oasis.html') {
       showAppConfirm("🌴 오아시스에서 퇴장하여 메인 광장으로 이동하시겠습니까?", function() {
         window.location.replace('index.html');
       }, "🌴");
