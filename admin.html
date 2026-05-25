@@ -813,18 +813,19 @@
       
       <!-- 검색 필터 레이아웃 -->
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 15px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; text-align: left;">
-        <div style="display: flex; gap: 8px;">
-          <input type="text" id="histSearchName" placeholder="회원 이름 또는 연락처 검색" style="flex: 1; padding: 10px 12px; font-size: 0.9rem; margin: 0; border: 1.5px solid #edf2f7; border-radius: 10px; background: #fff;" oninput="filterInBodyHistory()">
-          <input type="date" id="histSearchDate" style="flex: 1.2; padding: 10px 12px; font-size: 0.9rem; margin: 0; border: 1.5px solid #edf2f7; border-radius: 10px; background: #fff;" onchange="filterInBodyHistory()">
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="text" id="histSearchName" placeholder="이름 또는 연락처 입력" style="flex: 1; padding: 10px 12px; font-size: 0.9rem; margin: 0; border: 1.5px solid #edf2f7; border-radius: 10px; background: #fff;" onkeydown="if(event.key === 'Enter') filterInBodyHistory();">
+          <button onclick="filterInBodyHistory()" class="m-btn m-btn-combo" style="width: auto; padding: 0 14px; margin: 0; font-weight: 800; border-radius: 10px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem;">🔍 검색</button>
         </div>
         <div style="display: flex; gap: 8px;">
+          <input type="date" id="histSearchDate" style="flex: 1.2; padding: 10px 12px; font-size: 0.9rem; margin: 0; border: 1.5px solid #edf2f7; border-radius: 10px; background: #fff;" onchange="filterInBodyHistory()">
           <select id="histSearchWeek" style="flex: 1.5; padding: 10px 12px; font-size: 0.9rem; margin: 0; border: 1.5px solid #edf2f7; border-radius: 10px; background: #fff;" onchange="filterInBodyHistory()">
             <option value="">📅 주차 필터 (전체)</option>
             <option value="7">최근 1주일</option>
             <option value="14">최근 2주일</option>
             <option value="30">최근 1개월</option>
           </select>
-          <button onclick="resetHistFilters()" style="flex: 0.7; background: #e2e8f0; color: #4a5568; border: none; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;">🔄 초기화</button>
+          <button onclick="resetHistFilters()" style="flex: 0.8; background: #e2e8f0; color: #4a5568; border: none; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;">🔄 초기화</button>
         </div>
       </div>
 
