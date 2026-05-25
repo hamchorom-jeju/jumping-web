@@ -7439,7 +7439,7 @@ function generateAiDraftForManualMessage(payload) {
         var logSheet = ss.getSheetByName("출석기록");
         if (logSheet) {
           var logData = logSheet.getDataRange().getDisplayValues();
-          var logCols = getLogColumnIndices(logSheet);
+          var logCols = getAttendanceColumnIndices(logSheet);
           var lastAttendance = new Date(0);
           for (var j = 1; j < logData.length; j++) {
             var logPhone = String(logData[j][logCols.phone] || "").replace(/[^0-9]/g, "");
