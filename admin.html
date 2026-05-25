@@ -3,6 +3,9 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>노형점핑 관리자 대시보드</title>
   <link rel="apple-touch-icon" href="admin-icon.png">
@@ -2759,8 +2762,6 @@
         return;
       }
       
-      // 🛡️ [스크롤 및 메모리 폭주 방지 가드] 필터가 아예 비어있고 최초 전체 목록을 보여줄 때는
-      // 최근 등록된 최신 순 20개만 요약해서 렌더링하고 안내 문구를 덧붙여 스크롤 폭주와 렉을 완벽 차단합니다!
       const sName = document.getElementById('histSearchName').value.trim();
       const sDate = document.getElementById('histSearchDate').value;
       const sWeek = document.getElementById('histSearchWeek').value;
@@ -2772,32 +2773,38 @@
       
       if (isFilterEmpty && records.length > 20) {
         displayRecords = records.slice(0, 20); // 최신 20개만 슬라이스!
-        noteHtml = `<div style="background:#fffaf0; border:1px solid #feebc8; color:#c05621; padding:12px; border-radius:10px; font-size:0.85rem; font-weight:700; text-align:center; margin-bottom:12px; line-height:1.4;">
-          📊 전체 ${records.length}개의 기록 중 최근 등록된 20개만 표시 중입니다.<br>더 많은 기록은 상단 이름/날짜 필터로 조회해 주세요!
-        </div>`;
+        noteHtml = '<div style="background:#fffaf0; border:1px solid #feebc8; color:#c05621; padding:12px; border-radius:10px; font-size:0.85rem; font-weight:700; text-align:center; margin-bottom:12px; line-height:1.4;">' +
+          '📊 전체 ' + records.length + '개의 기록 중 최근 등록된 20개만 표시 중입니다.<br>더 많은 기록은 상단 이름/날짜 필터로 조회해 주세요!' +
+        '</div>';
       }
 
       let html = noteHtml;
       displayRecords.forEach(r => {
-        html += `<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:15px; margin-bottom:10px; text-align:left;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <div>
-              <strong style="font-size:0.95rem; color:#1a202c;">${r.name}</strong> 
-              <span style="color:#718096; font-size:0.78rem; margin-left:5px;">(${r.phone.slice(-4)})</span>
-            </div>
-            <span style="color:#718096; font-size:0.8rem; font-weight:700;">📅 ${r.date}</span>
-          </div>
-          <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; font-size:0.8rem; text-align:center;">
-            <div style="background:#fff; padding:6px; border-radius:8px; border:1.5px solid #edf2f7; font-weight:700;">체중: <span style="color:#e53e3e;">${r.weight}kg</span></div>
-            <div style="background:#fff; padding:6px; border-radius:8px; border:1.5px solid #edf2f7; font-weight:700;">근육: <span style="color:#38a169;">${r.muscle}kg</span></div>
-            <div style="background:#fff; padding:6px; border-radius:8px; border:1.5px solid #edf2f7; font-weight:700;">지방: <span style="color:#d97706;">${r.fat}%</span></div>
-          </div>
-          <div style="margin-top:10px; font-size:0.82rem; color:#2d3748; display:flex; justify-content:space-between; align-items:center;">
-            <span>🏆 점수: <strong style="color:#8a2be2; font-size:0.9rem;">${r.score || 0}점</strong></span>
-            <button onclick="openInBodyEditModal(${r.rowIdx})" style="background:#f1f5f9; color:#4a5568; border:1px solid #cbd5e0; padding:4px 10px; border-radius:8px; font-size:0.75rem; font-weight:800; cursor:pointer;">✏️ 수정</button>
-          </div>
-          ${r.memo ? `<div style="margin-top:8px; font-size:0.75rem; color:#718096; background:#fff; padding:6px 10px; border-radius:8px; border:1px dashed #edf2f7;">💬 ${r.memo}</div>` : ''}
-        </div>`;
+        var scoreVal = r.score || 0;
+        var memoHtml = '';
+        if (r.memo) {
+          memoHtml = '<div style="margin-top:8px; font-size:0.75rem; color:#718096; background:#fff; padding:6px 10px; border-radius:8px; border:1px dashed #edf2f7;">💬 ' + r.memo + '</div>';
+        }
+        
+        html += '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:15px; margin-bottom:10px; text-align:left;">' +
+          '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">' +
+            '<div>' +
+              '<strong style="font-size:0.95rem; color:#1a202c;">' + r.name + '</strong> ' +
+              '<span style="color:#718096; font-size:0.78rem; margin-left:5px;">(' + r.phone.slice(-4) + ')</span>' +
+            '</div>' +
+            '<span style="color:#718096; font-size:0.8rem; font-weight:700;">📅 ' + r.date + '</span>' +
+          '</div>' +
+          '<div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; font-size:0.8rem; text-align:center;">' +
+            '<div style="background:#fff; padding:6px; border-radius:8px; border:1.5px solid #edf2f7; font-weight:700;">체중: <span style="color:#e53e3e;">' + r.weight + 'kg</span></div>' +
+            '<div style="background:#fff; padding:6px; border-radius:8px; border:1.5px solid #edf2f7; font-weight:700;">근육: <span style="color:#38a169;">' + r.muscle + 'kg</span></div>' +
+            '<div style="background:#fff; padding:6px; border-radius:8px; border:1.5px solid #edf2f7; font-weight:700;">지방: <span style="color:#d97706;">' + r.fat + '%</span></div>' +
+          '</div>' +
+          '<div style="margin-top:10px; font-size:0.82rem; color:#2d3748; display:flex; justify-content:space-between; align-items:center;">' +
+            '<span>🏆 점수: <strong style="color:#8a2be2; font-size:0.9rem;">' + scoreVal + '점</strong></span>' +
+            '<button onclick="openInBodyEditModal(' + r.rowIdx + ')" style="background:#f1f5f9; color:#4a5568; border:1px solid #cbd5e0; padding:4px 10px; border-radius:8px; font-size:0.75rem; font-weight:800; cursor:pointer;">✏️ 수정</button>' +
+          '</div>' +
+          memoHtml +
+        '</div>';
       });
       document.getElementById('inBodyHistoryList').innerHTML = html;
     }
