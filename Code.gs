@@ -7475,7 +7475,16 @@ function generateAiDraftForManualMessage(payload) {
     
     var draft = callGeminiBackend(prompt, systemInstruction);
     if (!draft) {
-      draft = cleanName + "님, 오늘 하루도 활기차고 행복 가득하게 보내세요! 클럽에서 뵙겠습니다. ❤️";
+      // 🚨 [진단용 핫패치 v64.42] 원장님의 환경설정 시트 접근 권한 및 API 키 적재 여부 실시간 검증
+      var apiKeyRes = getGeminiApiKey();
+      var rawKey = apiKeyRes.key || "";
+      var keySnippet = (rawKey.length > 5) ? (rawKey.substring(0, 5) + "..." + rawKey.substring(rawKey.length - 3)) : "비어있음/추출안됨";
+      
+      draft = "[⚠️ 지니 비서 실시간 장해 진단 보고서]\n" +
+              "1. 환경설정 시트 API Key 로드 결과: " + (apiKeyRes.success ? "성공 ✅" : "실패 ❌") + "\n" +
+              "2. 감지된 API Key 상태: " + keySnippet + " (길이: " + rawKey.length + "글자)\n" +
+              "3. 원인: 위 Key가 올바름에도 이 메시지가 뜬다면 Gemini API 일시 한도초과 또는 구글 웹앱 배포 시 권한(Execute as: Me) 누락 상태입니다.\n\n" +
+              "👉 임시 쪽지: " + cleanName + "님, 오늘 하루도 활기차고 행복 가득하게 보내세요! 클럽에서 뵙겠습니다. ❤️";
     }
     return { success: true, draft: draft };
     
