@@ -7158,7 +7158,7 @@ function callGeminiBackendWithDetails(prompt, systemInstruction) {
       ],
       "generationConfig": {
         "temperature": 0.7,
-        "maxOutputTokens": 400
+        "maxOutputTokens": 1000
       }
     };
     
