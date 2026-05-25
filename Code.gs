@@ -9998,14 +9998,13 @@ function getSalesHistory() {
     var data = salesSheet.getDataRange().getValues();
     if (data.length <= 1) return { success: true, logs: [] };
     
-    // 지출 대표 6대 대분류
+    // 지출 대표 5대 대분류
     var expenseCategories = [
-      "임차료 (년세 등)",
-      "가게 관리비",
-      "공과금 (전기/수도/인터넷)",
-      "장비 렌탈료",
-      "클럽 운영/보수비",
-      "기타지출"
+      "임대료&관리비",
+      "공과금",
+      "렌탈료",
+      "운영비",
+      "기타"
     ];
     
     var salesGroup = {};
