@@ -8100,6 +8100,54 @@ function checkAndCreatePersonalNotificationSheet() {
 }
 
 /**
+ * 📢 [v64.10] 전체알림/공용 쪽지 데이터베이스 시트 검사 및 자동 생성
+ */
+function checkAndCreateGlobalNotificationSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("전체_알림_목록") || ss.getSheetByName("전체알림");
+  if (!sheet) {
+    sheet = ss.insertSheet("전체_알림_목록");
+    var headers = ["알림ID", "기록시간", "분류", "제목", "내용", "수신확인"];
+    sheet.getRange(1, 1, 1, headers.length)
+         .setValues([headers])
+         .setFontWeight("bold")
+         .setBackground("#e2e8f0");
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+/**
+ * 📢 [v64.10] 모든 회원 대상 전체(공용) 알림/쪽지 단 1개 적재 발송
+ */
+function sendGlobalNotification(type, title, content) {
+  try {
+    var sheet = checkAndCreateGlobalNotificationSheet();
+    var now = new Date();
+    var createdAtStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm:ss");
+    var globalId = "GLOBAL_" + now.getTime() + "_" + Math.floor(Math.random() * 1000);
+    
+    // [알림ID, 기록시간, 분류, 제목, 내용, 수신확인]
+    sheet.appendRow([
+      globalId,
+      createdAtStr,
+      type || "admin",
+      title || "전체 공지가 도착했습니다 📢",
+      content || "",
+      "" // 수신확인(읽은 전화번호 목록)은 처음엔 빈값
+    ]);
+    
+    // 실시간 UI 갱신을 위해 스크립트 캐시 초기화 트리거
+    var cache = CacheService.getScriptCache();
+    cache.remove("v45_member_registry");
+    return { success: true, globalId: globalId };
+  } catch (e) {
+    Logger.log("전체 알림 생성 실패: " + e.toString());
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
  * 📬 [v59.0] 새로운 개인 알림/쪽지 발송
  */
 function sendPersonalNotification(phone, type, title, content) {
@@ -8151,7 +8199,7 @@ function sendPersonalNotification(phone, type, title, content) {
 }
 
 /**
- * 📬 [v59.0] 사용자의 개인 알림 목록 조회 (안 읽은 것 + 오늘 읽은 것만 반환하여 24시간 롤링 소멸 구현)
+ * 📬 [v64.10] 사용자의 개인 알림 + 전체 공용 알림 병합 조회 (원장님표 번호 이어붙이기 수신확인 기법 적용)
  */
 function getPersonalNotifications(payload) {
   try {
@@ -8159,82 +8207,143 @@ function getPersonalNotifications(payload) {
     var phone = rawPhone.replace(/[^0-9]/g, ""); 
     if (!phone) return { success: false, error: "전화번호가 없습니다." };
     
-    var sheet = checkAndCreatePersonalNotificationSheet();
-    var lastRow = sheet.getLastRow();
-    if (lastRow < 2) return { success: true, notifications: [] };
-    
-    var data = sheet.getRange(2, 1, lastRow - 1, 8).getDisplayValues();
-    var notifications = [];
     var now = new Date();
+    var notifications = [];
     
-    for (var i = 0; i < data.length; i++) {
-      var row = data[i];
-      var rowPhone = String(row[1] || "").replace(/[^0-9]/g, "");
-      
-      // 해당 사용자의 전화번호와 매칭되는지 검사
-      if (rowPhone === phone || (phone.length >= 8 && rowPhone.endsWith(phone.substring(phone.length - 8)))) {
-        var notiId = String(row[0] || "");
-        var type = String(row[3] || "admin");
-        var title = String(row[4] || "");
-        var content = String(row[5] || "");
-        var createdAt = String(row[6] || "");
-        var readAt = String(row[7] || "");
-        var isRead = readAt.length > 0;
+    // 1. 개인 1:1 쪽지 긁어오기
+    var personalSheet = checkAndCreatePersonalNotificationSheet();
+    var personalLastRow = personalSheet.getLastRow();
+    if (personalLastRow >= 2) {
+      var personalData = personalSheet.getRange(2, 1, personalLastRow - 1, 8).getDisplayValues();
+      for (var i = 0; i < personalData.length; i++) {
+        var row = personalData[i];
+        var rowPhone = String(row[1] || "").replace(/[^0-9]/g, "");
         
-        // [v61.3] 라이프사이클 관리: 읽은 쪽지는 24시간(readAt 기준) 소멸, 안읽은 쪽지는 72시간(3일, createdAt 기준) 소멸
-        var keepNotification = true;
-        if (isRead) {
-          try {
-            // "yyyy-MM-dd HH:mm:ss" 포맷 파싱
-            var parts = readAt.split(/[ \-:]/);
-            if (parts.length >= 6) {
-              var readDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
-              var diffTime = now.getTime() - readDate.getTime();
-              var diffHours = diffTime / (1000 * 60 * 60);
-              if (diffHours > 24) {
-                keepNotification = false; // 읽은 쪽지 24시간 초과 시 필터링 아웃
+        if (rowPhone === phone || (phone.length >= 8 && rowPhone.endsWith(phone.substring(phone.length - 8)))) {
+          var notiId = String(row[0] || "");
+          var type = String(row[3] || "admin");
+          var title = String(row[4] || "");
+          var content = String(row[5] || "");
+          var createdAt = String(row[6] || "");
+          var readAt = String(row[7] || "");
+          var isRead = readAt.length > 0;
+          
+          var keepNotification = true;
+          if (isRead) {
+            try {
+              var parts = readAt.split(/[ \-:]/);
+              if (parts.length >= 6) {
+                var readDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
+                var diffTime = now.getTime() - readDate.getTime();
+                var diffHours = diffTime / (1000 * 60 * 60);
+                if (diffHours > 24) keepNotification = false;
+              } else {
+                keepNotification = false;
               }
+            } catch (err) {
+              keepNotification = false;
+            }
+          } else {
+            try {
+              var parts = createdAt.split(/[ \-:]/);
+              if (parts.length >= 6) {
+                var createDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
+                var diffTime = now.getTime() - createDate.getTime();
+                var diffHours = diffTime / (1000 * 60 * 60);
+                if (diffHours > 72) keepNotification = false;
+              } else {
+                keepNotification = false;
+              }
+            } catch (err) {
+              keepNotification = false;
+            }
+          }
+          
+          if (keepNotification) {
+            notifications.push({
+              id: notiId,
+              type: type,
+              title: title,
+              content: content,
+              createdAt: createdAt,
+              isRead: isRead,
+              readAt: readAt
+            });
+          }
+        }
+      }
+    }
+    
+    // 2. 📢 전체 공용 쪽지 긁어와서 병합하기 (원장님표 번호 이어붙이기 수신확인 기법 적용)
+    var globalSheet = checkAndCreateGlobalNotificationSheet();
+    var globalLastRow = globalSheet.getLastRow();
+    if (globalLastRow >= 2) {
+      var globalData = globalSheet.getRange(2, 1, globalLastRow - 1, 6).getDisplayValues();
+      for (var j = 0; j < globalData.length; j++) {
+        var gRow = globalData[j];
+        var gNotiId = String(gRow[0] || "");
+        var gCreatedAt = String(gRow[1] || "");
+        var gType = String(gRow[2] || "admin");
+        var gTitle = String(gRow[3] || "");
+        var gContent = String(gRow[4] || "");
+        var gReceivers = String(gRow[5] || ""); // 수신확인에 전화번호가 이어붙여짐
+        
+        // 내 전화번호가 수신확인에 포함되어 있으면 읽음 처리!
+        var gIsRead = gReceivers.indexOf(phone) !== -1;
+        var gReadAt = gIsRead ? gCreatedAt : ""; // 대략적인 읽음 시각
+        
+        // 라이프사이클 동일 적용 (읽음 24시간, 안읽음 72시간 소멸)
+        var keepGlobal = true;
+        if (gIsRead) {
+          try {
+            var parts = gCreatedAt.split(/[ \-:]/);
+            if (parts.length >= 6) {
+              var gDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
+              var diffTime = now.getTime() - gDate.getTime();
+              var diffHours = diffTime / (1000 * 60 * 60);
+              if (diffHours > 24) keepGlobal = false;
             } else {
-              keepNotification = false; // 파싱 실패 시 안전하게 감춤
+              keepGlobal = false;
             }
           } catch (err) {
-            keepNotification = false;
+            keepGlobal = false;
           }
         } else {
           try {
-            // "yyyy-MM-dd HH:mm:ss" 포맷 파싱
-            var parts = createdAt.split(/[ \-:]/);
+            var parts = gCreatedAt.split(/[ \-:]/);
             if (parts.length >= 6) {
-              var createDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
-              var diffTime = now.getTime() - createDate.getTime();
+              var gDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
+              var diffTime = now.getTime() - gDate.getTime();
               var diffHours = diffTime / (1000 * 60 * 60);
-              if (diffHours > 72) {
-                keepNotification = false; // 안읽은 쪽지 72시간(3일) 초과 시 필터링 아웃 (자동 소멸)
-              }
+              if (diffHours > 72) keepGlobal = false;
             } else {
-              keepNotification = false; // 파싱 실패 시 안전하게 감춤
+              keepGlobal = false;
             }
           } catch (err) {
-            keepNotification = false;
+            keepGlobal = false;
           }
         }
         
-        if (keepNotification) {
+        if (keepGlobal) {
           notifications.push({
-            id: notiId,
-            type: type,
-            title: title,
-            content: content,
-            createdAt: createdAt,
-            isRead: isRead,
-            readAt: readAt
+            id: gNotiId,
+            type: gType,
+            title: gTitle,
+            content: gContent,
+            createdAt: gCreatedAt,
+            isRead: gIsRead,
+            readAt: gReadAt
           });
         }
       }
     }
     
-    // 최근 알림이 위로 가도록 역순 정렬
-    notifications.reverse();
+    // 3. 🕒 모든 개인/전체 쪽지를 기록 시각 역순(최신순)으로 정렬!!!
+    notifications.sort(function(a, b) {
+      var dateA = new Date(a.createdAt.replace(/-/g, "/"));
+      var dateB = new Date(b.createdAt.replace(/-/g, "/"));
+      return dateB - dateA;
+    });
     
     return { success: true, notifications: notifications };
   } catch (e) {
@@ -8244,7 +8353,7 @@ function getPersonalNotifications(payload) {
 }
 
 /**
- * 📬 [v59.0] 사용자의 안 읽은 알림 전체 읽음 처리
+ * 📬 [v64.10] 사용자의 안 읽은 알림 전체 읽음 처리 (개인 쪽지 + 전체 공용 쪽지 수신확인 일괄 덮어쓰기 적용)
  */
 function markNotificationsAsRead(payload) {
   var lock = LockService.getScriptLock();
@@ -8253,51 +8362,74 @@ function markNotificationsAsRead(payload) {
     var phone = rawPhone.replace(/[^0-9]/g, ""); 
     if (!phone) return { success: false, error: "전화번호가 없습니다." };
     
-    var sheet = checkAndCreatePersonalNotificationSheet();
-    var lastRow = sheet.getLastRow();
-    if (lastRow < 2) return { success: true };
-    
-    // 1. Acquire Lock FIRST to protect the entire read-modify-write process safely
-    lock.waitLock(5000);
-    
-    // Read raw values (getValues is faster than getDisplayValues for simple checks)
-    var range = sheet.getRange(2, 1, lastRow - 1, 8);
-    var data = range.getValues();
-    
     var now = new Date();
     var nowStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm:ss");
     var updated = false;
     
-    // Prepare a 2D array specifically for column H (index 8) to write in one batch
-    var readAtValues = [];
+    // 1. Acquire Lock FIRST to protect the entire read-modify-write process safely
+    lock.waitLock(5000);
     
-    for (var i = 0; i < data.length; i++) {
-      var rowPhone = String(data[i][1] || "").replace(/[^0-9]/g, "");
-      var readAt = String(data[i][7] || "");
+    // 개인 1:1 쪽지 일괄 읽음 처리
+    var personalSheet = checkAndCreatePersonalNotificationSheet();
+    var personalLastRow = personalSheet.getLastRow();
+    if (personalLastRow >= 2) {
+      var personalRange = personalSheet.getRange(2, 1, personalLastRow - 1, 8);
+      var personalData = personalRange.getValues();
+      var readAtValues = [];
       
-      // If matching phone and not read, set read time to now
-      if ((rowPhone === phone || (phone.length >= 8 && rowPhone.endsWith(phone.substring(phone.length - 8)))) && readAt.length === 0) {
-        readAtValues.push([nowStr]);
-        updated = true;
-      } else {
-        // Keep the original read timestamp value
-        var origVal = data[i][7];
-        // If it's a Date object, convert to string representation matching sheet format
-        if (origVal instanceof Date) {
-          origVal = Utilities.formatDate(origVal, "GMT+9", "yyyy-MM-dd HH:mm:ss");
+      for (var i = 0; i < personalData.length; i++) {
+        var rowPhone = String(personalData[i][1] || "").replace(/[^0-9]/g, "");
+        var readAt = String(personalData[i][7] || "");
+        
+        // 내 전화번호와 매칭되며 아직 읽지 않은 쪽지 대상
+        if ((rowPhone === phone || (phone.length >= 8 && rowPhone.endsWith(phone.substring(phone.length - 8)))) && readAt.length === 0) {
+          readAtValues.push([nowStr]);
+          updated = true;
+        } else {
+          var origVal = personalData[i][7];
+          if (origVal instanceof Date) {
+            origVal = Utilities.formatDate(origVal, "GMT+9", "yyyy-MM-dd HH:mm:ss");
+          }
+          readAtValues.push([origVal ? String(origVal) : ""]);
         }
-        readAtValues.push([origVal ? String(origVal) : ""]);
+      }
+      if (updated) {
+        personalSheet.getRange(2, 8, personalLastRow - 1, 1).setValues(readAtValues);
       }
     }
     
-    if (updated) {
-      // 2. BATCH WRITE: Write all updated read timestamps to column H at once (O(1) write operation!)
-      sheet.getRange(2, 8, lastRow - 1, 1).setValues(readAtValues);
+    // 2. 📢 전체 공용 쪽지 일괄 읽음 처리 (수신확인 열에 전화번호 슬래시 구분 누적)
+    var globalSheet = checkAndCreateGlobalNotificationSheet();
+    var globalLastRow = globalSheet.getLastRow();
+    var globalUpdated = false;
+    
+    if (globalLastRow >= 2) {
+      var globalRange = globalSheet.getRange(2, 1, globalLastRow - 1, 6);
+      var globalData = globalRange.getValues();
+      var receiverValues = [];
+      
+      for (var j = 0; j < globalData.length; j++) {
+        var receivers = String(globalData[j][5] || ""); // 수신확인 열
+        
+        // 내 전화번호가 아직 수신확인 목록에 포함되어 있지 않은 경우
+        if (receivers.indexOf(phone) === -1) {
+          var newReceivers = receivers + (receivers.length > 0 && !receivers.endsWith("/") ? "/" : "") + phone + "/";
+          receiverValues.push([newReceivers]);
+          globalUpdated = true;
+        } else {
+          receiverValues.push([receivers]);
+        }
+      }
+      
+      if (globalUpdated) {
+        // 수신확인 (6번째 열) 일괄 배치 덮어쓰기!
+        globalSheet.getRange(2, 6, globalLastRow - 1, 1).setValues(receiverValues);
+      }
     }
     
     lock.releaseLock();
     
-    if (updated) {
+    if (updated || globalUpdated) {
       clearUserDashboardCache(phone);
     }
     
@@ -9065,7 +9197,7 @@ function getActiveUserPhones() {
 }
 
 /**
- * 📬 [v60.0] 매주 목요일 새벽 0시 5분 실행되는 주간 랭킹 자동 우편 발송 트리거
+ * 📬 [v64.10] 매주 목요일 새벽 0시 5분 실행되는 주간 랭킹 자동 공용 우편 발송 트리거 (단 1행 초고속 적재)
  */
 function autoSendWeeklyRankingNotice() {
   try {
@@ -9075,7 +9207,7 @@ function autoSendWeeklyRankingNotice() {
       return;
     }
     
-    // [v62.0] 주간 명예의 전당 성적 아카이브 자동 저장
+    // 주간 명예의 전당 성적 아카이브 자동 저장
     try {
       var periodMatch = preview.title.match(/\[노형빌리지\] (.+) 주간 명예의 전당/);
       var periodStr = periodMatch ? periodMatch[1] : "";
@@ -9088,20 +9220,21 @@ function autoSendWeeklyRankingNotice() {
     
     var title = preview.title;
     var content = preview.content;
-    var phones = getActiveUserPhones();
-    var sendCount = 0;
-    for (var i = 0; i < phones.length; i++) {
-      var res = sendPersonalNotification(phones[i], "ranking", title, content);
-      if (res && res.success) sendCount++;
+    
+    // 단 1회의 전체 알림 적재로 획기적 속도 향상!
+    var res = sendGlobalNotification("ranking", title, content);
+    if (res && res.success) {
+      Logger.log("🏆 주간 명예의 전당 전체 공용 쪽지 단 1개 발송 완료! (행 증가 제로)");
+    } else {
+      Logger.log("❌ 주간 명예의 전당 전체 쪽지 발송 실패: " + (res ? res.error : "unknown"));
     }
-    Logger.log("주간 명예의 전당 쪽지 발송 완료: 총 " + phones.length + "명 중 " + sendCount + "명 성공");
   } catch (err) {
     Logger.log("주간 명예의 전당 자동 쪽지 발송 오류: " + err.toString());
   }
 }
 
 /**
- * 📬 [v60.0] 매월 1일 새벽 0시 10분 실행되는 월간 랭킹 및 출석왕 자동 우편 발송 트리거
+ * 📬 [v64.10] 매월 1일 새벽 0시 10분 실행되는 월간 랭킹 및 출석왕 자동 공용 우편 발송 트리거 (단 1행 초고속 적재)
  */
 function autoSendMonthlyRankingNotice() {
   try {
@@ -9111,7 +9244,7 @@ function autoSendMonthlyRankingNotice() {
       return;
     }
     
-    // [v62.0] 월간 명예의 전당 성적 아카이브 자동 저장
+    // 월간 명예의 전당 성적 아카이브 자동 저장
     try {
       var periodMatch = preview.title.match(/\[노형빌리지\] (.+) 월간 명예의 전당/);
       var periodStr = periodMatch ? periodMatch[1] : "";
@@ -9124,13 +9257,14 @@ function autoSendMonthlyRankingNotice() {
     
     var title = preview.title;
     var content = preview.content;
-    var phones = getActiveUserPhones();
-    var sendCount = 0;
-    for (var i = 0; i < phones.length; i++) {
-      var res = sendPersonalNotification(phones[i], "ranking", title, content);
-      if (res && res.success) sendCount++;
+    
+    // 단 1회의 전체 알림 적재로 획기적 속도 향상!
+    var res = sendGlobalNotification("ranking", title, content);
+    if (res && res.success) {
+      Logger.log("🏆 월간 명예의 전당 전체 공용 쪽지 단 1개 발송 완료! (행 증가 제로)");
+    } else {
+      Logger.log("❌ 월간 명예의 전당 전체 쪽지 발송 실패: " + (res ? res.error : "unknown"));
     }
-    Logger.log("월간 명예의 전당 쪽지 발송 완료: 총 " + phones.length + "명 중 " + sendCount + "명 성공");
   } catch (err) {
     Logger.log("월간 명예의 전당 자동 쪽지 발송 오류: " + err.toString());
   }

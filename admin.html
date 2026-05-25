@@ -998,19 +998,35 @@
     </div>
   </div>
 
-  <!-- 📬 [v59.0] 개인 맞춤 쪽지/전령 발송 모달 -->
+  <!-- 📬 [v64.10] 개인 맞춤 쪽지 및 전체 공용 쪽지/전령 발송 모달 -->
   <div class="modal-overlay" id="personalNotiModal">
-    <div class="modal-content" style="max-width:400px; color:#1a202c; text-align: left;">
-      <div class="modal-header" style="color:#4f46e5;">✉️ 지니의 전령 발송기</div>
+    <div class="modal-content" style="max-width:420px; color:#1a202c; text-align: left; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5);">
+      <div class="modal-header" style="color:#6366f1; display:flex; align-items:center; gap:8px; font-size:1.35rem; font-weight:800; border-bottom:1px solid #f1f5f9; padding-bottom:12px; margin-bottom:18px;">
+        <span>✉️ 지니클럽 전령 발송기</span>
+      </div>
       
-      <!-- 회원 검색 영역 -->
-      <div class="form-group">
+      <!-- [v64.10] 📢 수신 대상 세그먼트 컨트롤 -->
+      <div class="form-group" style="margin-bottom:18px;">
+        <label class="form-label" style="font-weight: 800; color: #4b5563; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block;">🎯 수신 대상 선택</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; background: #f3f4f6; border-radius: 12px; padding: 4px; border: 1px solid #e5e7eb;">
+          <button type="button" id="pnTargetTypeBtnPersonal" onclick="changePnTargetType('personal')" style="padding: 10px; border-radius: 10px; border: none; font-size: 0.85rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); background: #ffffff; color: #4f46e5; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            📬 개별 회원 (1:1)
+          </button>
+          <button type="button" id="pnTargetTypeBtnGlobal" onclick="changePnTargetType('global')" style="padding: 10px; border-radius: 10px; border: none; font-size: 0.85rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); background: transparent; color: #4b5563;">
+            📢 전체 회원 (공지)
+          </button>
+        </div>
+        <input type="hidden" id="pnTargetType" value="personal">
+      </div>
+      
+      <!-- 회원 검색 영역 (개별 회원일 때만 보임) -->
+      <div id="pnSearchArea" class="form-group" style="transition: all 0.3s ease;">
         <label class="form-label">👤 수신 모험가 검색 *</label>
         <div style="display: flex; gap: 8px;">
           <input type="text" id="pnSearchName" class="form-control" placeholder="모험가 이름 입력 (2자 이상)" style="flex: 1; margin: 0;"
             oninput="searchPnMember(this.value)">
           <button type="button" class="btn-search-pn" onclick="triggerPnSearch()" 
-            style="background: #4f46e5; color: white; border: none; padding: 0 16px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.9rem; white-space: nowrap; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+            style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; padding: 0 20px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.9rem; white-space: nowrap; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);">
             🔍 검색
           </button>
         </div>
@@ -1019,17 +1035,17 @@
         </div>
       </div>
       
-      <!-- 선택된 회원 정보 바인딩 박스 -->
+      <!-- 선택된 회원 정보 바인딩 박스 (개별 회원일 때만 보임) -->
       <div id="pnTargetInfo"
-        style="margin-bottom:18px; padding:12px; background:#f0f5ff; border-radius:12px; border:1px solid #dbeafe; display:none; font-size:0.9rem;">
-        <strong>수신인:</strong> <span id="pnTargetName" style="color:#2563eb;">-</span> (<span id="pnTargetPhoneHint">-</span>)
+        style="margin-bottom:18px; padding:14px; background:#f5f3ff; border-radius:12px; border:1px solid #ddd6fe; display:none; font-size:0.9rem; transition: all 0.3s ease;">
+        <strong>수신인:</strong> <span id="pnTargetName" style="color:#6366f1; font-weight:800;">-</span> (<span id="pnTargetPhoneHint">-</span>)
         <input type="hidden" id="pnTargetPhoneRaw">
       </div>
       
       <!-- 쪽지 유형(테마) 선택 -->
       <div class="form-group">
         <label class="form-label">🎨 쪽지 테마 (디자인 선택)</label>
-        <select id="pnType" class="form-control">
+        <select id="pnType" class="form-control" style="border-radius:10px; border:1px solid #cbd5e1; padding:10px; font-size:0.9rem;">
           <option value="admin">✉️ 일반 안내 / 메시지 (단정한 블루 테마)</option>
           <option value="welcome">🎉 축하 / 칭찬 쪽지 (블링블링 골드 테마)</option>
           <option value="debuff">🚨 주의 / 경고 쪽지 (강렬한 레드 테마)</option>
@@ -1037,30 +1053,30 @@
           <option value="ranking">🏆 명예의 전당 시상식 쪽지 (럭셔리 인디고 테마)</option>
         </select>
       </div>
-
-      <!-- [v60.0] 시상식 자동완성 미리보기 패널 -->
-      <div class="form-group" style="background: rgba(138, 43, 226, 0.05); padding: 12px; border-radius: 12px; border: 1px dashed rgba(138, 43, 226, 0.3);">
-        <label class="form-label" style="color: var(--primary); font-weight: 700; margin-bottom: 6px;">✨ 시상식 쪽지 자동완성 (미리보기)</label>
+ 
+      <!-- 시상식 자동완성 미리보기 패널 -->
+      <div class="form-group" style="background: rgba(99, 102, 241, 0.05); padding: 14px; border-radius: 14px; border: 1px dashed rgba(99, 102, 241, 0.3); margin-bottom:18px;">
+        <label class="form-label" style="color: #4f46e5; font-weight: 800; margin-bottom: 6px; font-size:0.8rem; display:block;">✨ 시상식 쪽지 자동완성 (미리보기)</label>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <button type="button" class="select-btn" onclick="loadAwardTemplate('weekly')" style="padding: 10px 5px; font-size: 0.8rem; font-weight: 700; border-color: var(--primary); color: var(--primary); background: transparent;">📅 주간 시상식</button>
-          <button type="button" class="select-btn" onclick="loadAwardTemplate('monthly')" style="padding: 10px 5px; font-size: 0.8rem; font-weight: 700; border-color: var(--primary); color: var(--primary); background: transparent;">📅 월간/출석왕</button>
+          <button type="button" class="select-btn" onclick="loadAwardTemplate('weekly')" style="padding: 10px 5px; font-size: 0.8rem; font-weight: 700; border-color: #6366f1; color: #4f46e5; background: transparent; border-radius:8px;">📅 주간 시상식</button>
+          <button type="button" class="select-btn" onclick="loadAwardTemplate('monthly')" style="padding: 10px 5px; font-size: 0.8rem; font-weight: 700; border-color: #6366f1; color: #4f46e5; background: transparent; border-radius:8px;">📅 월간/출석왕</button>
         </div>
       </div>
       
       <!-- 쪽지 제목 -->
       <div class="form-group">
         <label class="form-label">✍️ 쪽지 제목</label>
-        <input type="text" id="pnTitle" class="form-control" placeholder="예) 새로운 돌발 퀘스트가 배달되었습니다! ⚡">
+        <input type="text" id="pnTitle" class="form-control" placeholder="예) 새로운 돌발 퀘스트가 배달되었습니다! ⚡" style="border-radius:10px;">
       </div>
       
       <!-- 쪽지 본문 내용 -->
-      <div class="form-group">
+      <div class="form-group" style="margin-bottom:20px;">
         <label class="form-label">📝 쪽지 본문 내용 *</label>
-        <textarea id="pnContent" class="form-control" rows="4" style="resize:none;" placeholder="회원님께 배달할 소중한 메시지나 맞춤 성취/안내 내용을 기입하세요."></textarea>
+        <textarea id="pnContent" class="form-control" rows="4" style="resize:none; border-radius:10px;" placeholder="회원님께 배달할 소중한 메시지나 맞춤 성취/안내 내용을 기입하세요."></textarea>
       </div>
       
-      <button class="btn-submit" onclick="submitPersonalNoti()" style="background:#4f46e5; margin-top:10px;">전령 발송하기 (쪽지 전송)</button>
-      <button class="btn-close" onclick="closePersonalNotiModal()">닫기</button>
+      <button class="btn-submit" onclick="submitPersonalNoti()" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color:white; margin-top:10px; font-weight:800; border-radius:12px; height:48px; border:none; cursor:pointer; width:100%; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); font-size:0.95rem; transition: all 0.2s;">전령 발송하기 (쪽지 전송)</button>
+      <button class="btn-close" onclick="closePersonalNotiModal()" style="margin-top:10px; border-radius:12px; height:45px; border:1px solid #cbd5e0; background:#f8fafc; color:#475569; font-weight:700; cursor:pointer; width:100%; font-size:0.9rem;">닫기</button>
     </div>
   </div>
 
@@ -3464,7 +3480,45 @@
       }
     }
 
-    // 📬 [v59.0] 개인알림/전령 수동 발송 제어 로직
+    // 📬 [v64.10] 개인알림 및 전체 공지 수동 발송 제어 로직 (Target Type 세그먼트 스위칭 탑재)
+    function changePnTargetType(type) {
+      document.getElementById('pnTargetType').value = type;
+      
+      const btnPersonal = document.getElementById('pnTargetTypeBtnPersonal');
+      const btnGlobal = document.getElementById('pnTargetTypeBtnGlobal');
+      const searchArea = document.getElementById('pnSearchArea');
+      const infoArea = document.getElementById('pnTargetInfo');
+      
+      if (type === 'global') {
+        // 전체 공지 모드
+        btnGlobal.style.background = "#ffffff";
+        btnGlobal.style.color = "#4f46e5";
+        btnGlobal.style.boxShadow = "0 4px 6px rgba(0,0,0,0.05)";
+        
+        btnPersonal.style.background = "transparent";
+        btnPersonal.style.color = "#4b5563";
+        btnPersonal.style.boxShadow = "none";
+        
+        searchArea.style.display = "none";
+        infoArea.style.display = "none";
+      } else {
+        // 개별 1:1 쪽지 모드
+        btnPersonal.style.background = "#ffffff";
+        btnPersonal.style.color = "#4f46e5";
+        btnPersonal.style.boxShadow = "0 4px 6px rgba(0,0,0,0.05)";
+        
+        btnGlobal.style.background = "transparent";
+        btnGlobal.style.color = "#4b5563";
+        btnGlobal.style.boxShadow = "none";
+        
+        searchArea.style.display = "block";
+        const phone = document.getElementById('pnTargetPhoneRaw').value;
+        if (phone) {
+          infoArea.style.display = "block";
+        }
+      }
+    }
+
     function openPersonalNotiModal() {
       // 폼 초기화
       document.getElementById('pnSearchName').value = "";
@@ -3474,6 +3528,8 @@
       document.getElementById('pnTitle').value = "";
       document.getElementById('pnContent').value = "";
       document.getElementById('pnType').value = "admin";
+      
+      changePnTargetType('personal'); // 기본값은 개별 쪽지
       
       document.getElementById('personalNotiModal').classList.add('show');
       if (window.registerModalOpen) {
@@ -3595,17 +3651,60 @@
     }
 
     function submitPersonalNoti() {
-      const nameInput = document.getElementById('pnSearchName').value.trim();
+      const targetType = document.getElementById('pnTargetType').value;
+      const type = document.getElementById('pnType').value;
+      const title = document.getElementById('pnTitle').value.trim();
+      const content = document.getElementById('pnContent').value.trim();
+      
+      if (!content) return alert("쪽지 본문 내용을 입력해주세요.");
+
+      const btn = document.querySelector('#personalNotiModal .btn-submit');
+      const originalText = btn.innerText;
+
+      // 1. 전체 공용 쪽지/공지 전송 시나리오
+      if (targetType === 'global') {
+        if (!confirm("🚨 정말로 전체 마을 회원(모든 모험가)에게 이 공지를 발송하시겠습니까?\n발송 후에는 취소할 수 없습니다.")) {
+          return;
+        }
+        
+        btn.innerText = "📢 전체 공지 발송 중...";
+        btn.disabled = true;
+
+        if (typeof google !== 'undefined' && google.script) {
+          google.script.run.withSuccessHandler(function (res) {
+            btn.innerText = originalText;
+            btn.disabled = false;
+            if (res && res.success) {
+              alert("📢 전령이 마을 광장에 전체 공지를 선포했습니다! (전송 성공)");
+              closePersonalNotiModal();
+            } else {
+              alert("❌ 전체 발송 실패: " + (res ? res.error : "알 수 없는 오류"));
+            }
+          }).withFailureHandler(function(err) {
+            btn.innerText = originalText;
+            btn.disabled = false;
+            alert("❌ 통신 실패: " + err.message);
+          }).sendGlobalNotification(type, title, content);
+        } else {
+          setTimeout(() => {
+            btn.innerText = originalText;
+            btn.disabled = false;
+            alert("[로컬 모크] 📢 전체 공지를 마을 광장에 선포했습니다!\n(수신처: 모든 회원)");
+            closePersonalNotiModal();
+          }, 1000);
+        }
+        return;
+      }
+
+      // 2. 개별 1:1 쪽지 전송 시나리오
       const phone = document.getElementById('pnTargetPhoneRaw').value;
+      const nameInput = document.getElementById('pnSearchName').value.trim();
 
       if (!phone) {
         if (!nameInput) {
           return alert("쪽지를 보낼 모험가 이름을 입력해주세요.");
         }
         
-        // 검색하지 않고 이름만 입력한 경우 -> 실시간 자동검색 처리
-        const btn = document.querySelector('#personalNotiModal .btn-submit');
-        const originalText = btn.innerText;
         btn.innerText = "🔍 모험가 자동 검색 중...";
         btn.disabled = true;
 
@@ -3620,12 +3719,10 @@
               document.getElementById('pnSearchResults').innerHTML = '<div style="padding:10px; color:#999; font-size:0.85rem;">검색 결과 없음</div>';
               document.getElementById('pnSearchResults').style.display = 'block';
             } else if (list.length === 1) {
-              // 동명이인이 없으므로 즉시 매칭하고 발송!
               selectPnMember(list[0].name, list[0].phone);
-              submitPersonalNoti(); // 재귀 호출로 발송 로직 재진행
+              submitPersonalNoti(); // 재귀 발송
             } else {
-              // 동명이인이 여러 명인 경우 선택하게 유도
-              alert("⚠️ '" + nameInput + "' 이름을 가진 동명이인이 여러 명 존재합니다.\n아래 목록에서 전령을 보낼 올바른 모험가를 클릭하신 뒤 다시 발송해주세요!");
+              alert("⚠️ '" + nameInput + "' 이름을 가진 동명이인이 여러 명 존재합니다.\n목록에서 올바른 모험가를 클릭하신 뒤 다시 발송해주세요!");
               let html = '';
               list.forEach(m => {
                 html += `<div onclick="selectPnMember('${m.name}', '${m.phone}')" style="padding:12px; border-bottom:1px solid #edf2f7; cursor:pointer; font-size:0.9rem; font-weight:700; color:#2d3748;">
@@ -3641,7 +3738,7 @@
             alert("❌ 모험가 검색 실패: " + err.message);
           }).searchMemberByName(nameInput);
         } else {
-          // 로컬 mockup 대응
+          // 로컬 mockup
           setTimeout(() => {
             btn.innerText = originalText;
             btn.disabled = false;
@@ -3672,14 +3769,6 @@
         return;
       }
 
-      const type = document.getElementById('pnType').value;
-      const title = document.getElementById('pnTitle').value.trim();
-      const content = document.getElementById('pnContent').value.trim();
-      
-      if (!content) return alert("쪽지 본문 내용을 입력해주세요.");
-
-      const btn = document.querySelector('#personalNotiModal .btn-submit');
-      const originalText = btn.innerText;
       btn.innerText = "🚀 전령 파견 중...";
       btn.disabled = true;
 
