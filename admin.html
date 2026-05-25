@@ -763,7 +763,8 @@
         <label>회원 검색 *</label>
         <div style="display: flex; gap: 8px;">
           <input type="text" id="ibSearchName" class="form-control" placeholder="회원 이름 입력"
-            style="flex: 1; margin-bottom: 0;" oninput="searchInBodyMember(this.value)">
+            style="flex: 1; margin-bottom: 0;" onkeydown="if(event.key === 'Enter') triggerInBodyMemberSearch();">
+          <button onclick="triggerInBodyMemberSearch()" class="m-btn m-btn-combo" style="width: auto; padding: 0 16px; margin: 0; font-weight: 800; border-radius: 10px;">🔍 검색</button>
         </div>
         <!-- 💡 [동명이인 완벽 구별] 절대좌표 드롭다운이 아닌, 화면에 시원하게 바로 펼쳐지는 친모바일 블록 리스트로 개조! -->
         <div id="ibSearchResults"
@@ -2607,6 +2608,8 @@
       document.getElementById('ibDate').value = getTodayDateStr();
       document.getElementById('ibTargetInfo').style.display = 'none';
       document.getElementById('ibSearchName').value = '';
+      document.getElementById('ibSearchResults').style.display = 'none';
+      document.getElementById('ibSearchResults').innerHTML = '';
       document.getElementById('ibWeight').value = '';
       document.getElementById('ibMuscle').value = '';
       document.getElementById('ibFat').value = '';
@@ -2623,16 +2626,23 @@
       }
     }
 
-    function searchInBodyMember(name) {
-      if (!name || name.length < 2) {
-        document.getElementById('ibSearchResults').style.display = 'none';
+    function triggerInBodyMemberSearch() {
+      const nameInput = document.getElementById('ibSearchName');
+      const name = nameInput.value.trim();
+      if (!name) {
+        alert("검색할 회원 이름을 입력해 주세요!");
         return;
       }
+      
+      const resultsEl = document.getElementById('ibSearchResults');
+      resultsEl.style.display = 'block';
+      resultsEl.innerHTML = '<div style="padding:15px; color:#718096; text-align:center; font-weight:bold;">🔍 검색 중입니다...</div>';
+      
       if (typeof google !== 'undefined' && google.script) {
         google.script.run.withSuccessHandler(function (res) {
           const list = (res && res.results) || [];
           if (list.length === 0) {
-            document.getElementById('ibSearchResults').innerHTML = '<div style="padding:10px; color:#999; text-align:center;">검색 결과 없음</div>';
+            resultsEl.innerHTML = '<div style="padding:15px; color:#e53e3e; text-align:center; font-weight:bold;">❌ 검색 결과가 없습니다!</div>';
           } else {
             let html = '';
             list.forEach(m => {
@@ -2641,9 +2651,8 @@
                 <span style="color:#718096; font-size:0.8rem; font-weight:700; background:#edf2f7; padding:2px 8px; border-radius:6px;">📱 뒷자리: ${m.phone.slice(-4)}</span>
               </div>`;
             });
-            document.getElementById('ibSearchResults').innerHTML = html;
+            resultsEl.innerHTML = html;
           }
-          document.getElementById('ibSearchResults').style.display = 'block';
         }).searchMemberByName(name);
       }
     }
