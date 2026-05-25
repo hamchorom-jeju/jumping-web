@@ -3331,11 +3331,12 @@
       const listEl = document.getElementById('rankingPeriodList');
       let html = '';
       
-      const liveText = selectedRankingCategory === 'weekly' ? '실시간 (이번주 주간)' : '실시간 (이번달 월간)';
+      const liveText = selectedRankingCategory === 'weekly' ? '실시간 이번주 주간 랭킹' : '실시간 이번달 월간 랭킹';
+      const suffix = selectedRankingCategory === 'weekly' ? '주간 랭킹' : '월간 랭킹';
       html += `<button class="m-btn m-btn-jumping" onclick="selectRankingPeriod('live')">⚡ ${liveText}</button>`;
       
       periods.forEach(p => {
-        html += `<button class="m-btn" style="background: rgba(255,255,255,0.03); color: white; border: 1px solid rgba(255,255,255,0.06);" onclick="selectRankingPeriod('${p}')">📅 ${p}</button>`;
+        html += `<button class="m-btn" style="background: rgba(255,255,255,0.03); color: white; border: 1px solid rgba(255,255,255,0.06);" onclick="selectRankingPeriod('${p}')">📅 ${p} ${suffix}</button>`;
       });
       
       listEl.innerHTML = html;
@@ -3347,9 +3348,10 @@
     function selectRankingPeriod(period) {
       selectedRankingPeriod = period;
       const titleEl = document.getElementById('selectedPeriodTitle');
+      const suffix = selectedRankingCategory === 'weekly' ? '주간 랭킹' : '월간 랭킹';
       titleEl.innerText = period === 'live' 
-        ? (selectedRankingCategory === 'weekly' ? '⚡ 실시간 주간 성적' : '⚡ 실시간 월간 성적')
-        : `📅 ${period} 성적 조회`;
+        ? (selectedRankingCategory === 'weekly' ? '⚡ 실시간 이번주 주간 랭킹' : '⚡ 실시간 이번달 월간 랭킹')
+        : `📅 ${period} ${suffix} 조회`;
       
       showLoading("상세 성적을 집계하는 중...");
       
@@ -3377,6 +3379,20 @@
                 const totalMatch = liveTotalList.find(t => t.name === rec.name);
                 if (totalMatch) rec.lifetimeTotal = totalMatch.score;
               });
+
+              // 실시간 날짜 범위 계산
+              const now = new Date();
+              if (selectedRankingCategory === 'weekly') {
+                const day = now.getDay();
+                const diffToThu = (day + 3) % 7;
+                const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToThu);
+                const endOfWeek = new Date(startOfWeek.getTime() + 6 * 24 * 60 * 60 * 1000);
+                window.currentRankingDateRange = `${startOfWeek.getMonth() + 1}월 ${startOfWeek.getDate()}일 ~ ${endOfWeek.getMonth() + 1}월 ${endOfWeek.getDate()}일`;
+              } else {
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                window.currentRankingDateRange = `${startOfMonth.getMonth() + 1}월 1일 ~ ${endOfMonth.getMonth() + 1}월 ${endOfMonth.getDate()}일`;
+              }
               
               renderConsoleTable();
             } else {
@@ -3394,6 +3410,7 @@
             hideLoading();
             if (response && response.success) {
               fetchedRankingRecords = response.records || [];
+              window.currentRankingDateRange = response.dateRange || "";
               renderConsoleTable();
             } else {
               alert("성적 조회 실패: " + (response ? response.error : "Unknown"));
@@ -3448,93 +3465,64 @@
       const printPaperContent = document.getElementById('printPaperContent');
       if (!printPaperContent) return;
 
-      const categoryTitle = selectedRankingCategory === 'weekly' ? '지니월드 랭킹 발표' : '지니월드 월간 랭킹 발표';
+      const categoryTitle = selectedRankingCategory === 'weekly' ? '주간 랭킹' : '월간 랭킹';
       const periodLabel = selectedRankingPeriod === 'live' 
         ? (selectedRankingCategory === 'weekly' ? '실시간 이번주' : '실시간 이번달')
         : selectedRankingPeriod;
         
       const title = `🏆 ${periodLabel} ${categoryTitle} 🏆`;
       const subtitle = `노형점핑을 가장 뜨겁게 빛낸 영웅들의 영광스러운 성적 발표`;
+      const dateRangeText = window.currentRankingDateRange ? `<p style="font-size: 0.95rem; color: #444; font-weight: 800; margin: 6px 0 0 0; letter-spacing: -0.3px;">(${window.currentRankingDateRange})</p>` : '';
 
       const top10 = fetchedRankingRecords.slice(0, 10);
-      const top3 = top10.filter(w => w.rank <= 3);
-      const getInitials = (name) => name.length >= 2 ? name.substring(name.length - 2) : name;
-
-      let podiumHTML = '';
-      if (top3.length > 0) {
-        podiumHTML += `<div style="display: flex; align-items: flex-end; justify-content: center; gap: 15px; margin: 25px 0 35px; padding-top: 15px;">`;
-        
-        const rank1 = top3.find(w => w.rank === 1);
-        const rank2 = top3.find(w => w.rank === 2);
-        const rank3 = top3.find(w => w.rank === 3);
-
-        if (rank2) {
-          podiumHTML += `
-            <div style="flex: 1; border: 2px solid black; border-radius: 12px; display: flex; flex-direction: column; align-items: center; padding: 12px 5px; height: 100px; background: #fafafa; position: relative;">
-              <div style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid black; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; margin-bottom: 4px; background: #eee; color: black;">${getInitials(rank2.name)}</div>
-              <div style="font-size: 0.85rem; font-weight: 900; color: black; margin-bottom: 2px;">${rank2.name}</div>
-              <div style="font-size: 0.72rem; color: #444; font-weight: bold;">${rank2.periodTotal.toLocaleString()} EXP</div>
-              <div style="position: absolute; bottom: -8px; background: white; border: 1px solid black; border-radius: 10px; padding: 1px 6px; font-size: 0.55rem; font-weight: 900; color: black;">2ND</div>
-            </div>
-          `;
-        } else {
-          podiumHTML += `<div style="flex: 1; height: 100px;"></div>`;
-        }
-
-        if (rank1) {
-          podiumHTML += `
-            <div style="flex: 1; border: 3px solid #fbbf24; border-radius: 14px; display: flex; flex-direction: column; align-items: center; padding: 12px 5px; height: 125px; background: #fffdf5; position: relative; transform: scale(1.05);">
-              <div style="font-size: 1.1rem; position: absolute; top: -14px;">👑</div>
-              <div style="width: 38px; height: 38px; border-radius: 50%; border: 2px solid #fbbf24; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.88rem; margin-bottom: 4px; background: #fffbeb; color: black;">${getInitials(rank1.name)}</div>
-              <div style="font-size: 0.9rem; font-weight: 900; color: black; margin-bottom: 2px;">${rank1.name}</div>
-              <div style="font-size: 0.75rem; color: black; font-weight: 800;">${rank1.periodTotal.toLocaleString()} EXP</div>
-              <div style="position: absolute; bottom: -8px; background: #fbbf24; border: 1px solid black; border-radius: 10px; padding: 1px 8px; font-size: 0.58rem; font-weight: 900; color: #451a03;">1ST CHAMP</div>
-            </div>
-          `;
-        }
-
-        if (rank3) {
-          podiumHTML += `
-            <div style="flex: 1; border: 2px solid black; border-radius: 12px; display: flex; flex-direction: column; align-items: center; padding: 12px 5px; height: 100px; background: #fafafa; position: relative;">
-              <div style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid black; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; margin-bottom: 4px; background: #eee; color: black;">${getInitials(rank3.name)}</div>
-              <div style="font-size: 0.85rem; font-weight: 900; color: black; margin-bottom: 2px;">${rank3.name}</div>
-              <div style="font-size: 0.72rem; color: #444; font-weight: bold;">${rank3.periodTotal.toLocaleString()} EXP</div>
-              <div style="position: absolute; bottom: -8px; background: white; border: 1px solid black; border-radius: 10px; padding: 1px 6px; font-size: 0.55rem; font-weight: 900; color: black;">3RD</div>
-            </div>
-          `;
-        } else {
-          podiumHTML += `<div style="flex: 1; height: 100px;"></div>`;
-        }
-
-        podiumHTML += `</div>`;
-      }
 
       let tableRowsHTML = '';
       top10.forEach(w => {
-        const showSubscores = (selectedRankingPeriod !== 'live');
-        const subscoresText = showSubscores 
-          ? `<span style="font-size: 0.7rem; color: #555; display: block; font-weight: 500; margin-top: 1px;">체력:${w.health} 실천력:${w.perf} 회복력:${w.def}</span>`
-          : '';
-          
+        let rowStyle = 'border-bottom: 1.5px solid black;';
+        let rankBadge = `${w.rank}위`;
+        let nameStyle = 'color: black; font-weight: 700;';
+        
+        if (w.rank === 1) {
+          rowStyle = 'border-bottom: 2px solid black; background-color: #fffbeb; font-weight: 900; font-size: 1.05rem;';
+          rankBadge = '🥇 1위';
+          nameStyle = 'color: #c2410c; font-weight: 950;';
+        } else if (w.rank === 2) {
+          rowStyle = 'border-bottom: 2px solid black; background-color: #f8fafc; font-weight: 900; font-size: 1.0rem;';
+          rankBadge = '🥈 2위';
+          nameStyle = 'color: #475569; font-weight: 950;';
+        } else if (w.rank === 3) {
+          rowStyle = 'border-bottom: 2px solid black; background-color: #fdf8f6; font-weight: 900; font-size: 0.95rem;';
+          rankBadge = '🥉 3위';
+          nameStyle = 'color: #9a3412; font-weight: 950;';
+        }
+        
+        const isLive = (selectedRankingPeriod === 'live');
+        const healthText = isLive ? '-' : `${w.health} EXP`;
+        const perfText = isLive ? '-' : `${w.perf} EXP`;
+        const defText = isLive ? '-' : `${w.def} EXP`;
+        
         tableRowsHTML += `
-          <tr style="border-bottom: 1.5px solid black;">
-            <td style="padding: 7px 5px; text-align: center; font-weight: 900; font-size: 0.8rem;">${w.rank}위</td>
-            <td style="padding: 7px 5px; font-weight: 900; font-size: 0.85rem; color: black; text-align: left;">
-              ${w.name}
-              ${subscoresText}
-            </td>
-            <td style="padding: 7px 5px; text-align: right; font-weight: 900; font-size: 0.85rem; color: black;">${w.periodTotal.toLocaleString()} EXP</td>
+          <tr style="${rowStyle}">
+            <td style="padding: 10px 4px; text-align: center; font-weight: 900;">${rankBadge}</td>
+            <td style="padding: 10px 4px; text-align: left; ${nameStyle}">${w.name}</td>
+            <td style="padding: 10px 4px; text-align: center; font-weight: bold; color: #444;">${healthText}</td>
+            <td style="padding: 10px 4px; text-align: center; font-weight: bold; color: #444;">${perfText}</td>
+            <td style="padding: 10px 4px; text-align: center; font-weight: bold; color: #444;">${defText}</td>
+            <td style="padding: 10px 4px; text-align: right; font-weight: 900; color: black; font-size: 0.95rem;">${w.periodTotal.toLocaleString()} EXP</td>
           </tr>
         `;
       });
 
       const detailsTableHTML = `
-        <table style="width: 100%; border-collapse: collapse; margin-top: 5px;">
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
           <thead>
-            <tr style="border-bottom: 2.5px solid black; border-top: 2px solid black;">
-              <th style="padding: 6px; text-align: center; font-weight: 900; font-size: 0.85rem; width: 60px;">순위</th>
-              <th style="padding: 6px; text-align: left; font-weight: 900; font-size: 0.85rem;">이름 / 세부점수</th>
-              <th style="padding: 6px; text-align: right; font-weight: 900; font-size: 0.85rem; width: 120px;">획득 EXP</th>
+            <tr style="border-bottom: 2.5px solid black; border-top: 2px solid black; background: #fafafa;">
+              <th style="padding: 8px 4px; text-align: center; font-weight: 900; font-size: 0.85rem; width: 60px;">순위</th>
+              <th style="padding: 8px 4px; text-align: left; font-weight: 900; font-size: 0.85rem; width: 80px;">이름</th>
+              <th style="padding: 8px 4px; text-align: center; font-weight: 900; font-size: 0.85rem;">체력</th>
+              <th style="padding: 8px 4px; text-align: center; font-weight: 900; font-size: 0.85rem;">실천력</th>
+              <th style="padding: 8px 4px; text-align: center; font-weight: 900; font-size: 0.85rem;">회복력</th>
+              <th style="padding: 8px 4px; text-align: right; font-weight: 900; font-size: 0.85rem; width: 110px;">EXP 합산</th>
             </tr>
           </thead>
           <tbody>
@@ -3586,10 +3574,10 @@
       printPaperContent.innerHTML = `
         <div style="text-align: center; margin-bottom: 10px;">
           <h1 style="font-size: 1.8rem; font-weight: 950; color: black; margin-bottom: 4px; letter-spacing: -1px;">${title}</h1>
-          <p style="font-size: 0.85rem; color: #333; font-weight: 500; margin: 0;">${subtitle}</p>
+          ${dateRangeText}
+          <p style="font-size: 0.85rem; color: #333; font-weight: 500; margin: 6px 0 0 0;">${subtitle}</p>
           <hr style="border: none; border-top: 2.5px solid black; margin: 12px 0 20px 0;">
         </div>
-        ${podiumHTML}
         ${detailsTableHTML}
         ${lifetimeHTML}
         ${stampHTML}

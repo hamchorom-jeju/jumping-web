@@ -9872,10 +9872,10 @@ function getChallengeArchiveData(payload) {
       sheet = ss.getSheetByName(sheetName);
     }
     
-    if (!sheet) return { success: true, periods: [], records: [] };
+    if (!sheet) return { success: true, periods: [], records: [], dateRange: "" };
     
     var data = sheet.getDataRange().getValues();
-    if (data.length <= 1) return { success: true, periods: [], records: [] };
+    if (data.length <= 1) return { success: true, periods: [], records: [], dateRange: "" };
     
     // (A) 고유 기간 리스트 추출 (최신 순서가 위에 오도록 역순 루프)
     var periodSet = {};
@@ -9891,6 +9891,7 @@ function getChallengeArchiveData(payload) {
     // (B) 특정 주차/월이 선택된 경우 데이터 필터링
     var targetPeriod = payload.period ? String(payload.period).trim() : "";
     var records = [];
+    var dateRange = "";
     
     if (targetPeriod) {
       for (var i = 1; i < data.length; i++) {
@@ -9910,9 +9911,76 @@ function getChallengeArchiveData(payload) {
       }
       // 순위별 오름차순 정렬
       records.sort(function(a, b) { return a.rank - b.rank; });
+
+      // 동적 날짜 범위 연산 헬퍼
+      try {
+        if (category === "weekly") {
+          function getThuStartOfWeekLocal(date) {
+            var d = new Date(date.getTime());
+            var day = d.getDay();
+            var diffToThu = (day + 3) % 7; 
+            d.setDate(d.getDate() - diffToThu);
+            d.setHours(0, 0, 0, 0);
+            return d;
+          }
+          function getWeekStringLocal(date) {
+            var thu = getThuStartOfWeekLocal(date);
+            var year = thu.getFullYear();
+            var month = thu.getMonth() + 1;
+            
+            var firstDayOfMonth = new Date(year, thu.getMonth(), 1);
+            var firstThu = new Date(year, thu.getMonth(), 1);
+            var firstDayOfWeek = firstDayOfMonth.getDay();
+            var diffToFirstThu = (4 - firstDayOfWeek + 7) % 7;
+            firstThu.setDate(1 + diffToFirstThu);
+            firstThu.setHours(0, 0, 0, 0);
+            
+            var weekNum = 1;
+            if (thu >= firstThu) {
+              weekNum = Math.floor((thu.getDate() - firstThu.getDate()) / 7) + 1;
+            } else {
+              var prevMonth = new Date(year, thu.getMonth(), 0);
+              return getWeekStringLocal(prevMonth);
+            }
+            return month + "월 " + weekNum + "주";
+          }
+
+          var summarySheet = ss.getSheetByName("일일_활동_기록");
+          var summaryData = summarySheet ? summarySheet.getDataRange().getValues() : [];
+          var matchDates = [];
+          for (var j = 1; j < summaryData.length; j++) {
+            var recDateRaw = summaryData[j][0];
+            var recDate = (recDateRaw instanceof Date) ? recDateRaw : new Date(recDateRaw);
+            if (isNaN(recDate.getTime())) continue;
+            
+            if (getWeekStringLocal(recDate) === targetPeriod) {
+              matchDates.push(recDate);
+            }
+          }
+          if (matchDates.length > 0) {
+            matchDates.sort(function(a, b) { return a - b; });
+            var startD = matchDates[0];
+            var endD = matchDates[matchDates.length - 1];
+            dateRange = (startD.getMonth() + 1) + "월 " + startD.getDate() + "일 ~ " + 
+                        (endD.getMonth() + 1) + "월 " + endD.getDate() + "일";
+          }
+        } else {
+          // 월간
+          var targetYear = new Date().getFullYear();
+          var monthNum = parseInt(targetPeriod.replace("월", "").trim());
+          if (!isNaN(monthNum)) {
+            var startOfMonth = new Date(targetYear, monthNum - 1, 1);
+            var endOfMonth = new Date(targetYear, monthNum, 0);
+            dateRange = (startOfMonth.getMonth() + 1) + "월 1일 ~ " + 
+                        (endOfMonth.getMonth() + 1) + "월 " + endOfMonth.getDate() + "일";
+          }
+        }
+      } catch (err) {
+        Logger.log("getChallengeArchiveData 날짜연산오류: " + err.toString());
+      }
     }
     
-    return { success: true, periods: periods, records: records };
+    return { success: true, periods: periods, records: records, dateRange: dateRange };
   } catch (e) {
     return { success: false, error: e.toString() };
   }
