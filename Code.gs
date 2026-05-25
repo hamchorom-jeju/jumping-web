@@ -4682,18 +4682,7 @@ function autoCloseDailyLog() {
 
 // [v63.0] 레거시 함수 제거 완료
 
-function backupRemainingSessions() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sourceSheet = ss.getSheetByName("등록 현황");
-  var targetSheet = ss.getSheetByName("잔여횟수 차감현황");
-  if (!sourceSheet || !targetSheet) return;
-  var lastRow = sourceSheet.getLastRow();
-  if (lastRow < 2) return;
-  var sourceValues = sourceSheet.getRange(2, 1, lastRow - 1, sourceSheet.getLastColumn()).getValues();
-  var dateStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm");
-  var backupData = sourceValues.map(function(row) { return [dateStr].concat(row); });
-  targetSheet.getRange(targetSheet.getLastRow() + 1, 1, backupData.length, backupData[0].length).setValues(backupData);
-}
+// [v63.0] backupRemainingSessions 레거시 함수 제거 완료
 
 // [v63.0] 레거시 함수 제거 완료
 // [v63.0] 레거시 함수 제거 완료
