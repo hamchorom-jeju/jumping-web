@@ -433,11 +433,7 @@
     </style>
 </head>
 <body style="margin:0; padding:0;">
-    <!-- [v44.218] 로딩 오버레이 -->
-    <div id="v-loading" class="v-loading-overlay" style="display: flex;">
-        <div class="v-loading-spinner"></div>
-        <div id="v-loading-msg" style="font-weight: 800; color: var(--wisdom-wood); font-size: 0.9rem;">유익한 웰니스 상식을 불러오고 있습니다...</div>
-    </div>
+    <!-- [v65.3] 로딩 오버레이 완전 제거 (원장님 지시 수용: 백그라운드 무진동 로딩 적용) -->
 
     <header class="v-global-header" style="background: var(--wisdom-wood); border-bottom: 2px solid var(--wisdom-gold);">
         <div style="display:flex; justify-content:space-between; align-items:center; width:100%; max-width:500px; margin:0 auto;">
@@ -554,16 +550,14 @@
         }
 
         function loadWisdomTips() {
-            showLoading("지식창고에서 웰니스 상식을 가져오는 중...");
+            // [v65.3] 로딩 장막 자체를 완전히 소거하여 백그라운드 로딩으로 전환
             if (typeof google === 'undefined') {
-                hideLoading();
                 // 오프라인/개발 환경 테스트용 모킹 렌더링
                 renderMagazine([]);
                 return;
             }
             google.script.run
                 .withSuccessHandler(tips => {
-                    hideLoading();
                     window.allWisdomTips = tips || [];
                     renderMagazine(tips || []);
                 })
@@ -805,8 +799,6 @@
                 alert("내용을 입력해 주세요!");
                 return;
             }
-
-            showLoading("코멘트를 기록하는 중...");
             
             const payload = {
                 tipId: tipId,
@@ -817,7 +809,6 @@
             if (typeof google !== 'undefined') {
                 google.script.run
                     .withSuccessHandler(res => {
-                        hideLoading();
                         if (res.success) {
                             input.value = '';
                             
@@ -833,23 +824,16 @@
                     })
                     .addWisdomComment(payload);
             } else {
-                hideLoading();
                 alert("구글 연동 환경이 아닙니다.");
             }
         }
 
         function showLoading(msg) {
-            const overlay = document.getElementById('v-loading');
-            const msgEl = document.getElementById('v-loading-msg');
-            if (overlay && msgEl) {
-                msgEl.innerText = msg;
-                overlay.style.display = 'flex';
-            }
+            // [v65.3] 로딩 장막 소거로 인한 무력화
         }
 
         function hideLoading() {
-            const overlay = document.getElementById('v-loading');
-            if (overlay) overlay.style.display = 'none';
+            // [v65.3] 로딩 장막 소거로 인한 무력화
         }
 
         window.onload = function() {
