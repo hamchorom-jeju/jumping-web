@@ -3797,7 +3797,7 @@
       }
     }
 
-    // [v60.0] 시상식 자동완성 불러오기 미리보기 기능
+    // [v64.10] 시상식 자동완성 불러오기 미리보기 기능 (수신 타입별 스마트 다이내믹 안내 적용)
     function loadAwardTemplate(periodType) {
       const btn = event ? event.target : null;
       let originalText = "";
@@ -3816,7 +3816,13 @@
           document.getElementById('pnTitle').value = res.title;
           document.getElementById('pnContent').value = res.content;
           document.getElementById('pnType').value = "ranking";
-          alert("✨ 실제 생성 예정인 " + (periodType === 'weekly' ? '주간' : '월간') + " 시상식 쪽지 내용을 실시간으로 불러와 적용했습니다!\n수신 모험가를 선택해 테스트 발송을 하실 수도 있습니다.");
+          
+          const targetType = document.getElementById('pnTargetType').value;
+          const tipMessage = targetType === 'global' 
+            ? "\n이 상태에서 [전령 발송하기]를 누르시면 전체 회원에게 공지(📢)로 일괄 발송됩니다!"
+            : "\n수신 모험가를 선택해 테스트 발송(📬)을 하실 수도 있습니다.";
+            
+          alert("✨ 실제 생성 예정인 " + (periodType === 'weekly' ? '주간' : '월간') + " 시상식 쪽지 내용을 실시간으로 불러와 적용했습니다!" + tipMessage);
         } else {
           alert("❌ 불러오기 실패: " + (res ? res.error : "알 수 없는 오류"));
         }
