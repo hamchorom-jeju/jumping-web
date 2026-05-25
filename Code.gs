@@ -4814,6 +4814,139 @@ function deleteReservationByRow(rowIdx) {
 }
 
 /**
+ * 🌿 [v64.80] 관리자용 특정 기간 범위 (startDateStr로부터 durationDays 동안) 테라피 예약 조회 API
+ */
+function getAdminReservationDataRange(startDateStr, durationDays) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("예약DB");
+    if (!sheet) return [];
+    
+    var data = sheet.getDataRange().getDisplayValues();
+    var headers = data[0];
+    
+    // 헤더에서 동적으로 인덱스 찾기
+    var idx = { name: 2, date: 3, time: 4, room: 7, people: 8, status: 9 }; 
+    for (var h = 0; h < headers.length; h++) {
+      var head = String(headers[h]).trim();
+      if (head.indexOf("이름") !== -1) idx.name = h;
+      if (head.indexOf("예약날짜") !== -1 || head.indexOf("날짜") !== -1) idx.date = h;
+      if (head.indexOf("입실시간") !== -1 || head.indexOf("예약시간") !== -1) idx.time = h;
+      if (head.indexOf("배정방") !== -1 || head.indexOf("방") !== -1) idx.room = h;
+      if (head.indexOf("인원") !== -1) idx.people = h;
+      if (head.indexOf("상태") !== -1) idx.status = h;
+    }
+
+    var limitDays = Number(durationDays) || 7;
+    var targetDates = [];
+    var startD = new Date(startDateStr);
+    for (var d = 0; d < limitDays; d++) {
+      var temp = new Date(startD);
+      temp.setDate(startD.getDate() + d);
+      var y = temp.getFullYear();
+      var m = String(temp.getMonth() + 1).padStart(2, '0');
+      var dateDay = String(temp.getDate()).padStart(2, '0');
+      targetDates.push(y + "-" + m + "-" + dateDay);
+    }
+    
+    var results = [];
+    for (var i = 1; i < data.length; i++) {
+      var rDateStr = String(data[i][idx.date] || "").split(" ")[0]; // YYYY-MM-DD
+      if (!rDateStr) continue;
+      
+      if (targetDates.indexOf(rDateStr) !== -1) {
+        var rawTime = data[i][idx.time];
+        var timeStr = "시간미정";
+        
+        if (rawTime && rawTime.includes(':')) {
+          var parts = rawTime.split(':');
+          if (parts.length >= 2) {
+            var hh = parts[0].trim().padStart(2, '0');
+            var mm = parts[1].trim().padStart(2, '0');
+            timeStr = hh + ":" + mm;
+          }
+        }
+        timeStr = timeStr.replace(/[^0-9:]+$/, "");
+
+        results.push({
+          rowIdx: i + 1,
+          date: rDateStr,
+          time: timeStr, 
+          name: data[i][idx.name],
+          room: data[i][idx.room],
+          people: data[i][idx.people],
+          status: data[i][idx.status]
+        });
+      }
+    }
+    
+    // 날짜순 -> 시간순 -> 방이름 순 정렬
+    results.sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      if (a.time !== b.time) return a.time.localeCompare(b.time);
+      return a.room.localeCompare(b.room);
+    });
+    
+    return results;
+  } catch (e) {
+    return [];
+  }
+}
+
+/**
+ * 🌿 [v64.80] 관리자용 기존 테라피 예약 정보 정밀 수정 API
+ */
+function updateReservation(rowIdx, payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('예약DB');
+    if (!sheet) return { error: "예약DB 시트를 찾을 수 없습니다." };
+    
+    var data = sheet.getDataRange().getDisplayValues();
+    var headers = data[0];
+    
+    var idx = { date: 3, time: 4, start: 5, end: 6, room: 7 }; 
+    for (var h = 0; h < headers.length; h++) {
+      var head = String(headers[h]).trim();
+      if (head.indexOf("예약날짜") !== -1 || head.indexOf("날짜") !== -1) idx.date = h;
+      if (head.indexOf("입실시간") !== -1 || head.indexOf("예약시간") !== -1) idx.time = h;
+      if (head.indexOf("사우나시작") !== -1) idx.start = h;
+      if (head.indexOf("사우나종료") !== -1) idx.end = h;
+      if (head.indexOf("배정방") !== -1 || head.indexOf("방") !== -1) idx.room = h;
+    }
+    
+    var addMinutes = function(timeStr, mins) {
+      var parts = timeStr.split(':');
+      var date = new Date(2000, 0, 1, parts[0], parts[1]);
+      date.setMinutes(date.getMinutes() + mins);
+      return Utilities.formatDate(date, "GMT+9", "HH:mm:00");
+    };
+    var formatTime = function(t) {
+      var parts = t.split(':');
+      var h = parts[0].length === 1 ? "0" + parts[0] : parts[0];
+      var m = parts[1].length === 1 ? "0" + parts[1] : parts[1];
+      return h + ":" + m + ":00";
+    };
+
+    var startTime = formatTime(payload.time); 
+    var saunaStart = addMinutes(payload.time, 30);
+    var saunaEnd = addMinutes(payload.time, 80);
+    
+    // 예약DB의 rowIdx 행에 있는 개별 컬럼 셀들 수정
+    sheet.getRange(rowIdx, idx.date + 1).setValue(payload.date);
+    sheet.getRange(rowIdx, idx.time + 1).setValue(startTime);
+    sheet.getRange(rowIdx, idx.start + 1).setValue(saunaStart);
+    sheet.getRange(rowIdx, idx.end + 1).setValue(saunaEnd);
+    sheet.getRange(rowIdx, idx.room + 1).setValue(payload.room);
+    
+    SpreadsheetApp.flush();
+    return { success: true };
+  } catch (e) {
+    return { error: e.toString() };
+  }
+}
+
+/**
  * 특정 날짜의 벙개/휴무 설정 가져오기
  */
 function getFlashSettingByDate(dateStr) {

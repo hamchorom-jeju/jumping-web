@@ -920,24 +920,157 @@
       style="background: #ffffff; max-height: 85vh; display: flex; flex-direction: column; padding: 25px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
         <div class="modal-header" style="margin-bottom:0;">🌿 테라피 예약 명단</div>
-        <button onclick="openFlashSettingModal()"
-          style="background:#f7fafc; border:1px solid #e2e8f0; padding:6px 10px; border-radius:8px; font-size:0.75rem; font-weight:700; color:#4a5568; cursor:pointer;">⚙️
-          벙개/휴일 설정</button>
       </div>
 
-      <!-- 날짜 선택 영역 -->
-      <div style="margin-bottom: 20px; display: flex; gap: 8px; align-items: center;">
-        <input type="date" id="resViewDate" class="form-control"
-          style="flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.9rem;"
-          onchange="loadReservationData()">
-        <button onclick="loadReservationData()"
-          style="background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: 700; font-size: 0.85rem;">조회</button>
+      <!-- 날짜 및 기간 선택 컨트롤 영역 -->
+      <div style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; background: #f8fafc; padding: 12px; border-radius: 14px; border: 1px solid #edf2f7;">
+        <!-- 시작일 및 조회 범위 한 줄 필터 -->
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <input type="date" id="resViewDate" class="form-control"
+            style="flex: 1.2; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.85rem; min-width: 0;"
+            onchange="loadReservationData()">
+          
+          <select id="resDuration" class="form-control"
+            style="flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.85rem; font-weight: 700; background: white; min-width: 0;"
+            onchange="loadReservationData()">
+            <option value="1">1일 조회</option>
+            <option value="3">3일 조회</option>
+            <option value="7" selected>7일 조회</option>
+            <option value="14">14일 조회</option>
+            <option value="30">30일 조회</option>
+          </select>
+          
+          <button onclick="loadReservationData()"
+            style="background: var(--primary); color: white; border: none; padding: 10px 14px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; white-space: nowrap;">조회</button>
+        </div>
+        
+        <!-- 5:5 파스텔 듀얼 액션 버튼 패널 -->
+        <div style="display: flex; gap: 8px;">
+          <button onclick="openFlashSettingModal()"
+            style="flex: 1; background: #ebf8ff; border: 1px solid #bee3f8; padding: 10px; border-radius: 10px; font-size: 0.82rem; font-weight: 700; color: #2b6cb0; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;"
+            onmouseover="this.style.background='#d8eeff'" onmouseout="this.style.background='#ebf8ff'">
+            ⚙️ 벙개/휴일 설정
+          </button>
+          <button onclick="openAdminAddReservationModal()"
+            style="flex: 1; background: #f0fff4; border: 1px solid #9ae6b4; padding: 10px; border-radius: 10px; font-size: 0.82rem; font-weight: 700; color: #22543d; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;"
+            onmouseover="this.style.background='#dcffd6'" onmouseout="this.style.background='#f0fff4'">
+            ➕ 새 예약 등록
+          </button>
+        </div>
       </div>
 
       <div id="reservationListContent" style="flex: 1; overflow-y: auto; padding-right: 2px;">
         <!-- 카드 리스트가 여기에 삽입됨 -->
       </div>
       <button class="btn-close" onclick="closeReservationModal()">닫기</button>
+    </div>
+  </div>
+
+  <!-- 테라피 예약 수정 모달 -->
+  <div class="modal-overlay" id="reservationEditModal" style="z-index: 5000;">
+    <div class="modal-content" style="background:#ffffff; border-radius:20px; padding:25px 20px; color:#1a202c; max-width:90%; width:400px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+      <div class="modal-header" style="border-bottom: 2px solid #edf2f7; padding-bottom: 12px; font-weight: 800; font-size: 1.15rem; margin-bottom:15px;">✏️ 테라피 예약 수정</div>
+      
+      <input type="hidden" id="editResRowIdx">
+      
+      <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
+        <div>
+          <label style="font-size:0.8rem; font-weight:800; color:#4a5568; display:block; margin-bottom:4px;">👤 예약자 성함</label>
+          <input type="text" id="editResName" class="form-control" style="background:#f7fafc; color:#718096; border:1px solid #e2e8f0; width:100%; padding:10px; border-radius:10px; font-size:0.9rem;" readonly>
+        </div>
+        
+        <div>
+          <label style="font-size:0.8rem; font-weight:800; color:#4a5568; display:block; margin-bottom:4px;">📅 예약 날짜</label>
+          <input type="date" id="editResDate" class="form-control" style="border:1px solid #e2e8f0; width:100%; padding:10px; border-radius:10px; font-size:0.9rem;">
+        </div>
+        
+        <div>
+          <label style="font-size:0.8rem; font-weight:800; color:#4a5568; display:block; margin-bottom:4px;">🕒 입실 시간</label>
+          <select id="editResTime" class="form-control" style="border:1px solid #e2e8f0; width:100%; padding:10px; border-radius:10px; font-size:0.9rem; font-weight:700; background:white;">
+            <option value="09:00">09:00</option>
+            <option value="10:00">10:00</option>
+            <option value="17:00">17:00</option>
+            <option value="18:00">18:00</option>
+            <option value="19:00">19:00</option>
+            <option value="20:00">20:00</option>
+          </select>
+        </div>
+        
+        <div>
+          <label style="font-size:0.8rem; font-weight:800; color:#4a5568; display:block; margin-bottom:4px;">🌿 배정 기기(방)</label>
+          <select id="editResRoom" class="form-control" style="border:1px solid #e2e8f0; width:100%; padding:10px; border-radius:10px; font-size:0.9rem; font-weight:700; background:white;">
+            <option value="1인실">1인실</option>
+            <option value="2인실 A">2인실 A</option>
+            <option value="2인실 B">2인실 B</option>
+          </select>
+        </div>
+      </div>
+      
+      <div style="display:flex; gap:8px;">
+        <button onclick="closeReservationEditModal()" style="flex:1; height:45px; background:#edf2f7; border:none; border-radius:10px; color:#4a5568; font-weight:700; cursor:pointer;">취소</button>
+        <button onclick="submitReservationEdit()" style="flex:1; height:45px; background:var(--primary); border:none; border-radius:10px; color:white; font-weight:700; cursor:pointer;">수정 완료</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 관리자 예약 등록 모달 -->
+  <div class="modal-overlay" id="adminAddReservationModal" style="z-index: 5000;">
+    <div class="modal-content" style="background:#ffffff; border-radius:20px; padding:25px 20px; color:#1a202c; max-width:90%; width:400px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-height: 80vh; display: flex; flex-direction: column;">
+      <div class="modal-header" style="border-bottom: 2px solid #edf2f7; padding-bottom: 12px; font-weight: 800; font-size: 1.15rem; margin-bottom:15px; flex-shrink: 0;">➕ 테라피 예약 등록 (관리자)</div>
+      
+      <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; margin-bottom:20px; padding-right:2px;">
+        <!-- 회원 검색창 -->
+        <div>
+          <label style="font-size:0.8rem; font-weight:800; color:#4a5568; display:block; margin-bottom:4px;">🔍 회원 성함 검색</label>
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="adminResSearchName" class="form-control" placeholder="회원 이름 입력 (예: 홍길동)" style="flex:1; border:1px solid #e2e8f0; padding:10px; border-radius:10px; font-size:0.9rem;" onkeyup="handleAdminResSearchNameKey(event)">
+            <button onclick="searchAdminResMember()" style="background:#4a5568; color:white; border:none; padding:10px 14px; border-radius:10px; font-weight:700; font-size:0.85rem; cursor:pointer;">검색</button>
+          </div>
+          <!-- 검색 결과 목록 -->
+          <div id="adminResSearchResult" style="margin-top:6px; max-height:120px; overflow-y:auto; border:1.5px solid #edf2f7; border-radius:10px; display:none; background:#f8fafc;">
+            <!-- 결과 리스트 동적 추가 -->
+          </div>
+        </div>
+
+        <!-- 선택된 회원 정보 바인딩 -->
+        <div id="adminSelectedMemberCard" style="display:none; background:#ebf8ff; border:1px solid #bee3f8; padding:10px; border-radius:10px;">
+          <div style="font-size:0.75rem; color:#2b6cb0; font-weight:700;">선택된 예약자:</div>
+          <div style="font-size:0.95rem; font-weight:800; color:#1a202c; margin-top:2px;" id="adminSelectedMemberInfo">-</div>
+          <input type="hidden" id="adminSelectedMemberName">
+          <input type="hidden" id="adminSelectedMemberPhone">
+        </div>
+        
+        <div>
+          <label style="font-size:0.8rem; font-weight:800; color:#4a5568; display:block; margin-bottom:4px;">📅 예약 날짜</label>
+          <input type="date" id="adminResDate" class="form-control" style="border:1px solid #e2e8f0; width:100%; padding:10px; border-radius:10px; font-size:0.9rem;">
+        </div>
+        
+        <div>
+          <label style="font-size:0.8rem; font-weight:800; color:#4a5568; display:block; margin-bottom:4px;">🕒 입실 시간</label>
+          <select id="adminResTime" class="form-control" style="border:1px solid #e2e8f0; width:100%; padding:10px; border-radius:10px; font-size:0.9rem; font-weight:700; background:white;">
+            <option value="09:00">09:00</option>
+            <option value="10:00">10:00</option>
+            <option value="17:00">17:00</option>
+            <option value="18:00">18:00</option>
+            <option value="19:00">19:00</option>
+            <option value="20:00">20:00</option>
+          </select>
+        </div>
+        
+        <div>
+          <label style="font-size:0.8rem; font-weight:800; color:#4a5568; display:block; margin-bottom:4px;">🌿 배정 기기(방)</label>
+          <select id="adminResRoom" class="form-control" style="border:1px solid #e2e8f0; width:100%; padding:10px; border-radius:10px; font-size:0.9rem; font-weight:700; background:white;">
+            <option value="1인실">1인실</option>
+            <option value="2인실 A">2인실 A</option>
+            <option value="2인실 B">2인실 B</option>
+          </select>
+        </div>
+      </div>
+      
+      <div style="display:flex; gap:8px; flex-shrink: 0;">
+        <button onclick="closeAdminAddReservationModal()" style="flex:1; height:45px; background:#edf2f7; border:none; border-radius:10px; color:#4a5568; font-weight:700; cursor:pointer;">취소</button>
+        <button onclick="submitAdminAddReservation()" style="flex:1; height:45px; background:var(--primary); border:none; border-radius:10px; color:white; font-weight:700; cursor:pointer;">예약 등록</button>
+      </div>
     </div>
   </div>
 
@@ -2533,6 +2666,7 @@
       let today = new Date();
       let dateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
       document.getElementById('resViewDate').value = dateStr;
+      document.getElementById('resDuration').value = "7"; // 기본 7일 조회
       loadReservationData();
       if (window.registerModalOpen) {
         window.registerModalOpen(closeReservationModal);
@@ -2541,62 +2675,92 @@
 
     function loadReservationData() {
       let dateStr = document.getElementById('resViewDate').value;
+      let duration = document.getElementById('resDuration').value;
       document.getElementById('reservationListContent').innerHTML = '<div style="text-align:center; padding:30px; color:#718096;"><div style="font-size:1.5rem; margin-bottom:10px;">🔄</div>데이터를 불러오는 중...</div>';
 
       google.script.run.withSuccessHandler(res => {
         if (!res || res.length === 0) {
-          document.getElementById('reservationListContent').innerHTML = `
-            <div style="text-align:center; padding:50px 20px; background:#f8fafc; border-radius:20px; border:1px dashed #e2e8f0;">
-              <div style="font-size:2.5rem; margin-bottom:15px;">🍃</div>
-              <div style="color:#718096; font-weight:600;">선택하신 날짜에<br>예약 내역이 없습니다.</div>
-            </div>`;
+          document.getElementById('reservationListContent').innerHTML = 
+            '<div style="text-align:center; padding:50px 20px; background:#f8fafc; border-radius:20px; border:1px dashed #e2e8f0;">' +
+              '<div style="font-size:2.5rem; margin-bottom:15px;">🍃</div>' +
+              '<div style="color:#718096; font-weight:600;">선택하신 기간에<br>예약 내역이 없습니다.</div>' +
+            '</div>';
           return;
         }
 
-        // 시간대별 그룹화
-        const groups = res.reduce((acc, r) => {
-          if (!acc[r.time]) acc[r.time] = [];
-          acc[r.time].push(r);
-          return acc;
-        }, {});
+        // 1. 날짜별 그룹화 -> 그 아래 시간대별 그룹화
+        const dateGroups = {};
+        res.forEach(r => {
+          if (!dateGroups[r.date]) {
+            dateGroups[r.date] = {};
+          }
+          if (!dateGroups[r.date][r.time]) {
+            dateGroups[r.date][r.time] = [];
+          }
+          dateGroups[r.date][r.time].push(r);
+        });
 
-        const sortedTimes = Object.keys(groups).sort();
+        const sortedDates = Object.keys(dateGroups).sort();
+        const weekDayNames = ["일", "월", "화", "수", "목", "금", "토"];
 
-        let html = sortedTimes.map(time => {
-          let itemsHtml = groups[time].map(r => {
-            let statusColor = r.status.indexOf('취소') !== -1 ? '#c53030' : (r.status.indexOf('완료') !== -1 ? '#2f855a' : '#2b6cb0');
-            return `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #edf2f7;">
-                  <div style="flex:1;">
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-                      <span style="font-weight:800; color:#1a202c; font-size:1rem;">${r.name}</span>
-                      <span style="font-size:0.75rem; color:#718096;">(${r.room})</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:6px;">
-                      <span style="color:${statusColor}; font-size:0.75rem; font-weight:700;">● ${r.status}</span>
-                      <span style="color:#cbd5e0; font-size:0.7rem;">|</span>
-                      <span style="color:#718096; font-size:0.75rem;">${r.people}명</span>
-                    </div>
-                  </div>
-                  <button onclick="confirmDeleteReservation(${r.rowIdx}, '${r.name}')" 
-                    style="background:#fff1f1; color:#e53e3e; border:1px solid #ffdada; padding:6px 12px; border-radius:8px; font-size:0.75rem; font-weight:700; cursor:pointer;">취소</button>
-                </div>`;
+        let html = sortedDates.map(dateKey => {
+          const dObj = new Date(dateKey);
+          const dayName = weekDayNames[dObj.getDay()] || "";
+          
+          const timeGroups = dateGroups[dateKey];
+          const sortedTimes = Object.keys(timeGroups).sort();
+
+          let timeGroupsHtml = sortedTimes.map(timeKey => {
+            let itemsHtml = timeGroups[timeKey].map(r => {
+              let statusColor = r.status.indexOf('취소') !== -1 ? '#c53030' : (r.status.indexOf('완료') !== -1 ? '#2f855a' : '#2b6cb0');
+              
+              // 수정 모달에 넘길 값 안전 처리
+              var safeName = String(r.name).replace(/'/g, "\\'");
+              var safeRoom = String(r.room).replace(/'/g, "\\'");
+              
+              return '<div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #edf2f7;">' +
+                  '<div style="flex:1; min-width:0; padding-right:8px;">' +
+                    '<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">' +
+                      '<span style="font-weight:800; color:#1a202c; font-size:0.95rem;">' + r.name + '</span>' +
+                      '<span style="font-size:0.75rem; color:#718096; background:#f1f5f9; padding:2px 6px; border-radius:6px; font-weight:700;">' + r.room + '</span>' +
+                    '</div>' +
+                    '<div style="display:flex; align-items:center; gap:6px;">' +
+                      '<span style="color:' + statusColor + '; font-size:0.75rem; font-weight:700;">● ' + r.status + '</span>' +
+                      '<span style="color:#cbd5e0; font-size:0.7rem;">|</span>' +
+                      '<span style="color:#718096; font-size:0.75rem;">' + r.people + '명</span>' +
+                    '</div>' +
+                  '</div>' +
+                  '<div style="display:flex; gap:6px; flex-shrink:0;">' +
+                    '<button onclick="openReservationEditModal(' + r.rowIdx + ', \'' + safeName + '\', \'' + r.date + '\', \'' + r.time + '\', \'' + safeRoom + '\')" ' +
+                      'style="background:#f1f5f9; color:#4a5568; border:1px solid #cbd5e0; padding:6px 10px; border-radius:8px; font-size:0.72rem; font-weight:800; cursor:pointer;">수정</button>' +
+                    '<button onclick="confirmDeleteReservation(' + r.rowIdx + ', \'' + safeName + '\')" ' +
+                      'style="background:#fff1f1; color:#e53e3e; border:1px solid #ffdada; padding:6px 10px; border-radius:8px; font-size:0.72rem; font-weight:800; cursor:pointer;">취소</button>' +
+                  '</div>' +
+                '</div>';
+            }).join('');
+
+            return '<div style="margin-bottom:12px; background:#fafbff; border:1px solid #edf2f7; border-radius:14px; padding:12px 15px;">' +
+                '<div style="display:flex; align-items:center; gap:6px; margin-bottom:8px; border-bottom:1px dashed #e2e8f0; padding-bottom:6px;">' +
+                  '<span style="font-size:0.95rem;">🕒</span>' +
+                  '<span style="font-weight:900; color:#4a5568; font-size:0.9rem;">' + timeKey + ' 입실</span>' +
+                '</div>' +
+                '<div>' + itemsHtml + '</div>' +
+              '</div>';
           }).join('');
 
-          return `
-            <div style="margin-bottom:20px; background:#fff; border:1px solid #e2e8f0; border-radius:20px; overflow:hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-              <div style="background:#f8fafc; padding:12px 20px; border-bottom:1px solid #edf2f7; display:flex; align-items:center; gap:10px;">
-                <span style="font-size:1.2rem;">🕒</span>
-                <span style="font-weight:900; color:#475569; font-size:1.1rem;">${time}</span>
-              </div>
-              <div style="padding:0 20px;">
-                ${itemsHtml}
-              </div>
-            </div>`;
+          return '<div style="margin-bottom:25px; background:#fff; border:1px solid #e2e8f0; border-radius:20px; overflow:hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">' +
+              '<div style="background:#edf2f7; padding:12px 20px; border-bottom:1px solid #edf2f7; display:flex; align-items:center; gap:8px;">' +
+                '<span style="font-size:1.1rem;">📅</span>' +
+                '<span style="font-weight:900; color:#2d3748; font-size:0.98rem;">' + dateKey + ' (' + dayName + ' 요일)</span>' +
+              '</div>' +
+              '<div style="padding:15px 15px 5px 15px;">' +
+                timeGroupsHtml +
+              '</div>' +
+            '</div>';
         }).join('');
 
         document.getElementById('reservationListContent').innerHTML = html;
-      }).getAdminReservationData(dateStr);
+      }).getAdminReservationDataRange(dateStr, duration);
     }
 
     function confirmDeleteReservation(rowIdx, name) {
@@ -2610,6 +2774,166 @@
           }
         }).deleteReservationByRow(rowIdx);
       }
+    }
+
+    // --- [NEW] 예약 수정 모달 관리 함수군 ---
+    function openReservationEditModal(rowIdx, name, date, time, room) {
+      document.getElementById('editResRowIdx').value = rowIdx;
+      document.getElementById('editResName').value = name;
+      document.getElementById('editResDate').value = date;
+      document.getElementById('editResTime').value = time;
+      document.getElementById('editResRoom').value = room;
+      
+      document.getElementById('reservationEditModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeReservationEditModal);
+      }
+    }
+
+    function closeReservationEditModal(isPopstate) {
+      document.getElementById('reservationEditModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeReservationEditModal);
+      }
+    }
+
+    function submitReservationEdit() {
+      var rowIdx = document.getElementById('editResRowIdx').value;
+      var name = document.getElementById('editResName').value;
+      var payload = {
+        date: document.getElementById('editResDate').value,
+        time: document.getElementById('editResTime').value,
+        room: document.getElementById('editResRoom').value
+      };
+      
+      if (!payload.date || !payload.time || !payload.room) {
+        alert("모든 값을 올바르게 채워주세요!");
+        return;
+      }
+      
+      google.script.run.withSuccessHandler(res => {
+        if (res.success) {
+          showAppAlert("성공적으로 수정되었습니다!", "success");
+          closeReservationEditModal();
+          loadReservationData();
+        } else {
+          alert("수정 실패: " + res.error);
+        }
+      }).updateReservation(Number(rowIdx), payload);
+    }
+
+    // --- [NEW] 관리자 예약 등록 모달 관리 함수군 ---
+    function openAdminAddReservationModal() {
+      // 날짜 기본값을 조회 시작일 값으로 자동 동기화
+      var currentFilterDate = document.getElementById('resViewDate').value;
+      document.getElementById('adminResDate').value = currentFilterDate || getTodayDateStr();
+      
+      // 검색 및 입력 필드 초기화
+      document.getElementById('adminResSearchName').value = "";
+      document.getElementById('adminResSearchResult').style.display = "none";
+      document.getElementById('adminResSearchResult').innerHTML = "";
+      document.getElementById('adminSelectedMemberCard').style.display = "none";
+      document.getElementById('adminSelectedMemberInfo').innerText = "-";
+      document.getElementById('adminSelectedMemberName').value = "";
+      document.getElementById('adminSelectedMemberPhone').value = "";
+      document.getElementById('adminResTime').value = "09:00";
+      document.getElementById('adminResRoom').value = "1인실";
+      
+      document.getElementById('adminAddReservationModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeAdminAddReservationModal);
+      }
+    }
+
+    function closeAdminAddReservationModal(isPopstate) {
+      document.getElementById('adminAddReservationModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeAdminAddReservationModal);
+      }
+    }
+
+    function handleAdminResSearchNameKey(e) {
+      if (e.key === 'Enter') {
+        searchAdminResMember();
+      }
+    }
+
+    function searchAdminResMember() {
+      var nameStr = document.getElementById('adminResSearchName').value.trim();
+      if (!nameStr) {
+        alert("검색할 회원 이름을 입력해 주세요!");
+        return;
+      }
+      
+      var resultBox = document.getElementById('adminResSearchResult');
+      resultBox.innerHTML = '<div style="padding:10px; text-align:center; color:#718096; font-size:0.85rem;">🔍 검색 중...</div>';
+      resultBox.style.display = "block";
+      
+      google.script.run.withSuccessHandler(res => {
+        if (res.error || !res.results || res.results.length === 0) {
+          resultBox.innerHTML = '<div style="padding:10px; text-align:center; color:#e53e3e; font-size:0.85rem; font-weight:700;">결과 없음 (이름을 확인해주세요)</div>';
+          return;
+        }
+        
+        let html = '';
+        res.results.forEach(m => {
+          var safeName = String(m.name).replace(/'/g, "\\'");
+          var safePhone = String(m.phone).replace(/'/g, "\\'");
+          var displayPhone4 = safePhone.replace(/[^0-9]/g, "").slice(-4);
+          
+          html += '<div onclick="selectAdminResMember(\'' + safeName + '\', \'' + safePhone + '\')" ' +
+            'style="padding:10px 12px; border-bottom:1px solid #edf2f7; cursor:pointer; font-weight:700; font-size:0.88rem; transition:all 0.2s;" ' +
+            'onmouseover="this.style.background=\'#edf2f7\'" onmouseout="this.style.background=\'transparent\'">' +
+            '👤 ' + m.name + ' <span style="font-size:0.75rem; color:#718096; font-weight:400;">(📱 ' + displayPhone4 + ')</span>' +
+          '</div>';
+        });
+        resultBox.innerHTML = html;
+      }).searchAllMembers(nameStr);
+    }
+
+    function selectAdminResMember(name, phone) {
+      var displayPhone4 = String(phone).replace(/[^0-9]/g, "").slice(-4);
+      document.getElementById('adminSelectedMemberName').value = name;
+      document.getElementById('adminSelectedMemberPhone').value = phone;
+      document.getElementById('adminSelectedMemberInfo').innerText = name + " (📱 " + displayPhone4 + ")";
+      
+      document.getElementById('adminSelectedMemberCard').style.display = "block";
+      document.getElementById('adminResSearchResult').style.display = "none";
+    }
+
+    function submitAdminAddReservation() {
+      var name = document.getElementById('adminSelectedMemberName').value;
+      var phone = document.getElementById('adminSelectedMemberPhone').value;
+      var date = document.getElementById('adminResDate').value;
+      var time = document.getElementById('adminResTime').value;
+      var room = document.getElementById('adminResRoom').value;
+      
+      if (!name || !phone) {
+        alert("먼저 회원을 검색하여 예약 대상을 콕 선택해 주세요!");
+        return;
+      }
+      if (!date || !time || !room) {
+        alert("날짜, 시간, 배정방 기기를 모두 올바르게 선택해 주세요!");
+        return;
+      }
+      
+      var payload = {
+        nameOnly: name,
+        phone: phone,
+        date: date,
+        time: time,
+        room: room
+      };
+      
+      google.script.run.withSuccessHandler(res => {
+        if (res === "성공") {
+          showAppAlert("테라피 예약이 성공적으로 등록되었습니다!", "success");
+          closeAdminAddReservationModal();
+          loadReservationData();
+        } else {
+          alert("등록 실패: " + res);
+        }
+      }).submitReservation(payload);
     }
 
     function closeReservationModal(isPopstate) {
