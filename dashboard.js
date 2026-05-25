@@ -1109,6 +1109,32 @@ const Village = {
         if (!settings) return;
         this.lastSettings = settings; // 토글 시 재참조용으로 보관
         
+        // [v65.0] 마스터 환경 마법 일괄 제어 토글 처리 (원장님 일괄 차단 지시 수용)
+        const magicEnabled = settings.magicEnabled === undefined || settings.magicEnabled.toString().toLowerCase() === 'true';
+        if (!magicEnabled) {
+            console.log("🚫 [Dashboard Environment] Globally disabled by the Chief.");
+            const oldWrap = document.getElementById('village-weather-wrapper');
+            if (oldWrap) oldWrap.remove();
+            
+            // BGM 일시정지 및 버튼 숨김
+            const bgmBtn = document.getElementById('village-bgm-toggle');
+            if (bgmBtn) bgmBtn.style.display = 'none';
+            const audio = document.getElementById('village-bgm-audio');
+            if (audio) audio.pause();
+            
+            // 제주 싱크 날씨 배너 가리기
+            const jejuBar = document.getElementById('jeju-sync-weather-bar');
+            if (jejuBar) jejuBar.style.display = 'none';
+            
+            // 날씨 토글 스위치 비주얼 비활성화
+            const weatherBtn = document.getElementById('jeju-weather-toggle-btn');
+            if (weatherBtn) {
+                weatherBtn.innerHTML = '🚫 비활성화됨';
+                weatherBtn.classList.add('disabled');
+            }
+            return;
+        }
+        
         // [v48.0] 회원별 날씨 효과 온/오프 상태 로드 및 스위치 UI 동기화
         const weatherDisabled = localStorage.getItem('village_weather_disabled') === 'true';
         const btn = document.getElementById('jeju-weather-toggle-btn');
@@ -1458,6 +1484,14 @@ const Village = {
     
     toggleWeatherParticles(event) {
         if (event) event.stopPropagation();
+        
+        // [v65.0] 마스터 환경 마법 일괄 제어 토글 처리
+        const settings = this.lastSettings || {};
+        const magicEnabled = settings.magicEnabled === undefined || settings.magicEnabled.toString().toLowerCase() === 'true';
+        if (!magicEnabled) {
+            showAppAlert("🪄 현재 마을 마법 환경이 전원 꺼진 상태(일괄 정지)입니다. 생텀에서 [🪄 마을 마법 환경 일괄 활성화] 체크 후 저장해 주세요.", "error", "마법 제어 불가");
+            return;
+        }
         
         const current = localStorage.getItem('village_weather_disabled') === 'true';
         const newVal = !current;
