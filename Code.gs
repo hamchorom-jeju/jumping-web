@@ -8748,15 +8748,16 @@ function getPersonalNotifications(payload) {
           }
           
           if (keepGlobal) {
-          notifications.push({
-            id: gNotiId,
-            type: gType,
-            title: gTitle,
-            content: gContent,
-            createdAt: gCreatedAt,
-            isRead: gIsRead,
-            readAt: gReadAt
-          });
+            notifications.push({
+              id: gNotiId,
+              type: gType,
+              title: gTitle,
+              content: gContent,
+              createdAt: gCreatedAt,
+              isRead: gIsRead,
+              readAt: gReadAt
+            });
+          }
         }
       }
     }
