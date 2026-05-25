@@ -2629,12 +2629,13 @@
         return;
       }
       if (typeof google !== 'undefined' && google.script) {
-        google.script.run.withSuccessHandler(function (results) {
-          if (results.length === 0) {
-            document.getElementById('ibSearchResults').innerHTML = '<div style="padding:10px; color:#999;">검색 결과 없음</div>';
+        google.script.run.withSuccessHandler(function (res) {
+          const list = (res && res.results) || [];
+          if (list.length === 0) {
+            document.getElementById('ibSearchResults').innerHTML = '<div style="padding:10px; color:#999; text-align:center;">검색 결과 없음</div>';
           } else {
             let html = '';
-            results.forEach(m => {
+            list.forEach(m => {
               html += `<div onclick="selectInBodyMember('${m.name}', '${m.phone}')" style="padding:10px 12px; border-bottom:1px solid #edf2f7; cursor:pointer; font-size:0.9rem; display:flex; justify-content:space-between; align-items:center; background:white; border-radius:8px; margin-bottom:4px; transition:background 0.2s;">
                 <strong style="color:#2d3748;">${m.name}</strong> 
                 <span style="color:#718096; font-size:0.8rem; font-weight:700; background:#edf2f7; padding:2px 8px; border-radius:6px;">📱 뒷자리: ${m.phone.slice(-4)}</span>
