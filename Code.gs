@@ -5211,7 +5211,8 @@ function checkLongTermAbsentees() {
 }
 
 /**
- * [관리자 전용] 등록이 끊긴 지 14일 이상 된 장기 미등록 회원 추출
+ * [자동화/관리자 공용] 등록이 끊긴 지 1일 이상 된 미등록 회원 스캔 및 복귀 권유 문자 자동 적재 (v64.20)
+ * 잔여 횟수 및 마감 경과일 기준 세심한 다이내믹 6개 세그먼트 메시지 템플릿 탑재
  */
 function checkInactiveMembers() {
   try {
@@ -5226,8 +5227,6 @@ function checkInactiveMembers() {
     var regCols = getRegColumnIndices(regSheet);
     
     var now = new Date();
-    var fourteenDaysAgo = new Date();
-    fourteenDaysAgo.setDate(now.getDate() - 14);
     
     // 1. 회원별 상태 체크 (가장 최근 만료일 및 활성 여부)
     var memberInfoMap = {};
@@ -5236,14 +5235,21 @@ function checkInactiveMembers() {
       var status = String(regData[i][regCols.status] || "").trim(); 
       var expireDateStr = regData[i][regCols.expire];
       var name = regData[i][regCols.name];
+      var remain = parseInt(regData[i][regCols.remain]) || 0;
       
       if (!phone) continue;
       
       if (!memberInfoMap[phone]) {
-        memberInfoMap[phone] = { isActive: false, lastExpire: new Date(0), name: name, phoneRaw: regData[i][regCols.phone] };
+        memberInfoMap[phone] = { 
+          isActive: false, 
+          lastExpire: new Date(0), 
+          name: name, 
+          phoneRaw: regData[i][regCols.phone],
+          totalRemain: 0 
+        };
       }
       
-      // 하나라도 진행중이면 활성 회원
+      // 하나라도 진행중이면 활성 회원으로 정의
       if (status === "진행중" || status === "진행 중") {
         memberInfoMap[phone].isActive = true;
       }
@@ -5255,21 +5261,24 @@ function checkInactiveMembers() {
           memberInfoMap[phone].lastExpire = expDate;
         }
       }
+      
+      // 잔여 횟수 합산 (해당 폰 번호의 만료된 건들 포함 전체 횟수 합)
+      memberInfoMap[phone].totalRemain += remain;
     }
     
-    // 2. 이미 발송 목록에 있는지 확인
-    var existingSmsMap = {};
+    // 2. 이미 문자함에 "대기" 중인 건이 있는지 확인 (Standby 중복 생성 원천 가드)
+    var pendingSmsMap = {};
     for (var j = 1; j < smsData.length; j++) {
       var sPhone = String(smsData[j][2] || "").replace(/[^0-9]/g, "");
       var sCategory = smsData[j][3];
-      var sStatus = smsData[j][5];
-      // 이미 복귀권유 대기 중이거나 최근 발송 완료된 경우 제외
-      if (sCategory === "복귀권유" && (sStatus === "대기" || sStatus === "완료")) {
-        existingSmsMap[sPhone] = true;
+      var sStatus = String(smsData[j][5]).trim();
+      
+      if (sCategory === "복귀권유" && sStatus === "대기") {
+        pendingSmsMap[sPhone] = true;
       }
     }
     
-    // 3. 비활성 회원 중 14일 이상 된 분들 추출
+    // 3. 미등록자 추출 및 세심한 분기 문자 생성
     var count = 0;
     var addedNames = [];
     
@@ -5277,33 +5286,57 @@ function checkInactiveMembers() {
     for (var pIdx = 0; pIdx < phones.length; pIdx++) {
       var m = memberInfoMap[phones[pIdx]];
       
-      // 활성 회원이 아니고, 마지막 만료일이 14일보다 더 과거라면
-      if (!m.isActive && m.lastExpire < fourteenDaysAgo && m.lastExpire.getTime() > 0) {
-        if (existingSmsMap[phones[pIdx]]) continue;
+      // 활성(진행중) 회원이 아니고, 마지막 만료일이 있고 과거 시점이라면
+      if (!m.isActive && m.lastExpire.getTime() > 0 && m.lastExpire < now) {
         
-        var cleanName = m.name.replace(/\d{4}$/, "");
+        // 문자함에 이미 복귀권유 "대기" 상태 문자가 들어있다면 절대 중복 생성 안 함!
+        if (pendingSmsMap[phones[pIdx]]) continue;
+        
+        // 만료 경과 일수 계산
+        var diffMs = now.getTime() - m.lastExpire.getTime();
+        var elapsedDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        
+        // 최소 1일 이상 지난 건들만 스캔 대상으로 삼음 (당일 만료 회원에 대한 당일 문자 폭격 방지)
+        if (elapsedDays < 1) continue;
+        
+        var cleanName = m.name.replace(/\d{4}$/, ""); // 이름 끝 번호 제거
         var msg = "";
+        var totalRemain = m.totalRemain;
         
-        // 잔여 횟수 확인 (memberInfoMap 생성 시 합산 로직 추가 필요 - 아래 루프에서 보완)
-        var totalRemain = 0;
-        for (var k = 1; k < regData.length; k++) {
-          if (String(regData[k][regCols.phone] || "").replace(/[^0-9]/g, "") === phones[pIdx]) {
-            var r = parseInt(regData[k][regCols.remain]) || 0;
-            totalRemain += r;
+        if (totalRemain === 0) {
+          // ----------------------------------------------------
+          // [수강권 만료 시 횟수를 다 쓴 영웅들] - 3단계 경과 일수 분기
+          // ----------------------------------------------------
+          if (elapsedDays >= 1 && elapsedDays <= 6) {
+            // A. 만료 1~6일 (조기 케어)
+            msg = cleanName + "회원님, 노형점핑클럽입니다! 😊 며칠 전 회원님의 신나는 운동 이용권(수강권)이 모두 마감되었네요. 혹시 깜빡하고 재등록을 놓치고 계신 건 아닌가요? 😢 겨우 다져놓은 체력과 건강한 루틴이 아깝게 멈춰 서기 전에 꼭 다시 함께 뛰었으면 좋겠습니다. 가벼운 마음으로 클럽 들러주시면 뜨겁게 환영해 드릴게요! ❤️";
+          } else if (elapsedDays >= 7 && elapsedDays <= 29) {
+            // B. 만료 7~29일 (중기 케어)
+            msg = cleanName + "회원님, 노형점핑클럽입니다. 😊 이용권이 마감된 지 벌써 시간이 꽤 흘렀네요! 문득 회원님과 함께 활기차게 운동하던 열정 넘치던 시간이 생각나 안부 전해요. 🏃‍♀️ 다시 한번 점핑 트램폴린 위에서 땀을 쫙 빼며 몸의 활력을 깨워보시는 건 어떨까요? 언제든 편하게 놀러 오세요! ❤️";
+          } else {
+            // C. 만료 30일 이상 (장기 미등록)
+            msg = cleanName + "회원님, 노형점핑클럽입니다! 😊 오랫동안 뵙지 못했지만 회원님의 밝고 활기찬 에너지는 여전히 클럽에 따뜻한 온기로 남아있습니다. 비록 클럽 출석은 잠시 쉬어가고 계시더라도, 모바일 앱에서 다이어리 체크를 꾸준히 하시면서 하루 식단과 루틴을 멋지게 이어가시길 진심으로 응원합니다. 늘 건강하세요. ❤️";
           }
-        }
-
-        if (totalRemain >= 5) {
-          // 유형 A: 횟수가 5회 이상 남은 분들 (보너스 제안)
-          msg = cleanName + "회원님! 노형점핑 클럽입니다. 😊 잘 지내고 계시죠? 지난번 이용하실 때 아깝게 남은 횟수들이 기간이 지나 만료되는 바람에 저희도 참 마음이 쓰였답니다. 😢 이번 기회에 다시 오시면 보너스권으로 넉넉히 채워드릴게요. 🔥 다시 한번 활기차게 건강관리 시작해 보시는 건 어떨까요? 기다리고 있겠습니다. ❤️";
         } else {
-          // 유형 B: 다 썼거나 5회 미만 남은 분들 (열정 재점화)
-          msg = cleanName + "회원님, 노형점핑클럽입니다. 😊 그동안 잘 지내셨나요? 문득 회원님과 함께 신나게 땀 흘리며 운동하던 시간이 떠올라 소식 전해요. 🏃‍♀️ 다시 운동을 시작하고 싶은 마음이 드신다면 언제든 가볍게 들러주세요. 제가 그동안 더 연마한(?) 비법으로 점핑 자세 하나하나 기깔나게 다시 잡아드릴게요. 🔥 우리 다시 한번 뜨거운 열정을 불태워봐요! 😊";
+          // ----------------------------------------------------
+          // [수강권 만료 시 잔여 횟수가 아깝게 남아 잠긴 영웅들] - 3단계 경과 일수 분기
+          // ----------------------------------------------------
+          if (elapsedDays >= 1 && elapsedDays <= 6) {
+            // A. 만료 1~6일 (조기 구제 특급 딜)
+            msg = cleanName + "회원님! 노형점핑클럽입니다. 😊 며칠 전 이용권이 마감되었는데, 소중한 남은 횟수(" + totalRemain + "회)가 아깝게 잠겨버렸네요! 😢 이대로 아쉽게 소멸되게 둘 수는 없죠! 이번 주 안에 재등록을 하시면, 잠겨있던 잔여 횟수를 소생시켜 보너스로 넉넉하게 보태드리겠습니다. 얼른 오셔서 신나게 운동해 봐요! 🏃‍♀️";
+          } else if (elapsedDays >= 7 && elapsedDays <= 29) {
+            // B. 만료 7~29일 (중기 보너스 구제)
+            msg = cleanName + "회원님! 노형점핑클럽입니다. 😊 잘 지내고 계시죠? 지난번 이용권 만료 시 아깝게 쓰지 못하고 남았던 " + totalRemain + "회의 잔여 횟수가 저희도 내내 눈에 밟히고 마음에 남았답니다. 😢 그래서 원장님이 준비한 보너스 혜택! 다시 등록하러 클럽에 들러주시면 소중한 이전 횟수를 아낌없이 복구해 얹어드릴게요. 다시 활기차게 시작해 봐요! ❤️";
+          } else {
+            // C. 만료 30일 이상 (장기 구제 및 스페셜 웰컴)
+            msg = cleanName + "회원님, 노형점핑클럽입니다. 😊 오랫동안 뵙지 못해 회원님의 안부와 건강이 늘 염려되고 무척이나 그립습니다. 😢 예전에 미처 사용하지 못했던 남은 횟수(" + totalRemain + "회)가 잠긴 채 시간이 흘러 너무나 안타까운 마음에 특별 안부 연락을 드립니다. 다시 저희 클럽을 찾아주시면 소멸되었던 잔여 횟수를 따뜻하게 복구해 드릴게요! 가볍게 다시 문을 두드려 주세요. 늘 환영합니다! ❤️";
+          }
         }
         
         // 휴대폰 번호 보정 (0 누락 방지)
         var formattedPhone = formatPhoneForSms(m.phoneRaw);
-
+        
+        // 문자발송 대기열 시트에 적재
         smsSheet.appendRow([
           Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm"),
           cleanName,
@@ -5321,7 +5354,7 @@ function checkInactiveMembers() {
     return { 
       success: true, 
       count: count, 
-      message: count > 0 ? count + "명의 복귀 권유 대상을 추출했습니다." : "새로운 복귀 권유 대상이 없습니다.",
+      message: count > 0 ? count + "명의 복귀 권유 대상을 세심하게 분류하여 문자 대기열에 쌓았습니다." : "새로운 복귀 권유 대상이 없습니다.",
       addedNames: addedNames
     };
     
