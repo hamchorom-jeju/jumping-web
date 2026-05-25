@@ -4468,68 +4468,7 @@
     }
     // --- 모바일 뒤로가기 대응 (History API) ---
     // 팝업이 열릴 때마다 히스토리 추가, 뒤로가기 시 팝업 닫기
-    function pushModalState() {
-      history.pushState({ modalOpen: true }, null);
-    }
 
-    window.addEventListener('popstate', function (e) {
-      // 🛡️ [Vercel Bridge 중복 실행 예방] 만약 bridge.js의 전역 모달 백버튼 스택이 활성화되어 있다면,
-      // 뒤로가기 흐름이 이중으로 격발되어 하위 목록 모달까지 한꺼번에 철거되는 현상을 완벽 차단하기 위해 이 로컬 리스너는 조용히 복귀합니다.
-      if (window.globalModalHistoryStack && window.globalModalHistoryStack.length > 0) {
-        return;
-      }
-
-      const openModals = document.querySelectorAll('.modal-overlay.show');
-      if (openModals.length > 0) {
-        // 가장 마지막에 열린(가장 위에 있는) 모달 찾기
-        const topModal = openModals[openModals.length - 1];
-        
-        // 해당 모달의 닫기 버튼이나 취소 버튼을 찾아 클릭 이벤트 발생
-        const closeBtn = topModal.querySelector('.btn-close, .m-btn-cancel, [onclick*="close"]');
-        if (closeBtn) {
-          closeBtn.click();
-        } else {
-          topModal.classList.remove('show');
-        }
-      }
-    });
-
-    // 기존 열기 함수들에 pushModalState() 연동
-    const originalOpenWorkLogModal = openWorkLogModal;
-    openWorkLogModal = function() { originalOpenWorkLogModal(); pushModalState(); };
-
-    const originalOpenSalesModal = openSalesModal;
-    openSalesModal = function() { originalOpenSalesModal(); pushModalState(); };
-
-    const originalOpenWorkLogMenu = openWorkLogMenu;
-    openWorkLogMenu = function() { originalOpenWorkLogMenu(); pushModalState(); };
-
-    const originalOpenChallengeMenu = openChallengeMenu;
-    openChallengeMenu = function() { originalOpenChallengeMenu(); pushModalState(); };
-
-    const originalOpenSmsLogModal = openSmsLogModal;
-    openSmsLogModal = function() { originalOpenSmsLogModal(); pushModalState(); };
-
-    const originalOpenFlashSettingModal = openFlashSettingModal;
-    openFlashSettingModal = function() { originalOpenFlashSettingModal(); pushModalState(); };
-
-    const originalOpenReservationMenu = openReservationMenu;
-    openReservationMenu = function() { originalOpenReservationMenu(); pushModalState(); };
-
-    const originalOpenInBodyRegModal = openInBodyRegModal;
-    openInBodyRegModal = function() { originalOpenInBodyRegModal(); pushModalState(); };
-
-    const originalOpenInBodyHistoryModal = openInBodyHistoryModal;
-    openInBodyHistoryModal = function() { originalOpenInBodyHistoryModal(); pushModalState(); };
-
-    const originalOpenChallengeRanking = openChallengeRanking;
-    openChallengeRanking = function() { originalOpenChallengeRanking(); pushModalState(); };
-
-    const originalOpenWorkLogHistoryModal = openWorkLogHistoryModal;
-    openWorkLogHistoryModal = function() { originalOpenWorkLogHistoryModal(); pushModalState(); };
-
-    const originalOpenPersonalNotiModal = openPersonalNotiModal;
-    openPersonalNotiModal = function() { originalOpenPersonalNotiModal(); pushModalState(); };
   </script>
   <script>
     if ('serviceWorker' in navigator) {
