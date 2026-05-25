@@ -548,6 +548,155 @@
         padding: 15px 10px !important;
         font-size: 1.1rem !important;
       }
+      
+      /* 🖨️ 명예의 전당 A4 인쇄 미리보기 활성화 시 출력 스타일 */
+      body.print-preview-active > *:not(#printPreviewModal) {
+        display: none !important;
+      }
+      body.print-preview-active #printPreviewModal {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        backdrop-filter: none !important;
+        display: block !important;
+      }
+      body.print-preview-active .print-preview-modal-content {
+        background: white !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+        box-shadow: none !important;
+        display: block !important;
+      }
+      body.print-preview-active .print-preview-modal-header {
+        display: none !important;
+      }
+      body.print-preview-active .print-preview-paper-wrapper {
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+        display: block !important;
+      }
+      body.print-preview-active .print-preview-paper {
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+        border: none !important;
+        display: block !important;
+      }
+    }
+
+    /* 🖨️ 명예의 전당 A4 인쇄 미리보기 모달 스크린 스타일 */
+    .print-preview-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(7, 9, 19, 0.96);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(15px);
+      animation: fadeInModal 0.25s ease-out;
+    }
+    @keyframes fadeInModal {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .print-preview-modal-content {
+      background: #1e1b4b;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      border-radius: 24px;
+      width: 95%;
+      max-width: 680px;
+      padding: 20px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      animation: scaleUpModal 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes scaleUpModal {
+      from { transform: scale(0.92) translateY(12px); }
+      to { transform: scale(1) translateY(0); }
+    }
+    .print-preview-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 12px;
+    }
+    .print-preview-modal-header h3 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .preview-btn-print {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      color: #451a03;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 30px;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(251, 191, 36, 0.25);
+      outline: none;
+    }
+    .preview-btn-print:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(251, 191, 36, 0.35);
+    }
+    .preview-btn-close {
+      background: rgba(255, 255, 255, 0.06);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+    .preview-btn-close:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .print-preview-paper-wrapper {
+      max-height: 60vh;
+      overflow-y: auto;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 16px;
+      display: flex;
+      justify-content: center;
+    }
+    .print-preview-paper {
+      background: white;
+      color: black;
+      width: 100%;
+      max-width: 520px;
+      min-height: 730px;
+      padding: 35px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+      border-radius: 8px;
+      font-family: 'Noto Sans KR', sans-serif;
+      text-align: left;
+      box-sizing: border-box;
     }
   </style>
   <script src="bridge.js"></script>
@@ -3117,6 +3266,338 @@
 
     function openChallengeMenu() { document.getElementById('challengeMenuModal').classList.add('show'); }
     function closeChallengeMenuModal() { document.getElementById('challengeMenuModal').classList.remove('show'); }
+
+    // --- 지니월드 챌린지 성적 및 클럽 인쇄 통합 콘솔 제어 스크립트 ---
+    let selectedRankingCategory = '';
+    let selectedRankingPeriod = '';
+    let fetchedRankingRecords = [];
+
+    function openChallengeRankingConsole() {
+      selectedRankingCategory = '';
+      selectedRankingPeriod = '';
+      fetchedRankingRecords = [];
+      
+      document.getElementById('rankingConsoleStep1').style.display = 'flex';
+      document.getElementById('rankingConsoleStep2').style.display = 'none';
+      document.getElementById('rankingConsoleStep3').style.display = 'none';
+      
+      document.getElementById('challengeRankingConsoleModal').classList.add('show');
+    }
+
+    function closeChallengeRankingConsole() {
+      document.getElementById('challengeRankingConsoleModal').classList.remove('show');
+    }
+
+    function selectRankingCategory(category) {
+      selectedRankingCategory = category;
+      const titleEl = document.getElementById('selectedCategoryTitle');
+      titleEl.innerText = category === 'weekly' ? '🏆 주간 랭킹 리스트 선택' : '📅 월간 랭킹 리스트 선택';
+      
+      showLoading("랭킹 리스트를 가져오는 중...");
+      
+      google.script.run
+        .withSuccessHandler(function(response) {
+          hideLoading();
+          if (response && response.success) {
+            renderPeriodList(response.periods || []);
+          } else {
+            alert("기간 조회 오류: " + (response ? response.error : "Unknown"));
+          }
+        })
+        .withFailureHandler(function(err) {
+          hideLoading();
+          alert("네트워크 오류: " + err);
+        })
+        .getChallengeArchiveData({ category: category });
+    }
+
+    function goBackToRankingStep1() {
+      document.getElementById('rankingConsoleStep1').style.display = 'flex';
+      document.getElementById('rankingConsoleStep2').style.display = 'none';
+    }
+
+    function renderPeriodList(periods) {
+      const listEl = document.getElementById('rankingPeriodList');
+      let html = '';
+      
+      const liveText = selectedRankingCategory === 'weekly' ? '실시간 (이번주 주간)' : '실시간 (이번달 월간)';
+      html += `<button class="m-btn m-btn-jumping" onclick="selectRankingPeriod('live')">⚡ ${liveText}</button>`;
+      
+      periods.forEach(p => {
+        html += `<button class="m-btn" style="background: rgba(255,255,255,0.03); color: white; border: 1px solid rgba(255,255,255,0.06);" onclick="selectRankingPeriod('${p}')">📅 ${p}</button>`;
+      });
+      
+      listEl.innerHTML = html;
+      
+      document.getElementById('rankingConsoleStep1').style.display = 'none';
+      document.getElementById('rankingConsoleStep2').style.display = 'flex';
+    }
+
+    function selectRankingPeriod(period) {
+      selectedRankingPeriod = period;
+      const titleEl = document.getElementById('selectedPeriodTitle');
+      titleEl.innerText = period === 'live' 
+        ? (selectedRankingCategory === 'weekly' ? '⚡ 실시간 주간 성적' : '⚡ 실시간 월간 성적')
+        : `📅 ${period} 성적 조회`;
+      
+      showLoading("상세 성적을 집계하는 중...");
+      
+      if (period === 'live') {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            hideLoading();
+            if (response && response.success && response.data) {
+              const liveList = response.data[selectedRankingCategory] || [];
+              const liveTotalList = response.data['total'] || [];
+              
+              fetchedRankingRecords = liveList.map(item => {
+                return {
+                  rank: item.rank,
+                  name: item.name,
+                  health: 0,
+                  perf: 0,
+                  def: 0,
+                  periodTotal: item.score,
+                  lifetimeTotal: 0
+                };
+              });
+              
+              fetchedRankingRecords.forEach(rec => {
+                const totalMatch = liveTotalList.find(t => t.name === rec.name);
+                if (totalMatch) rec.lifetimeTotal = totalMatch.score;
+              });
+              
+              renderConsoleTable();
+            } else {
+              alert("실시간 성적 조회 실패");
+            }
+          })
+          .withFailureHandler(function(err) {
+            hideLoading();
+            alert("실시간 조회 네트워크 오류: " + err);
+          })
+          .getHallOfFameData();
+      } else {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            hideLoading();
+            if (response && response.success) {
+              fetchedRankingRecords = response.records || [];
+              renderConsoleTable();
+            } else {
+              alert("성적 조회 실패: " + (response ? response.error : "Unknown"));
+            }
+          })
+          .withFailureHandler(function(err) {
+            hideLoading();
+            alert("네트워크 오류: " + err);
+          })
+          .getChallengeArchiveData({ category: selectedRankingCategory, period: period });
+      }
+    }
+
+    function goBackToRankingStep2() {
+      document.getElementById('rankingConsoleStep2').style.display = 'flex';
+      document.getElementById('rankingConsoleStep3').style.display = 'none';
+    }
+
+    function renderConsoleTable() {
+      const tbody = document.getElementById('rankingDetailsTableBody');
+      const thDetail = document.getElementById('thDetailCol');
+      
+      thDetail.innerText = selectedRankingCategory === 'weekly' ? '주간 합산 EXP' : '월간 합산 EXP';
+      
+      let html = '';
+      if (fetchedRankingRecords.length === 0) {
+        html = `<tr><td colspan="3" style="text-align: center; padding: 20px; color: var(--text-sub);">참가자 성적이 없습니다.</td></tr>`;
+      } else {
+        fetchedRankingRecords.forEach(r => {
+          let rankBadge = `${r.rank}위`;
+          if (r.rank === 1) rankBadge = '🥇 1위';
+          else if (r.rank === 2) rankBadge = '🥈 2위';
+          else if (r.rank === 3) rankBadge = '🥉 3위';
+          
+          html += `
+            <tr style="border-bottom: 1px solid var(--glass-border);">
+              <td style="padding: 8px; text-align: center; font-weight: bold; color: #fbbf24;">${rankBadge}</td>
+              <td style="padding: 8px; font-weight: bold; color: white;">${r.name}</td>
+              <td style="padding: 8px; text-align: right; font-weight: bold; color: var(--primary-hover); font-size: 0.9rem;">${r.periodTotal.toLocaleString()} EXP</td>
+            </tr>
+          `;
+        });
+      }
+      
+      tbody.innerHTML = html;
+      
+      document.getElementById('rankingConsoleStep2').style.display = 'none';
+      document.getElementById('rankingConsoleStep3').style.display = 'flex';
+    }
+
+    function triggerPrintFromConsole() {
+      const printPaperContent = document.getElementById('printPaperContent');
+      if (!printPaperContent) return;
+
+      const categoryTitle = selectedRankingCategory === 'weekly' ? '지니월드 랭킹 발표' : '지니월드 월간 랭킹 발표';
+      const periodLabel = selectedRankingPeriod === 'live' 
+        ? (selectedRankingCategory === 'weekly' ? '실시간 이번주' : '실시간 이번달')
+        : selectedRankingPeriod;
+        
+      const title = `🏆 ${periodLabel} ${categoryTitle} 🏆`;
+      const subtitle = `노형점핑을 가장 뜨겁게 빛낸 영웅들의 영광스러운 성적 발표`;
+
+      const top10 = fetchedRankingRecords.slice(0, 10);
+      const top3 = top10.filter(w => w.rank <= 3);
+      const getInitials = (name) => name.length >= 2 ? name.substring(name.length - 2) : name;
+
+      let podiumHTML = '';
+      if (top3.length > 0) {
+        podiumHTML += `<div style="display: flex; align-items: flex-end; justify-content: center; gap: 15px; margin: 25px 0 35px; padding-top: 15px;">`;
+        
+        const rank1 = top3.find(w => w.rank === 1);
+        const rank2 = top3.find(w => w.rank === 2);
+        const rank3 = top3.find(w => w.rank === 3);
+
+        if (rank2) {
+          podiumHTML += `
+            <div style="flex: 1; border: 2px solid black; border-radius: 12px; display: flex; flex-direction: column; align-items: center; padding: 12px 5px; height: 100px; background: #fafafa; position: relative;">
+              <div style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid black; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; margin-bottom: 4px; background: #eee; color: black;">${getInitials(rank2.name)}</div>
+              <div style="font-size: 0.85rem; font-weight: 900; color: black; margin-bottom: 2px;">${rank2.name}</div>
+              <div style="font-size: 0.72rem; color: #444; font-weight: bold;">${rank2.periodTotal.toLocaleString()} EXP</div>
+              <div style="position: absolute; bottom: -8px; background: white; border: 1px solid black; border-radius: 10px; padding: 1px 6px; font-size: 0.55rem; font-weight: 900; color: black;">2ND</div>
+            </div>
+          `;
+        } else {
+          podiumHTML += `<div style="flex: 1; height: 100px;"></div>`;
+        }
+
+        if (rank1) {
+          podiumHTML += `
+            <div style="flex: 1; border: 3px solid #fbbf24; border-radius: 14px; display: flex; flex-direction: column; align-items: center; padding: 12px 5px; height: 125px; background: #fffdf5; position: relative; transform: scale(1.05);">
+              <div style="font-size: 1.1rem; position: absolute; top: -14px;">👑</div>
+              <div style="width: 38px; height: 38px; border-radius: 50%; border: 2px solid #fbbf24; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.88rem; margin-bottom: 4px; background: #fffbeb; color: black;">${getInitials(rank1.name)}</div>
+              <div style="font-size: 0.9rem; font-weight: 900; color: black; margin-bottom: 2px;">${rank1.name}</div>
+              <div style="font-size: 0.75rem; color: black; font-weight: 800;">${rank1.periodTotal.toLocaleString()} EXP</div>
+              <div style="position: absolute; bottom: -8px; background: #fbbf24; border: 1px solid black; border-radius: 10px; padding: 1px 8px; font-size: 0.58rem; font-weight: 900; color: #451a03;">1ST CHAMP</div>
+            </div>
+          `;
+        }
+
+        if (rank3) {
+          podiumHTML += `
+            <div style="flex: 1; border: 2px solid black; border-radius: 12px; display: flex; flex-direction: column; align-items: center; padding: 12px 5px; height: 100px; background: #fafafa; position: relative;">
+              <div style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid black; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; margin-bottom: 4px; background: #eee; color: black;">${getInitials(rank3.name)}</div>
+              <div style="font-size: 0.85rem; font-weight: 900; color: black; margin-bottom: 2px;">${rank3.name}</div>
+              <div style="font-size: 0.72rem; color: #444; font-weight: bold;">${rank3.periodTotal.toLocaleString()} EXP</div>
+              <div style="position: absolute; bottom: -8px; background: white; border: 1px solid black; border-radius: 10px; padding: 1px 6px; font-size: 0.55rem; font-weight: 900; color: black;">3RD</div>
+            </div>
+          `;
+        } else {
+          podiumHTML += `<div style="flex: 1; height: 100px;"></div>`;
+        }
+
+        podiumHTML += `</div>`;
+      }
+
+      let tableRowsHTML = '';
+      top10.forEach(w => {
+        const showSubscores = (selectedRankingPeriod !== 'live');
+        const subscoresText = showSubscores 
+          ? `<span style="font-size: 0.7rem; color: #555; display: block; font-weight: 500; margin-top: 1px;">체력:${w.health} 실천력:${w.perf} 회복력:${w.def}</span>`
+          : '';
+          
+        tableRowsHTML += `
+          <tr style="border-bottom: 1.5px solid black;">
+            <td style="padding: 7px 5px; text-align: center; font-weight: 900; font-size: 0.8rem;">${w.rank}위</td>
+            <td style="padding: 7px 5px; font-weight: 900; font-size: 0.85rem; color: black; text-align: left;">
+              ${w.name}
+              ${subscoresText}
+            </td>
+            <td style="padding: 7px 5px; text-align: right; font-weight: 900; font-size: 0.85rem; color: black;">${w.periodTotal.toLocaleString()} EXP</td>
+          </tr>
+        `;
+      });
+
+      const detailsTableHTML = `
+        <table style="width: 100%; border-collapse: collapse; margin-top: 5px;">
+          <thead>
+            <tr style="border-bottom: 2.5px solid black; border-top: 2px solid black;">
+              <th style="padding: 6px; text-align: center; font-weight: 900; font-size: 0.85rem; width: 60px;">순위</th>
+              <th style="padding: 6px; text-align: left; font-weight: 900; font-size: 0.85rem;">이름 / 세부점수</th>
+              <th style="padding: 6px; text-align: right; font-weight: 900; font-size: 0.85rem; width: 120px;">획득 EXP</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRowsHTML}
+          </tbody>
+        </table>
+      `;
+
+      // 2부: 누적 토탈 랭킹 (1~3위 스냅샷) - 1부2부 표기 삭제 및 주차별 제목 보정 피드백 반영
+      const sortedLifetime = [...fetchedRankingRecords]
+        .filter(x => x.lifetimeTotal > 0)
+        .sort((a, b) => b.lifetimeTotal - a.lifetimeTotal)
+        .slice(0, 3);
+        
+      let lifetimeHTML = '';
+      if (sortedLifetime.length > 0) {
+        lifetimeHTML += `
+          <div style="margin-top: 25px; border: 2px solid black; border-radius: 12px; padding: 12px; background: #fafafa;">
+            <h4 style="font-size: 0.9rem; font-weight: 900; margin-bottom: 6px; text-align: center; color: black; letter-spacing: -0.5px;">⚡ ${periodLabel} 누적 토탈 랭킹 순위</h4>
+            <p style="font-size: 0.65rem; color: #555; text-align: center; margin-bottom: 10px; font-weight: 500;">노형점핑 지니월드 평생 공헌도 최고 명예의 전당 (1위 ~ 3위 스냅샷)</p>
+            <div style="display: flex; gap: 8px; justify-content: center; width: 100%;">
+        `;
+        sortedLifetime.forEach((w, lIdx) => {
+          const medal = lIdx === 0 ? '🥇 1위' : lIdx === 1 ? '🥈 2위' : '🥉 3위';
+          lifetimeHTML += `
+            <div style="flex: 1; text-align: center; border: 1.5px solid black; border-radius: 8px; padding: 6px 4px; background: white;">
+              <span style="font-size: 0.72rem; font-weight: 900; color: black; display: block; margin-bottom: 2px;">${medal}</span>
+              <strong style="font-size: 0.8rem; font-weight: 900; color: black; display: block; margin-bottom: 2px;">${w.name}</strong>
+              <span style="font-size: 0.68rem; font-weight: 700; color: #555;">${w.lifetimeTotal.toLocaleString()} EXP</span>
+            </div>
+          `;
+        });
+        lifetimeHTML += `
+            </div>
+          </div>
+        `;
+      }
+
+      const stampHTML = `
+        <div style="margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+          <div style="text-align: left; font-size: 0.72rem; color: #555; font-weight: 500;">
+            <p style="margin: 2px 0;">발표 기관: 노형점핑 지니월드 관리사령부</p>
+            <p style="margin: 2px 0;">출력 일시: ${new Date().toLocaleString('ko-KR')}</p>
+          </div>
+          <div style="position: relative; width: 80px; height: 80px; border: 2.5px solid #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; transform: rotate(-8deg); background: rgba(239, 68, 68, 0.01);">
+            <span style="color: #ef4444; font-size: 0.65rem; font-weight: 900; text-align: center; line-height: 1.25; letter-spacing: -0.5px;">노형점핑<br>지인보증<br>🏆</span>
+          </div>
+        </div>
+      `;
+
+      printPaperContent.innerHTML = `
+        <div style="text-align: center; margin-bottom: 10px;">
+          <h1 style="font-size: 1.8rem; font-weight: 950; color: black; margin-bottom: 4px; letter-spacing: -1px;">${title}</h1>
+          <p style="font-size: 0.85rem; color: #333; font-weight: 500; margin: 0;">${subtitle}</p>
+          <hr style="border: none; border-top: 2.5px solid black; margin: 12px 0 20px 0;">
+        </div>
+        ${podiumHTML}
+        ${detailsTableHTML}
+        ${lifetimeHTML}
+        ${stampHTML}
+      `;
+
+      document.body.classList.add('print-preview-active');
+      document.getElementById('printPreviewModal').style.display = 'flex';
+    }
+
+    function executePrint() {
+      window.print();
+    }
+
+    function closePrintPreview() {
+      document.body.classList.remove('print-preview-active');
+      document.getElementById('printPreviewModal').style.display = 'none';
+    }
   </script>
 
   <div class="modal-overlay" id="challengeMenuModal">
@@ -3126,8 +3607,80 @@
         <button class="m-btn" style="background: linear-gradient(135deg, #7c3aed, #4c1d95); color:white;" 
           onclick="window.location.href='sanctum.html';">🏰 지니월드 관리센터 (생텀) 입장</button>
         <button class="m-btn m-btn-jumping" onclick="openInBodyHistoryModal(); closeChallengeMenuModal();">📋 챌린지 인바디 기록 조회 및 수정</button>
-        <button class="m-btn m-btn-combo" onclick="window.location.href='halloffame.html';">📊 지난 챌린지 성적 및 클럽 인쇄 템플릿</button>
+        <button class="m-btn m-btn-combo" onclick="openChallengeRankingConsole(); closeChallengeMenuModal();">📊 지난 챌린지 성적 및 클럽 인쇄 템플릿</button>
         <button class="m-btn m-btn-cancel" onclick="closeChallengeMenuModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🏆 지니월드 챌린지 성적 및 클럽 인쇄 통합 콘솔 모달 -->
+  <div class="modal-overlay" id="challengeRankingConsoleModal">
+    <div class="modal-content" style="max-width: 520px; width: 95%;">
+      <div class="modal-header" id="consoleModalHeader">📊 챌린지 성적 및 클럽 인쇄 콘솔</div>
+      
+      <!-- 1단계: 카테고리 선택 -->
+      <div id="rankingConsoleStep1" class="modal-btn-group">
+        <button class="m-btn m-btn-jumping" onclick="selectRankingCategory('weekly')">🏆 주간 랭킹 인쇄</button>
+        <button class="m-btn m-btn-therapy" onclick="selectRankingCategory('monthly')">📅 월간 랭킹 인쇄</button>
+        <button class="m-btn m-btn-cancel" onclick="closeChallengeRankingConsole()">닫기</button>
+      </div>
+
+      <!-- 2단계: 리스트 선택 -->
+      <div id="rankingConsoleStep2" style="display: none; flex-direction: column; gap: 12px; margin-top: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+          <strong id="selectedCategoryTitle" style="color: var(--primary); font-size: 1rem;">🏆 주간 랭킹 리스트</strong>
+          <button onclick="goBackToRankingStep1()" class="m-btn" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; width: auto; margin: 0; background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.15);">이전으로</button>
+        </div>
+        <div id="rankingPeriodList" class="modal-btn-group" style="max-height: 250px; overflow-y: auto; padding-right: 5px;">
+          <!-- JS dynamic lists -->
+        </div>
+      </div>
+      
+      <!-- 3단계: 성적 확인 및 미리보기 실행 -->
+      <div id="rankingConsoleStep3" style="display: none; flex-direction: column; gap: 12px; margin-top: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+          <strong id="selectedPeriodTitle" style="color: var(--primary); font-size: 1rem;">📅 5월 2주차 성적</strong>
+          <button onclick="goBackToRankingStep2()" class="m-btn" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; width: auto; margin: 0; background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.15);">이전으로</button>
+        </div>
+        
+        <div id="rankingDetailsTableWrapper" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(0,0,0,0.25);">
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--glass-border); background: rgba(255,255,255,0.04); position: sticky; top: 0; z-index: 1;">
+                <th style="padding: 8px; text-align: center; width: 45px;">순위</th>
+                <th style="padding: 8px; text-align: left;">이름</th>
+                <th id="thDetailCol" style="padding: 8px; text-align: right; width: 140px;">기간합산 EXP</th>
+              </tr>
+            </thead>
+            <tbody id="rankingDetailsTableBody">
+              <!-- JS dynamic records -->
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 5px;">
+          <button onclick="triggerPrintFromConsole()" class="m-btn m-btn-combo" style="flex: 1;"><i class="fa-solid fa-print"></i> 🖨️ A4 인쇄 미리보기</button>
+          <button onclick="closeChallengeRankingConsole()" class="m-btn m-btn-cancel" style="flex: 1;">닫기</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 🖨️ 명예의 전당 A4 인쇄 미리보기 모달 -->
+  <div id="printPreviewModal" class="print-preview-modal-overlay" style="display: none;">
+    <div class="print-preview-modal-content">
+      <div class="print-preview-modal-header">
+        <h3><i class="fa-solid fa-print" style="color: #fbbf24;"></i> 🖨️ 클럽 부착용 A4 인쇄 미리보기</h3>
+        <div style="display: flex; gap: 8px;">
+          <button onclick="executePrint()" class="preview-btn-print">진짜 인쇄하기</button>
+          <button onclick="closePrintPreview()" class="preview-btn-close">닫기</button>
+        </div>
+      </div>
+      <div class="print-preview-paper-wrapper">
+        <div id="printPaperContent" class="print-preview-paper">
+          <!-- JS dynamic content -->
+        </div>
       </div>
     </div>
   </div>
