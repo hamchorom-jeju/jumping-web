@@ -4537,90 +4537,13 @@ function getChallengeRanking() {
 }
 
 /**
- * 상단 메뉴 생성 (기존 대시보드 도구 통합)
  */
-function onOpen() {
-  var ui = SpreadsheetApp.getUi();
-  ui.createMenu('🚀 노형점핑 대시보드')
-      .addItem('💌 [문자발송(토)] 잔여현황 안내 팝업', 'showMemberReportPopup')
-      .addItem('📧 [마우스드래그] 건강 리포트 발송 팝업', 'showIntegratedReportPopup') 
-      .addSeparator()
-      .addItem('✔️ 주간 잔여횟수 현황 누적(매주 일 5시 트리거)', 'backupRemainingSessions')
-      .addSeparator()
-      .addItem('📊1. 주간 통계 생성(회원명단 병기)', 'runWeeklyStats')
-      .addItem('📊2. 월간 통계 생성(회원명단 병기)', 'runMonthlyStats')
-      .addSeparator()
-      .addItem('❇️33 챌린지 주별 누적 정산 시스템', 'run33ChallengeWeeklySettlement') 
-      .addSeparator()
-      .addItem('🎉각종 순위표 카드이미지 만들고 저장하기', 'showRankingCardBySelection') 
-      .addItem('👥 챌린지 카드 (단톡방용-실명)', 'showChallengeCard_Full')
-      .addItem('📱 챌린지 카드 (인스타용-숨김)', 'showChallengeCard_Masked')
-      .addSeparator()
-      .addItem('⚙️ ERP 시트 구조 최적화 (강제 업데이트)', 'forceUpdateAllHeaders')
-      .addToUi();
-}
+// [v63.0] 레거시 함수 제거 완료
 
 /**
  * 노형점핑클럽 - 전체 안내 및 잔여 현황 발송 팝업
  */
-function showMemberReportPopup() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName("등록 현황");
-  if (!sheet) {
-    SpreadsheetApp.getUi().alert("⚠️ [등록 현황] 시트가 없습니다.");
-    return;
-  }
-
-  var data = sheet.getDataRange().getValues();
-  var list = ""; var allPhones = []; var rowIndices = []; var count = 0;
-
-  for (var i = 1; i < data.length; i++) {
-    if (data[i][10] === "진행중"){
-      var name = data[i][3];      // D: 이름
-      var phone = String(data[i][4]).replace(/[^0-9]/g, ""); // E: 휴대폰
-      var product = data[i][6];   // G: 권종
-      var expiry = Utilities.formatDate(new Date(data[i][8]), "GMT+9", "yyyy-MM-dd"); // I: 만료일
-      var remains = data[i][9];   // J: 잔여횟수
-
-      var msg = name + " 회원님, 노형점핑클럽입니다! ❤️\n\n" +
-                " 현재 잔여 현황을 안내드립니다. 😊\n\n" +
-                "🏃 이용권: [" + product + "]\n" +
-                "📊 남은횟수: " + remains + "회\n" +
-                "📅 만료일자: ~ " + expiry + "\n\n" +
-                "잔여 현황이 맞지 않으시면 연락주세요.^^\n" +"더 건강해지고 예뻐지시도록 노형점핑이 함께 할게요!\n" +" 즐거운 주말 보내시고 다음주에 클럽에서 뵙겠습니다. ✨";
-
-      allPhones.push(phone);
-      rowIndices.push(i + 1);
-
-      var safeMsg = msg.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, "\\n");
-
-      list += '<div id="row_' + (i+1) + '" style="margin-bottom:12px; border:1px solid #dee2e6; padding:15px; border-radius:10px; background:white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">' +
-              '<div style="font-size:15px; margin-bottom:8px;"><b>👤 ' + name + ' 회님</b> <span style="color:#868e96; font-size:12px;">(' + phone + ')</span></div>' +
-              '<div style="font-size:13px; color:#495057; background:#f8f9fa; padding:10px; border-radius:5px; margin-bottom:10px; line-height:1.5; white-space:pre-wrap;">' + msg + '</div>' +
-              '<div style="display:flex; gap:6px;">' +
-              '<button onclick="copyT(\'' + phone + '\', this)" style="flex:1; padding:10px; border:1px solid #ced4da; border-radius:6px; background:white; cursor:pointer;">📞 번호 복사</button>' +
-              '<button onclick="copyT(\'' + safeMsg + '\', this)" style="flex:2; padding:10px; border:none; border-radius:6px; background:#e3fafd; color:#0b7285; font-weight:bold; cursor:pointer;">💬 문구 복사</button>' +
-              '<button onclick="markDone(' + (i+1) + ', this)" style="flex:1; padding:10px; border:none; border-radius:6px; background:#f1f3f5; cursor:pointer;">✅ 완료</button>' +
-              '</div></div>';
-      count++;
-    }
-  }
-
-  var script = '<script>' +
-    'function copyT(t,b){var a=document.body.appendChild(document.createElement("textarea"));a.value=t;a.select();document.execCommand("copy");document.body.removeChild(a);b.innerText="복사됨!";b.style.background="#fab005";b.style.color="white";setTimeout(function(){b.innerText= (t.length<15?"📞 번호":"💬 문구")+" 복사"; b.style.background=(t.length<15?"white":"#e3fafd"); b.style.color=(t.length<15?"black":"#0b7285");},800);}' +
-    'function markDone(r,b){google.script.run.withSuccessHandler(function(){document.getElementById("row_"+r).style.background="#ebfbee"; document.getElementById("row_"+r).style.opacity="0.6"; b.innerText="확인됨"; b.disabled=true;}).setCheck(r);}' +
-    'function markAllDone(rs){ if(confirm("선택한 모든 회원을 완료 처리할까요?")){ google.script.run.withSuccessHandler(function(){google.script.host.close();}).setAllChecks(rs); } }</script>';
-
-  var header = count > 0 ?
-    '<div style="background:#fff4e6; padding:15px; border:2px solid #fd7e14; border-radius:10px; margin-bottom:20px; text-align:center;">' +
-    '<b>📢 회원 잔여현황 안내 (' + count + '건)</b><br>' +
-    '<textarea id="allP" style="width:100%; margin:10px 0; padding:5px; height:50px;">' + allPhones.join(", ") + '</textarea>' +
-    '<button onclick="copyT(document.getElementById(\'allP\').value, this)" style="width:100%; padding:10px; background:#fd7e14; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">전체 번호 복사</button>' +
-    '<button onclick="markAllDone([' + rowIndices.join(",") + '])" style="width:100%; padding:10px; background:#40c057; color:white; border:none; border-radius:6px; margin-top:5px; font-weight:bold; cursor:pointer;">전체 완료 체크</button></div>'
-    : "<div style='padding:50px; text-align:center;'>대상자가 없습니다. 😊</div>";
-
-  SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput('<div style="font-family:sans-serif; background:#f8f9fa; padding:15px; min-height:100%;">' + script + header + list + '</div>').setWidth(450).setHeight(700), "🧡 노형점핑 회원 관리 리포트");
-}
+// [v63.0] 레거시 함수 제거 완료
 
 function setCheck(r) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("등록 현황");
@@ -4632,96 +4555,7 @@ function setAllChecks(rs) {
   rs.forEach(function(r) { sheet.getRange(r, 14).setValue(true); });
 }
 
-function showIntegratedReportPopup() {
-  var ui = SpreadsheetApp.getUi();
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  
-  var response = ui.prompt("📊 (1/3) 단계", "데이터가 담긴 시트명을 입력해 주세요.", ui.ButtonSet.OK_CANCEL);
-  if (response.getSelectedButton() != ui.Button.OK) return;
-  var targetSheetName = response.getResponseText().trim();
-  var sheet = ss.getSheetByName(targetSheetName); 
-  if (!sheet) { ui.alert("⚠️ 시트를 찾을 수 없습니다."); return; }
-
-  var periodResponse = ui.prompt("🗓️ (2/3) 단계", "문자에 표시할 리포트 기간을 입력해 주세요.\n(예: 2월 3주차)", ui.ButtonSet.OK_CANCEL);
-  if (periodResponse.getSelectedButton() != ui.Button.OK) return;
-  var periodName = periodResponse.getResponseText().trim();
-
-  var dateResponse = ui.prompt("📅 (3/3) 단계", "인바디 매칭 기준 날짜를 입력하세요.\n(예: 2/21)", ui.ButtonSet.OK_CANCEL);
-  if (dateResponse.getSelectedButton() != ui.Button.OK) return;
-  var inputDateStr = dateResponse.getResponseText().trim();
-
-  var currentTargetLabel = getTargetSeasonLabelByInput(inputDateStr);
-  if (!currentTargetLabel || currentTargetLabel === "") {
-    ui.alert("⚠️ 해당 날짜에 맞는 시즌 정보를 찾지 못했습니다.");
-    return;
-  }
-
-  var weeklyListSheet = ss.getSheetByName("33챌린지 주별 누적");
-  var weeklyData = weeklyListSheet ? weeklyListSheet.getDataRange().getValues() : [];
-  var range = ss.getActiveRange();
-  var data = range.getValues();
-  var startRow = range.getRow();
-  var list = ""; var count = 0;
-
-  for (var i = 0; i < data.length; i++) {
-    var actualRow = startRow + i;
-    var id = String(data[i][0] || "").trim();      
-    var name = data[i][1];                         
-    var phone = String(data[i][2]).replace(/[^0-9]/g, ""); 
-    var goal = data[i][9] || "건강관리";            
-    var weekCount = data[i][16] || 0;               
-    var weekTims = data[i][17] || 0;                
-    var weekTimeStr = data[i][18] || "0시간 0분";    
-    var monthCount = data[i][19] || 0;              
-    var monthTims = data[i][20] || 0;               
-    var monthTimeStr = data[i][21] || "0시간 0분";  
-    var weight = data[i][22] || "-";                
-    var fat = data[i][23] || "-";                   
-    var muscle = data[i][24] || "-";                
-    var score = data[i][25] || "-";                 
-
-    // 매칭 인바디 찾기
-    var inBodyNote = "인바디 매칭 정보 없음";
-    for(var w=0; w<weeklyData.length; w++){
-      if(String(weeklyData[w][0]) === id){
-        inBodyNote = "인바디 변화 기록 있음"; break;
-      }
-    }
-
-    var msg = name + " 회원님, 33챌린지 " + periodName + " 리포트입니다! 🏆\n\n" +
-              "🔥 주간 활동 요약\n" +
-              "🏃 출석: " + weekCount + "회 / 운동: " + weekTimeStr + "\n\n" +
-              "📅 한달 누적 현황\n" +
-              "✨ 출석: " + monthCount + "회 / 운동: " + monthTimeStr + "\n\n" +
-              "📊 신체 변화 (매칭기준: " + inputDateStr + ")\n" +
-              "⚖️ 체중: " + weight + "kg / 체지방: " + fat + "%\n" +
-              "💪 골격근: " + muscle + "kg / 점수: " + score + "점\n\n" +
-              "목표하신 [" + goal + "]를 향해 잘 가고 계십니다. 이번주도 화이팅하세요! ❤️";
-
-    var safeMsg = msg.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, "\\n");
-
-    list += '<div id="row_' + actualRow + '" style="margin-bottom:12px; border:1px solid #dee2e6; padding:15px; border-radius:10px; background:white;">' +
-            '<div style="font-size:15px; margin-bottom:8px;"><b>👤 ' + name + ' 회님</b> <span style="color:#868e96; font-size:12px;">(' + phone + ')</span></div>' +
-            '<div style="font-size:13px; color:#495057; background:#f8f9fa; padding:10px; border-radius:5px; margin-bottom:10px; white-space:pre-wrap;">' + msg + '</div>' +
-            '<div style="display:flex; gap:6px;">' +
-            '<button onclick="copyT(\'' + phone + '\', this)" style="flex:1; padding:10px;">📞 번호</button>' +
-            '<button onclick="copyT(\'' + safeMsg + '\', this)" style="flex:2; padding:10px;">💬 문구 복사</button>' +
-            '<button onclick="markDone(' + actualRow + ', this)" style="flex:1; padding:10px;">✅ 완료</button>' +
-            '</div></div>';
-    count++;
-  }
-
-  var script = '<script>' +
-    'function copyT(t,b){var a=document.body.appendChild(document.createElement("textarea"));a.value=t;a.select();document.execCommand("copy");document.body.removeChild(a);b.innerText="복사됨!";setTimeout(function(){b.innerText= (t.length<15?"📞 번호":"💬 문구")+" 복사";},800);}' +
-    'function markDone(r,b){google.script.run.withSuccessHandler(function(){document.getElementById("row_"+r).style.opacity="0.3"; b.innerText="확인됨"; b.disabled=true;}).setCheck(r);}' +
-    '</script>';
-
-  var header = '<div style="background:#e7f5ff; padding:15px; border-radius:10px; margin-bottom:20px; text-align:center;">' +
-               '<b>📊 통합 건강 리포트 발송 (' + count + '건)</b><br>' +
-               '<small>선택하신 범위 내 회원님들의 주간/월간 리포트입니다.</small></div>';
-
-  SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput('<div style="font-family:sans-serif; background:#f8f9fa; padding:15px;">' + script + header + list + '</div>').setWidth(450).setHeight(700), "🏆 통합 건강 리포트");
-}
+// [v63.0] 레거시 함수 제거 완료
 
 /**
  * 밤 11시 30분경 자동으로 실행되어 그날의 최종 통계를 업무일지에 업데이트합니다.
@@ -4844,33 +4678,9 @@ function autoCloseDailyLog() {
   }
 }
 
-function setRowColor(r, sName) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sName);
-  if (sheet) sheet.getRange(r, 1, 1, sheet.getLastColumn()).setBackground("#dcfce7");
-}
+// [v63.0] 레거시 함수 제거 완료
 
-function getTargetSeasonLabelByInput(dateStr) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var setupSheet = ss.getSheetByName("인바디 시즌제 등록");
-    var setupData = setupSheet.getDataRange().getValues();
-    var parts = dateStr.split("/");
-    var targetDateOnly = new Date(2026, parseInt(parts[0]) - 1, parseInt(parts[1]));
-    for (var i = 1; i < setupData.length; i++) {
-      var seasonName = String(setupData[i][0] || "").trim();
-      var awardDate = new Date(setupData[i][1]);
-      if (!seasonName || isNaN(awardDate.getTime())) continue;
-      var awardDateOnly = new Date(awardDate.getFullYear(), awardDate.getMonth(), awardDate.getDate());
-      var diffDays = Math.round((awardDateOnly - targetDateOnly) / (1000 * 60 * 60 * 24));
-      var weekNum = "";
-      if (diffDays <= 1 && diffDays >= -5) weekNum = "3주차";
-      else if (diffDays <= 8 && diffDays >= 2) weekNum = "2주차";
-      else if (diffDays <= 15 && diffDays >= 9) weekNum = "1주차";
-      if (weekNum !== "") return seasonName + " " + weekNum;
-    }
-    return "";
-  } catch(e) { return ""; }
-}
+// [v63.0] 레거시 함수 제거 완료
 
 function backupRemainingSessions() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -4885,177 +4695,17 @@ function backupRemainingSessions() {
   targetSheet.getRange(targetSheet.getLastRow() + 1, 1, backupData.length, backupData[0].length).setValues(backupData);
 }
 
-function runWeeklyStats() { generateStats('주간 통계'); }
-function runMonthlyStats() { generateStats('월간 통계'); }
+// [v63.0] 레거시 함수 제거 완료
+// [v63.0] 레거시 함수 제거 완료
 
-function generateStats(targetSheetName) {
-  var ui = SpreadsheetApp.getUi();
-  var startRes = ui.prompt('📅 [' + targetSheetName + '] 시작일', 'YYYY-MM-DD', ui.ButtonSet.OK_CANCEL);
-  if (startRes.getSelectedButton() !== ui.Button.OK) return;
-  var endRes = ui.prompt('📅 [' + targetSheetName + '] 종료일', 'YYYY-MM-DD', ui.ButtonSet.OK_CANCEL);
-  if (endRes.getSelectedButton() !== ui.Button.OK) return;
-  
-  var startDate = new Date(startRes.getResponseText().trim());
-  var endDate = new Date(endRes.getResponseText().trim());
-  endDate.setHours(23, 59, 59, 999);
+// [v63.0] 레거시 함수 제거 완료
 
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var regSheet = ss.getSheetByName("등록 현황");
-  var logSheet = ss.getSheetByName("출석기록");
-  var memberSheet = ss.getSheetByName("회원명단"); 
-  var targetSheet = ss.getSheetByName(targetSheetName);
+// [v63.0] 레거시 함수 제거 완료
 
-  var regData = regSheet.getDataRange().getValues();
-  var logData = logSheet.getDataRange().getValues();
-  var memberData = memberSheet.getDataRange().getValues();
-  var resultRows = []; var memberUpdateMap = {};
+// [v63.0] 레거시 함수 제거 완료
+// [v63.0] 레거시 함수 제거 완료
 
-  for (var i = 1; i < regData.length; i++) {
-    if (regData[i][10] === "진행중") {
-      var mId = String(regData[i][2] || "").trim();
-      var name = regData[i][3];
-      var count = 0, tCount = 0, tMins = 0;
-      for (var j = 1; j < logData.length; j++) {
-        var logId = String(logData[j][3] || "").trim();
-        var logTime = new Date(logData[j][1]);
-        if (logId === mId && logTime >= startDate && logTime <= endDate) {
-          count++; tCount += Number(logData[j][8] || 0); tMins += Number(logData[j][10] || 0);
-        }
-      }
-      var formatted = Math.floor(tMins / 60) + "시간 " + (tMins % 60) + "분";
-      resultRows.push([startDate.toLocaleDateString() + "~" + endDate.toLocaleDateString(), mId, name, count, tCount, formatted]);
-      memberUpdateMap[mId] = {count: count, tims: tCount, timeStr: formatted};
-    }
-  }
-
-  for (var k = 1; k < memberData.length; k++) {
-    var mId = String(memberData[k][0] || "").trim();
-    if (memberUpdateMap[mId]) {
-      var ud = memberUpdateMap[mId];
-      var col = (targetSheetName === '주간 통계') ? 17 : 20;
-      memberSheet.getRange(k + 1, col, 1, 3).setValues([[ud.count, ud.tims, ud.timeStr]]);
-    }
-  }
-
-  if (resultRows.length > 0) {
-    targetSheet.insertRowsAfter(1, resultRows.length);
-    targetSheet.getRange(2, 1, resultRows.length, 6).setValues(resultRows);
-    ui.alert("✅ 통계 완료!");
-  }
-}
-
-function run33ChallengeWeeklySettlement() {
-  var ui = SpreadsheetApp.getUi();
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  
-  var sPrompt = ui.prompt('시즌 선택', '시즌명 입력', ui.ButtonSet.OK_CANCEL);
-  if (sPrompt.getSelectedButton() != ui.Button.OK) return;
-  var seasonName = sPrompt.getResponseText();
-
-  var wPrompt = ui.prompt('주차 선택', '숫자만 (1,2,3)', ui.ButtonSet.OK_CANCEL);
-  if (wPrompt.getSelectedButton() != ui.Button.OK) return;
-  var weekNum = wPrompt.getResponseText();
-
-  var setupSheet = ss.getSheetByName("인바디 시즌제 등록");
-  var setupData = setupSheet.getDataRange().getValues();
-  var awardDate = null;
-  for (var i = 1; i < setupData.length; i++) {
-    if (setupData[i][0] == seasonName) { awardDate = new Date(setupData[i][1]); break; }
-  }
-  if (!awardDate) return;
-
-  var endDate = new Date(awardDate); endDate.setDate(awardDate.getDate() - ((3 - parseInt(weekNum)) * 7 + 1)); endDate.setHours(23, 59, 59);
-  var startDate = new Date(endDate); startDate.setDate(endDate.getDate() - 2); 
-  var startEndDate = new Date(awardDate); startEndDate.setDate(awardDate.getDate() - 22);
-  var startStartDate = new Date(startEndDate); startStartDate.setDate(startEndDate.getDate() - 2);
-
-  var inputSheet = ss.getSheetByName("인바디 입력");
-  var regSheet = ss.getSheetByName("등록 현황");
-  var targetSheet = ss.getSheetByName("33챌린지 주별 누적");
-  var inputData = inputSheet.getDataRange().getValues();
-  var regData = regSheet.getDataRange().getValues();
-  var targetData = targetSheet.getDataRange().getValues();
-  
-  var weekXRows = [], week0Rows = [];
-
-  for (var i = 1; i < regData.length; i++) {
-    if (regData[i][10] == "진행중") {
-      var mId = regData[i][2], name = regData[i][3];
-      var curR = null, preR = null, baseR = null;
-
-      for (var j = inputData.length - 1; j >= 1; j--) {
-        var d = new Date(inputData[j][1]);
-        if (inputData[j][3] == mId && d >= startDate && d <= endDate) { curR = inputData[j]; break; }
-      }
-      for (var j = inputData.length - 1; j >= 1; j--) {
-        var d = new Date(inputData[j][1]);
-        if (inputData[j][3] == mId && d >= startStartDate && d <= startEndDate) { baseR = inputData[j]; break; }
-      }
-      
-      if (weekNum == "1") preR = baseR;
-      else {
-        var pLabel = seasonName + " " + (parseInt(weekNum) - 1) + "주차";
-        for (var k = 0; k < targetData.length; k++) { if (targetData[k][1] == mId && targetData[k][0] == pLabel) { preR = targetData[k]; break; } }
-      }
-
-      if (!curR && !preR) continue;
-
-      if (weekNum == "1" && baseR) {
-        week0Rows.push([seasonName + " 0주차", mId, name, seasonName, baseR[4], baseR[5], baseR[6], (baseR[6]/baseR[4]*100).toFixed(2), 0, 0, 0, 0, baseR[7], "0주차 시작점"]);
-      }
-
-      var fW, fM, fF, note = "", wDW=0, fDW=0, fRW=0, fRS=0;
-      if (!curR) {
-        fW = preR[4]; fM = preR[5]; fF = preR[6]; note = "(미제출) 복사";
-      } else {
-        fW = curR[4]; fM = curR[5]; fF = curR[6];
-      }
-
-      if (preR) {
-        wDW = (fW - preR[4]).toFixed(1); fDW = (fF - preR[6]).toFixed(1); fRW = (preR[6] != 0) ? ((fDW / preR[6]) * 100).toFixed(2) : 0;
-      }
-      if (baseR) fRS = (baseR[6] != 0) ? (((fF - baseR[6]) / baseR[6]) * 100).toFixed(2) : 0;
-
-      weekXRows.push([seasonName + " " + weekNum + "주차", mId, name, seasonName, fW, fM, fF, (fW > 0 ? (fF/fW*100).toFixed(2) : 0), wDW, fDW, fRW, fRS, (curR ? curR[7] : ""), note]);
-    }
-  }
-
-  var finalRows = weekXRows.concat(week0Rows);
-  if (finalRows.length > 0) {
-    targetSheet.insertRowsBefore(2, finalRows.length);
-    targetSheet.getRange(2, 1, finalRows.length, 14).setValues(finalRows);
-    var rankS = ss.getSheetByName("33챌린지 랭킹뷰");
-    if (rankS) {
-      rankS.getRange(2, 1, Math.max(1, rankS.getLastRow()), 14).clear();
-      if (weekXRows.length > 0) rankS.getRange(2, 1, weekXRows.length, 14).setValues(weekXRows);
-    }
-    ui.alert("✅ 정산 완료");
-  }
-}
-
-function showChallengeCard_Full() { createChallengeEntryCard(false); }
-function showChallengeCard_Masked() { createChallengeEntryCard(true); }
-
-function createChallengeEntryCard(isMasked) {
-  var ui = SpreadsheetApp.getUi();
-  var range = SpreadsheetApp.getActiveSpreadsheet().getActiveRange();
-  var values = range.getDisplayValues();
-  if (values.length < 1) return;
-
-  var seasonRes = ui.prompt("🏆 시즌명", "입력", ui.ButtonSet.OK_CANCEL);
-  var seasonName = seasonRes.getResponseText() || "33 챌린지";
-
-  var memberNames = values.map(v => v[0].toString().trim()).filter(n => n !== "").sort();
-  var finalNames = isMasked ? memberNames.map(n => n.length <= 1 ? n : n[0] + "*".repeat(n.length - 2) + n[n.length - 1]) : memberNames;
-
-  var html = '<html><body style="font-family:sans-serif; text-align:center; padding:20px;">' +
-             '<h2>🏆 ' + seasonName + ' 엔트리</h2>' +
-             '<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">' +
-             finalNames.map(n => '<div style="padding:10px; background:#f8f9fa; border:1px solid #ddd;">' + n + '</div>').join('') +
-           '</div>';
-html += '</script></body></html>';
-  ui.showModalDialog(HtmlService.createHtmlOutput(html).setWidth(400).setHeight(600), "챌린지 카드");
-}
+// [v63.0] 레거시 함수 제거 완료
 function getAdminReservationData(targetDateStr) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
