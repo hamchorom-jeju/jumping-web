@@ -7138,12 +7138,11 @@ function setGeminiApiKey(newKey) {
 /**
  * 🤖 [v64.30] 지니 웰니스 AI 비서 (Gemini 1.5 Flash) 백엔드 API 직접 호출 엔진
  */
-function callGeminiBackend(prompt, systemInstruction) {
+function callGeminiBackendWithDetails(prompt, systemInstruction) {
   try {
     var apiKeyRes = getGeminiApiKey();
     if (!apiKeyRes.success || !apiKeyRes.key) {
-      Logger.log("🚨 Gemini API Key가 설정되지 않았습니다. 환경설정을 확인해 주세요.");
-      return null;
+      return { success: false, error: "API Key가 로드되지 않았습니다." };
     }
     var apiKey = apiKeyRes.key;
     
@@ -7182,15 +7181,23 @@ function callGeminiBackend(prompt, systemInstruction) {
     if (responseCode === 200) {
       var json = JSON.parse(responseText);
       if (json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts[0]) {
-        return json.candidates[0].content.parts[0].text.trim();
+        return { success: true, text: json.candidates[0].content.parts[0].text.trim() };
       }
+      return { success: false, error: "응답 구조 파싱 실패: " + responseText };
     }
-    Logger.log("🚨 Gemini API 호출 에러 (" + responseCode + "): " + responseText);
-    return null;
+    return { success: false, error: "HTTP " + responseCode + " - " + responseText };
   } catch (e) {
-    Logger.log("🚨 callGeminiBackend 익셉션: " + e.toString());
-    return null;
+    return { success: false, error: e.toString() };
   }
+}
+
+function callGeminiBackend(prompt, systemInstruction) {
+  var res = callGeminiBackendWithDetails(prompt, systemInstruction);
+  if (res.success) {
+    return res.text;
+  }
+  Logger.log("🚨 Gemini API 호출 에러: " + res.error);
+  return null;
 }
 
 /**
@@ -7473,9 +7480,12 @@ function generateAiDraftForManualMessage(payload) {
                  recentHistoryText + "\n\n" +
                  "위 상황과 최근 대화 히스토리 및 원장님의 지시 메모를 결합하여, 회원의 가슴을 뭉클하게 할 150자~200자 내외의 명품 1:1 쪽지 초안 본문을 작성해 주세요.";
     
-    var draft = callGeminiBackend(prompt, systemInstruction);
-    if (!draft) {
-      // 🚨 [진단용 핫패치 v64.42] 원장님의 환경설정 시트 접근 권한 및 API 키 적재 여부 실시간 검증
+    var apiRes = callGeminiBackendWithDetails(prompt, systemInstruction);
+    var draft = "";
+    if (apiRes.success) {
+      draft = apiRes.text;
+    } else {
+      // 🚨 [진단용 핫패치 v64.45] API 호출의 날것 그대로인 에러 전문을 출력!
       var apiKeyRes = getGeminiApiKey();
       var rawKey = apiKeyRes.key || "";
       var keySnippet = (rawKey.length > 5) ? (rawKey.substring(0, 5) + "..." + rawKey.substring(rawKey.length - 3)) : "비어있음/추출안됨";
@@ -7483,7 +7493,7 @@ function generateAiDraftForManualMessage(payload) {
       draft = "[⚠️ 지니 비서 실시간 장해 진단 보고서]\n" +
               "1. 환경설정 시트 API Key 로드 결과: " + (apiKeyRes.success ? "성공 ✅" : "실패 ❌") + "\n" +
               "2. 감지된 API Key 상태: " + keySnippet + " (길이: " + rawKey.length + "글자)\n" +
-              "3. 원인: 위 Key가 올바름에도 이 메시지가 뜬다면 Gemini API 일시 한도초과 또는 구글 웹앱 배포 시 권한(Execute as: Me) 누락 상태입니다.\n\n" +
+              "3. 백엔드가 감지한 진짜 오류 원인:\n➡️ " + apiRes.error + "\n\n" +
               "👉 임시 쪽지: " + cleanName + "님, 오늘 하루도 활기차고 행복 가득하게 보내세요! 클럽에서 뵙겠습니다. ❤️";
     }
     return { success: true, draft: draft };
