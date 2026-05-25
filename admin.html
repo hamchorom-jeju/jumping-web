@@ -1985,7 +1985,13 @@
   <!-- 매출 등록 모달 -->
   <div class="modal-overlay" id="salesModal">
     <div class="modal-content" style="max-height:85vh; overflow-y:auto; background:#ffffff;">
-      <div class="modal-header">💰 일일 수입 및 지출 등록</div>
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; margin-bottom: 20px;">
+        <span style="font-size: 1.15rem; font-weight: 800;">💰 일일 매출/지출 등록</span>
+        <button onclick="closeSalesModal(); setTimeout(function() { openSalesHistoryModal(); }, 150);" 
+                style="background: #3182ce; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: background 0.2s;">
+          📁 매출조회
+        </button>
+      </div>
 
       <div class="form-group">
         <label class="form-label">📅 날짜 선택</label>
@@ -2049,7 +2055,6 @@
       </div>
 
       <button class="btn-submit" onclick="submitSalesData()" style="background:#38a169; margin-bottom: 8px;">등록 완료하기</button>
-      <button class="btn-submit" onclick="closeSalesModal(); setTimeout(function() { openSalesHistoryModal(); }, 150);" style="background:#3182ce; margin-bottom: 8px;">📁 통합 손익 역사 목록</button>
       <button class="btn-close" onclick="closeSalesModal()">닫기</button>
     </div>
   </div>
@@ -2121,9 +2126,26 @@
 
   <!-- 손익 역사 목록 모달 -->
   <div class="modal-overlay" id="salesHistoryModal">
-    <div class="modal-content" style="max-height:85vh; overflow-y:auto; background:#ffffff; color:#1a202c; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
-      <div class="modal-header" style="border-bottom: 2px solid #edf2f7; padding-bottom: 15px; font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; gap: 8px;">📊 통합 손익 역사 목록</div>
+    <div class="modal-content" style="max-height:85vh; overflow-y:auto; background:#ffffff; color:#1a202c; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); max-width: 480px; width: 95%;">
+      <div class="modal-header" style="border-bottom: 2px solid #edf2f7; padding-bottom: 12px; font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; gap: 8px;">📊 매출 / 지출 장부 조회</div>
       
+      <!-- 💳 탭 선택 그리드 (일매출 / 월매출 / 기간별) -->
+      <div class="select-grid" id="salesTabGrid" style="grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 12px 0;">
+        <div class="select-btn active" id="salesTabDailyBtn" onclick="switchSalesTab('daily')">일매출</div>
+        <div class="select-btn" id="salesTabMonthlyBtn" onclick="switchSalesTab('monthly')">월매출</div>
+        <div class="select-btn" id="salesTabRangeBtn" onclick="switchSalesTab('range')">기간별</div>
+      </div>
+
+      <!-- 📅 기간 입력 폼 (기간별 탭 선택 시 노출) -->
+      <div id="salesRangeSelector" style="display: none; background: #ebf8ff; border: 1px solid #bee3f8; padding: 12px; border-radius: 14px; margin-bottom: 12px; flex-direction: column; gap: 8px;">
+        <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between;">
+          <input type="date" id="salesStartDate" style="flex: 1; padding: 8px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.85rem; outline: none; background: #ffffff;">
+          <span style="font-size: 0.85rem; font-weight: bold; color: #4a5568;">~</span>
+          <input type="date" id="salesEndDate" style="flex: 1; padding: 8px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.85rem; outline: none; background: #ffffff;">
+        </div>
+        <button onclick="applySalesRangeQuery()" style="background: #3182ce; color: white; border: none; padding: 10px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: background 0.2s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 4px;">🔍 조회하기</button>
+      </div>
+
       <div id="salesHistorySummary" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 15px 0; background: #f8fafc; padding: 15px; border-radius: 16px; border: 1px solid #e2e8f0;">
         <div style="text-align: center;">
           <div style="font-size: 0.75rem; color: #718096; margin-bottom: 4px;">📈 총 수입</div>
@@ -2139,7 +2161,7 @@
         </div>
       </div>
 
-      <div id="salesHistoryList" style="max-height: 50vh; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 10px;">
+      <div id="salesHistoryList" style="max-height: 42vh; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 10px;">
         <div style="text-align:center; padding:20px; color:#718096;">로딩 중...</div>
       </div>
       
@@ -2979,8 +3001,15 @@
 
     // --- 통합 손익 역사 조회 모듈 ---
     let lastSalesLogs = [];
+    let currentSalesTab = 'daily'; // daily, monthly, range
 
     function openSalesHistoryModal() {
+      // 탭 기본값 복원
+      currentSalesTab = 'daily';
+      document.querySelectorAll('#salesTabGrid .select-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('salesTabDailyBtn').classList.add('active');
+      document.getElementById('salesRangeSelector').style.display = 'none';
+      
       document.getElementById('salesHistoryList').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-sub);">손익 기록을 실시간 집계 중...</div>';
       document.getElementById('totalSalesIncome').innerText = '0원';
       document.getElementById('totalSalesExpense').innerText = '0원';
@@ -3004,46 +3033,190 @@
             }
 
             lastSalesLogs = res.logs;
-            var html = '';
-            var totalIncome = 0;
-            var totalExpense = 0;
-
-            res.logs.forEach(function (log, idx) {
-              totalIncome += log.incomeTotal;
-              totalExpense += log.expenseTotal;
-              var netProfit = log.incomeTotal - log.expenseTotal;
-              var netColor = netProfit >= 0 ? '#4c51bf' : '#e53e3e';
-              var netPrefix = netProfit >= 0 ? '+' : '';
-
-              html += '<div onclick="openSalesDetailModal(\'' + log.date + '\')" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:15px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition: transform 0.2s;">' +
-                '<div>' +
-                '<div style="font-weight:800; color:#1a202c; font-size:1.05rem;">📅 ' + log.date + '</div>' +
-                '<div style="font-size:0.8rem; color:#718096; margin-top:4px; display:flex; gap:8px;">' +
-                '<span>수입: <strong style="color:#2f855a;">' + Number(log.incomeTotal).toLocaleString() + '원</strong></span>' +
-                '<span>|</span>' +
-                '<span>지출: <strong style="color:#c53030;">' + Number(log.expenseTotal).toLocaleString() + '원</strong></span>' +
-                '</div>' +
-                '</div>' +
-                '<div style="text-align:right; display:flex; align-items:center; gap:8px;">' +
-                '<div style="font-weight:800; font-size:0.95rem; color:' + netColor + ';">' + netPrefix + Number(netProfit).toLocaleString() + '원</div>' +
-                '<div style="color:#cbd5e0; font-size:1.1rem;">❯</div>' +
-                '</div>' +
-                '</div>';
-            });
-
-            var totalNet = totalIncome - totalExpense;
-            document.getElementById('totalSalesIncome').innerText = Number(totalIncome).toLocaleString() + '원';
-            document.getElementById('totalSalesExpense').innerText = Number(totalExpense).toLocaleString() + '원';
-            document.getElementById('totalSalesNet').innerText = (totalNet >= 0 ? '+' : '') + Number(totalNet).toLocaleString() + '원';
-            document.getElementById('totalSalesNet').style.color = totalNet >= 0 ? '#4c51bf' : '#e53e3e';
-            
-            document.getElementById('salesHistoryList').innerHTML = html;
+            renderSalesHistoryTab();
           })
           .withFailureHandler(function (err) {
             document.getElementById('salesHistoryList').innerHTML = '<div style="color:var(--danger); text-align:center; padding:20px;">서버 오류: ' + (err.message || err) + '</div>';
           })
           .getSalesHistory();
+      } else {
+        // 로컬 목업 데이터
+        setTimeout(function() {
+          lastSalesLogs = [
+            { date: "2026-05-25", incomeTotal: 350000, expenseTotal: 45000 },
+            { date: "2026-05-24", incomeTotal: 120000, expenseTotal: 0 },
+            { date: "2026-05-20", incomeTotal: 500000, expenseTotal: 120000 },
+            { date: "2026-04-15", incomeTotal: 450000, expenseTotal: 230000 },
+            { date: "2026-04-01", incomeTotal: 0, expenseTotal: 80000 }
+          ];
+          renderSalesHistoryTab();
+        }, 300);
       }
+    }
+
+    function switchSalesTab(tabType) {
+      currentSalesTab = tabType;
+      document.querySelectorAll('#salesTabGrid .select-btn').forEach(btn => btn.classList.remove('active'));
+      
+      if (tabType === 'daily') {
+        document.getElementById('salesTabDailyBtn').classList.add('active');
+        document.getElementById('salesRangeSelector').style.display = 'none';
+        renderSalesHistoryTab();
+      } else if (tabType === 'monthly') {
+        document.getElementById('salesTabMonthlyBtn').classList.add('active');
+        document.getElementById('salesRangeSelector').style.display = 'none';
+        renderSalesHistoryTab();
+      } else if (tabType === 'range') {
+        document.getElementById('salesTabRangeBtn').classList.add('active');
+        document.getElementById('salesRangeSelector').style.display = 'flex';
+        
+        // 날짜 기본값: 이번달 1일 ~ 오늘
+        const today = new Date();
+        const y = today.getFullYear();
+        const m = String(today.getMonth() + 1).padStart(2, '0');
+        const d = String(today.getDate()).padStart(2, '0');
+        
+        if (!document.getElementById('salesStartDate').value) {
+          document.getElementById('salesStartDate').value = y + '-' + m + '-01';
+        }
+        if (!document.getElementById('salesEndDate').value) {
+          document.getElementById('salesEndDate').value = y + '-' + m + '-' + d;
+        }
+        
+        renderSalesHistoryTab();
+      }
+    }
+
+    function applySalesRangeQuery() {
+      renderSalesHistoryTab();
+    }
+
+    function renderSalesHistoryTab() {
+      if (!lastSalesLogs || lastSalesLogs.length === 0) {
+        document.getElementById('salesHistoryList').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-sub);">조회할 데이터가 존재하지 않습니다.</div>';
+        return;
+      }
+
+      var listContainer = document.getElementById('salesHistoryList');
+      var html = '';
+      var totalIncome = 0;
+      var totalExpense = 0;
+
+      if (currentSalesTab === 'daily') {
+        lastSalesLogs.forEach(function (log) {
+          totalIncome += log.incomeTotal;
+          totalExpense += log.expenseTotal;
+          var netProfit = log.incomeTotal - log.expenseTotal;
+          var netColor = netProfit >= 0 ? '#4c51bf' : '#e53e3e';
+          var netPrefix = netProfit >= 0 ? '+' : '';
+
+          html += '<div onclick="openSalesDetailModal(\'' + log.date + '\')" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:15px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition: transform 0.2s;">' +
+            '<div>' +
+            '<div style="font-weight:800; color:#1a202c; font-size:1.05rem;">📅 ' + log.date + '</div>' +
+            '<div style="font-size:0.8rem; color:#718096; margin-top:4px; display:flex; gap:8px;">' +
+            '<span>수입: <strong style="color:#2f855a;">' + Number(log.incomeTotal).toLocaleString() + '원</strong></span>' +
+            '<span>|</span>' +
+            '<span>지출: <strong style="color:#c53030;">' + Number(log.expenseTotal).toLocaleString() + '원</strong></span>' +
+            '</div>' +
+            '</div>' +
+            '<div style="text-align:right; display:flex; align-items:center; gap:8px;">' +
+            '<div style="font-weight:800; font-size:0.95rem; color:' + netColor + ';">' + netPrefix + Number(netProfit).toLocaleString() + '원</div>' +
+            '<div style="color:#cbd5e0; font-size:1.1rem;">❯</div>' +
+            '</div>' +
+            '</div>';
+        });
+      } else if (currentSalesTab === 'monthly') {
+        // 월별 YYYY-MM 그룹 계산
+        var monthlyMap = {};
+        lastSalesLogs.forEach(function (log) {
+          var monthKey = log.date.substring(0, 7); // YYYY-MM
+          if (!monthlyMap[monthKey]) {
+            monthlyMap[monthKey] = { month: monthKey, income: 0, expense: 0 };
+          }
+          monthlyMap[monthKey].income += log.incomeTotal;
+          monthlyMap[monthKey].expense += log.expenseTotal;
+        });
+
+        // 내림차순 정렬
+        var sortedMonths = Object.keys(monthlyMap).sort().reverse();
+
+        sortedMonths.forEach(function (key) {
+          var item = monthlyMap[key];
+          totalIncome += item.income;
+          totalExpense += item.expense;
+          var netProfit = item.income - item.expense;
+          var netColor = netProfit >= 0 ? '#4c51bf' : '#e53e3e';
+          var netPrefix = netProfit >= 0 ? '+' : '';
+          
+          // 월 클릭 시 시작일/종료일 기간 조회로 스마트 이동 연동!
+          var clickRangeFn = "switchSalesTab('range'); document.getElementById('salesStartDate').value='" + item.month + "-01'; document.getElementById('salesEndDate').value='" + item.month + "-31'; renderSalesHistoryTab();";
+
+          html += '<div onclick="' + clickRangeFn + '" style="background:#fcf8ff; border:1.5px dashed #d6bcfa; border-radius:14px; padding:15px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition: transform 0.2s;">' +
+            '<div>' +
+            '<div style="font-weight:800; color:#5b21b6; font-size:1.05rem;">🗓️ ' + item.month.substring(0,4) + '년 ' + Number(item.month.substring(5,7)) + '월 합계</div>' +
+            '<div style="font-size:0.8rem; color:#718096; margin-top:4px; display:flex; gap:8px;">' +
+            '<span>수입: <strong style="color:#2f855a;">' + Number(item.income).toLocaleString() + '원</strong></span>' +
+            '<span>|</span>' +
+            '<span>지출: <strong style="color:#c53030;">' + Number(item.expense).toLocaleString() + '원</strong></span>' +
+            '</div>' +
+            '</div>' +
+            '<div style="text-align:right; display:flex; align-items:center; gap:8px;">' +
+            '<div style="font-weight:800; font-size:0.95rem; color:' + netColor + ';">' + netPrefix + Number(netProfit).toLocaleString() + '원</div>' +
+            '<div style="color:#b7791f; font-size:0.8rem; font-weight:bold; background:#fef3c7; padding:2px 6px; border-radius:6px; margin-left:4px;">상세조회</div>' +
+            '</div>' +
+            '</div>';
+        });
+      } else if (currentSalesTab === 'range') {
+        var startVal = document.getElementById('salesStartDate').value;
+        var endVal = document.getElementById('salesEndDate').value;
+
+        if (!startVal || !endVal) {
+          listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-sub);">조회 시작일과 종료일을 올바르게 선택해주세요.</div>';
+          return;
+        }
+
+        lastSalesLogs.forEach(function (log) {
+          // 날짜 범위 필터링 (사전적 대소 비교)
+          if (log.date >= startVal && log.date <= endVal) {
+            totalIncome += log.incomeTotal;
+            totalExpense += log.expenseTotal;
+            var netProfit = log.incomeTotal - log.expenseTotal;
+            var netColor = netProfit >= 0 ? '#4c51bf' : '#e53e3e';
+            var netPrefix = netProfit >= 0 ? '+' : '';
+
+            html += '<div onclick="openSalesDetailModal(\'' + log.date + '\')" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:15px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition: transform 0.2s;">' +
+              '<div>' +
+              '<div style="font-weight:800; color:#1a202c; font-size:1.05rem;">📅 ' + log.date + '</div>' +
+              '<div style="font-size:0.8rem; color:#718096; margin-top:4px; display:flex; gap:8px;">' +
+              '<span>수입: <strong style="color:#2f855a;">' + Number(log.incomeTotal).toLocaleString() + '원</strong></span>' +
+              '<span>|</span>' +
+              '<span>지출: <strong style="color:#c53030;">' + Number(log.expenseTotal).toLocaleString() + '원</strong></span>' +
+              '</div>' +
+              '</div>' +
+              '<div style="text-align:right; display:flex; align-items:center; gap:8px;">' +
+              '<div style="font-weight:800; font-size:0.95rem; color:' + netColor + ';">' + netPrefix + Number(netProfit).toLocaleString() + '원</div>' +
+              '<div style="color:#cbd5e0; font-size:1.1rem;">❯</div>' +
+              '</div>' +
+              '</div>';
+          }
+        });
+
+        if (html === '') {
+          listContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#718096;">해당 기간에 조회된 손익 내역이 없습니다.</div>';
+          document.getElementById('totalSalesIncome').innerText = '0원';
+          document.getElementById('totalSalesExpense').innerText = '0원';
+          document.getElementById('totalSalesNet').innerText = '0원';
+          return;
+        }
+      }
+
+      var totalNet = totalIncome - totalExpense;
+      document.getElementById('totalSalesIncome').innerText = Number(totalIncome).toLocaleString() + '원';
+      document.getElementById('totalSalesExpense').innerText = Number(totalExpense).toLocaleString() + '원';
+      document.getElementById('totalSalesNet').innerText = (totalNet >= 0 ? '+' : '') + Number(totalNet).toLocaleString() + '원';
+      document.getElementById('totalSalesNet').style.color = totalNet >= 0 ? '#4c51bf' : '#e53e3e';
+      
+      listContainer.innerHTML = html;
     }
 
     function closeSalesHistoryModal(isPopstate) {
