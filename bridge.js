@@ -790,19 +790,23 @@ window.addEventListener('popstate', function(e) {
       showAppConfirm("👑 점핑관리자 앱을 종료하시겠습니까?", function() {
         localStorage.removeItem('v44_user_name');
         localStorage.removeItem('v44_user_phone');
-        window.location.replace('login.html');
+        window.close();
+        setTimeout(function() { history.go(-2); }, 50);
       }, "👑", "아니오(머무르기)", "예(앱종료)");
     } else if (pageName === 'attendance.html') {
       showAppConfirm("⚙️ 출석체크 앱을 종료하시겠습니까?", function() {
-        window.location.replace('login.html');
+        window.close();
+        setTimeout(function() { history.go(-2); }, 50);
       }, "⚙️", "아니오(머무르기)", "예(앱종료)");
     } else if (pageName === 'registration.html') {
       showAppConfirm("⚙️ 회원등록앱을 종료하시겠습니까?", function() {
-        window.location.replace('login.html');
+        window.close();
+        setTimeout(function() { history.go(-2); }, 50);
       }, "⚙️", "아니오(머무르기)", "예(저장취소)");
     } else if (pageName === 'renewal.html' || pageName.indexOf('renewal') !== -1) {
       showAppConfirm("⚙️ 회원등록앱을 종료하시겠습니까?", function() {
-        window.location.replace('login.html');
+        window.close();
+        setTimeout(function() { history.go(-2); }, 50);
       }, "⚙️", "아니오(머무르기)", "예(저장취소)");
     } else if (pageName === 'oasis.html') {
       showAppConfirm("🌴 오아시스에서 퇴장하여 메인 광장으로 이동하시겠습니까?", function() {
