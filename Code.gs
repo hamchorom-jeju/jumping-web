@@ -6682,8 +6682,7 @@ function triggerGlycogenQuest(phone, name) {
     var deadline = new Date(now.getTime() + 72 * 60 * 60 * 1000); // 72 hours
     var deadlineStr = Utilities.formatDate(deadline, "GMT+9", "yyyy-MM-dd HH:mm:ss");
     
-    var lastRow = sheet.getLastRow();
-    var nextId = lastRow;
+    var nextId = "GLY_" + Date.now();
     
     sheet.appendRow([
       nextId,
@@ -6947,8 +6946,7 @@ function createSurpriseQuest(payload) {
     var endTime = new Date(now.getTime() + durationMs);
     var endTimeStr = Utilities.formatDate(endTime, "GMT+9", "yyyy-MM-dd HH:mm:ss");
     
-    var lastRow = sheet.getLastRow();
-    var nextId = lastRow;
+    var nextId = "SUR_" + Date.now();
     
     var qScore = payload.score ? Number(payload.score) : 15;
     var qMethod = payload.method || "사진";
@@ -6973,6 +6971,17 @@ function createSurpriseQuest(payload) {
       noticeContent += "! " + payload.description;
     }
     updatePillarNotice({ content: noticeContent });
+    
+    // [v64.50] 즉석 돌발 퀘스트 생성 시에도 '전체_알림_목록' 시트에 글로벌 레코드로 1행 즉시 적재 발송합니다!
+    var globalTitle = "⚡ [돌발 퀘스트] " + payload.title + " 선포! ✉️";
+    var globalContent = "📢 [웰니스 코치의 긴급 돌발 퀘스트 선포!] 📢\n\n" +
+                        "오늘의 돌발 퀘스트가 선포되었습니다! 오늘 자정까지 완수하고 추가 보너스 에너지를 획득하세요!\n\n" +
+                        "🔥 [돌발 퀘스트]: " + payload.title + "\n" +
+                        "📝 [임무 설명]: " + (payload.description || "웰니스 코치의 특별 계시입니다.") + "\n" +
+                        "💎 [보상 EXP]: +" + qScore + " EXP\n" +
+                        "🎯 [인증 방법]: " + qMethod + " 인증\n\n" +
+                        "지금 즉시 대시보드에서 돌발 퀘스트를 인증하고 수호 점수를 획득해 보세요! ⚔️";
+    sendGlobalNotification("quest", globalTitle, globalContent);
     
     return { success: true, endTime: endTime.getTime() };
   } catch (e) {
@@ -8298,7 +8307,19 @@ function saveScheduledQuest(payload) {
       ]);
     }
     
-    return { success: true, message: dateStr + "일 자정에 자동 실행되는 돌발 퀘스트가 안전하게 예약되었습니다! 📅⚡" };
+    // [v64.50] 생텀에서 돌발 퀘스트를 등록(예약)하는 순간에도 '전체_알림_목록' 시트에 1행의 글로벌 예고 알림을 함께 기록 선포합니다!
+    var globalTitle = "📅 [돌발 퀘스트 예고] " + title + " (시행일: " + dateStr + ") ⚡";
+    var globalContent = "📢 [웰니스 코치의 새로운 돌발 퀘스트 예약 선포!] 📢\n\n" +
+                        "새로운 돌발 퀘스트가 캘린더에 예약 등록되었습니다! 미리 챌린지 일정을 대비해 보세요!\n\n" +
+                        "📅 [시행 일자]: " + dateStr + " (당일 자정 마감)\n" +
+                        "🔥 [돌발 퀘스트]: " + title + "\n" +
+                        "📝 [임무 설명]: " + desc + "\n" +
+                        "💎 [보상 EXP]: +" + score + " EXP\n" +
+                        "🎯 [인증 방법]: " + method + " 인증\n\n" +
+                        "당일 자정에 퀘스트가 공식적으로 진행 시작됩니다. 수호 점수 획득을 준비하세요! ⚔️";
+    sendGlobalNotification("quest", globalTitle, globalContent);
+    
+    return { success: true, message: dateStr + "일 자정에 자동 실행되는 돌발 퀘스트가 예약 등록 및 전체 알림 선포 완료되었습니다! 📅⚡" };
   } catch (e) {
     return { success: false, error: e.toString() };
   }
@@ -9868,15 +9889,16 @@ function autoSendDailyQuestNotice() {
     
     var title = preview.title;
     var content = preview.content;
-    var phones = getActiveUserPhones();
-    var sendCount = 0;
-    for (var i = 0; i < phones.length; i++) {
-      var res = sendPersonalNotification(phones[i], "quest", title, content);
-      if (res && res.success) sendCount++;
+    
+    // [v64.50] 전체회원 대상 돌발 퀘스트는 개인알림 시트 용량 낭비를 방지하기 위해 '전체_알림_목록' 시트에 단 1개의 글로벌 레코드로 적재 발송합니다!
+    var res = sendGlobalNotification("quest", title, content);
+    if (res && res.success) {
+      Logger.log("돌발 퀘스트 자동 전체 알림 등록 완료! GLOBAL_ID: " + res.globalId);
+    } else {
+      Logger.log("돌발 퀘스트 자동 전체 알림 등록 실패: " + (res ? res.error : "알 수 없음"));
     }
-    Logger.log("돌발 퀘스트 자동 쪽지 발송 완료: 총 " + phones.length + "명 중 " + sendCount + "명 성공");
   } catch (err) {
-    Logger.log("돌발 퀘스트 자동 쪽지 발송 오류: " + err.toString());
+    Logger.log("돌발 퀘스트 자동 전체 알림 발송 오류: " + err.toString());
   }
 }
 
