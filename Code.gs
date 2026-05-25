@@ -4991,7 +4991,7 @@ function updateSmsStatus(rowIdx, status) {
 /**
  * [관리자 전용] 7일 이상 미방문 회원 추출 및 문자 생성
  */
-function checkLongTermAbsentees() { return { success: true, count: 0, message: "동작 제외" };
+function checkLongTermAbsentees() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var regSheet = ss.getSheetByName("등록 현황");
@@ -5211,7 +5211,7 @@ function checkLongTermAbsentees() { return { success: true, count: 0, message: "
 /**
  * [관리자 전용] 등록이 끊긴 지 14일 이상 된 장기 미등록 회원 추출
  */
-function checkInactiveMembers() { return { success: true, count: 0, message: "동작 제외" };
+function checkInactiveMembers() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var regSheet = ss.getSheetByName("등록 현황");
