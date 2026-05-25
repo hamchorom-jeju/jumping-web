@@ -5440,6 +5440,7 @@ function checkInactiveMembers() {
         var mTypes = m.memberships || [];
         var attStats = memberAttendanceTypeMap[phones[pIdx]] || { therapy: 0, jumping: 0 };
         var regClass = determineMemberClassInfo(mTypes, attStats);
+        var hasNoAttendance = (!memberAttendanceTypeMap[phones[pIdx]] || (attStats.therapy === 0 && attStats.jumping === 0));
         
         // 🚨 [원장님 스마트 가드] 4~6일차 만료 회원 하이브리드 발송 분기
         var isAppActive = hasMemberActiveInApp(phones[pIdx], 3); // 최근 3일 내 앱 활동 여부
@@ -5454,7 +5455,7 @@ function checkInactiveMembers() {
         }
         
         // AI 본문 동적 생성 (과거 히스토리 + 회원 이용 성향 맥락 인지형)
-        var msg = generateWellnessAiSms(cleanName, totalRemain, elapsedDays, "복귀권유", formattedPhone, targetChannel, regClass);
+        var msg = generateWellnessAiSms(cleanName, totalRemain, elapsedDays, "복귀권유", formattedPhone, targetChannel, regClass, hasNoAttendance);
         
         if (targetChannel === "noti") {
           // 무료 개인 쪽지 즉시 발송
@@ -10885,12 +10886,50 @@ function determineMemberClassInfo(membershipNames, attendanceStats) {
     }
   }
   
-  // 만약 출석 이력이 아예 없는 신규 무기록 회원인 경우!
-  if (!hasAttendance) {
-    return "new_no_record";
+  return regClass;
+}
+
+/**
+ * 웰니스 회원 성향 맥락 기반 AI 안부 문자/쪽지 생성 (점핑/테라피/복합 동적 맞춤)
+ */
+function generateWellnessAiSms(name, remain, elapsed, type, phone, channel, regClass, hasNoAttendance) {
+  var prefix = (channel === "noti") ? "" : "[노형점핑] ";
+  
+  // A. 신규 가입 후 무출석 미방문 회원
+  if (hasNoAttendance) {
+    if (regClass === "therapy") {
+      return prefix + name + " 회원님! 지니클럽 노형점에 오신 것을 진심으로 환영합니다. 🥰 아직 테라피 첫 이용을 안 하셨더라고요! 바쁜 일상 속, 따뜻한 힐링으로 피로를 녹여드릴 준비가 되어 있습니다. 몸도 마음도 맑아지는 힐링 타임, 이번 주에 꼭 첫 예약하고 방문해 보세요. 기다리고 있을게요! 🌿❤️";
+    } else if (regClass === "jumping") {
+      return prefix + name + " 회원님! 지니클럽 노형점에 신규 등록해 주셔서 정말 기쁩니다! 🥳 아직 첫 점핑 수업에 참석하지 않으셨네요. 처음이라 망설여지신다면 걱정 마세요! 전문 코치님이 기초부터 쉽고 재미있게 도와드립니다. 신나는 음악에 맞춰 스트레스 싹 날리러 이번 주에 첫 발걸음을 떼어보세요. 응원합니다! 🔥💪";
+    } else {
+      // complex 또는 일반
+      return prefix + name + " 회원님! 지니클럽 노형점의 새 가족이 되신 것을 환영합니다! 🎉 아직 첫 운동/힐링 출석을 안 하셨더라고요. 점핑의 신나는 에너지와 테라피의 편안한 치유 모두 회원님을 기다리고 있습니다. 이번 주에는 가벼운 마음으로 첫 출석 도장을 꾹 찍어보시는 건 어떨까요? 설레는 마음으로 기다릴게요! 😊✨";
+    }
   }
   
-  return regClass;
+  // B. 기존 이용 회원 (점핑/테라피/복합 성향별 분기)
+  if (regClass === "therapy") {
+    // 테라피 성향
+    if (remain === 0) {
+      return prefix + name + " 회원님, 요즘 몸이 찌푸둥하진 않으신가요? 🌿 테라피 이용권이 만료된 지 " + elapsed + "일이 흘렀습니다. 땀 흘리고 따뜻하게 몸을 녹이며 온전히 스스로를 대접했던 그 힐링의 시간, 잊지 않으셨죠? 다시 편안한 일상의 온도를 되찾으실 수 있도록, 웰니스 여정을 이어가 보세요. 회원님의 포근한 안식처가 되어 드릴게요. 😊❤️";
+    } else {
+      return prefix + name + " 회원님, 소중한 테라피 이용권이 " + remain + "회 남아있어요! 🌿 마지막 힐링 후 벌써 " + elapsed + "일이 지나 걱정되는 마음에 연락드렸습니다. 바쁜 일상 속에서 나만을 위해 가졌던 따뜻한 시간, 이번 주에 다시 선물해 보시는 건 어떨까요? 편안하게 쉬어가실 수 있도록 준비하고 기다릴게요! ✨";
+    }
+  } else if (regClass === "jumping") {
+    // 점핑 성향
+    if (remain === 0) {
+      return prefix + name + " 회원님, 잘 지내고 계시죠? 🔥 신나게 점핑을 뛰며 땀방울을 흘리던 그 활기찬 에너지가 그리운 요즘입니다. 이용권이 만료된 지 벌써 " + elapsed + "일이 지났네요. 다시 한번 심장을 뛰게 하고 스트레스를 싹 날릴 수 있도록, 웰니스 도전을 이어서 시작해 보세요! 언제나 열정 넘치는 응원으로 맞이하겠습니다. 힘내세요! 💪⭐";
+    } else {
+      return prefix + name + " 회원님, 신나게 흔들며 에너지를 채우던 점핑 교실이 그리워요! ⚡ 남은 " + remain + "회의 기회가 회원님을 기다리고 있답니다. 마지막 출석 후 " + elapsed + "일이 지나 몸이 찌푸둥하시진 않은지 걱정됩니다. 오늘 가벼운 마음으로 클럽에 오셔서 스트레스도 날리고 활력도 만땅으로 충전해 보세요! 파이팅! 😎🔥";
+    }
+  } else {
+    // 복합/하이브리드 성향
+    if (remain === 0) {
+      return prefix + name + " 회원님, 건강하고 균형 잡힌 웰니스 루틴, 잘 유지하고 계시나요? 😊 점핑으로 땀 흘리고 테라피로 피로를 풀던 최강의 콤보가 생각나는 날입니다. 이용권 만료 후 " + elapsed + "일이 흘렀네요. 몸의 독소는 빼고 에너지는 꽉 채우던 소중한 건강 습관, 끊기지 않도록 다시 한번 지니클럽과 함께 도약해 보세요! 👑✨";
+    } else {
+      return prefix + name + " 회원님, 점핑의 에너제틱함과 테라피의 안락함이 모두 담긴 이용권이 " + remain + "회 남아있어요! 💫 마지막 방문 후 벌써 " + elapsed + "일이나 지나 너무 아깝고 보고 싶은 마음에 안부를 전합니다. 오늘 오셔서 땀 흘려 스트레스를 날리고 뜨끈하게 피로까지 싹 풀고 가세요! 기다리고 있겠습니다! 💖";
+    }
+  }
 }
 
 
