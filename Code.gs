@@ -11037,6 +11037,240 @@ function determineMemberClassInfo(membershipNames, attendanceStats) {
   return regClass;
 }
 
+// ──────────────────────────────────────────────
+// V65.50 초고속 예약 흐름 개선용 병합 API
+// ──────────────────────────────────────────────
+
+function getMemberIDListWithTicket(v) { 
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var memberSheet = ss.getSheetByName('회원명단');
+    var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+    if (!memberSheet) return [];
+
+    var mData = memberSheet.getDataRange().getValues();
+    var regData = regSheet ? regSheet.getDataRange().getValues() : [];
+    var cols = regSheet ? getRegColumnIndices(regSheet) : null;
+    
+    var results = [];
+    var seen = {}; // 중복 체크용
+
+    // 등록 현황 데이터 미리 번호별 인덱싱하여 조회 속도 O(N) 최적화
+    var regMap = {};
+    if (regSheet && cols) {
+      for (var i = 1; i < regData.length; i++) {
+        var rPhone = String(regData[i][cols.phone]).replace(/[^0-9]/g, "");
+        var rStatus = String(regData[i][cols.status]).trim();
+        if (rStatus === "진행중" || rStatus === "진행 중") {
+          if (!regMap[rPhone]) regMap[rPhone] = [];
+          regMap[rPhone].push({
+            membership: String(regData[i][cols.membership]),
+            remainRaw: regData[i][cols.remain]
+          });
+        }
+      }
+    }
+
+    for (var i = 1; i < mData.length; i++) {
+      var name = String(mData[i][1]).trim();
+      var phoneRaw = String(mData[i][2]).trim();
+      var phoneOnly = phoneRaw.replace(/[^0-9]/g, "");
+      var phone4 = phoneOnly.slice(-4);
+      var status = String(mData[i][10]).trim(); // K열 상태
+      
+      if (status !== "마감" && status !== "정지" && phone4 === v) {
+        var key = name + "|" + phone4;
+        if (!seen[key]) {
+          // 회원권 유효성 일괄 계산
+          var hasValidTicket = false;
+          var foundTickets = [];
+          
+          // 1. 등록현황 확인
+          var rList = regMap[phoneOnly] || [];
+          rList.forEach(function(r) {
+            var membership = r.membership;
+            var remainRaw = r.remainRaw;
+            var remain = parseInt(remainRaw) || 0;
+            if (membership.indexOf("테라피") !== -1 || membership.indexOf("점핑") !== -1 || membership.indexOf("회") !== -1 || membership.indexOf("월권") !== -1) {
+              if (remain > 0 || String(remainRaw).indexOf("무제한") !== -1) {
+                hasValidTicket = true;
+                foundTickets.push(membership + "(" + remainRaw + "회)");
+              }
+            }
+          });
+          
+          // 2. 보너스권 확인 (회원명단 J열 -> Index 9)
+          var bonus = parseInt(mData[i][9]) || 0;
+          if (bonus > 0) {
+            hasValidTicket = true;
+            foundTickets.push("보너스권(" + bonus + "회)");
+          }
+
+          results.push({
+            displayName: name + "(" + phone4 + ")",
+            name: name,
+            phone: phoneRaw,
+            ticketInfo: {
+              success: true,
+              hasValidTicket: hasValidTicket,
+              tickets: foundTickets.join(", ") || "없음"
+            }
+          }); 
+          seen[key] = true;
+        }
+      }
+    }
+    return results;
+  } catch(e) { return []; }
+}
+
+function getTodayTimetableAndRooms(targetDate) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var resSheet = ss.getSheetByName('예약DB');
+    var holidaySheet = ss.getSheetByName("벙개테라피 및 휴일 설정");
+    if (!resSheet) return { error: "시트를 찾을 수 없습니다." };
+    
+    var targetNum = targetDate.replace(/[^0-9]/g, "");
+    var dateObj = new Date(targetDate);
+    var dayOfWeek = dateObj.getDay(); 
+
+    var now = new Date();
+    var todayNum = Utilities.formatDate(now, "GMT+9", "yyyyMMdd");
+    var isToday = (targetNum === todayNum);
+
+    // 기본 시간표 설정 (토요일 3타임, 평일 7타임)
+    var baseTimes = (dayOfWeek === 6) ? ["09:00", "09:50", "10:40"] : ["09:00", "09:50", "10:40", "17:00", "17:50", "18:40", "19:30"];
+    if (dayOfWeek === 0) baseTimes = [];
+
+    var isHoliday = false;
+    var holidayMemo = "";
+    var extraTimes = [];
+
+    if (holidaySheet) {
+      var holidayData = holidaySheet.getDataRange().getDisplayValues().slice(1);
+      for (var i = 0; i < holidayData.length; i++) {
+        var hDateNum = String(holidayData[i][0]).replace(/[^0-9]/g, "");
+        if (hDateNum === targetNum) {
+          var hType = String(holidayData[i][1]).trim();
+          var hNote = String(holidayData[i][2]).trim();
+          
+          if (hType === "휴무") {
+            isHoliday = true;
+            holidayMemo = hNote || "센터 휴무일입니다.";
+          } else if (hType === "벙개") {
+            if (hNote !== "") {
+              var splitTimes = hNote.split(/[,/ ]+/);
+              splitTimes.forEach(function(st) {
+                if (st && st.indexOf(":") !== -1) extraTimes.push(st.trim());
+              });
+            }
+          }
+        }
+      }
+    }
+
+    if (isHoliday) {
+      return { isHoliday: true, error: holidayMemo || "오늘은 센터 휴무일입니다." };
+    }
+
+    if (extraTimes.length > 0) {
+      if (dayOfWeek === 0) baseTimes = extraTimes;
+      else {
+        extraTimes.forEach(function(et) {
+          if (baseTimes.indexOf(et) === -1) baseTimes.push(et);
+        });
+      }
+    } else if (dayOfWeek === 0) {
+      return { isHoliday: true, error: "일요일은 쉽니다." };
+    }
+
+    // 오늘 날짜인 경우, 현재 시간보다 이미 지난 타임은 필터링
+    if (isToday) {
+      var currentTimeStr = Utilities.formatDate(now, "GMT+9", "HH:mm");
+      baseTimes = baseTimes.filter(function(time) {
+        return time >= currentTimeStr;
+      });
+    }
+
+    baseTimes.sort();
+
+    if (baseTimes.length === 0) {
+      return { isHoliday: true, error: "오늘은 센터 운영 시간이 없습니다." };
+    }
+
+    var resData = resSheet.getDataRange().getDisplayValues().slice(1);
+    
+    var formatToTwoDigits = function(timeStr) {
+      return timeStr.split(':').map(function(v) {
+        var clean = v.replace(/[^0-9]/g, "");
+        return clean.length === 1 ? "0" + clean : clean;
+      }).join(':').substring(0, 5);
+    };
+
+    // 각 시간대별 방 상태 맵핑
+    var roomStatusMap = {};
+    var validTimes = [];
+
+    // 방 리스트
+    var defaultRooms = ["1인실", "2인실 A", "2인실 B"];
+
+    baseTimes.forEach(function(t) {
+      var targetT = formatToTwoDigits(t);
+
+      if (isToday) {
+        var tParts = targetT.split(':');
+        var checkTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), Number(tParts[0]), Number(tParts[1]));
+        var limitTime = new Date(now.getTime() + (20 * 60000));
+        if (checkTime < limitTime) return; 
+      }
+
+      // 예약 리스트 필터링
+      var activeReservations = resData.filter(function(row) {
+        var rDateNum = row[3].replace(/[^0-9]/g, "");
+        var rTimeRaw = String(row[4]).trim();
+        if (!rTimeRaw || rTimeRaw === "") return false;
+        var rTimeFormatted = formatToTwoDigits(rTimeRaw);
+        return rDateNum === targetNum && rTimeFormatted === targetT && row[9] !== "취소";
+      });
+
+      // 만약 예약이 3개 이상 꽉 찼으면 이 시간대 제외
+      if (activeReservations.length >= 3) return;
+
+      // 예약된 방 추출
+      var bookedRooms = activeReservations.map(function(row) {
+        return String(row[7]).trim(); // 배정방 기기
+      });
+
+      // 방 상태 맵핑 채우기
+      var roomStatusList = defaultRooms.map(function(roomName) {
+        var isBooked = bookedRooms.indexOf(roomName) !== -1;
+        return { name: roomName, isBooked: isBooked };
+      });
+
+      roomStatusMap[targetT] = roomStatusList;
+
+      var parts = targetT.split(':');
+      var h = Number(parts[0]);
+      var display = (h < 12) ? "오전 " + targetT : "오후 " + targetT;
+      
+      validTimes.push({
+        timeValue: targetT,
+        display: display + " (예약 가능)",
+        isFull: false
+      });
+    });
+
+    return {
+      isHoliday: false,
+      times: validTimes,
+      roomStatusMap: roomStatusMap
+    };
+  } catch(e) {
+    return { error: "서버 오류: " + e.toString() };
+  }
+}
+
 
 
 

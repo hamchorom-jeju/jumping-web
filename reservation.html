@@ -377,6 +377,7 @@
 
   <script>
     let resData = {};
+    let globalRoomStatusMap = {};
 
     // [v44.220] 모바일 기기 하드웨어 뒤로가기 버튼 연동 화면 제어 시스템
     // 브라우저 history.pushState를 사용하여 예약 흐름 단계 이동 시 히스토리를 쌓고,
@@ -612,7 +613,7 @@
         inputEl.disabled = false;
         lastQuery = ""; 
         msgEl.innerHTML = `<span style="color:var(--danger);">⚠️ 오류: ${err.message}</span>`;
-      }).getMemberIDList(phoneVal);
+      }).getMemberIDListWithTicket(phoneVal);
     }
 
     function selectMemberByIndex(idx) {
@@ -654,40 +655,37 @@
         else item.classList.remove('selected');
       });
 
-      // [추가] 회원권 유효성 체크
-      const msgEl = document.getElementById('step1-msg'); // 1단계 메시지창 재활용 또는 별도 알림
-      showAppAlert("회원권 정보를 확인하고 있습니다...", "info");
+      // 이미 1단계에서 사전에 받아온 회원권 정보를 기반으로 즉시 확인! (서버 API 통신 왕복 1회 전면 제거!)
+      const res = m.ticketInfo || { success: false, error: "회원권 정보 없음" };
+      
+      if (!res.success) {
+        showAppAlert("회원권 조회 중 오류가 발생했습니다.", "error");
+        return;
+      }
+      
+      if (!res.hasValidTicket) {
+        showAppAlert(`[${m.name}] 회원님은 현재 사용 가능한 회원권이 없습니다.\n(테라피/점핑권 만료 혹은 잔여횟수 부족)`, "error");
+        return;
+      }
 
-      google.script.run.withSuccessHandler(res => {
-        if (!res.success) {
-          showAppAlert("회원권 조회 중 오류가 발생했습니다.", "error");
-          return;
-        }
-        
-        if (!res.hasValidTicket) {
-          showAppAlert(`[${m.name}] 회원님은 현재 사용 가능한 회원권이 없습니다.\n(테라피/점핑권 만료 혹은 잔여횟수 부족)`, "error");
-          return;
-        }
+      // 유효한 경우 진행
+      resData.memberID = m.displayName; 
+      resData.nameOnly = m.name;
+      resData.phone = m.phone;
+      
+      showAppAlert(`${m.name}님, 확인되었습니다.\n보유권종: ${res.tickets}`, "success", "회원권 확인 완료");
 
-        // 유효한 경우 진행
-        resData.memberID = m.displayName; 
-        resData.nameOnly = m.name;
-        resData.phone = m.phone;
-        
-        showAppAlert(`${m.name}님, 확인되었습니다.\n보유권종: ${res.tickets}`, "success", "회원권 확인 완료");
-
-        // [오늘 날짜 자동 세팅 - 한국 시간 기준]
-        const dateInput = document.getElementById('dateInput');
-        const now = new Date();
-        const kstOffset = 9 * 60 * 60 * 1000;
-        const kstDate = new Date(now.getTime() + kstOffset);
-        const todayStr = kstDate.toISOString().split('T')[0];
-        
-        dateInput.min = todayStr; // 과거 날짜 선택 차단
-        dateInput.value = todayStr; // 기본값 오늘로 설정
-        
-        showStep(3);
-      }).checkMemberTicket(m.name, m.phone);
+      // [오늘 날짜 자동 세팅 - 한국 시간 기준]
+      const dateInput = document.getElementById('dateInput');
+      const now = new Date();
+      const kstOffset = 9 * 60 * 60 * 1000;
+      const kstDate = new Date(now.getTime() + kstOffset);
+      const todayStr = kstDate.toISOString().split('T')[0];
+      
+      dateInput.min = todayStr; // 과거 날짜 선택 차단
+      dateInput.value = todayStr; // 기본값 오늘로 설정
+      
+      showStep(3);
     }
 
     function loadTimes() {
@@ -699,19 +697,31 @@
       timeList.innerHTML = `<div class="skeleton" style="height:120px; grid-column:span 2;"></div>`;
       document.getElementById('roomNextBtn').style.display = 'none'; // 다음 버튼 숨기기
 
-      google.script.run.withSuccessHandler(times => {
+      // 신형 초고속 통합 API 호출 (시간표와 방 상태를 한번에 일괄 대량 다운로드)
+      google.script.run.withSuccessHandler(res => {
+        if (res.error) {
+          timeList.innerHTML = `<div style="color:var(--danger); font-weight:bold; padding:20px; text-align:center; grid-column:span 2;">${res.error}</div>`;
+          return;
+        }
+        
+        if (res.isHoliday) {
+          timeList.innerHTML = `<div style="color:var(--danger); font-weight:bold; padding:20px; text-align:center; grid-column:span 2;">${res.error}</div>`;
+          return;
+        }
+
+        // 방 상태 맵핑 전역 저장
+        globalRoomStatusMap = res.roomStatusMap || {};
+        
         let h = "";
-        if (typeof times === 'string' && times.startsWith("휴무:")) {
-          h = `<div style="color:var(--danger); font-weight:bold; padding:20px; text-align:center; grid-column:span 2;">${times.split(":")[1]}</div>`;
-        } else if (Array.isArray(times)) {
-          times.forEach(t => {
+        if (res.times && res.times.length > 0) {
+          res.times.forEach(t => {
             if(t.isFull) h += `<div class="btn-item booked">${t.display}</div>`;
             else h += `<div class="btn-item" onclick="selectTime(this, '${t.timeValue}')">${t.display}</div>`;
           });
         }
         timeList.innerHTML = h || "예약 가능한 시간이 없습니다.";
         showStep(4);
-      }).getTodayTimetable(selectedDate);
+      }).getTodayTimetableAndRooms(selectedDate);
     }
 
     function selectTime(el, t) {
@@ -728,25 +738,17 @@
 
     function loadRooms() {
       const btn = document.getElementById('roomNextBtn');
-      const originalText = btn.innerText;
-      btn.innerText = "방 정보 불러오는 중...";
-      btn.disabled = true;
-
+      // 이미 로컬 메모리에 저장된 데이터를 활용하여 즉시 화면을 렌더링 (서버 API 통신 왕복 2회째 전면 제거!)
+      const rooms = globalRoomStatusMap[resData.time] || [];
+      
       const roomList = document.getElementById('roomList');
-      roomList.innerHTML = `<div class="skeleton" style="height:100px; grid-column:span 3;"></div>`;
-
-      google.script.run.withSuccessHandler(rooms => {
-        btn.innerText = originalText;
-        btn.disabled = false;
-        
-        let h = ""; 
-        rooms.forEach(r => {
-          if (r.isBooked) h += `<div class="btn-item booked"><span>${r.name}</span><span style="font-size:0.7rem; font-weight:400;">마감</span></div>`;
-          else h += `<div class="btn-item" onclick="selectRoom(this, '${r.name}')"><span>${r.name}</span><span style="font-size:0.7rem; font-weight:400; color:var(--primary-light);">가능</span></div>`;
-        });
-        roomList.innerHTML = h;
-        showStep(5);
-      }).getRoomStatus(resData.date, resData.time);
+      let h = ""; 
+      rooms.forEach(r => {
+        if (r.isBooked) h += `<div class="btn-item booked"><span>${r.name}</span><span style="font-size:0.7rem; font-weight:400;">마감</span></div>`;
+        else h += `<div class="btn-item" onclick="selectRoom(this, '${r.name}')"><span>${r.name}</span><span style="font-size:0.7rem; font-weight:400; color:var(--primary-light);">가능</span></div>`;
+      });
+      roomList.innerHTML = h || `<div style="grid-column:span 3; text-align:center; padding:20px;">선택 가능한 방이 없습니다.</div>`;
+      showStep(5);
     }
 
     function selectRoom(el, r) {
