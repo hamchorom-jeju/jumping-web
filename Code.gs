@@ -7477,12 +7477,17 @@ function getMemberMessageHistory(phone) {
  * 회원의 상황(이름, 남은횟수, 경과일수, 유형, 번호, 발송채널)을 받아, 과거 발송 이력을 읽은 제미나이가
  * 회원이 스팸처럼 느끼지 않고 따뜻한 안부를 체감하도록 최적화된 맞춤형 복귀 권유/안부 문구를 실시간 창조합니다.
  */
-function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetChannel, memberClassInfo) {
+function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetChannel, memberClassInfo, hasNoAttendance) {
   var cleanName = name.replace(/\d{4}$/, ""); // 이름 끝 숫자 제거
   var recentHistoryText = getMemberMessageHistory(phone); // 최근 3~5건의 문자+쪽지 발송 내역 취합
   
   var channelInfo = targetChannel === "noti" ? "인앱 쪽지(알림)" : "오프라인 SMS 일반 문자";
+  
+  var originalClass = memberClassInfo || "general";
   var classInfo = memberClassInfo || "general";
+  if (hasNoAttendance) {
+    classInfo = "new_no_record";
+  }
   
   // 🚨 [회원권 성향별 맞춤 가이드 주입 - v64.70 신규 미출석 무기록 가이드 탑재]
   var classDesc = "";
@@ -7493,7 +7498,11 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
   } else if (classInfo === "complex") {
     classDesc = "★[회원 성향 맞춤] 이 회원은 신나는 '트램폴린 점핑 운동'과 편안한 '원적외선 테라피 힐링'을 모두 즐기던 복합(하이브리드) 회원입니다. 점핑 운동의 활기찬 땀방울과 테라피의 따뜻한 피로 회복, 두 가지 매력을 조화롭고 자연스럽게 녹여서 감성 메시지를 조립하십시오.";
   } else if (classInfo === "new_no_record") {
-    classDesc = "★[회원 성향 맞춤] 이 회원은 노형점핑클럽에 등록은 되어 있으나, 시스템 상에 과거 출석 기록이 아예 존재하지 않는 신규 또는 이관(마이그레이션) 무기록 회원입니다. '이전에 오셨을 때 편안하셨길 바란다'거나 '다시 온다'는 식의 유경험 뉘앙스 표현은 절대 쓰지 마십시오. 대신 '등록하신 이후 아직 클럽에서 첫 걸음을 내딛지 못하셨거나 첫 운동을 어색함으로 주저하고 계신 것 같다'며, '코치와 함께하는 첫 번째 신나는 점핑 또는 따뜻한 테라피의 웰니스 여정'을 설렘 가득하고 따뜻하게 열어드리는 웰커밍 메시지(환대 및 유도)로 독려하십시오.";
+    var originalDesc = "신나고 활기찬 점핑 운동과 따뜻한 테라피 힐링";
+    if (originalClass === "therapy") originalDesc = "따뜻한 편백 원적외선 테라피실의 아늑한 힐링과 여유";
+    else if (originalClass === "jumping") originalDesc = "신나는 음악과 활력 넘치는 트램폴린 점핑 운동";
+    
+    classDesc = "★[회원 성향 맞춤] 이 회원은 노형점핑클럽에 등록은 되어 있으나, 시스템 상에 과거 출석 기록이 아예 존재하지 않는 신규 또는 이관(마이그레이션) 무기록 회원입니다. '이전에 오셨을 때 편안하셨길 바란다'거나 '다시 온다'는 식의 유경험 뉘앙스 표현은 절대 쓰지 마십시오. 대신 '등록하신 이후 아직 클럽에서 첫 걸음을 내딛지 못하셨거나 첫 운동을 어색함으로 주저하고 계신 것 같다'며, 특별히 이 회원이 보유한 이용권 성향인 [" + originalDesc + "]을 따뜻하게 소개하고, '코치와 함께하는 첫 번째 웰니스 여정'을 설렘 가득하고 따뜻하게 열어드리는 웰커밍 메시지(환대 및 첫 방문 유도)로 독려하십시오.";
   } else {
     classDesc = "★[회원 성향 맞춤] 이 회원은 일반 점핑클럽 회원입니다. 활력 넘치는 점핑 운동 또는 따뜻한 테라피 힐링 안부를 편안하고 균형감 있게 터치하며 소통하십시오.";
   }
@@ -7547,7 +7556,13 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
   if (!aiMsg) {
     if (classInfo === "new_no_record") {
       var newThemeText = "신나고 짜릿한 점핑 운동과 몸을 사르르 녹여주는 따뜻한 테라피 힐링";
-      aiMsg = cleanName + "회원님, 노형점핑클럽입니다. 😊 저희 클럽에 소중한 첫 발걸음을 딛으신 이후로, 아직 한 번도 뵙지 못한 것 같아 설레는 마음 반, 걱정스러운 마음 반으로 조심스레 안부 전합니다. 💖 혹시 첫 운동이 낯설거나 시작이 망설여지셨다면 부담은 완전히 내려놓고 놀러오세요! " + newThemeText + "을 코치가 아주 친절하고 재미있게 경험하실 수 있도록 에스코트해 드릴게요. 함께 건강한 첫 걸음을 웰니스 코치와 시작해 보시는 건 어떨까요? 기다리고 있겠습니다! ❤️";
+      if (originalClass === "therapy") {
+        aiMsg = cleanName + "회원님, 노형점핑클럽입니다. 😊 저희 클럽에 소중한 첫 등록을 해주신 이후로, 아직 편안한 힐링실에서 뵙지 못한 것 같아 설레는 마음 반, 걱정스러운 마음 반으로 안부 전합니다. 💖 혹시 첫 방문이 낯설거나 예약이 어려우셨다면 부담은 완전히 내려놓고 편하게 들러주세요! 지치고 찌푸둥한 몸을 따뜻하게 충전하실 수 있게 코치가 정성껏 에스코트해 드릴게요. 웰니스 코치와 함께 첫 힐링 타임을 시작해 보시는 건 어떨까요? 기다리고 있을게요! 🌿❤️";
+      } else if (originalClass === "jumping") {
+        aiMsg = cleanName + "회원님, 노형점핑클럽입니다. 😊 신나고 신선한 활력을 약속하는 저희 클럽에 등록해주신 이후, 아직 첫 수업을 시작하지 못하신 것 같아 설레는 마음 반, 주저하시는 건 아닌가 걱정되는 마음 반으로 응원 전합니다. 💖 처음이라 어색하거나 망설여지신다면 걱정 마세요! 기초부터 아주 쉽고 재미있게 뛰실 수 있도록 코치가 확실히 케어해 드릴게요. 이번 주에 신나는 음악 속에 첫 걸음을 떼어보시는 건 어떨까요? 파이팅! 🔥💪";
+      } else {
+        aiMsg = cleanName + "회원님, 노형점핑클럽입니다. 😊 저희 클럽에 소중한 첫 발걸음을 딛으신 이후로, 아직 한 번도 뵙지 못한 것 같아 설레는 마음 반, 걱정스러운 마음 반으로 조심스레 안부 전합니다. 💖 혹시 첫 운동이 낯설거나 시작이 망설여지셨다면 부담은 완전히 내려놓고 놀러오세요! " + newThemeText + "을 코치가 아주 친절하고 재미있게 경험하실 수 있도록 에스코트해 드릴게요. 함께 건강한 첫 걸음을 웰니스 코치와 시작해 보시는 건 어떨까요? 기다리고 있겠습니다! ❤️";
+      }
     } else if (type === "장기미방문") {
       var elapsedTextFallback = (elapsedDays === 999) ? "오랫동안 소식이 닿지 않아 무척 궁금했답니다." : "뵙지 못한 지 벌써 " + elapsedDays + "일이나 지났네요! 😢";
       
@@ -10887,49 +10902,6 @@ function determineMemberClassInfo(membershipNames, attendanceStats) {
   }
   
   return regClass;
-}
-
-/**
- * 웰니스 회원 성향 맥락 기반 AI 안부 문자/쪽지 생성 (점핑/테라피/복합 동적 맞춤)
- */
-function generateWellnessAiSms(name, remain, elapsed, type, phone, channel, regClass, hasNoAttendance) {
-  var prefix = (channel === "noti") ? "" : "[노형점핑] ";
-  
-  // A. 신규 가입 후 무출석 미방문 회원
-  if (hasNoAttendance) {
-    if (regClass === "therapy") {
-      return prefix + name + " 회원님! 지니클럽 노형점에 오신 것을 진심으로 환영합니다. 🥰 아직 테라피 첫 이용을 안 하셨더라고요! 바쁜 일상 속, 따뜻한 힐링으로 피로를 녹여드릴 준비가 되어 있습니다. 몸도 마음도 맑아지는 힐링 타임, 이번 주에 꼭 첫 예약하고 방문해 보세요. 기다리고 있을게요! 🌿❤️";
-    } else if (regClass === "jumping") {
-      return prefix + name + " 회원님! 지니클럽 노형점에 신규 등록해 주셔서 정말 기쁩니다! 🥳 아직 첫 점핑 수업에 참석하지 않으셨네요. 처음이라 망설여지신다면 걱정 마세요! 전문 코치님이 기초부터 쉽고 재미있게 도와드립니다. 신나는 음악에 맞춰 스트레스 싹 날리러 이번 주에 첫 발걸음을 떼어보세요. 응원합니다! 🔥💪";
-    } else {
-      // complex 또는 일반
-      return prefix + name + " 회원님! 지니클럽 노형점의 새 가족이 되신 것을 환영합니다! 🎉 아직 첫 운동/힐링 출석을 안 하셨더라고요. 점핑의 신나는 에너지와 테라피의 편안한 치유 모두 회원님을 기다리고 있습니다. 이번 주에는 가벼운 마음으로 첫 출석 도장을 꾹 찍어보시는 건 어떨까요? 설레는 마음으로 기다릴게요! 😊✨";
-    }
-  }
-  
-  // B. 기존 이용 회원 (점핑/테라피/복합 성향별 분기)
-  if (regClass === "therapy") {
-    // 테라피 성향
-    if (remain === 0) {
-      return prefix + name + " 회원님, 요즘 몸이 찌푸둥하진 않으신가요? 🌿 테라피 이용권이 만료된 지 " + elapsed + "일이 흘렀습니다. 땀 흘리고 따뜻하게 몸을 녹이며 온전히 스스로를 대접했던 그 힐링의 시간, 잊지 않으셨죠? 다시 편안한 일상의 온도를 되찾으실 수 있도록, 웰니스 여정을 이어가 보세요. 회원님의 포근한 안식처가 되어 드릴게요. 😊❤️";
-    } else {
-      return prefix + name + " 회원님, 소중한 테라피 이용권이 " + remain + "회 남아있어요! 🌿 마지막 힐링 후 벌써 " + elapsed + "일이 지나 걱정되는 마음에 연락드렸습니다. 바쁜 일상 속에서 나만을 위해 가졌던 따뜻한 시간, 이번 주에 다시 선물해 보시는 건 어떨까요? 편안하게 쉬어가실 수 있도록 준비하고 기다릴게요! ✨";
-    }
-  } else if (regClass === "jumping") {
-    // 점핑 성향
-    if (remain === 0) {
-      return prefix + name + " 회원님, 잘 지내고 계시죠? 🔥 신나게 점핑을 뛰며 땀방울을 흘리던 그 활기찬 에너지가 그리운 요즘입니다. 이용권이 만료된 지 벌써 " + elapsed + "일이 지났네요. 다시 한번 심장을 뛰게 하고 스트레스를 싹 날릴 수 있도록, 웰니스 도전을 이어서 시작해 보세요! 언제나 열정 넘치는 응원으로 맞이하겠습니다. 힘내세요! 💪⭐";
-    } else {
-      return prefix + name + " 회원님, 신나게 흔들며 에너지를 채우던 점핑 교실이 그리워요! ⚡ 남은 " + remain + "회의 기회가 회원님을 기다리고 있답니다. 마지막 출석 후 " + elapsed + "일이 지나 몸이 찌푸둥하시진 않은지 걱정됩니다. 오늘 가벼운 마음으로 클럽에 오셔서 스트레스도 날리고 활력도 만땅으로 충전해 보세요! 파이팅! 😎🔥";
-    }
-  } else {
-    // 복합/하이브리드 성향
-    if (remain === 0) {
-      return prefix + name + " 회원님, 건강하고 균형 잡힌 웰니스 루틴, 잘 유지하고 계시나요? 😊 점핑으로 땀 흘리고 테라피로 피로를 풀던 최강의 콤보가 생각나는 날입니다. 이용권 만료 후 " + elapsed + "일이 흘렀네요. 몸의 독소는 빼고 에너지는 꽉 채우던 소중한 건강 습관, 끊기지 않도록 다시 한번 지니클럽과 함께 도약해 보세요! 👑✨";
-    } else {
-      return prefix + name + " 회원님, 점핑의 에너제틱함과 테라피의 안락함이 모두 담긴 이용권이 " + remain + "회 남아있어요! 💫 마지막 방문 후 벌써 " + elapsed + "일이나 지나 너무 아깝고 보고 싶은 마음에 안부를 전합니다. 오늘 오셔서 땀 흘려 스트레스를 날리고 뜨끈하게 피로까지 싹 풀고 가세요! 기다리고 있겠습니다! 💖";
-    }
-  }
 }
 
 
