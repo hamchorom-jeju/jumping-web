@@ -2902,27 +2902,74 @@
 
     function handleSalesCategoryChange() {
       var cat = document.getElementById('salesCategory').value;
-      var expenseCategories = [
-        "임차료 (년세 등)",
-        "가게 관리비",
-        "공과금 (전기/수도/인터넷)",
-        "장비 렌탈료",
-        "클럽 운영/보수비",
-        "기타지출"
-      ];
-      
-      var isExpense = expenseCategories.indexOf(cat) !== -1 || cat.indexOf("지출") !== -1;
       
       var buyerInput = document.getElementById('salesBuyer');
       var itemInput = document.getElementById('salesItemName');
       
-      if (isExpense) {
-        buyerInput.placeholder = "예: 임대인(건물주), 한국전력, 삼다수...";
-        itemInput.placeholder = "예: 5월 월세, 5월 전기요금, 정수기 렌탈...";
-      } else {
-        buyerInput.placeholder = "예: 홍길동";
-        itemInput.placeholder = "예: 점핑 30회권, 찜질복 1벌...";
-      }
+      // 💡 [원장님 피드백 200% 경청!] 각 세부 카테고리별 정밀 맞춤 힌트 가이드 맵
+      var hints = {
+        // 📈 수입 (매출)
+        "회원등록": {
+          buyer: "예: 회원 이름 (홍길동)",
+          item: "예: 3개월권 등록, 횟수권 30회, PT 병행 등록 등"
+        },
+        "찜질복대여": {
+          buyer: "예: 회원 이름 (홍길동)",
+          item: "예: 찜질복 1회 대여, 찜질복 월 대여권 등"
+        },
+        "1일체험비": {
+          buyer: "예: 체험자 이름 (홍길동)",
+          item: "예: 1일 점핑 체험 1회권, 주말 체험 등"
+        },
+        "제품판매": {
+          buyer: "예: 회원 이름 (홍길동)",
+          item: "예: 허벌티 1통, 쉐이크 1개, 멀티비타민 등"
+        },
+        "점핑PT": {
+          buyer: "예: 회원 이름 (홍길동)",
+          item: "예: 1:1 개인 PT 10회, 듀엣 PT 20회 등"
+        },
+        "기타": {
+          buyer: "예: 입금자/회원 이름",
+          item: "예: 물품 파손 보상금, 일시적 기타 수입 등"
+        },
+        
+        // 💸 지출 (영업 비용)
+        "임차료 (년세 등)": {
+          buyer: "예: 임대인 또는 건물주 이름 (김이장)",
+          item: "예: 2026년도 년세 납부, 반기 임대료 등"
+        },
+        "가게 관리비": {
+          buyer: "예: 관리사무소, 세스코, 청소업체 등",
+          item: "예: 정수기 렌탈비, 세스코 관리비, 건물 공동 청소비 등"
+        },
+        "공과금 (전기/수도/인터넷)": {
+          buyer: "예: 한국전력, 수자원본부, KT 등",
+          item: "예: 5월분 한전 전기요금, 상수도요금, KT 인터넷요금 등"
+        },
+        "장비 렌탈료": {
+          buyer: "예: 렌탈 업체명 (주식회사 점핑코리아)",
+          item: "예: 점핑 트램폴린 렌탈비, 체성분측정기 대여료 등"
+        },
+        "클럽 운영/보수비": {
+          buyer: "예: 구입처 또는 철물점/보수업체",
+          item: "예: 트램폴린 고무줄 교체, 에어컨 필터 청소비, 조명 전구 구매 등"
+        },
+        "기타지출": {
+          buyer: "예: 지출 지급처 또는 구매처 (다이소 등)",
+          item: "예: 사무용지 구매, 클럽 비품 구매, 경조사비 등"
+        }
+      };
+      
+      var defaultHint = {
+        buyer: "예: 홍길동 / 지급처",
+        item: "예: 세부 내역 및 지출 용도 상세 입력"
+      };
+      
+      var activeHint = hints[cat] || defaultHint;
+      
+      buyerInput.placeholder = activeHint.buyer;
+      itemInput.placeholder = activeHint.item;
     }
 
     function closeSalesModal(isPopstate) {
