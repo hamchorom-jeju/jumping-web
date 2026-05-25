@@ -8662,6 +8662,7 @@ function getPersonalNotifications(payload) {
     
     var now = new Date();
     var notifications = [];
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
     
     // 1. 개인 1:1 쪽지 긁어오기
     var personalSheet = checkAndCreatePersonalNotificationSheet();
@@ -8762,11 +8763,11 @@ function getPersonalNotifications(payload) {
       }
     }
     
-    // 3. 🕒 모든 개인/전체 쪽지를 기록 시각 역순(최신순)으로 정렬!!!
+    // 3. 🕒 모든 개인/전체 쪽지를 기록 시각 역순(최신순)으로 정렬!!! (parseDateTimeSafely로 무결성 보장!)
     notifications.sort(function(a, b) {
-      var dateA = new Date(a.createdAt.replace(/-/g, "/"));
-      var dateB = new Date(b.createdAt.replace(/-/g, "/"));
-      return dateB - dateA;
+      var dateA = parseDateTimeSafely(a.createdAt);
+      var dateB = parseDateTimeSafely(b.createdAt);
+      return dateB.getTime() - dateA.getTime();
     });
     
     return { success: true, notifications: notifications };
