@@ -3611,9 +3611,12 @@
         .getChallengeArchiveData({ category: category });
     }
 
-    function goBackToRankingStep1() {
+    function goBackToRankingStep1(isPopstate) {
       document.getElementById('rankingConsoleStep1').style.display = 'flex';
       document.getElementById('rankingConsoleStep2').style.display = 'none';
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(goBackToRankingStep1);
+      }
     }
 
     function getWeekLabelForDate(date) {
@@ -3676,6 +3679,9 @@
       
       document.getElementById('rankingConsoleStep1').style.display = 'none';
       document.getElementById('rankingConsoleStep2').style.display = 'flex';
+      if (window.registerModalOpen) {
+        window.registerModalOpen(goBackToRankingStep1);
+      }
     }
 
     function selectRankingPeriod(period) {
@@ -3764,9 +3770,12 @@
       }
     }
 
-    function goBackToRankingStep2() {
+    function goBackToRankingStep2(isPopstate) {
       document.getElementById('rankingConsoleStep2').style.display = 'flex';
       document.getElementById('rankingConsoleStep3').style.display = 'none';
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(goBackToRankingStep2);
+      }
     }
 
     function renderConsoleTable() {
@@ -3799,6 +3808,9 @@
       
       document.getElementById('rankingConsoleStep2').style.display = 'none';
       document.getElementById('rankingConsoleStep3').style.display = 'flex';
+      if (window.registerModalOpen) {
+        window.registerModalOpen(goBackToRankingStep2);
+      }
     }
 
     function triggerPrintFromConsole() {
@@ -3911,15 +3923,21 @@
 
       document.body.classList.add('print-preview-active');
       document.getElementById('printPreviewModal').style.display = 'flex';
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closePrintPreview);
+      }
     }
 
     function executePrint() {
       window.print();
     }
 
-    function closePrintPreview() {
+    function closePrintPreview(isPopstate) {
       document.body.classList.remove('print-preview-active');
       document.getElementById('printPreviewModal').style.display = 'none';
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closePrintPreview);
+      }
     }
   </script>
 
@@ -3981,9 +3999,8 @@
           </table>
         </div>
 
-        <div style="display: flex; gap: 10px; margin-top: 5px;">
-          <button onclick="triggerPrintFromConsole()" class="m-btn m-btn-combo" style="flex: 1;"><i class="fa-solid fa-print"></i> 🖨️ A4 인쇄 미리보기</button>
-          <button onclick="closeChallengeRankingConsole()" class="m-btn m-btn-cancel" style="flex: 1;">닫기</button>
+        <div style="margin-top: 5px;">
+          <button onclick="triggerPrintFromConsole()" class="m-btn m-btn-combo" style="width: 100%;"><i class="fa-solid fa-print"></i> 🖨️ A4 인쇄 미리보기</button>
         </div>
       </div>
 
