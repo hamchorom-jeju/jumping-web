@@ -3548,8 +3548,18 @@
     function openWorkLogMenu() { document.getElementById('workLogMenuModal').classList.add('show'); }
     function closeWorkLogMenuModal() { document.getElementById('workLogMenuModal').classList.remove('show'); }
 
-    function openChallengeMenu() { document.getElementById('challengeMenuModal').classList.add('show'); }
-    function closeChallengeMenuModal() { document.getElementById('challengeMenuModal').classList.remove('show'); }
+    function openChallengeMenu() {
+      document.getElementById('challengeMenuModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeChallengeMenuModal);
+      }
+    }
+    function closeChallengeMenuModal(isPopstate) {
+      document.getElementById('challengeMenuModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeChallengeMenuModal);
+      }
+    }
 
     // --- 지니월드 챌린지 성적 및 클럽 인쇄 통합 콘솔 제어 스크립트 ---
     let selectedRankingCategory = '';
@@ -3566,10 +3576,16 @@
       document.getElementById('rankingConsoleStep3').style.display = 'none';
       
       document.getElementById('challengeRankingConsoleModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeChallengeRankingConsole);
+      }
     }
 
-    function closeChallengeRankingConsole() {
+    function closeChallengeRankingConsole(isPopstate) {
       document.getElementById('challengeRankingConsoleModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeChallengeRankingConsole);
+      }
     }
 
     function selectRankingCategory(category) {
@@ -3936,7 +3952,7 @@
       <div id="rankingConsoleStep2" style="display: none; flex-direction: column; gap: 12px; margin-top: 10px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
           <strong id="selectedCategoryTitle" style="color: var(--primary); font-size: 1rem;">🏆 주간 랭킹 리스트</strong>
-          <button onclick="goBackToRankingStep1()" class="m-btn" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; width: auto; margin: 0; background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.15);">이전으로</button>
+          <button onclick="goBackToRankingStep1()" class="m-btn" style="padding: 6px 12px; font-size: 0.75rem; border-radius: 8px; width: auto; margin: 0; background: #edf2f7; color: #2d3748; border: 1px solid #cbd5e0; font-weight: 800; cursor: pointer; transition: background 0.2s;">이전으로</button>
         </div>
         <div id="rankingPeriodList" class="modal-btn-group" style="max-height: 250px; overflow-y: auto; padding-right: 5px;">
           <!-- JS dynamic lists -->
@@ -3947,7 +3963,7 @@
       <div id="rankingConsoleStep3" style="display: none; flex-direction: column; gap: 12px; margin-top: 10px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
           <strong id="selectedPeriodTitle" style="color: var(--primary); font-size: 1rem;">📅 5월 2주차 성적</strong>
-          <button onclick="goBackToRankingStep2()" class="m-btn" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; width: auto; margin: 0; background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.15);">이전으로</button>
+          <button onclick="goBackToRankingStep2()" class="m-btn" style="padding: 6px 12px; font-size: 0.75rem; border-radius: 8px; width: auto; margin: 0; background: #edf2f7; color: #2d3748; border: 1px solid #cbd5e0; font-weight: 800; cursor: pointer; transition: background 0.2s;">이전으로</button>
         </div>
         
         <div id="rankingDetailsTableWrapper" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(0,0,0,0.25);">
