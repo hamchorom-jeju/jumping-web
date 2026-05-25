@@ -7474,7 +7474,10 @@ function generateAiDraftForManualMessage(payload) {
                  "위 상황과 최근 대화 히스토리 및 원장님의 지시 메모를 결합하여, 회원의 가슴을 뭉클하게 할 150자~200자 내외의 명품 1:1 쪽지 초안 본문을 작성해 주세요.";
     
     var draft = callGeminiBackend(prompt, systemInstruction);
-    return { success: true, draft: draft || "지현님, 오늘 날씨가 참 좋은데 클럽에서 힐링하러 오세요! ❤️" };
+    if (!draft) {
+      draft = cleanName + "님, 오늘 하루도 활기차고 행복 가득하게 보내세요! 클럽에서 뵙겠습니다. ❤️";
+    }
+    return { success: true, draft: draft };
     
   } catch (e) {
     Logger.log("🚨 generateAiDraftForManualMessage 오류: " + e.toString());
