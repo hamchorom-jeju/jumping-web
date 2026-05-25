@@ -3010,6 +3010,7 @@
       document.getElementById('salesTabDailyBtn').classList.add('active');
       document.getElementById('salesRangeSelector').style.display = 'none';
       
+      document.getElementById('salesHistorySummary').style.display = 'none';
       document.getElementById('salesHistoryList').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-sub);">손익 기록을 실시간 집계 중...</div>';
       document.getElementById('totalSalesIncome').innerText = '0원';
       document.getElementById('totalSalesExpense').innerText = '0원';
@@ -3061,14 +3062,17 @@
       if (tabType === 'daily') {
         document.getElementById('salesTabDailyBtn').classList.add('active');
         document.getElementById('salesRangeSelector').style.display = 'none';
+        document.getElementById('salesHistorySummary').style.display = 'none'; // 일매출은 총계 숨김!
         renderSalesHistoryTab();
       } else if (tabType === 'monthly') {
         document.getElementById('salesTabMonthlyBtn').classList.add('active');
         document.getElementById('salesRangeSelector').style.display = 'none';
+        document.getElementById('salesHistorySummary').style.display = 'none'; // 월매출도 총계 숨김!
         renderSalesHistoryTab();
       } else if (tabType === 'range') {
         document.getElementById('salesTabRangeBtn').classList.add('active');
         document.getElementById('salesRangeSelector').style.display = 'flex';
+        document.getElementById('salesHistorySummary').style.display = 'grid'; // 기간별 매출 조회에서만 수려하게 총계 표시!
         
         // 날짜 기본값: 이번달 1일 ~ 오늘
         const today = new Date();
