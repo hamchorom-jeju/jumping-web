@@ -772,14 +772,20 @@
           <button onclick="filterInBodyHistory()" class="m-btn m-btn-combo" style="width: auto; padding: 0 16px; margin: 0; font-weight: 800; border-radius: 10px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem;">🔍 검색</button>
         </div>
         
-        <!-- 2행: 날짜 및 주차 필터 (글자 잘림 100% 차단용 2열 배치) -->
+        <!-- 2행: 날짜 및 주차 필터 (이모지 논리 재배치 및 잘림 원천 차단) -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <input type="date" id="histSearchDate" style="width: 100%; padding: 10px 12px; font-size: 0.9rem; margin: 0; border: 1.5px solid #edf2f7; border-radius: 10px; background: #fff; box-sizing: border-box;" onchange="filterInBodyHistory()">
+          <!-- 날짜 필터: 직관적인 📅 달력 이모지 결합형 입력창 -->
+          <div style="position: relative; display: flex; align-items: center; width: 100%;">
+            <span style="position: absolute; left: 10px; color: #718096; pointer-events: none; font-size: 0.95rem;">📅</span>
+            <input type="date" id="histSearchDate" style="width: 100%; padding: 10px 12px 10px 30px; font-size: 0.9rem; margin: 0; border: 1.5px solid #edf2f7; border-radius: 10px; background: #fff; box-sizing: border-box;" onchange="filterInBodyHistory()">
+          </div>
+          
+          <!-- 주차 필터: 이모지를 제거하여 잘림 현상을 100% 예방한 와이드 셀렉트 -->
           <select id="histSearchWeek" style="width: 100%; padding: 10px 12px; font-size: 0.9rem; margin: 0; border: 1.5px solid #edf2f7; border-radius: 10px; background: #fff; box-sizing: border-box;" onchange="filterInBodyHistory()">
-            <option value="">📅 주차 필터 (전체)</option>
-            <option value="7">최근 1주일</option>
-            <option value="14">최근 2주일</option>
-            <option value="30">최근 1개월</option>
+            <option value="">주차 필터 (전체)</option>
+            <option value="7">⏳ 최근 1주일</option>
+            <option value="14">⏳ 최근 2주일</option>
+            <option value="30">⏳ 최근 1개월</option>
           </select>
         </div>
 
