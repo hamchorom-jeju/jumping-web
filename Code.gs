@@ -7246,11 +7246,16 @@ function getMemberMessageHistory(phone) {
           var row = smsData[i];
           var rowPhone = String(row[2] || "").replace(/[^0-9]/g, "");
           if (rowPhone === cleanPhone || (cleanPhone.length >= 8 && rowPhone.endsWith(cleanPhone.substring(cleanPhone.length - 8)))) {
+            var rawContent = String(row[4] || "").trim();
+            // 장해 진단서 문구가 들어있거나, 지나치게 짧고 온전한 구두점 없이 끝나는 경우 이력 매칭에서 과감히 제외
+            if (rawContent.indexOf("장해 진단") !== -1 || (rawContent.length < 50 && !rawContent.endsWith(".") && !rawContent.endsWith("!") && !rawContent.endsWith("❤️") && !rawContent.endsWith("~"))) {
+              continue;
+            }
             historyLogs.push({
               date: row[0],
               channel: "일반 SMS 문자",
               category: row[3],
-              content: row[4],
+              content: rawContent,
               status: row[5]
             });
           }
@@ -7271,11 +7276,15 @@ function getMemberMessageHistory(phone) {
           var row = personalData[i];
           var rowPhone = String(row[1] || "").replace(/[^0-9]/g, "");
           if (rowPhone === cleanPhone || (cleanPhone.length >= 8 && rowPhone.endsWith(cleanPhone.substring(cleanPhone.length - 8)))) {
+            var rawContent = String(row[5] || "").trim();
+            if (rawContent.indexOf("장해 진단") !== -1 || (rawContent.length < 50 && !rawContent.endsWith(".") && !rawContent.endsWith("!") && !rawContent.endsWith("❤️") && !rawContent.endsWith("~"))) {
+              continue;
+            }
             historyLogs.push({
               date: row[6],
               channel: "인앱 쪽지(알림)",
               category: row[3],
-              content: row[5],
+              content: rawContent,
               status: "완료"
             });
           }
@@ -7488,7 +7497,8 @@ function generateAiDraftForManualMessage(payload) {
     var systemInstruction = "당신은 제주 노형점핑클럽의 다정한 '이장님(원장님)'이자 최고의 헬스 코치입니다. " +
                             "원장님이 특정 회원에게 1:1로 직접 보낼 '감성 케어 편지/쪽지'의 명품 본문을 작성해야 합니다.\n" +
                             "제공되는 [최근 메시지 발송 이력]과 [원장님의 작문 메모]를 100% 정밀 분석하여, " +
-                            "중복 멘트를 완벽 방어하고 회원과 1:1로 친근하게 속삭이는 감동적인 다이어리 피드백/안부 쪽지를 지어내십시오.";
+                            "중복 멘트를 완벽 방어하고 회원과 1:1로 친근하게 속삭이는 감동적인 다이어리 피드백/안부 쪽지를 지어내십시오.\n" +
+                            "⚠️ 절대 규칙: 최근 발송 히스토리에 있는 문자 내용이나 끊긴 예전 문구를 절대로 그대로 복사하거나 뒤이어 쓰지 마십시오. 항상 기승전결이 완벽히 마감되는 새로운 편지를 창작해야 합니다.";
     
     var prompt = "■ 수신인 회원 정보\n" +
                  "- 회원 이름: " + cleanName + "\n" +
@@ -7497,7 +7507,10 @@ function generateAiDraftForManualMessage(payload) {
                  "- 원장님의 직접 지시사항(작문 요지): [" + (memo || "다정하고 편안하게 안부와 건강 챙기기") + "]\n\n" +
                  "■ 최근 발송 히스토리\n" +
                  recentHistoryText + "\n\n" +
-                 "위 상황과 최근 대화 히스토리 및 원장님의 지시 메모를 결합하여, 회원의 가슴을 뭉클하게 할 150자~200자 내외의 명품 1:1 쪽지 초안 본문을 작성해 주세요.";
+                 "⚠️ [작문 지침]\n" +
+                 "1. 위 정보와 원장님의 지시 메모를 기반으로 회원의 가슴을 뭉클하게 할 150자~200자 내외의 명품 1:1 쪽지 초안 본문을 작성해 주세요.\n" +
+                 "2. 절대로 히스토리에 들어있는 기존 메시지 문구(특히 끊긴 문구)를 베끼거나 복제하지 마십시오.\n" +
+                 "3. 메시지 본문은 절대로 중간에 뚝 끊기면 안 되며, 반드시 온전한 마침표('.') 또는 이모티콘과 함께 완결된 종결어미('~요.', '~입니다.', '❤️')로 확실하게 끝마쳐야 합니다.";
     
     var apiRes = callGeminiBackendWithDetails(prompt, systemInstruction);
     var draft = "";
