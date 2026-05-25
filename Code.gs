@@ -6418,13 +6418,13 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
               if (!mName) mName = "회원";
               mName = String(mName).replace(/\d{4}$/, ""); // 이름 뒤 숫자 제거
               
-              sendPersonalNotification(
+              if (!hasSentNotificationToday(cleanPhone, "방어", "방패 실패")) { sendPersonalNotification(
                 cleanPhone,
                 "방어",
                 "😢 아쉽습니다! 글리코겐 방패 충전 실패",
                 mName + "님, 아쉽게도 3일 제한 시간 내에 미션을 완수하지 못해 글리코겐 방패 충전에 실패하셨습니다. 😢\n\n비록 이번 방패는 충전하지 못했지만 낙담하지 마세요! 건강한 습관을 다시 채우는 것이 중요합니다. 오늘부터 다시 가볍고 건강한 식단과 함께 클럽에서 땀 흘려보아요. 언제나 회원님의 도전을 응원합니다! ❤️"
               );
-            } catch (errFailNoti) {
+              } } catch (errFailNoti) {
               console.error("Error sending shield fail notification: " + errFailNoti.toString());
             }
           } else {
