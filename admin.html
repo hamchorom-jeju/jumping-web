@@ -691,7 +691,9 @@
       width: 100%;
       max-width: 520px;
       min-height: 730px;
-      padding: 35px;
+      height: auto;
+      align-self: flex-start;
+      padding: 25px;
       box-shadow: 0 8px 25px rgba(0,0,0,0.4);
       border-radius: 8px;
       font-family: 'Noto Sans KR', sans-serif;
@@ -3523,54 +3525,54 @@
         
       const title = '🏆 ' + periodLabel + ' ' + categoryTitle + ' 🏆';
       const subtitle = '노형점핑을 가장 뜨겁게 빛낸 영웅들의 영광스러운 성적 발표';
-      const dateRangeText = window.currentRankingDateRange ? '<p style="font-size: 0.95rem; color: #444; font-weight: 800; margin: 6px 0 0 0; letter-spacing: -0.3px;">(' + window.currentRankingDateRange + ')</p>' : '';
+      const dateRangeText = window.currentRankingDateRange ? '<p style="font-size: 0.85rem; color: #444; font-weight: 800; margin: 4px 0 0 0; letter-spacing: -0.3px;">(' + window.currentRankingDateRange + ')</p>' : '';
 
       const top10 = fetchedRankingRecords.slice(0, 10);
 
       let tableRowsHTML = '';
       top10.forEach(w => {
-        let rowStyle = 'border-bottom: 1.5px solid black;';
+        let rowStyle = 'border-bottom: 1.2px solid black;';
         let rankBadge = w.rank + '위';
         let nameStyle = 'color: black; font-weight: 700;';
         
         if (w.rank === 1) {
-          rowStyle = 'border-bottom: 2px solid black; background-color: #fffbeb; font-weight: 900; font-size: 1.05rem;';
+          rowStyle = 'border-bottom: 1.8px solid black; background-color: #fffbeb; font-weight: 900; font-size: 0.95rem;';
           rankBadge = '🥇 1위';
           nameStyle = 'color: #c2410c; font-weight: 950;';
         } else if (w.rank === 2) {
-          rowStyle = 'border-bottom: 2px solid black; background-color: #f8fafc; font-weight: 900; font-size: 1.0rem;';
+          rowStyle = 'border-bottom: 1.8px solid black; background-color: #f8fafc; font-weight: 900; font-size: 0.92rem;';
           rankBadge = '🥈 2위';
           nameStyle = 'color: #475569; font-weight: 950;';
         } else if (w.rank === 3) {
-          rowStyle = 'border-bottom: 2px solid black; background-color: #fdf8f6; font-weight: 900; font-size: 0.95rem;';
+          rowStyle = 'border-bottom: 1.8px solid black; background-color: #fdf8f6; font-weight: 900; font-size: 0.9rem;';
           rankBadge = '🥉 3위';
           nameStyle = 'color: #9a3412; font-weight: 950;';
         }
         
         const isLive = (selectedRankingPeriod === 'live');
-        const healthText = isLive ? '-' : w.health + ' EXP';
-        const perfText = isLive ? '-' : w.perf + ' EXP';
-        const defText = isLive ? '-' : w.def + ' EXP';
+        const healthText = isLive ? '-' : w.health;
+        const perfText = isLive ? '-' : w.perf;
+        const defText = isLive ? '-' : w.def;
         
         tableRowsHTML += '<tr style="' + rowStyle + '">' +
-            '<td style="padding: 10px 4px; text-align: center; font-weight: 900;">' + rankBadge + '</td>' +
-            '<td style="padding: 10px 4px; text-align: left; ' + nameStyle + '">' + w.name + '</td>' +
-            '<td style="padding: 10px 4px; text-align: center; font-weight: bold; color: #444;">' + healthText + '</td>' +
-            '<td style="padding: 10px 4px; text-align: center; font-weight: bold; color: #444;">' + perfText + '</td>' +
-            '<td style="padding: 10px 4px; text-align: center; font-weight: bold; color: #444;">' + defText + '</td>' +
-            '<td style="padding: 10px 4px; text-align: right; font-weight: 900; color: black; font-size: 0.95rem;">' + w.periodTotal.toLocaleString() + ' EXP</td>' +
+            '<td style="padding: 5px 4px; text-align: center; font-weight: 900;">' + rankBadge + '</td>' +
+            '<td style="padding: 5px 4px; text-align: left; ' + nameStyle + '">' + w.name + '</td>' +
+            '<td style="padding: 5px 4px; text-align: center; font-weight: bold; color: #444;">' + healthText + '</td>' +
+            '<td style="padding: 5px 4px; text-align: center; font-weight: bold; color: #444;">' + perfText + '</td>' +
+            '<td style="padding: 5px 4px; text-align: center; font-weight: bold; color: #444;">' + defText + '</td>' +
+            '<td style="padding: 5px 4px; text-align: right; font-weight: 900; color: black; font-size: 0.9rem;">' + w.periodTotal.toLocaleString() + '</td>' +
           '</tr>';
       });
 
-      const detailsTableHTML = '<table style="width: 100%; border-collapse: collapse; margin-top: 15px;">' +
+      const detailsTableHTML = '<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">' +
           '<thead>' +
-            '<tr style="border-bottom: 2.5px solid black; border-top: 2px solid black; background: #fafafa;">' +
-              '<th style="padding: 8px 4px; text-align: center; font-weight: 900; font-size: 0.85rem; width: 60px;">순위</th>' +
-              '<th style="padding: 8px 4px; text-align: left; font-weight: 900; font-size: 0.85rem; width: 80px;">이름</th>' +
-              '<th style="padding: 8px 4px; text-align: center; font-weight: 900; font-size: 0.85rem;">체력</th>' +
-              '<th style="padding: 8px 4px; text-align: center; font-weight: 900; font-size: 0.85rem;">실천력</th>' +
-              '<th style="padding: 8px 4px; text-align: center; font-weight: 900; font-size: 0.85rem;">회복력</th>' +
-              '<th style="padding: 8px 4px; text-align: right; font-weight: 900; font-size: 0.85rem; width: 110px;">EXP 합산</th>' +
+            '<tr style="border-bottom: 2px solid black; border-top: 1.5px solid black; background: #fafafa;">' +
+              '<th style="padding: 6px 4px; text-align: center; font-weight: 900; font-size: 0.8rem; width: 60px;">순위</th>' +
+              '<th style="padding: 6px 4px; text-align: left; font-weight: 900; font-size: 0.8rem; width: 80px;">이름</th>' +
+              '<th style="padding: 6px 4px; text-align: center; font-weight: 900; font-size: 0.8rem;">체력</th>' +
+              '<th style="padding: 6px 4px; text-align: center; font-weight: 900; font-size: 0.8rem;">실천력</th>' +
+              '<th style="padding: 6px 4px; text-align: center; font-weight: 900; font-size: 0.8rem;">회복력</th>' +
+              '<th style="padding: 6px 4px; text-align: right; font-weight: 900; font-size: 0.8rem; width: 90px;">총점</th>' +
             '</tr>' +
           '</thead>' +
           '<tbody>' +
@@ -3578,7 +3580,7 @@
           '</tbody>' +
         '</table>';
 
-      // 2부: 누적 토탈 랭킹 (1~3위 스냅샷) - 1부2부 표기 삭제 및 주차별 제목 보정 피드백 반영
+      // 2부: 누적 토탈 랭킹 (1~3위 스냅샷)
       const sortedLifetime = [...fetchedRankingRecords]
         .filter(x => x.lifetimeTotal > 0)
         .sort((a, b) => b.lifetimeTotal - a.lifetimeTotal)
@@ -3586,35 +3588,35 @@
         
       let lifetimeHTML = '';
       if (sortedLifetime.length > 0) {
-        lifetimeHTML += '<div style="margin-top: 25px; border: 2px solid black; border-radius: 12px; padding: 12px; background: #fafafa;">' +
-            '<h4 style="font-size: 0.9rem; font-weight: 900; margin-bottom: 10px; text-align: center; color: black; letter-spacing: -0.5px;">⚡ ' + periodLabel + ' 누적 토탈 랭킹 순위</h4>' +
+        lifetimeHTML += '<div style="margin-top: 12px; border: 1.5px solid black; border-radius: 12px; padding: 8px 12px; background: #fafafa;">' +
+            '<h4 style="font-size: 0.82rem; font-weight: 900; margin-bottom: 6px; text-align: center; color: black; letter-spacing: -0.5px;">⚡ ' + periodLabel + ' 누적 토탈 랭킹 순위</h4>' +
             '<div style="display: flex; gap: 8px; justify-content: center; width: 100%;">';
             
         sortedLifetime.forEach((w, lIdx) => {
           const medal = lIdx === 0 ? '🥇 1위' : lIdx === 1 ? '🥈 2위' : '🥉 3위';
-          lifetimeHTML += '<div style="flex: 1; text-align: center; border: 1.5px solid black; border-radius: 8px; padding: 6px 4px; background: white;">' +
-              '<span style="font-size: 0.72rem; font-weight: 900; color: black; display: block; margin-bottom: 2px;">' + medal + '</span>' +
-              '<strong style="font-size: 0.8rem; font-weight: 900; color: black; display: block; margin-bottom: 2px;">' + w.name + '</strong>' +
-              '<span style="font-size: 0.68rem; font-weight: 700; color: #555;">' + w.lifetimeTotal.toLocaleString() + ' EXP</span>' +
+          lifetimeHTML += '<div style="flex: 1; text-align: center; border: 1.2px solid black; border-radius: 8px; padding: 4px; background: white;">' +
+              '<span style="font-size: 0.68rem; font-weight: 900; color: black; display: block; margin-bottom: 1px;">' + medal + '</span>' +
+              '<strong style="font-size: 0.75rem; font-weight: 900; color: black; display: block; margin-bottom: 1px;">' + w.name + '</strong>' +
+              '<span style="font-size: 0.65rem; font-weight: 700; color: #555;">' + w.lifetimeTotal.toLocaleString() + '</span>' +
             '</div>';
         });
         lifetimeHTML += '</div></div>';
       }
 
-      const stampHTML = '<div style="margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end;">' +
-          '<div style="text-align: left; font-size: 0.72rem; color: #555; font-weight: 500;">' +
+      const stampHTML = '<div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: flex-end;">' +
+          '<div style="text-align: left; font-size: 0.68rem; color: #555; font-weight: 500;">' +
             '<p style="margin: 2px 0;">출력 일시: ' + new Date().toLocaleString('ko-KR') + '</p>' +
           '</div>' +
-          '<div style="position: relative; width: 85px; height: 85px; border: 2.5px solid #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; transform: rotate(-8deg); background: rgba(239, 68, 68, 0.01);">' +
-            '<span style="color: #ef4444; font-size: 0.68rem; font-weight: 950; text-align: center; line-height: 1.3; letter-spacing: -0.5px;">지니클럽<br>공식인증<br>👑</span>' +
+          '<div style="position: relative; width: 68px; height: 68px; border: 2px solid #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; transform: rotate(-8deg); background: rgba(239, 68, 68, 0.01);">' +
+            '<span style="color: #ef4444; font-size: 0.58rem; font-weight: 950; text-align: center; line-height: 1.3; letter-spacing: -0.5px;">지니클럽<br>공식인증<br>👑</span>' +
           '</div>' +
         '</div>';
 
-      printPaperContent.innerHTML = '<div style="text-align: center; margin-bottom: 10px;">' +
-          '<h1 style="font-size: 1.8rem; font-weight: 950; color: black; margin-bottom: 4px; letter-spacing: -1px;">' + title + '</h1>' +
+      printPaperContent.innerHTML = '<div style="text-align: center; margin-bottom: 6px;">' +
+          '<h1 style="font-size: 1.5rem; font-weight: 950; color: black; margin-bottom: 2px; letter-spacing: -1px;">' + title + '</h1>' +
           dateRangeText +
-          '<p style="font-size: 0.85rem; color: #333; font-weight: 500; margin: 6px 0 0 0;">' + subtitle + '</p>' +
-          '<hr style="border: none; border-top: 2.5px solid black; margin: 12px 0 20px 0;">' +
+          '<p style="font-size: 0.8rem; color: #333; font-weight: 500; margin: 4px 0 0 0;">' + subtitle + '</p>' +
+          '<hr style="border: none; border-top: 2px solid black; margin: 8px 0 12px 0;">' +
         '</div>' +
         detailsTableHTML +
         lifetimeHTML +
