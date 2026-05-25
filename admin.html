@@ -4524,6 +4524,12 @@
 
     const originalOpenPersonalNotiModal = openPersonalNotiModal;
     openPersonalNotiModal = function() { originalOpenPersonalNotiModal(); pushModalState(); };
+
+    const originalShowWorkLogDetail = showWorkLogDetail;
+    showWorkLogDetail = function(idx) { originalShowWorkLogDetail(idx); pushModalState(); };
+
+    const originalOpenSalesDetailModal = openSalesDetailModal;
+    openSalesDetailModal = function(dateStr) { originalOpenSalesDetailModal(dateStr); pushModalState(); };
   </script>
   <script>
     if ('serviceWorker' in navigator) {
