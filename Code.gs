@@ -5093,23 +5093,19 @@ function checkLongTermAbsentees() {
         var remain = regData[k][regCols.remain] || "0";
         var expWarn = "\n🎫 회원님의 [" + membership + "] 만료일은 " + expire + "까지이며, 현재 잔여 횟수가 " + remain + "회 남아있습니다. 소중한 이용권이 마감되어 소멸되기 전에 꼭 오셔서 알차게 사용하시길 바랄게요! 😊";
         
-        var msg = generateWellnessAiSms(cleanName, remain, absentDays, "장기미방문");
-        var notiTitle = "";
-        var notiContent = "";
+        var formattedPhone = formatPhoneForSms(regData[k][regCols.phone]);
         
-        if (absentDays >= 7 && absentDays <= 13) {
-          notiTitle = "회원님, 가벼운 시작으로 에너지를 찾아보세요!";
-          notiContent = cleanName + "회원님, 점핑클럽입니다! 😊 클럽에서 뵙지 못한 지 벌써 일주일이 지났네요! 😢 많이 바쁘시더라도 가벼운 점핑 운동이나 따뜻한 테라피로 다시 건강 리듬을 회복해보시는 건 어떨까요?\n\n모바일 앱에 매일 로그인하셔서 소중한 일상 건강 기록을 남겨보시는 것도 큰 도움이 됩니다. 오늘 꼭 앱 접속이나 클럽 방문으로 건강 충전을 위한 첫 걸음을 내딛어 보세요! 화이팅! ❤️" + expWarn;
-        } else if (absentDays >= 14 && absentDays <= 29) {
-          notiTitle = "회원님의 신나는 에너지가 너무나도 그립습니다.";
-          notiContent = cleanName + "회원님, 점핑클럽입니다! 😊 회원님의 활기차고 건강한 에너지가 클럽에서 너무나도 그립습니다. 😢\n\n몸과 마음의 피로를 사르르 녹여줄 편안한 원적외선 테라피라도 받으러 클럽에 들러주세요. 운동하기 부쩍 망설여지신다면 따뜻한 차 한 잔 나누러 오셔도 대환영입니다! 이번 주에는 꼭 클럽에서 소중한 회원님의 얼굴을 뵈었으면 좋겠습니다. ❤️" + expWarn;
-        } else {
-          // 30일 이상 또는 기록 없음
-          notiTitle = "회원님, 건강한 습관을 끝까지 지키시길 응원합니다!";
-          notiContent = cleanName + "회원님, 점핑클럽입니다! 😊 오랫동안 뵙지 못해 회원님의 건강과 일상이 늘 궁금하고 걱정됩니다. 😢\n\n비록 바쁜 일상 때문에 클럽 출석은 잠시 뜸하시더라도, 웰니스 다이어리에 하루 건강을 차근차근 기록하면서 건강한 마인드와 습관을 놓지 않으시길 진심으로 응원합니다. 언제든 저희 클럽 문은 활짝 열려있으니 다시 웃는 얼굴로 뛸 날을 손꼽아 기다리겠습니다. 늘 건강하고 행복하세요! ❤️" + expWarn;
+        // 🤖 [v64.40] 제미나이 AI 기반 히스토리-맥락 융합 본문 2채널 동적 생성
+        var msg = generateWellnessAiSms(cleanName, remain, absentDays, "장기미방문", formattedPhone, "sms");
+        
+        var notiTitle = "회원님, 에너지를 다시 채워드릴게요! ❤️";
+        if (absentDays >= 14 && absentDays <= 29) {
+          notiTitle = "회원님의 활기찬 에너지가 무척 그립습니다! 😊";
+        } else if (absentDays >= 30) {
+          notiTitle = "회원님, 건강한 습관을 항상 응원합니다! 🌟";
         }
         
-        var formattedPhone = formatPhoneForSms(regData[k][regCols.phone]);
+        var notiContent = generateWellnessAiSms(cleanName, remain, absentDays, "장기미방문", formattedPhone, "noti") + expWarn;
         
         // A. 오프라인 문자 적재
         smsSheet.appendRow([
@@ -5295,20 +5291,41 @@ function checkInactiveMembers() {
         
         var cleanName = m.name.replace(/\d{4}$/, ""); // 이름 끝 번호 제거
         var totalRemain = m.totalRemain;
-        var msg = generateWellnessAiSms(cleanName, totalRemain, elapsedDays, "복귀권유");
-        
-        // 휴대폰 번호 보정 (0 누락 방지)
         var formattedPhone = formatPhoneForSms(m.phoneRaw);
         
-        // 문자발송 대기열 시트에 적재
-        smsSheet.appendRow([
-          Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm"),
-          cleanName,
-          formattedPhone,
-          "복귀권유",
-          msg,
-          "대기"
-        ]);
+        // 🚨 [원장님 스마트 가드] 4~6일차 만료 회원 하이브리드 발송 분기
+        var isAppActive = hasMemberActiveInApp(phones[pIdx], 3); // 최근 3일 내 앱 활동 여부
+        var targetChannel = "sms"; // 기본값 SMS
+        
+        if (elapsedDays >= 4 && elapsedDays <= 6) {
+          if (isAppActive) {
+            targetChannel = "noti"; // 앱 활성자는 무료 쪽지로 부드럽게 케어!
+          } else {
+            targetChannel = "sms"; // 앱 미활성자는 SMS로 강력 노킹!
+          }
+        }
+        
+        // AI 본문 동적 생성 (과거 히스토리 맥락 인지형)
+        var msg = generateWellnessAiSms(cleanName, totalRemain, elapsedDays, "복귀권유", formattedPhone, targetChannel);
+        
+        if (targetChannel === "noti") {
+          // 무료 개인 쪽지 즉시 발송
+          var notiTitle = "회원님, 남은 횟수(" + totalRemain + "회)를 지켜드릴게요! ❤️";
+          if (totalRemain === 0) {
+            notiTitle = "회원님, 함께 다져온 건강한 루틴을 계속 이어요! 😊";
+          }
+          sendPersonalNotification(formattedPhone, "복귀권유", notiTitle, msg);
+        } else {
+          // 오프라인 문자 대기열 적재
+          smsSheet.appendRow([
+            Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm"),
+            cleanName,
+            formattedPhone,
+            "복귀권유",
+            msg,
+            "대기"
+          ]);
+        }
         
         count++;
         addedNames.push(cleanName);
@@ -7177,39 +7194,119 @@ function callGeminiBackend(prompt, systemInstruction) {
 }
 
 /**
- * 🤖 [v64.30] 지니 웰니스 AI 문자 생성기 (Gemini API 융합형)
- * 회원의 상황(이름, 남은횟수, 경과일수, 유형)을 받아, 따뜻하고 설득력 있는 맞춤형 복귀 권유/안부 문구를 생성합니다.
+ * 📊 [v64.40] 특정 회원의 최근 발송 히스토리(문자발송 + 개인쪽지) 통합 수집기
+ * 대상 전화번호의 최근 4건의 발송 내역을 가져와 AI 비서에게 맥락으로 전달합니다.
  */
-function generateWellnessAiSms(name, remain, elapsedDays, type) {
+function getMemberMessageHistory(phone) {
+  try {
+    var cleanPhone = String(phone || "").replace(/[^0-9]/g, "");
+    if (!cleanPhone) return "최근 발송 이력 없음";
+    
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var smsSheet = ss.getSheetByName("문자발송");
+    var personalSheet = ss.getSheetByName("개인_알림");
+    
+    var historyLogs = [];
+    
+    // 1. 문자발송 시트 스캔 (최근 500줄 스캔하여 특정 회원 찾기)
+    if (smsSheet) {
+      var smsLast = smsSheet.getLastRow();
+      if (smsLast >= 2) {
+        var startRow = Math.max(2, smsLast - 500);
+        var numRows = smsLast - startRow + 1;
+        var smsData = smsSheet.getRange(startRow, 1, numRows, 6).getDisplayValues();
+        
+        for (var i = smsData.length - 1; i >= 0; i--) {
+          var row = smsData[i];
+          var rowPhone = String(row[2] || "").replace(/[^0-9]/g, "");
+          if (rowPhone === cleanPhone || (cleanPhone.length >= 8 && rowPhone.endsWith(cleanPhone.substring(cleanPhone.length - 8)))) {
+            historyLogs.push({
+              date: row[0],
+              channel: "일반 SMS 문자",
+              category: row[3],
+              content: row[4],
+              status: row[5]
+            });
+          }
+          if (historyLogs.length >= 4) break;
+        }
+      }
+    }
+    
+    // 2. 개인쪽지(인앱 알림) 시트 스캔 (최근 500줄 스캔하여 특정 회원 찾기)
+    if (personalSheet && historyLogs.length < 4) {
+      var personalLast = personalSheet.getLastRow();
+      if (personalLast >= 2) {
+        var startRow = Math.max(2, personalLast - 500);
+        var numRows = personalLast - startRow + 1;
+        var personalData = personalSheet.getRange(startRow, 1, numRows, 8).getDisplayValues();
+        
+        for (var i = personalData.length - 1; i >= 0; i--) {
+          var row = personalData[i];
+          var rowPhone = String(row[1] || "").replace(/[^0-9]/g, "");
+          if (rowPhone === cleanPhone || (cleanPhone.length >= 8 && rowPhone.endsWith(cleanPhone.substring(cleanPhone.length - 8)))) {
+            historyLogs.push({
+              date: row[6],
+              channel: "인앱 쪽지(알림)",
+              category: row[3],
+              content: row[5],
+              status: "완료"
+            });
+          }
+          if (historyLogs.length >= 6) break; // 최대 6건 취합
+        }
+      }
+    }
+    
+    if (historyLogs.length === 0) {
+      return "최근 발송 이력 없음 (신규 케어 대상 회원입니다.)";
+    }
+    
+    // 시간순 정렬 (오래된 것 -> 최신 것)
+    historyLogs.sort(function(a, b) {
+      return new Date(a.date) - new Date(b.date);
+    });
+    
+    // 이력 텍스트화
+    var textArr = [];
+    historyLogs.forEach(function(log, idx) {
+      textArr.push("[" + (idx + 1) + "] " + log.date + " | 발송채널: " + log.channel + " | 분류: " + log.category + " | 발송상태: " + log.status + "\n└ 메시지내용: " + log.content);
+    });
+    
+    return textArr.join("\n\n");
+  } catch (e) {
+    Logger.log("🚨 getMemberMessageHistory 오류: " + e.toString());
+    return "발송 이력 조회 중 오류 발생 (무결한 신규 멘트 작성 필요)";
+  }
+}
+
+/**
+ * 🤖 [v64.40] 지니 웰니스 AI 문자/쪽지 통합 생성기 (Gemini API & 히스토리 지능 융합형)
+ * 회원의 상황(이름, 남은횟수, 경과일수, 유형, 번호, 발송채널)을 받아, 과거 발송 이력을 읽은 제미나이가
+ * 회원이 스팸처럼 느끼지 않고 따뜻한 안부를 체감하도록 최적화된 맞춤형 복귀 권유/안부 문구를 실시간 창조합니다.
+ */
+function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetChannel) {
   var cleanName = name.replace(/\d{4}$/, ""); // 이름 끝 숫자 제거
+  var recentHistoryText = getMemberMessageHistory(phone); // 최근 3~5건의 문자+쪽지 발송 내역 취합
+  
+  var channelInfo = targetChannel === "noti" ? "인앱 쪽지(알림)" : "오프라인 SMS 일반 문자";
+  
   var systemInstruction = "당신은 제주 노형점핑클럽의 친근하고 열정적인 '이장님(원장님)'이자 최고의 웰니스 헬스 코치입니다. " +
                           "마을 주민(회원)들의 건강을 진심으로 걱정하고 다시 클럽으로 복귀하도록 이끄는 따뜻하고 감성 넘치는 메시지를 작성해 주세요. " +
-                          "글자수는 SMS 문자 발송용이므로 150자~250자 내외로 간결하게 작성하고, 격려와 친근함을 담아 이모티콘(😊, ❤️, 🏃‍♀️, 🔥)을 적절히 융합해 주세요. 절대 딱딱하거나 기계적인 말투를 쓰지 마세요.";
+                          "글자수는 " + channelInfo + " 발송용이므로 150자~250자 내외로 간결하게 작성하고, 격려와 친근함을 담아 이모티콘(😊, ❤️, 🏃‍♀️, 🔥)을 적절히 융합해 주세요. 절대 딱딱하거나 기계적인 말투를 쓰지 마세요.\n\n" +
+                          "★가장 중요한 미션★\n" +
+                          "제공되는 [최근 메시지 발송 이력]을 반드시 분석하여, 이전에 보냈던 내용과 어조를 반복하지 마십시오. " +
+                          "이전 문자에 반응이 없었다면 이번에는 조금 더 파격적이거나 다른 각도의 혜택(원적외선 테라피 힐링, 깜짝 소생 보너스 복구 등)을 제안하는 2차/3차 맞춤 터치포인트 문장을 스스로 유동적으로 지어내십시오.";
   
-  var prompt = "";
-  
-  if (type === "장기미방문") {
-    prompt = "회원 이름: " + cleanName + "\n" +
-             "미출석(결석) 기간: " + elapsedDays + "일\n" +
-             "회원권 남은 횟수: " + remain + "회\n\n" +
-             "현재 이 회원은 수강 기간 중인데 오랜 기간(벌써 " + elapsedDays + "일째) 클럽에 나오지 않고 계십니다. " +
-             "소중한 남은 횟수가 아깝게 소멸되기 전에 얼른 복귀하여 따뜻한 원적외선 테라피나 신나는 점핑으로 다시 체력 리듬을 찾을 수 있도록 감동적이고 다정한 안부 메시지를 작성해 주세요.";
-  } else if (type === "복귀권유") {
-    // 장기 미등록 (만료 회원)
-    if (remain === 0) {
-      prompt = "회원 이름: " + cleanName + "\n" +
-               "수강권 만료 경과일: " + elapsedDays + "일\n" +
-               "남은 횟수: 0회 (다 씀)\n\n" +
-               "이 회원은 수강 기간이 종료되었고 횟수도 다 썼는데, 마감된 지 " + elapsedDays + "일 동안 아직 재등록을 하지 않고 계십니다. " +
-               "다져놓은 운동 습관과 건강한 루틴이 멈추지 않도록, 부담을 주지 않으면서 다시 함께 땀 흘리던 열정을 회복하여 재등록하고 복귀할 수 있도록 친근하고 자연스럽게 마음을 끄는 메시지를 써주세요.";
-    } else {
-      prompt = "회원 이름: " + cleanName + "\n" +
-               "수강권 만료 경과일: " + elapsedDays + "일\n" +
-               "남은 횟수: " + remain + "회 (아깝게 남은 상태로 만료됨)\n\n" +
-               "이 회원은 수강 기간이 만료되었는데 소중한 남은 횟수(" + remain + "회)가 잠겨버린 지 벌써 " + elapsedDays + "일이 지났습니다. " +
-               "이번 주 내로 복귀(재등록)하시면 원장님 특별 웰컴백 서비스로 잠겨있는 횟수를 전량 보너스로 되살려 얹어드리겠다는 특급 혜택을 다정하고 위트 있게 안내하며 복귀를 소생시키는 메시지를 써주세요.";
-    }
-  }
+  var prompt = "■ 회원 상황 정보\n" +
+               "- 회원 이름: " + cleanName + "\n" +
+               "- 미출석/만료 경과일: " + elapsedDays + "일\n" +
+               "- 회원권 잔여 횟수: " + remain + "회\n" +
+               "- 분류 유형: " + type + " (" + (type === "장기미방문" ? "결석 중" : "수강 마감 상태") + ")\n" +
+               "- 발송 예정 채널: " + channelInfo + "\n\n" +
+               "■ [중요] 최근 메시지 발송 이력 (시공간 순)\n" +
+               recentHistoryText + "\n\n" +
+               "위 상황 정보와 최근 발송 히스토리를 꿰뚫어 보고, 이 회원에게 다음 단계로 전달할 가장 자연스럽고 마음을 끄는 최고의 넥스트 " + channelInfo + " 문장을 새로 작성해 주세요.";
   
   var aiMsg = callGeminiBackend(prompt, systemInstruction);
   
@@ -7227,6 +7324,162 @@ function generateWellnessAiSms(name, remain, elapsedDays, type) {
   }
   
   return aiMsg;
+}
+
+/**
+ * 📱 [v64.40] 특정 회원의 최근 모바일 앱 활동(로그인/다이어리 등) 여부 검사기
+ * '일일_활동_기록' 시트를 스캔하여 최근 limitDays 일 동안 해당 회원의 활동 내역이 1건이라도 있는지 판단합니다.
+ */
+function hasMemberActiveInApp(phone, limitDays) {
+  try {
+    var cleanPhone = String(phone || "").replace(/[^0-9]/g, "");
+    if (!cleanPhone) return false;
+    
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("일일_활동_기록");
+    if (!sheet) return false;
+    
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return false;
+    
+    // 최근 800줄만 스캔하여 속도 최적화
+    var startRow = Math.max(2, lastRow - 800);
+    var numRows = lastRow - startRow + 1;
+    var data = sheet.getRange(startRow, 1, numRows, 3).getDisplayValues();
+    
+    var now = new Date();
+    var limitMs = limitDays * 24 * 60 * 60 * 1000;
+    
+    for (var i = data.length - 1; i >= 0; i--) {
+      var row = data[i];
+      var rowPhone = String(row[1] || "").replace(/[^0-9]/g, "");
+      
+      if (rowPhone === cleanPhone || (cleanPhone.length >= 8 && rowPhone.endsWith(cleanPhone.substring(cleanPhone.length - 8)))) {
+        var logDateStr = row[0];
+        if (logDateStr) {
+          var logDate = new Date(logDateStr);
+          var diffMs = now.getTime() - logDate.getTime();
+          if (diffMs <= limitMs) {
+            return true; // 최근 limitDays 일 내에 앱 활동이 존재함!
+          }
+        }
+      }
+    }
+    return false;
+  } catch (e) {
+    Logger.log("🚨 hasMemberActiveInApp 오류: " + e.toString());
+    return false;
+  }
+}
+
+/**
+ * 🤖 [v64.40] 수동 발송용 AI 메시지 초안 생성기 (Gemini API & 히스토리 융합형)
+ * 원장님이 관리자 에디터에서 수동으로 개인쪽지/공지 등을 작성할 때 AI가 상황 정보 및 히스토리를
+ * 100% 수집하여 감성 넘치는 초정밀 맞춤 초안을 기획해 줍니다.
+ */
+function generateAiDraftForManualMessage(payload) {
+  try {
+    var rawPhone = String(payload.phone || "");
+    var name = String(payload.name || "");
+    var memo = String(payload.memo || "").trim();
+    var targetType = String(payload.targetType || "personal"); // personal 또는 global
+    
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    
+    if (targetType === "global") {
+      // 1. 단체 공지 사항 작문 시나리오
+      var systemInstruction = "당신은 제주 노형점핑클럽의 열정적인 '이장님(원장님)'이자 친근한 건강 메신저입니다. " +
+                              "클럽 전체 모험가(회원)들에게 공지할 감성 넘치고 모험심을 자극하는 멋진 공지문 본문을 써주세요. " +
+                              "어투는 다정하고 활기차게 이모티콘을 활용해 주세요.";
+      var prompt = "원장님의 공지 요지 지시사항: [" + (memo || "일반 유쾌한 건강 다이어리 피드백 및 안부 인사") + "]\n\n" +
+                   "위 지시사항을 멋지게 가공하여 전체 주민들이 기쁜 마음으로 동참할 만한 150자 내외의 세련된 공지문 본문을 한 판 써주세요.";
+      var draft = callGeminiBackend(prompt, systemInstruction);
+      return { success: true, draft: draft || "공지 사항을 적어보세요! ❤️" };
+    }
+    
+    // 2. 개별 1:1 쪽지 작문 시나리오 (프로필 + 최근 발송 히스토리 자동 추출)
+    var cleanPhone = rawPhone.replace(/[^0-9]/g, "");
+    var regSheet = ss.getSheetByName("등록 현황");
+    
+    var remain = 0;
+    var elapsedDays = 0;
+    var status = "만료";
+    
+    if (regSheet && cleanPhone) {
+      var regData = regSheet.getDataRange().getDisplayValues();
+      var regCols = getRegColumnIndices(regSheet);
+      
+      // 해당 폰 번호의 만료일과 횟수 스캔
+      var now = new Date();
+      var lastExpire = new Date(0);
+      var isActive = false;
+      
+      for (var i = 1; i < regData.length; i++) {
+        var rowPhone = String(regData[i][regCols.phone] || "").replace(/[^0-9]/g, "");
+        if (rowPhone === cleanPhone || (cleanPhone.length >= 8 && rowPhone.endsWith(cleanPhone.substring(cleanPhone.length - 8)))) {
+          var rowStatus = String(regData[i][regCols.status] || "").trim();
+          var rowRemain = parseInt(regData[i][regCols.remain]) || 0;
+          var rowExpireStr = regData[i][regCols.expire];
+          
+          remain += rowRemain;
+          if (rowStatus === "진행중" || rowStatus === "진행 중") isActive = true;
+          if (rowExpireStr) {
+            var expDate = new Date(rowExpireStr);
+            if (expDate > lastExpire) lastExpire = expDate;
+          }
+        }
+      }
+      
+      status = isActive ? "장기미방문" : "복귀권유";
+      if (lastExpire.getTime() > 0 && lastExpire < now) {
+        var diffMs = now.getTime() - lastExpire.getTime();
+        elapsedDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      } else {
+        // 출석 기록 스캔 (결석 일수 구하기)
+        var logSheet = ss.getSheetByName("출석기록");
+        if (logSheet) {
+          var logData = logSheet.getDataRange().getDisplayValues();
+          var logCols = getLogColumnIndices(logSheet);
+          var lastAttendance = new Date(0);
+          for (var j = 1; j < logData.length; j++) {
+            var logPhone = String(logData[j][logCols.phone] || "").replace(/[^0-9]/g, "");
+            if (logPhone === cleanPhone || (cleanPhone.length >= 8 && logPhone.endsWith(cleanPhone.substring(cleanPhone.length - 8)))) {
+              var logDate = new Date(logData[j][logCols.date]);
+              if (logDate > lastAttendance) lastAttendance = logDate;
+            }
+          }
+          if (lastAttendance.getTime() > 0) {
+            var diffMs = now.getTime() - lastAttendance.getTime();
+            elapsedDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          }
+        }
+      }
+    }
+    
+    var recentHistoryText = getMemberMessageHistory(cleanPhone);
+    var cleanName = name.replace(/\d{4}$/, ""); // 이름 끝 숫자 제거
+    
+    var systemInstruction = "당신은 제주 노형점핑클럽의 다정한 '이장님(원장님)'이자 최고의 헬스 코치입니다. " +
+                            "원장님이 특정 회원에게 1:1로 직접 보낼 '감성 케어 편지/쪽지'의 명품 본문을 작성해야 합니다.\n" +
+                            "제공되는 [최근 메시지 발송 이력]과 [원장님의 작문 메모]를 100% 정밀 분석하여, " +
+                            "중복 멘트를 완벽 방어하고 회원과 1:1로 친근하게 속삭이는 감동적인 다이어리 피드백/안부 쪽지를 지어내십시오.";
+    
+    var prompt = "■ 수신인 회원 정보\n" +
+                 "- 회원 이름: " + cleanName + "\n" +
+                 "- 잔여 수강 횟수: " + remain + "회\n" +
+                 "- 미출석/만료 경과일: " + elapsedDays + "일 (" + status + " 상태)\n" +
+                 "- 원장님의 직접 지시사항(작문 요지): [" + (memo || "다정하고 편안하게 안부와 건강 챙기기") + "]\n\n" +
+                 "■ 최근 발송 히스토리\n" +
+                 recentHistoryText + "\n\n" +
+                 "위 상황과 최근 대화 히스토리 및 원장님의 지시 메모를 결합하여, 회원의 가슴을 뭉클하게 할 150자~200자 내외의 명품 1:1 쪽지 초안 본문을 작성해 주세요.";
+    
+    var draft = callGeminiBackend(prompt, systemInstruction);
+    return { success: true, draft: draft || "지현님, 오늘 날씨가 참 좋은데 클럽에서 힐링하러 오세요! ❤️" };
+    
+  } catch (e) {
+    Logger.log("🚨 generateAiDraftForManualMessage 오류: " + e.toString());
+    return { success: false, error: e.toString() };
+  }
 }
 
 /**
