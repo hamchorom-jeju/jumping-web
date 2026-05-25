@@ -4964,6 +4964,8 @@ function autoRefreshSmsLists() {
     // 다시 추출
 
 
+    checkLongTermAbsentees();         // 💌 [자동화] 7일 이상 장기 미방문자 안부 문자 자동 스캔 적재!
+    checkInactiveMembers();          // 🔄 [자동화] 14일 이상 장기 미등록자 복귀 권유 문자 자동 스캔 적재!
     checkInactivityDebuffAbsentees(); // [v46.35] 연속 미출석 결석 디버프 대기열 추가
     
     Logger.log("SMS 발송 대기 목록 자동 최신화 완료");
