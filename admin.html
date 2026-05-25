@@ -4473,6 +4473,12 @@
     }
 
     window.addEventListener('popstate', function (e) {
+      // 🛡️ [Vercel Bridge 중복 실행 예방] 만약 bridge.js의 전역 모달 백버튼 스택이 활성화되어 있다면,
+      // 뒤로가기 흐름이 이중으로 격발되어 하위 목록 모달까지 한꺼번에 철거되는 현상을 완벽 차단하기 위해 이 로컬 리스너는 조용히 복귀합니다.
+      if (window.globalModalHistoryStack && window.globalModalHistoryStack.length > 0) {
+        return;
+      }
+
       const openModals = document.querySelectorAll('.modal-overlay.show');
       if (openModals.length > 0) {
         // 가장 마지막에 열린(가장 위에 있는) 모달 찾기
@@ -4524,12 +4530,6 @@
 
     const originalOpenPersonalNotiModal = openPersonalNotiModal;
     openPersonalNotiModal = function() { originalOpenPersonalNotiModal(); pushModalState(); };
-
-    const originalShowWorkLogDetail = showWorkLogDetail;
-    showWorkLogDetail = function(idx) { originalShowWorkLogDetail(idx); pushModalState(); };
-
-    const originalOpenSalesDetailModal = openSalesDetailModal;
-    openSalesDetailModal = function(dateStr) { originalOpenSalesDetailModal(dateStr); pushModalState(); };
   </script>
   <script>
     if ('serviceWorker' in navigator) {
