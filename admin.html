@@ -3327,17 +3327,62 @@
       document.getElementById('rankingConsoleStep2').style.display = 'none';
     }
 
+    function getWeekLabelForDate(date) {
+      const day = date.getDay();
+      const diffToThu = (day + 3) % 7; 
+      const thu = new Date(date.getFullYear(), date.getMonth(), date.getDate() - diffToThu);
+      
+      const year = thu.getFullYear();
+      const month = thu.getMonth() + 1;
+      
+      const firstDayOfMonth = new Date(year, thu.getMonth(), 1);
+      const firstThu = new Date(year, thu.getMonth(), 1);
+      const firstDayOfWeek = firstDayOfMonth.getDay();
+      const diffToFirstThu = (4 - firstDayOfWeek + 7) % 7;
+      firstThu.setDate(1 + diffToFirstThu);
+      firstThu.setHours(0, 0, 0, 0);
+      
+      let weekNum = 1;
+      if (thu >= firstThu) {
+        weekNum = Math.floor((thu.getDate() - firstThu.getDate()) / 7) + 1;
+      } else {
+        const prevMonth = new Date(year, thu.getMonth(), 0);
+        return getWeekLabelForDate(prevMonth);
+      }
+      return `${month}월 ${weekNum}주차`;
+    }
+
+    function getCurrentWeekLabel() {
+      return getWeekLabelForDate(new Date());
+    }
+
+    function getCurrentMonthLabel() {
+      const now = new Date();
+      return `${now.getMonth() + 1}월`;
+    }
+
     function renderPeriodList(periods) {
       const listEl = document.getElementById('rankingPeriodList');
       let html = '';
       
-      const liveText = selectedRankingCategory === 'weekly' ? '실시간 이번주 주간 랭킹' : '실시간 이번달 월간 랭킹';
-      const suffix = selectedRankingCategory === 'weekly' ? '주간 랭킹' : '월간 랭킹';
-      html += `<button class="m-btn m-btn-jumping" onclick="selectRankingPeriod('live')">⚡ ${liveText}</button>`;
-      
-      periods.forEach(p => {
-        html += `<button class="m-btn" style="background: rgba(255,255,255,0.03); color: white; border: 1px solid rgba(255,255,255,0.06);" onclick="selectRankingPeriod('${p}')">📅 ${p} ${suffix}</button>`;
-      });
+      if (selectedRankingCategory === 'weekly') {
+        const currentWeek = getCurrentWeekLabel(); // 예: "5월 3주차"
+        html += `<button class="m-btn" style="background: linear-gradient(135deg, #8a2be2, #6a1b9a); color: white; border: none; font-weight: 800;" onclick="selectRankingPeriod('live')">⚡ ${currentWeek} 주간 랭킹</button>`;
+        
+        periods.forEach(p => {
+          const cleanP = p.endsWith('차') ? p : p + '차';
+          // 현재 실시간 주차와 겹치는 과거 아카이브가 있다면 생략하거나 그냥 띄워줍니다.
+          html += `<button class="m-btn" style="background: rgba(255,255,255,0.03); color: white; border: 1px solid rgba(255,255,255,0.06);" onclick="selectRankingPeriod('${p}')">📅 ${cleanP} 주간 랭킹</button>`;
+        });
+      } else {
+        const currentMonth = getCurrentMonthLabel(); // 예: "5월"
+        html += `<button class="m-btn" style="background: linear-gradient(135deg, #8a2be2, #6a1b9a); color: white; border: none; font-weight: 800;" onclick="selectRankingPeriod('live')">⚡ ${currentMonth} 월간 랭킹</button>`;
+        
+        periods.forEach(p => {
+          const cleanP = p.endsWith('월') ? p : p + '월';
+          html += `<button class="m-btn" style="background: rgba(255,255,255,0.03); color: white; border: 1px solid rgba(255,255,255,0.06);" onclick="selectRankingPeriod('${p}')">📅 ${cleanP} 월간 랭킹</button>`;
+        });
+      }
       
       listEl.innerHTML = html;
       
@@ -3349,9 +3394,16 @@
       selectedRankingPeriod = period;
       const titleEl = document.getElementById('selectedPeriodTitle');
       const suffix = selectedRankingCategory === 'weekly' ? '주간 랭킹' : '월간 랭킹';
-      titleEl.innerText = period === 'live' 
-        ? (selectedRankingCategory === 'weekly' ? '⚡ 실시간 이번주 주간 랭킹' : '⚡ 실시간 이번달 월간 랭킹')
-        : `📅 ${period} ${suffix} 조회`;
+      
+      let displayTitle = '';
+      if (period === 'live') {
+        const liveLabel = selectedRankingCategory === 'weekly' ? getCurrentWeekLabel() : getCurrentMonthLabel() + ' 월간';
+        displayTitle = `⚡ 실시간 ${liveLabel} ${suffix}`;
+      } else {
+        const cleanP = period.endsWith('차') || period.endsWith('월') ? period : period + (selectedRankingCategory === 'weekly' ? '차' : '월');
+        displayTitle = `📅 ${cleanP} ${suffix} 조회`;
+      }
+      titleEl.innerText = displayTitle;
       
       showLoading("상세 성적을 집계하는 중...");
       
