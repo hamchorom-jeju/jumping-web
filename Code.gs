@@ -553,8 +553,9 @@ function getUserDashboardData(payload) {
               activeInbodySnapshot = record;
             }
           }
-          if (iDate <= startOfSeason) {
-            if (!season0WeekInbody || iDate > season0WeekInbody.date) {
+          // [v65.70] 당월 1일 ~ 수학적 1주차 마감 수요일 사이에 등록된 최초 기록을 월초 기준 인바디로 설정!
+          if (iDate >= startOfSeason && iDate <= baselineDeadline) {
+            if (!season0WeekInbody || iDate < season0WeekInbody.date) {
               season0WeekInbody = record;
             }
           }
@@ -566,11 +567,7 @@ function getUserDashboardData(payload) {
       }
     }
 
-    if (!season0WeekInbody) {
-      season0WeekInbody = firstEverInbody;
-    }
-
-    // 인바디 개선 점수 연산 헬퍼 호출 (옵션 B: 최초 체지방량 대비 체지방 감소율 1%당 200점)
+    // 인바디 개선 점수 연산 헬퍼 호출
     function calculateInbodyScoreHelper(first, current) {
       if (!first || !current) return 0;
       var score = 0;
@@ -591,14 +588,17 @@ function getUserDashboardData(payload) {
       if (diffW >= 8.0 || fatLossRate >= 20.0) {
         score += 1500;
       }
-      
       if (Math.abs(diffW) <= 0.2) score += 100;
       return score;
     }
 
-    var inbodyLifetimeScore = calculateInbodyScoreHelper(firstEverInbody, latestInbody || activeInbodySnapshot);
+    // 평생 최초와 최신 기록이 동일한 기록 1개뿐인 경우(자기 대조) 점수 0점
+    var inbodyLifetimeScore = 0;
+    if (firstEverInbody && latestInbody && firstEverInbody !== latestInbody) {
+      inbodyLifetimeScore = calculateInbodyScoreHelper(firstEverInbody, latestInbody);
+    }
     
-    // [v46.42] 주간 및 시즌(월간) 인바디 점수 정밀 계산 (과거 기록이 주간/월간에 잘못 합산되는 오류 수정)
+    // [v46.42] 주간 및 시즌(월간) 인바디 점수 정밀 계산 (v65.70 strict rules)
     var inbodyWeeklyScore = 0;
     var inbodySeasonScore = 0;
     
@@ -606,7 +606,7 @@ function getUserDashboardData(payload) {
     if (currentInbody) {
       // (1) 주간 인바디 점수: 이번 주(startOfWeek 이후)에 측정된 기록이 있을 때만 반영!
       if (currentInbody.date >= startOfWeek) {
-        // 이번 주 직전의 최신 기록을 탐색하여 순수 주간 변화를 구하거나, 없으면 최초 기록 대비로 계산합니다.
+        // 이번 주 목요일 이전의 가장 최근 기록이되, 목요일 기준 7일(7.5일 마진) 이내인 지난주 기록만 탐색!
         var prevBeforeThisWeek = null;
         if (inbodySheet && inData) {
           for (var k = 1; k < inData.length; k++) {
@@ -614,27 +614,34 @@ function getUserDashboardData(payload) {
             if (recPhone === phone) {
               var iDate = new Date(inData[k][0]);
               if (iDate < startOfWeek) {
-                if (!prevBeforeThisWeek || iDate > prevBeforeThisWeek.date) {
-                  prevBeforeThisWeek = {
-                    date: iDate,
-                    weight: Number(inData[k][3] || 0),
-                    muscle: Number(inData[k][4] || 0),
-                    fat: Number(inData[k][5] || 0)
-                  };
+                var timeDiff = startOfWeek.getTime() - iDate.getTime();
+                var diffDays = timeDiff / (1000 * 60 * 60 * 24);
+                if (diffDays <= 7.5) { // 7.5일 이내 지난주 기록 한정
+                  if (!prevBeforeThisWeek || iDate > prevBeforeThisWeek.date) {
+                    prevBeforeThisWeek = {
+                      date: iDate,
+                      weight: Number(inData[k][3] || 0),
+                      muscle: Number(inData[k][4] || 0),
+                      fat: Number(inData[k][5] || 0)
+                    };
+                  }
                 }
               }
             }
           }
         }
-        var baseRecord = prevBeforeThisWeek || firstEverInbody;
-        inbodyWeeklyScore = calculateInbodyScoreHelper(baseRecord, currentInbody);
+        // 지난주 기록(prevBeforeThisWeek)이 있을 때만 주간 점수 부여! 없으면 무조건 0점.
+        if (prevBeforeThisWeek) {
+          inbodyWeeklyScore = calculateInbodyScoreHelper(prevBeforeThisWeek, currentInbody);
+        }
       }
       
-      // (2) 시즌(월간) 인바디 점수: 이번 시즌(startOfSeason 이후)에 측정된 기록이 있을 때만 반영!
-      if (currentInbody.date >= startOfSeason) {
+      // (2) 시즌(월간) 인바디 점수: 월초 첫 주 기준 기록(season0WeekInbody)이 있고, 본인 최신 기록이 다를 때만 반영!
+      if (season0WeekInbody && currentInbody && season0WeekInbody !== currentInbody) {
         inbodySeasonScore = calculateInbodyScoreHelper(season0WeekInbody, currentInbody);
       }
     }
+
 
     // [v46.35] 연속 미출석(결석) 페널티 계산 (출석 시 즉시 부활!)
     var lastAttendanceDate = null;
@@ -819,12 +826,31 @@ function clearUserDashboardCache(phone) {
 }
 
 /**
- * [v44.160] 인바디 기록 저장 및 v39 자동 점수 계산
+ * [v44.160] 인바디 기록 저장 및 v39 자동 점수 계산 (주간/월간/토탈 3단 점수 정교화 패치 v65.70)
  */
 function submitInBodyRecord(payload) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("33챌린지_인바디") || ss.insertSheet("33챌린지_인바디");
+    
+    // [마이그레이션 가드] 기존 9열 포맷("변화점수")을 11열 포맷("주간/월간/토탈변화점수")으로 자동 변환
+    if (sheet.getLastRow() > 0) {
+      var firstRowValues = sheet.getRange(1, 1, 1, 9).getValues()[0];
+      var headerG = String(firstRowValues[6] || "").trim();
+      if (headerG === "변화점수" || headerG === "변화 점수") {
+        sheet.getRange(1, 1, 1, 11).setValues([[
+          "측정일", "회원명", "연락처", "체중", "골격근량", "체지방률", 
+          "주간변화점수", "월간변화점수", "토탈변화점수", "비고", "등록일"
+        ]]);
+        SpreadsheetApp.flush();
+      }
+    } else {
+      // 신규 시트인 경우 헤더 생성
+      sheet.appendRow([
+        "측정일", "회원명", "연락처", "체중", "골격근량", "체지방률", 
+        "주간변화점수", "월간변화점수", "토탈변화점수", "비고", "등록일"
+      ]);
+    }
     
     var name = payload.name;
     var phone = formatPhoneNumber(payload.phone).replace(/[^0-9]/g, "");
@@ -832,7 +858,6 @@ function submitInBodyRecord(payload) {
     var muscle = Number(payload.muscle);
     var fat = Number(payload.fat);
     
-    // [v46.39] 측정 날짜 먼저 계산!
     var dateValue = new Date();
     if (payload.customDate) {
       var parts = payload.customDate.split('-');
@@ -844,75 +869,172 @@ function submitInBodyRecord(payload) {
     
     var targetDateStr = Utilities.formatDate(dateValue, "GMT+9", "yyyy-MM-dd");
 
-    // 이전 기록 찾기 & 동일한 날짜의 기존 기록(중복) 찾기
+    // 1. 전체 이력 조회 및 동일 날짜 중복 검사
     var data = sheet.getDataRange().getValues();
-    var prevRecord = null;
-    var prevDate = null;
-    var existingRowIndex = -1; // 동일 날짜 중복 행 인덱스
+    var existingRowIndex = -1;
+    var userRecords = [];
     
+    // G열이 주간변화점수 등 11열 포맷으로 매핑되었으므로, 헤더가 아닌 데이터 행을 안전하게 정밀 스캔
     for (var i = 1; i < data.length; i++) {
-      if (formatPhoneNumber(data[i][2]).replace(/[^0-9]/g, "") === phone) {
+      var rowPhone = formatPhoneNumber(data[i][2]).replace(/[^0-9]/g, "");
+      if (rowPhone === phone) {
         var rowDate = new Date(data[i][0]);
-        var rowDateStr = Utilities.formatDate(rowDate, "GMT+9", "yyyy-MM-dd");
+        if (isNaN(rowDate.getTime())) continue;
         
+        var rowDateStr = Utilities.formatDate(rowDate, "GMT+9", "yyyy-MM-dd");
         if (rowDateStr === targetDateStr) {
-          existingRowIndex = i + 1; // 1-based index for Google Sheets
-        } else if (rowDate < dateValue) {
-          // 신규 측정일보다 과거인 기록 중 가장 최신 것!
-          if (!prevDate || rowDate > prevDate) {
-            prevDate = rowDate;
-            prevRecord = { weight: data[i][3], muscle: data[i][4], fat: data[i][5] };
-          }
+          existingRowIndex = i + 1; // 동일 날짜 중복
         }
+        
+        userRecords.push({
+          date: rowDate,
+          weight: Number(data[i][3] || 0),
+          muscle: Number(data[i][4] || 0),
+          fat: Number(data[i][5] || 0)
+        });
       }
     }
     
-    var changeScore = 0;
-    if (prevRecord) {
-      // v45.6 원장님 상향 배점 적용
-      var diffWeight = Number((prevRecord.weight - weight).toFixed(2)); 
-      var diffMuscle = Number((muscle - prevRecord.muscle).toFixed(2)); 
-      var diffFat = Number((prevRecord.fat - fat).toFixed(1)); 
-      
-      if (diffWeight > 0) changeScore += (diffWeight * 10) * 50;  
-      if (diffMuscle > 0) changeScore += (diffMuscle * 10) * 200; // 100g당 200점 (1kg=2000점)
-      if (diffFat > 0) changeScore += (diffFat * 10) * 100;   // 0.1%당 100점 (1%=1000점)
-      
-      // 유지 보너스 (+100)
-      if (Math.abs(diffWeight) <= 0.2) changeScore += 100;
-    }
-    
-    // [v46.39] 전용 9번째 열(I열)을 추가하여 등록일(Record Date) 기록!
-    var uploadDate = new Date();
-    
     if (existingRowIndex > -1) {
-      // [v46.40] 동일 날짜에 기록이 이미 존재하면 아예 등록을 차단하고 팝업으로 정중하게 안내합니다 (중복 및 무단 수정 방지!)
       return { 
         success: false, 
         error: "선택하신 측정 날짜(" + targetDateStr + ")에 이미 등록된 인바디 기록이 존재합니다!\n\n중복 등록은 불가하오니 날짜를 다시 확인해 주세요. 만약 수치 오입력으로 기존 기록의 수정을 원하시는 경우 웰니스 코치에게 직접 요청해 주시기 바랍니다! 😊" 
       };
-    } else {
-      // 기존 기록이 없으면 신규 행 추가
-      sheet.appendRow([
-        dateValue,              // Column A: 측정일 (Measurement Date)
-        name,                   // Column B: 회원명
-        "'" + phone,            // Column C: 연락처
-        weight,                 // Column D: 체중
-        muscle,                 // Column E: 골격근량
-        fat,                    // Column F: 체지방률
-        changeScore,            // Column G: 변화점수
-        payload.remarks || "",  // Column H: 비고
-        uploadDate              // Column I: 등록일 (Record Date / Submission Date)
-      ]);
     }
     
+    // 2. 신규 등록 데이터를 포함한 가상의 이력 시뮬레이션용 배열 구성 (날짜순 정렬)
+    var currentInbody = { date: dateValue, weight: weight, muscle: muscle, fat: fat };
+    var simulatedRecords = userRecords.slice();
+    simulatedRecords.push(currentInbody);
+    simulatedRecords.sort(function(a, b) { return a.date - b.date; });
     
-    // [perf] 인바디 업로드 완료 시 캐시 즉시 제거
+    // 3. 인바디 점수 연산 공통 헬퍼
+    function calculateInbodyScoreHelper(first, current) {
+      if (!first || !current) return 0;
+      var score = 0;
+      var diffW = Number((first.weight - current.weight).toFixed(2));
+      var diffM = Number((current.muscle - first.muscle).toFixed(2));
+      var diffFat = Number((first.fat - current.fat).toFixed(1));
+      
+      if (diffW > 0) score += (diffW * 10) * 50;
+      if (diffM > 0) score += (diffM * 10) * 200;
+      if (diffFat > 0) score += (diffFat * 10) * 100;
+      
+      var firstFatMass = first.weight * (first.fat / 100);
+      var currentFatMass = current.weight * (current.fat / 100);
+      var fatLossRate = 0;
+      if (firstFatMass > 0) {
+        fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
+      }
+      if (diffW >= 8.0 || fatLossRate >= 20.0) {
+        score += 1500;
+      }
+      if (Math.abs(diffW) <= 0.2) score += 100;
+      return score;
+    }
+    
+    // 4. 날짜 기준점 계산
+    // (1) 이번 주 목요일 구하기
+    var day = dateValue.getDay();
+    var diffToThu = (day + 3) % 7; 
+    var startOfWeek = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate() - diffToThu);
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    // (2) 월초 시작일 및 수학적 1주차 수요일 마감 마일스톤 구하기
+    var year = dateValue.getFullYear();
+    var month = dateValue.getMonth();
+    var startOfMonth = new Date(year, month, 1, 0, 0, 0, 0);
+    
+    // [원장님 선포 규칙] 1일 이후 도래하는 첫 수요일
+    var firstDayOfWeek = startOfMonth.getDay(); // 0(일)~6(토)
+    var diffToWed = (3 - firstDayOfWeek + 7) % 7;
+    var baselineDeadline = new Date(year, month, 1 + diffToWed);
+    var hasWedHoliday = isCenterHoliday(baselineDeadline);
+    if (hasWedHoliday) {
+      baselineDeadline.setDate(baselineDeadline.getDate() + 1); // 공휴일 시 목요일 연장
+    }
+    baselineDeadline.setHours(23, 59, 59, 999);
+    
+    // 5. 기준 대조 기록 필터링
+    var firstEver = null;
+    var prevBeforeThisWeek = null;
+    var baselineRecord = null;
+    
+    for (var rIdx = 0; rIdx < simulatedRecords.length; rIdx++) {
+      var r = simulatedRecords[rIdx];
+      
+      // A. 평생 최초 기록 구하기
+      if (!firstEver || r.date < firstEver.date) {
+        firstEver = r;
+      }
+      
+      // B. 지난주 인바디 구하기: 이번 주 목요일 이전의 가장 최근 기록이되, 목요일 기준 7일(7.5일 마진) 이내인 것!
+      if (r.date < startOfWeek) {
+        var timeDiff = startOfWeek.getTime() - r.date.getTime();
+        var diffDays = timeDiff / (1000 * 60 * 60 * 24);
+        if (diffDays <= 7.5) { // 지난주 측정일 범위 내
+          if (!prevBeforeThisWeek || r.date > prevBeforeThisWeek.date) {
+            prevBeforeThisWeek = r;
+          }
+        }
+      }
+      
+      // C. 월초 기준 인바디 구하기: 당월 1일 ~ 1주차 마감 수요일 사이의 첫 기록
+      if (r.date >= startOfMonth && r.date <= baselineDeadline) {
+        if (!baselineRecord || r.date < baselineRecord.date) {
+          baselineRecord = r;
+        }
+      }
+    }
+    
+    // 6. 3단 점수 정밀 연산
+    var weeklyScore = 0;
+    var monthlyScore = 0;
+    var totalScore = 0;
+    
+    // 최초 기록과 본인의 기록이 단 1개뿐인 경우(자기 대조) 점수 0점
+    if (firstEver && firstEver !== currentInbody) {
+      totalScore = calculateInbodyScoreHelper(firstEver, currentInbody);
+    }
+    
+    if (prevBeforeThisWeek) {
+      weeklyScore = calculateInbodyScoreHelper(prevBeforeThisWeek, currentInbody);
+    }
+    
+    if (baselineRecord && baselineRecord !== currentInbody) {
+      monthlyScore = calculateInbodyScoreHelper(baselineRecord, currentInbody);
+    }
+    
+    // 7. 시트에 3단 확장 포맷으로 영구 기입
+    var uploadDate = new Date();
+    sheet.appendRow([
+      dateValue,              // Column A: 측정일 (Measurement Date)
+      name,                   // Column B: 회원명
+      "'" + phone,            // Column C: 연락처
+      weight,                 // Column D: 체중
+      muscle,                 // Column E: 골격근량
+      fat,                    // Column F: 체지방률
+      weeklyScore,            // Column G: 주간변화점수 [NEW]
+      monthlyScore,           // Column H: 월간변화점수 [NEW]
+      totalScore,             // Column I: 토탈변화점수 [NEW]
+      payload.remarks || "",  // Column J: 비고
+      uploadDate              // Column K: 등록일 (Record Date)
+    ]);
+    
+    // [perf] 인바디 업로드 완료 시 대시보드 캐시 즉시 파괴
     clearUserDashboardCache(phone);
     
-    return { success: true, score: changeScore };
-  } catch (e) { return { success: false, error: e.toString() }; }
+    return { 
+      success: true, 
+      weeklyScore: weeklyScore, 
+      monthlyScore: monthlyScore, 
+      totalScore: totalScore 
+    };
+  } catch (e) { 
+    return { success: false, error: e.toString() }; 
+  }
 }
+
 
 /**
  * [입장] 전화번호 뒷자리로 회원 검색 (키오스크 스타일 v44.148)
