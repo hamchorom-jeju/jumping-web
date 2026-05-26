@@ -561,31 +561,32 @@
       <input type="file" id="file-input-inbody-camera" hidden accept="image/*" capture="camera" onchange="previewInbodyImage(this)">
       <input type="file" id="file-input-inbody-album" hidden accept="image/*" onchange="previewInbodyImage(this)">
 
-      <!-- AI 분석된 수치 입력 폼 -->
-      <div id="inbody-scan-result-form" style="display: none; margin-top: 15px; background: #f3f4f6; padding: 15px; border-radius: 20px; border: 1px solid #e5e7eb;">
-        <div style="font-size: 0.85rem; font-weight: 900; color: #4f46e5; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-          ✨ 지니 AI 분석 완료 (직접 수정 가능)
+      <!-- AI 분석된 수치 입력 폼 (🔒 보안 잠금: 어뷰징 방지 readonly 필터 탑재) -->
+      <div id="inbody-scan-result-form" style="display: none; margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 20px; border: 1.5px solid #cbd5e1;">
+        <div style="font-size: 0.85rem; font-weight: 900; color: #475569; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+          🛡️ 지니 AI 공식 판독 (변조 방지 잠금)
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px;">
           <div>
-            <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">체중(kg)</label>
-            <input type="number" id="inbody-scan-weight" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
+            <label style="font-size: 0.7rem; font-weight: 800; color: #64748b;">체중(kg)</label>
+            <input type="number" id="inbody-scan-weight" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; cursor: not-allowed;" step="0.1" readonly>
           </div>
           <div>
-            <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">골격근량(kg)</label>
-            <input type="number" id="inbody-scan-muscle" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
+            <label style="font-size: 0.7rem; font-weight: 800; color: #64748b;">골격근량(kg)</label>
+            <input type="number" id="inbody-scan-muscle" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; cursor: not-allowed;" step="0.1" readonly>
           </div>
           <div>
-            <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563;">체지방률(%)</label>
-            <input type="number" id="inbody-scan-fat" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #fff;" step="0.1">
+            <label style="font-size: 0.7rem; font-weight: 800; color: #64748b;">체지방률(%)</label>
+            <input type="number" id="inbody-scan-fat" class="comment-input" style="margin-top: 3px; font-weight: 800; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; cursor: not-allowed;" step="0.1" readonly>
           </div>
         </div>
-        <div style="margin-bottom: 10px;">
-          <label style="font-size: 0.7rem; font-weight: 800; color: #4b5563; display: block; margin-bottom: 3px;">측정 날짜 (결과지 검사일시)</label>
-          <input type="date" id="inbody-scan-date" class="comment-input" style="font-weight: 800; background: #fff; width: 100%; box-sizing: border-box; border: 1.5px solid var(--v-border); padding: 8px 12px; border-radius: 10px; font-size: 0.8rem;">
+        <div style="margin-bottom: 12px;">
+          <label style="font-size: 0.7rem; font-weight: 800; color: #64748b; display: block; margin-bottom: 3px;">측정 날짜 (결과지 검사일시)</label>
+          <input type="date" id="inbody-scan-date" class="comment-input" style="font-weight: 800; background: #f1f5f9; color: #475569; width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 10px; font-size: 0.8rem; cursor: not-allowed;" readonly>
         </div>
-        <div style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; line-height: 1.3;">
-          * AI 판독이 틀렸을 경우 숫자를 수동으로 올바르게 보정하실 수 있습니다.
+        <div style="font-size: 0.65rem; color: #e11d48; font-weight: 800; line-height: 1.4; background: #fff1f2; padding: 10px; border-radius: 12px; border: 1px solid #ffe4e6; word-break: keep-all;">
+          ⚠️ 공정한 웰니스 시상 제도를 수호하기 위해, AI가 판독한 인바디 수치를 회원이 직접 수정하는 것은 전면 차단되어 있습니다.<br>
+          혹시 검사지 화질이나 빛 반사로 오판독이 발생했을 경우, 등록하지 마시고 웰니스 코치에게 사진을 보내 수정 조치를 요청해 주세요! 🤝
         </div>
       </div>
 
