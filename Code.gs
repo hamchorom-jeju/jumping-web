@@ -8638,20 +8638,61 @@ function saveScheduledQuest(payload) {
       ]);
     }
     
-    // [v64.50] 생텀에서 돌발 퀘스트를 등록(예약)하는 순간에도 '전체_알림_목록' 시트에 1행의 글로벌 예고 알림을 함께 기록 선포합니다!
-    var globalTitle = "📅 [돌발 퀘스트 예고] " + title + " (시행일: " + dateStr + ") ⚡";
-    var globalContent = "📢 [웰니스 코치의 새로운 돌발 퀘스트 예약 선포!] 📢\n\n" +
-                        "새로운 돌발 퀘스트가 캘린더에 예약 등록되었습니다! 미리 챌린지 일정을 대비해 보세요!\n\n" +
-                        "📅 [시행 일자]: " + dateStr + " (당일 자정 마감)\n" +
-                        "🔥 [돌발 퀘스트]: " + title + "\n" +
-                        "📝 [임무 설명]: " + desc + "\n" +
-                        "💎 [보상 EXP]: +" + score + " EXP\n" +
-                        "🎯 [인증 방법]: " + method + " 인증\n\n" +
-                        "당일 자정에 퀘스트가 공식적으로 진행 시작됩니다. 수호 점수 획득을 준비하세요! ⚔️";
-    sendGlobalNotification("quest", globalTitle, globalContent);
-    
-    return { success: true, message: dateStr + "일 자정에 자동 실행되는 돌발 퀘스트가 예약 등록 및 전체 알림 선포 완료되었습니다! 📅⚡" };
+    return { success: true, message: dateStr + "일 당일에 자동 선포되는 돌발 퀘스트 예약 등록이 안전하게 완료되었습니다! 📅⚡" };
   } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * 📅 [매일 스케줄러] 당일 돌발 퀘스트 자동 활성화 및 아침 선포 알림 발송 (v65.0)
+ * 매일 아침(예: 06:00 ~ 08:00 사이) 트리거로 자동 동작하도록 설정합니다.
+ * 당일 시행일인 '대기' 상태의 이장 퀘스트를 찾아 '진행'으로 전환하고 전체 알림 쪽지를 발송합니다.
+ */
+function processScheduledQuestsDaily() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = checkAndCreateQuestRegistrySheet();
+    var data = sheet.getDataRange().getDisplayValues();
+    
+    var now = new Date();
+    var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    var activatedCount = 0;
+    
+    for (var i = 1; i < data.length; i++) {
+      var dateStr = data[i][1]; // B열: 시행일 (yyyy-MM-dd)
+      var type = data[i][2];    // C열: 유형 ("이장")
+      var title = data[i][3];   // D열: 퀘스트명
+      var desc = data[i][4];    // E열: 설명
+      var status = data[i][7];  // H열: 상태 ("대기")
+      var score = Number(data[i][8] || 15);
+      var method = data[i][9] || "사진";
+      
+      if (type === "이장" && dateStr === todayStr && status === "대기") {
+        var rowIdx = i + 1;
+        // 1. 상태를 '진행'으로 변경하여 당일 퀘스트로 공식 표출
+        sheet.getRange(rowIdx, 8).setValue("진행");
+        
+        // 2. 당일 아침 활성화 알림(쪽지)을 회원 전체에게 1회 공식 선포!
+        var globalTitle = "📅 [오늘의 돌발 퀘스트] " + title + " ⚡";
+        var globalContent = "📢 [웰니스 코치의 돌발 퀘스트 오늘 진행 시작!] 📢\n\n" +
+                            "오늘의 돌발 퀘스트가 공식적으로 활성화되었습니다! 오늘의 웰니스 수호에 도전해 보세요!\n\n" +
+                            "📅 [시행 일자]: " + todayStr + " (오늘 밤 자정 마감)\n" +
+                            "🔥 [돌발 퀘스트]: " + title + "\n" +
+                            "📝 [임무 설명]: " + desc + "\n" +
+                            "💎 [보상 EXP]: +" + score + " EXP\n" +
+                            "🎯 [인증 방법]: " + method + " 인증\n\n" +
+                            "오늘 밤 자정 전까지 아카이브 게시판에 인증을 완료해 주세요. 수호 점수 획득을 향해 돌격! ⚔️";
+                            
+        sendGlobalNotification("quest", globalTitle, globalContent);
+        activatedCount++;
+        Logger.log("✅ [돌발퀘스트 활성화] 오늘 자(" + todayStr + ") 퀘스트 '" + title + "' 공식 진행 개시 및 알림 발송 완료!");
+      }
+    }
+    
+    return { success: true, activatedCount: activatedCount };
+  } catch (e) {
+    Logger.log("❌ processScheduledQuestsDaily 에러: " + e.toString());
     return { success: false, error: e.toString() };
   }
 }
