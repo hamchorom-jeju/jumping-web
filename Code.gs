@@ -8890,7 +8890,7 @@ function getAllMemberNames() {
 function getMyInbodyHistory(phone) {
   try {
     if (!phone) return { error: "로그인이 필요합니다." };
-    var cleanPhone = String(phone).replace(/[^0-9]/g, "");
+    var cleanPhone = formatPhoneNumber(phone).replace(/[^0-9]/g, "");
     if (!cleanPhone) return { error: "올바른 연락처 정보가 없습니다." };
 
     var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -8903,7 +8903,8 @@ function getMyInbodyHistory(phone) {
     // 칼럼 매핑 순서:
     // 0: 측정일 | 1: 회원명 | 2: 연락처 | 3: 체중 | 4: 골격근량 | 5: 체지방률 | 6: 변화점수 | 7: 비고 | 8: 등록일
     for (var i = 1; i < data.length; i++) {
-      var rowPhone = String(data[i][2]).replace(/[^0-9]/g, "");
+      var rawPhone = String(data[i][2] || "").trim();
+      var rowPhone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, "");
       if (rowPhone === cleanPhone) {
         var formattedDate = "";
         try {
@@ -8925,8 +8926,11 @@ function getMyInbodyHistory(phone) {
           weight: Number(data[i][3]) || 0,
           muscle: Number(data[i][4]) || 0,
           fat: Number(data[i][5]) || 0,
-          score: Number(data[i][6]) || 0, // 변화점수
-          memo: String(data[i][7] || "") // 비고
+          weeklyScore: Number(data[i][6]) || 0,   // G열: 주간변화점수
+          monthlyScore: Number(data[i][7]) || 0,  // H열: 월간변화점수
+          totalScore: Number(data[i][8]) || 0,    // I열: 토탈변화점수
+          score: (Number(data[i][6]) || 0) + (Number(data[i][7]) || 0) + (Number(data[i][8]) || 0), // 합산 변화점수 (miracle.html 기록보기와 완벽 호환)
+          memo: String(data[i][9] || "")          // J열: 비고
         });
       }
     }
