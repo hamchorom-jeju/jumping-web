@@ -976,6 +976,16 @@ const Village = {
     renderQuestWidgets(quests) {
         if (!quests) return;
         
+        // 💡 [iOS Safari 날짜 파싱 호환성 헬퍼]
+        // 아이폰 Safari는 YYYY-MM-DD 형태의 대시(-) 날짜 문자열을 new Date로 파싱할 때 
+        // Invalid Date 에러(NaN)를 내며 자바스크립트 전체를 중단시키는 결함이 있어,
+        // 대시를 슬래시(/)로 치환하여 파싱 호환성을 보장합니다.
+        const safeParseDate = (dateStr) => {
+            if (!dateStr) return new Date();
+            const cleanStr = String(dateStr).replace(/-/g, '/');
+            return new Date(cleanStr);
+        };
+        
         // 오늘의 돌발 퀘스트는 마을공지 롤링 시스템에 고품격 통합 완료되었습니다. [v58.5]
         
 
@@ -985,8 +995,8 @@ const Village = {
             if (quests.glycogenQuest) {
                 glyWidget.style.display = 'flex';
                 
-                // 남은 시간 계산 (시간 단위)
-                const deadlineTime = new Date(quests.glycogenQuest.deadlineStr).getTime();
+                // 남은 시간 계산 (시간 단위) - safeParseDate 적용
+                const deadlineTime = safeParseDate(quests.glycogenQuest.deadlineStr).getTime();
                 const nowTime = Date.now();
                 const diffMs = deadlineTime - nowTime;
                 const hoursLeft = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60)));
@@ -1029,7 +1039,8 @@ const Village = {
             if (quests.shield && quests.shield.active) {
                 shieldWidget.style.display = 'flex';
                 
-                const expireTime = new Date(quests.shield.expireStr).getTime();
+                // safeParseDate 적용
+                const expireTime = safeParseDate(quests.shield.expireStr).getTime();
                 const nowTime = Date.now();
                 const diffMs = expireTime - nowTime;
                 const daysLeft = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
