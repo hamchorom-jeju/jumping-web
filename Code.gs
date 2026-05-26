@@ -8366,10 +8366,19 @@ function getVillageSettings() {
     
     // [v48.0] 불러올 때도 기존에 시트에 박혀있는 모든 Suno 단축/공유 링크를 오디오 다이렉트 주소로 초고속 해독!
     // 오직 실제 BGM URL 주소 값을 가진 필드들만 엄격히 발라내어 해독 연산 수행! (불리언/설정 플래그 오작동 방지)
+    // 💡 [마법의 백포트 보정 엔진] 원장님이 구글 시트에 직접 날것의 Suno 주소를 복사해 넣더라도, 로드 시 알아서 해독하여 시트 셀에 역저장(자동 변환)합니다!
     var bgmKeys = ["bgm_sun", "bgm_rain", "bgm_snow", "bgm_blossom", "bgm_leaves", "bgmForceUrl", "bgmUrl"];
     bgmKeys.forEach(function(key) {
       if (settings[key]) {
-        settings[key] = resolveSunoUrl(settings[key]);
+        var originalVal = String(settings[key]).trim();
+        var resolvedVal = resolveSunoUrl(originalVal);
+        if (originalVal !== resolvedVal) {
+          settings[key] = resolvedVal;
+          // 만약 해석 전/후 주소가 달라졌다면 시트에도 자동으로 변환된 값을 역저장하여 영구 업데이트!
+          if (keysInSheet[key]) {
+            sheet.getRange(keysInSheet[key], 2).setValue(resolvedVal);
+          }
+        }
       }
     });
     
