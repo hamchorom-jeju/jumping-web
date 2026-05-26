@@ -1852,25 +1852,39 @@
               dateStr = dateStr.substring(2, 10);
             }
             
-            // 점수 색상 디자인 강조
+            // 점수 색상 디자인 강조 (주간, 월간, 평생 3단 변화 분할 매핑)
             let scoreBadge = '';
-            if (Number(r.score) > 0) {
-              scoreBadge = `<span style="background:#e0f2fe; color:#0369a1; border-radius:4px; padding:2px 4px; font-weight:900; font-size:0.65rem;">+${r.score}</span>`;
+            const wScore = Number(r.weeklyScore) || 0;
+            const mScore = Number(r.monthlyScore) || 0;
+            const tScore = Number(r.totalScore) || 0;
+
+            if (wScore > 0 || mScore > 0 || tScore > 0) {
+              let badges = [];
+              if (wScore > 0) {
+                badges.push(`<span style="background:#e0f2fe; color:#0369a1; border-radius:4px; padding:2px 4px; font-weight:900; font-size:0.62rem; display:inline-block; white-space:nowrap; margin:1px 0;">주 +${wScore}</span>`);
+              }
+              if (mScore > 0) {
+                badges.push(`<span style="background:#f3e8ff; color:#6b21a8; border-radius:4px; padding:2px 4px; font-weight:900; font-size:0.62rem; display:inline-block; white-space:nowrap; margin:1px 0;">월 +${mScore}</span>`);
+              }
+              if (tScore > 0) {
+                badges.push(`<span style="background:#fef3c7; color:#b45309; border-radius:4px; padding:2px 4px; font-weight:900; font-size:0.62rem; display:inline-block; white-space:nowrap; margin:1px 0;">평 +${tScore}</span>`);
+              }
+              scoreBadge = `<div style="display:flex; flex-direction:column; gap:2px; align-items:center; padding: 2px 0;">${badges.join('')}</div>`;
             } else if (isFirst) {
-              scoreBadge = `<span style="background:#dbffe6; color:#15803d; border-radius:4px; padding:2px 4px; font-weight:900; font-size:0.62rem;">🌱 최초</span>`;
+              scoreBadge = `<span style="background:#dbffe6; color:#15803d; border-radius:4px; padding:2px 4px; font-weight:900; font-size:0.62rem; display:inline-block; white-space:nowrap;">🌱 최초</span>`;
             } else {
-              scoreBadge = `<span style="color:#a0aec0; font-weight:800;">-</span>`;
+              scoreBadge = `<span style="color:#a0aec0; font-weight:800; font-size:0.65rem;">-</span>`;
             }
 
             html += `
               <tr style="background:${rowBg}; border-bottom:1px solid #edf2f7; font-weight:800; color:#4a5568;">
-                <td style="padding:11px 2px; font-weight:900; color:#1a202c; font-size:0.7rem;">
+                <td style="padding:11px 2px; font-weight:900; color:#1a202c; font-size:0.7rem; vertical-align:middle;">
                   ${dateStr}
                 </td>
-                <td style="padding:11px 2px; font-size:0.75rem; color:#2d3748;">${r.weight}</td>
-                <td style="padding:11px 2px; font-size:0.75rem; color:#16a34a; font-weight:900;">${r.muscle}</td>
-                <td style="padding:11px 2px; font-size:0.75rem; color:#8b5cf6; font-weight:900;">${r.fat}</td>
-                <td style="padding:11px 2px;">${scoreBadge}</td>
+                <td style="padding:11px 2px; font-size:0.75rem; color:#2d3748; vertical-align:middle;">${r.weight}</td>
+                <td style="padding:11px 2px; font-size:0.75rem; color:#16a34a; font-weight:900; vertical-align:middle;">${r.muscle}</td>
+                <td style="padding:11px 2px; font-size:0.75rem; color:#8b5cf6; font-weight:900; vertical-align:middle;">${r.fat}</td>
+                <td style="padding:4px 2px; vertical-align:middle;">${scoreBadge}</td>
               </tr>
             `;
           });
