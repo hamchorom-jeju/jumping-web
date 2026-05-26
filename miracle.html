@@ -530,6 +530,118 @@
     </div>
   </div>
 
+  <!-- 📊 [NEW v65.70] 영웅의 인바디 웰니스 3단 성적표 모달 -->
+  <div id="inbody-reward-modal" class="info-modal" style="display: none; align-items: center; justify-content: center; padding: 20px;">
+    <div class="info-modal-card" style="border-radius: 28px; max-width: 440px; animation: scaleUpReward 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); padding: 30px 22px 26px; text-align: left;">
+      <style>
+        @keyframes scaleUpReward {
+          from { transform: scale(0.8); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes bounceIcon {
+          from { transform: translateY(0); }
+          to { transform: translateY(-5px); }
+        }
+        .reward-tier-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin: 20px 0;
+        }
+        .reward-card {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          padding: 14px 18px;
+          border-radius: 20px;
+          border: 1.5px solid rgba(255,255,255,0.6);
+          box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+          transition: all 0.2s;
+        }
+        .reward-card.weekly {
+          background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+          border-color: #7dd3fc;
+        }
+        .reward-card.monthly {
+          background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+          border-color: #d8b4fe;
+        }
+        .reward-card.lifetime {
+          background: linear-gradient(135deg, #fef3c7, #fde68a);
+          border-color: #fcd34d;
+        }
+        .reward-card-icon {
+          font-size: 2.2rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .reward-card-info {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+        }
+        .reward-card-title {
+          font-size: 0.85rem;
+          font-weight: 800;
+          color: #1e293b;
+          margin-bottom: 2px;
+        }
+        .reward-card-score {
+          font-size: 1.25rem;
+          font-weight: 900;
+          color: #0f172a;
+        }
+        .reward-card-desc {
+          font-size: 0.72rem;
+          font-weight: 800;
+          color: #64748b;
+          line-height: 1.35;
+          margin-top: 4px;
+        }
+      </style>
+      <div style="font-size: 3.5rem; text-align: center; margin-bottom: 5px; animation: bounceIcon 1s infinite alternate;">📊</div>
+      <div style="font-size: 1.3rem; font-weight: 900; color: #1e293b; text-align: center; margin-bottom: 2px;">영웅의 인바디 웰니스 성적표</div>
+      <div style="font-size: 0.82rem; font-weight: 800; color: #64748b; text-align: center; margin-bottom: 15px;">지니클럽 33챌린지 공식 가산점 반영 완료!</div>
+      
+      <div class="reward-tier-grid">
+        <!-- 주간 향상 스탯 -->
+        <div class="reward-card weekly" id="reward-weekly-card">
+          <div class="reward-card-icon">⚡</div>
+          <div class="reward-card-info">
+            <span class="reward-card-title">주간 향상 스탯 (지난주 대조)</span>
+            <span class="reward-card-score" id="reward-weekly-score">+0 EXP</span>
+            <span class="reward-card-desc" id="reward-weekly-desc">다음 주 측정을 통해 향상 스탯에 도전하세요! 🔥</span>
+          </div>
+        </div>
+        
+        <!-- 월간 향상 스탯 -->
+        <div class="reward-card monthly" id="reward-monthly-card">
+          <div class="reward-card-icon">🔮</div>
+          <div class="reward-card-info">
+            <span class="reward-card-title">월간 향상 스탯 (월초 1주차 대조)</span>
+            <span class="reward-card-score" id="reward-monthly-score">+0 EXP</span>
+            <span class="reward-card-desc" id="reward-monthly-desc">월초 1주차 최초 기록과 대조해 스탯이 산정됩니다. 🌟</span>
+          </div>
+        </div>
+        
+        <!-- 평생 토탈 스탯 -->
+        <div class="reward-card lifetime" id="reward-lifetime-card">
+          <div class="reward-card-icon">👑</div>
+          <div class="reward-card-info">
+            <span class="reward-card-title">평생 토탈 스탯 (생애 최초 대조)</span>
+            <span class="reward-card-score" id="reward-lifetime-score">+0 EXP</span>
+            <span class="reward-card-desc" id="reward-lifetime-desc">지니클럽과 함께한 평생의 땀방울 기록입니다. 🌱</span>
+          </div>
+        </div>
+      </div>
+      
+      <button onclick="closeInbodyRewardModal()" style="width: 100%; padding: 15px; border: none; border-radius: 18px; background: #1e293b; color: #f8fafc; font-weight: 900; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 12px rgba(30,41,59,0.15); transition: all 0.2s; text-align: center;">
+        확인 완료 🏆
+      </button>
+    </div>
+  </div>
+
   <!-- 📊 [v50.2] 인바디 전용 바텀시트 모달 (🔒 모바일 스크롤 잘림 해소: max-height & touch scroll 적용) -->
   <div id="inbody-modal" class="polaroid-modal" style="display:none; align-items:flex-end;">
     <div style="background:#fff; border-radius:30px 30px 0 0; width:100%; max-width:500px; padding:25px 20px 40px; box-shadow:0 -8px 40px rgba(0,0,0,0.15); animation:slideUp 0.35s ease-out; text-align: left; box-sizing: border-box; max-height: 85vh; overflow-y: auto; -webkit-overflow-scrolling: touch;">
@@ -1985,8 +2097,9 @@
       google.script.run
         .withSuccessHandler(res => {
           if (res.success) {
-            showAppAlert(`🎉 인바디 최종 등록 성공!\n웰니스 통합 감량 성적이 반영되어 +${res.score} EXP가 적립되었습니다!`, "success");
             closeInbodyModal();
+            // [v65.70] 프리미엄 3단 보상 모달 표출
+            openInbodyRewardModal(res.weeklyScore, res.monthlyScore, res.totalScore);
           } else {
             showAppAlert("인바디 시트 저장 실패: " + res.error, "error");
             submitBtn.disabled = false;
@@ -2006,6 +2119,51 @@
           fat: fatVal,
           customDate: dateVal
         });
+    }
+
+    // 📊 [NEW v65.70] 영웅의 인바디 웰니스 3단 성적표 모달 오픈/클로즈 헬퍼
+    function openInbodyRewardModal(weeklyScore, monthlyScore, totalScore) {
+      document.getElementById('reward-weekly-score').innerText = weeklyScore > 0 ? `+${weeklyScore} EXP` : "0 EXP";
+      document.getElementById('reward-monthly-score').innerText = monthlyScore > 0 ? `+${monthlyScore} EXP` : "0 EXP";
+      document.getElementById('reward-lifetime-score').innerText = totalScore > 0 ? `+${totalScore} EXP` : "0 EXP";
+
+      // 0점일 경우 동기부여 문구 분기 처리
+      const wDesc = document.getElementById('reward-weekly-desc');
+      if (weeklyScore > 0) {
+        wDesc.innerText = "지난주 대비 체중/지방 감량 및 근육 향상 성적입니다! 대단해요! 🎉";
+      } else {
+        wDesc.innerText = "다음 주 측정을 통해 향상 스탯에 도전하세요! 🔥";
+      }
+
+      const mDesc = document.getElementById('reward-monthly-desc');
+      if (monthlyScore > 0) {
+        mDesc.innerText = "월초 기준 기록 대비 눈부신 신체 향상 성과를 달성했습니다! 🔮";
+      } else {
+        mDesc.innerText = "월초 1주차 최초 기록과 대조해 스탯이 산정됩니다. 🌟";
+      }
+
+      const lDesc = document.getElementById('reward-lifetime-desc');
+      if (totalScore > 0) {
+        lDesc.innerText = "지니클럽과 함께한 생애 최초 대비 통합 스탯입니다. 최고예요! 👑";
+      } else {
+        lDesc.innerText = "지니클럽과 함께한 평생의 땀방울 기록입니다. 🌱";
+      }
+
+      document.getElementById('inbody-reward-modal').style.display = 'flex';
+      
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeInbodyRewardModal);
+      }
+    }
+
+    function closeInbodyRewardModal(isPopstate) {
+      document.getElementById('inbody-reward-modal').style.display = 'none';
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeInbodyRewardModal);
+      }
+      
+      // 등록 완료 후 점수를 실시간 반영하기 위해 깔끔하게 화면을 새로고침합니다!
+      location.reload();
     }
 
     // ═══════════════════════════════════════════════════════
