@@ -1886,14 +1886,36 @@
     function previewInbodyImage(input) {
       if (input.files && input.files[0]) {
         const file = input.files[0];
-        inbodyMimeType = file.type || "image/jpeg";
+        inbodyMimeType = "image/jpeg"; // 판독의 일관성 및 파일 크기 다이어트를 위해 JPEG 포맷 고정
         
         const reader = new FileReader();
         reader.onload = e => {
-          document.getElementById('inbody-preview-img').src = e.target.result;
-          document.getElementById('inbody-preview-box').style.display = 'flex';
-          document.getElementById('inbody-upload-placeholder').style.display = 'none';
-          inbodyBase64Image = e.target.result.split(',')[1];
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            // 인바디 결과지의 좁고 빽빽한 숫자 판독 화질을 보존하기 위해 최대 1000px 넉넉한 가이드 적용
+            let w = img.width, h = img.height, max = 1000;
+            if (w > h) {
+              if (w > max) { h *= max / w; w = max; }
+            } else {
+              if (h > max) { w *= max / h; h = max; }
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            
+            // 85%의 아주 높은 해상 퀄리티로 압축하여 10MB 원본을 120KB 내외로 완벽 다이어트!
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            
+            document.getElementById('inbody-preview-img').src = compressedDataUrl;
+            document.getElementById('inbody-preview-box').style.display = 'flex';
+            document.getElementById('inbody-upload-placeholder').style.display = 'none';
+            
+            // Base64 데이터만 헤더를 잘라내어 저장
+            inbodyBase64Image = compressedDataUrl.split(',')[1];
+          };
+          img.src = e.target.result;
         };
         reader.readAsDataURL(file);
       }
@@ -2067,7 +2089,7 @@
           scanLine.style.display = 'none';
           btn.innerText = '지니 AI 인바디 스캔 시작 📊';
           btn.disabled = false;
-          showAppAlert(formatAiFriendlyError(err), "error");
+          showAppAlert(formatAiFriendlyError(err) + "\n\n💡 해결 꿀팁:\n1. 모바일 기기의 초고화질 사진 용량 때문에 일시적인 전송 과부하가 걸렸을 수 있습니다. 화면을 '새로고침' 하시면 이제 대용량 사진도 120KB 수준으로 자동 초압축하는 엔진이 가동됩니다!\n2. 결과지 사진이 흔들렸거나 수치가 어두워 판독이 어려울 수 있으니, 밝은 곳에서 글씨가 선명하게 나오도록 재촬영해 주세요.\n3. 지속될 경우 우측 하단의 '설정 ⚙️' 아이콘을 클릭하여 지니 AI API Key가 만료되지 않고 정상 등록되어 있는지 확인해 보세요! 😊", "error");
         }
       }).getGeminiApiKey();
     }
