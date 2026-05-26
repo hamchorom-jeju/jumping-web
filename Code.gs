@@ -576,34 +576,22 @@ function getUserDashboardData(payload) {
       var score = 0;
       var diffW = Number((first.weight - current.weight).toFixed(2));
       var diffM = Number((current.muscle - first.muscle).toFixed(2));
+      var diffFat = Number((first.fat - current.fat).toFixed(1));
       
-      // 1. 체중 감량 점수: 100g당 50점 (1kg당 500점)
       if (diffW > 0) score += (diffW * 10) * 50;
-      
-      // 2. 근육량 증가 점수: 100g당 200점 (1kg당 2,000점)
       if (diffM > 0) score += (diffM * 10) * 200;
+      if (diffFat > 0) score += (diffFat * 10) * 100;
       
-      // 3. [옵션 B] 최초 체지방량 대비 체지방 감소율 점수: 감소율 1%당 200점! (고배점)
-      // 최초/현재 체지방량(kg) = 체중(kg) * (체지방률(%) / 100)
       var firstFatMass = first.weight * (first.fat / 100);
       var currentFatMass = current.weight * (current.fat / 100);
       var fatLossRate = 0;
-      
       if (firstFatMass > 0) {
         fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
-        if (fatLossRate > 0) {
-          score += Math.round(fatLossRate * 200); // 예: 체지방의 10% 감량 시 2,000점!
-        }
       }
-      
-      // 4. [신규 v46.36] 명품 유지 히어로 보너스 (Maintenance Hero Bonus)
-      // 이미 충분히 감량하여 명품 건강 상태를 안정적으로 유지 중인 회원 대상 보너스 (+1,500 EXP)
-      // 조건: 최초 대비 체중 8kg 이상 감량 유지 중이거나, 체지방 감소율(옵션 B) 20% 이상을 유지 중일 때!
       if (diffW >= 8.0 || fatLossRate >= 20.0) {
         score += 1500;
       }
       
-      // 5. 유지 보너스 (+100점)
       if (Math.abs(diffW) <= 0.2) score += 100;
       return score;
     }
@@ -9525,21 +9513,18 @@ function getHallOfFameData(payload) {
       var score = 0;
       var diffW = Number((first.weight - current.weight).toFixed(2));
       var diffM = Number((current.muscle - first.muscle).toFixed(2));
+      var diffFat = Number((first.fat - current.fat).toFixed(1));
       
       if (diffW > 0) score += (diffW * 10) * 50;
       if (diffM > 0) score += (diffM * 10) * 200;
+      if (diffFat > 0) score += (diffFat * 10) * 100;
       
       var firstFatMass = first.weight * (first.fat / 100);
       var currentFatMass = current.weight * (current.fat / 100);
       var fatLossRate = 0;
-      
       if (firstFatMass > 0) {
         fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
-        if (fatLossRate > 0) {
-          score += Math.round(fatLossRate * 200);
-        }
       }
-      
       if (diffW >= 8.0 || fatLossRate >= 20.0) {
         score += 1500;
       }
@@ -10399,19 +10384,21 @@ function archiveWeeklyRankingToSheet(period) {
       var score = 0;
       var diffW = Number((first.weight - current.weight).toFixed(2));
       var diffM = Number((current.muscle - first.muscle).toFixed(2));
+      var diffFat = Number((first.fat - current.fat).toFixed(1));
       
       if (diffW > 0) score += (diffW * 10) * 50;
       if (diffM > 0) score += (diffM * 10) * 200;
+      if (diffFat > 0) score += (diffFat * 10) * 100;
       
       var firstFatMass = first.weight * (first.fat / 100);
       var currentFatMass = current.weight * (current.fat / 100);
       var fatLossRate = 0;
-      
       if (firstFatMass > 0) {
         fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
-        if (fatLossRate > 0) score += Math.round(fatLossRate * 200);
       }
-      if (diffW >= 8.0 || fatLossRate >= 20.0) score += 1500;
+      if (diffW >= 8.0 || fatLossRate >= 20.0) {
+        score += 1500;
+      }
       if (Math.abs(diffW) <= 0.2) score += 100;
       return score;
     }
@@ -10595,19 +10582,21 @@ function archiveMonthlyRankingToSheet(period) {
       var score = 0;
       var diffW = Number((first.weight - current.weight).toFixed(2));
       var diffM = Number((current.muscle - first.muscle).toFixed(2));
+      var diffFat = Number((first.fat - current.fat).toFixed(1));
       
       if (diffW > 0) score += (diffW * 10) * 50;
       if (diffM > 0) score += (diffM * 10) * 200;
+      if (diffFat > 0) score += (diffFat * 10) * 100;
       
       var firstFatMass = first.weight * (first.fat / 100);
       var currentFatMass = current.weight * (current.fat / 100);
       var fatLossRate = 0;
-      
       if (firstFatMass > 0) {
         fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
-        if (fatLossRate > 0) score += Math.round(fatLossRate * 200);
       }
-      if (diffW >= 8.0 || fatLossRate >= 20.0) score += 1500;
+      if (diffW >= 8.0 || fatLossRate >= 20.0) {
+        score += 1500;
+      }
       if (Math.abs(diffW) <= 0.2) score += 100;
       return score;
     }
