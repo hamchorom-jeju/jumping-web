@@ -533,23 +533,30 @@
 
     function loadEnvironmentSettings() {
       if (typeof google === 'undefined') return;
-      google.script.run.withSuccessHandler(settings => {
-        if (settings) {
-          activeWeather = settings.weather || 'sun';
-          updateWeatherUI();
-          document.getElementById('magic-master-enabled').checked = settings.magicEnabled === undefined || settings.magicEnabled.toString().toLowerCase() === 'true';
-          document.getElementById('bgm-enabled-check').checked = settings.bgmEnabled && settings.bgmEnabled.toString().toLowerCase() === 'true';
-          document.getElementById('bgm-force-check').checked = settings.bgmForceOverride && settings.bgmForceOverride.toString().toLowerCase() === 'true';
-          document.getElementById('bgm-force-input').value = settings.bgmForceUrl || '';
-          
-          // 기후별 커스텀 BGM 입력란 바인딩
-          document.getElementById('bgm-sun-input').value = settings.bgm_sun || '';
-          document.getElementById('bgm-rain-input').value = settings.bgm_rain || '';
-          document.getElementById('bgm-snow-input').value = settings.bgm_snow || '';
-          document.getElementById('bgm-blossom-input').value = settings.bgm_blossom || '';
-          document.getElementById('bgm-leaves-input').value = settings.bgm_leaves || '';
-        }
-      }).getVillageSettings();
+      google.script.run
+        .withSuccessHandler(settings => {
+          if (settings) {
+            activeWeather = settings.weather || 'sun';
+            updateWeatherUI();
+            document.getElementById('magic-master-enabled').checked = settings.magicEnabled === undefined || settings.magicEnabled.toString().toLowerCase() === 'true';
+            document.getElementById('bgm-enabled-check').checked = settings.bgmEnabled && settings.bgmEnabled.toString().toLowerCase() === 'true';
+            document.getElementById('bgm-force-check').checked = settings.bgmForceOverride && settings.bgmForceOverride.toString().toLowerCase() === 'true';
+            document.getElementById('bgm-force-input').value = settings.bgmForceUrl || '';
+            
+            // 기후별 커스텀 BGM 입력란 바인딩
+            document.getElementById('bgm-sun-input').value = settings.bgm_sun || '';
+            document.getElementById('bgm-rain-input').value = settings.bgm_rain || '';
+            document.getElementById('bgm-snow-input').value = settings.bgm_snow || '';
+            document.getElementById('bgm-blossom-input').value = settings.bgm_blossom || '';
+            document.getElementById('bgm-leaves-input').value = settings.bgm_leaves || '';
+          }
+          hideLoading(); // ⚡ 모든 환경 설정이 정상 복원되었으므로 로딩 오버레이를 제거합니다!
+        })
+        .withFailureHandler(err => {
+          hideLoading(); // ⚡ 오류가 나더라도 조작할 수 있게 로딩바를 제거합니다.
+          console.error("사령부 환경 복제 실패:", err);
+        })
+        .getVillageSettings();
     }
 
     function setWeather(w) {
