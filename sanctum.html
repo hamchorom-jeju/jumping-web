@@ -306,34 +306,37 @@
           <input type="checkbox" id="bgm-force-check" style="width: 16px; height: 16px; accent-color: var(--sanctum-gold);">
           <label for="bgm-force-check" style="font-size: 0.72rem; font-weight: 850; color: var(--sanctum-gold-light); cursor: pointer;">🃏 날씨 상관없이 특정 음악 강제 고정하기</label>
         </div>
-        <input type="text" id="bgm-force-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px;" placeholder="강제 고정할 수노/MP3 음악 주소">
+        <textarea id="bgm-force-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px; height: 48px; resize: vertical;" placeholder="강제 고정할 수노/MP3 음악 주소 (여러 개일 경우 쉼표나 줄바꿈으로 입력)"></textarea>
       </div>
       
       <!-- 🎵 기후별 커스텀 BGM 설정 (제주 기상싱크 및 각 기후 매칭용) -->
       <div id="custom-bgm-panel" style="margin-top: 15px; margin-bottom: 15px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 20px; border: 1px solid rgba(217, 119, 6, 0.2);">
-        <div style="font-size: 0.78rem; font-weight: 900; color: var(--sanctum-gold-light); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <div style="font-size: 0.78rem; font-weight: 900; color: var(--sanctum-gold-light); margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
           <i class="fa-solid fa-sliders"></i> 🌦️ 기후 연동 배경음악 세트 지정 (Suno 또는 MP3 주소)
+        </div>
+        <div style="font-size: 0.65rem; color: #f59e0b; font-weight: 800; line-height: 1.4; margin-bottom: 12px; padding: 6px 10px; background: rgba(245, 158, 11, 0.1); border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.2);">
+          💡 <strong>플레이리스트 팁:</strong> 각 기후 입력란에 음악 주소를 <strong>쉼표(,) 또는 줄바꿈(엔터)</strong>으로 여러 개 입력하시면, 회원 화면에서 순서대로 계속 순환하며 재생됩니다!
         </div>
         <div style="display: flex; flex-direction: column; gap: 10px;">
           <div>
             <span style="font-size: 0.65rem; color: var(--text-sub); font-weight: 800; display: block; margin-bottom: 4px;">☀️ 기본 맑음 BGM (여름/겨울의 맑은 날)</span>
-            <input type="text" id="bgm-sun-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px;" placeholder="맑음 테마곡 주소">
+            <textarea id="bgm-sun-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px; height: 48px; resize: vertical;" placeholder="맑음 테마곡 주소 (쉼표/줄바꿈 가능)"></textarea>
           </div>
           <div>
             <span style="font-size: 0.65rem; color: var(--text-sub); font-weight: 800; display: block; margin-bottom: 4px;">🌧️ 비 내리는 날 BGM (실시간 비 올 때)</span>
-            <input type="text" id="bgm-rain-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px;" placeholder="비 테마곡 주소">
+            <textarea id="bgm-rain-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px; height: 48px; resize: vertical;" placeholder="비 테마곡 주소 (쉼표/줄바꿈 가능)"></textarea>
           </div>
           <div>
             <span style="font-size: 0.65rem; color: var(--text-sub); font-weight: 800; display: block; margin-bottom: 4px;">❄️ 눈 내리는 날 BGM (실시간 눈 올 때)</span>
-            <input type="text" id="bgm-snow-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px;" placeholder="눈 테마곡 주소">
+            <textarea id="bgm-snow-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px; height: 48px; resize: vertical;" placeholder="눈 테마곡 주소 (쉼표/줄바꿈 가능)"></textarea>
           </div>
           <div>
             <span style="font-size: 0.65rem; color: var(--text-sub); font-weight: 800; display: block; margin-bottom: 4px;">🌸 벚꽃 BGM (봄의 맑은 날 - 3~5월)</span>
-            <input type="text" id="bgm-blossom-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px;" placeholder="벚꽃 테마곡 주소">
+            <textarea id="bgm-blossom-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px; height: 48px; resize: vertical;" placeholder="벚꽃 테마곡 주소 (쉼표/줄바꿈 가능)"></textarea>
           </div>
           <div>
             <span style="font-size: 0.65rem; color: var(--text-sub); font-weight: 800; display: block; margin-bottom: 4px;">🍁 낙엽 BGM (가을의 맑은 날 - 9~11월)</span>
-            <input type="text" id="bgm-leaves-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px;" placeholder="낙엽 테마곡 주소">
+            <textarea id="bgm-leaves-input" class="pillar-input" style="margin-bottom:0; font-size: 0.72rem; padding: 8px 12px; height: 48px; resize: vertical;" placeholder="낙엽 테마곡 주소 (쉼표/줄바꿈 가능)"></textarea>
           </div>
         </div>
       </div>
@@ -561,6 +564,22 @@
     }
 
     async function resolveSunoLinkClient(url) {
+      if (!url) return url;
+      
+      const urls = url.split(/[,;\n\r]+/);
+      const resolvedUrls = [];
+      
+      for (const u of urls) {
+        const trimmed = u.trim();
+        if (!trimmed) continue;
+        const resolved = await resolveSingleSunoLinkClient(trimmed);
+        resolvedUrls.push(resolved);
+      }
+      
+      return resolvedUrls.join(", ");
+    }
+
+    async function resolveSingleSunoLinkClient(url) {
       if (!url) return url;
       url = url.trim();
       

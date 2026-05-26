@@ -8387,6 +8387,25 @@ function getVillageSettings() {
 
 function resolveSunoUrl(url) {
   if (!url) return url;
+  
+  // 쉼표(,), 세미콜론(;), 줄바꿈/개행(\n, \r) 구분자만 엄격하게 자르고 공백은 trim()으로 해결
+  var urls = url.split(/[,;\n\r]+/);
+  var resolvedUrls = [];
+  
+  for (var i = 0; i < urls.length; i++) {
+    var u = urls[i].trim();
+    if (!u) continue;
+    
+    // 개별 단일 URL 해독 실행
+    var resolved = resolveSingleSunoUrl(u);
+    resolvedUrls.push(resolved);
+  }
+  
+  return resolvedUrls.join(", ");
+}
+
+function resolveSingleSunoUrl(url) {
+  if (!url) return url;
   url = url.trim();
   
   // 1. 만약 이미 cdn1.suno.ai 직접 주소거나 다른 일반 주소라면 그대로 반환

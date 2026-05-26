@@ -1400,15 +1400,47 @@ const Village = {
     handleBgm(enabled, url) {
         if (!url) return;
         
+        // 쉼표(,), 세미콜론(;), 줄바꿈/개행(\n, \r) 기준으로 쪼개어 플레이리스트 생성
+        const playlist = url.split(/[,;\n\r]+/).map(u => u.trim()).filter(u => u.length > 0);
+        if (playlist.length === 0) return;
+        
         let audio = document.getElementById('village-bgm-audio');
+        let isNewPlaylist = false;
+        
         if (!audio) {
             audio = document.createElement('audio');
             audio.id = 'village-bgm-audio';
-            audio.loop = true;
-            audio.src = url;
             document.body.appendChild(audio);
-        } else if (audio.src !== url) {
-            audio.src = url;
+            isNewPlaylist = true;
+        } else {
+            // 이전 플레이리스트와 구성이 달라졌다면 새 플레이리스트로 인식
+            const oldPlaylistStr = audio.dataset.playlist || "";
+            const newPlaylistStr = playlist.join(",");
+            if (oldPlaylistStr !== newPlaylistStr) {
+                isNewPlaylist = true;
+            }
+        }
+        
+        if (isNewPlaylist) {
+            audio.dataset.playlist = playlist.join(",");
+            audio.dataset.currentIndex = "0";
+            audio.src = playlist[0];
+            
+            // 여러 곡일 경우 ended 이벤트를 이용하여 순환, 단일 곡일 경우 loop 처리
+            if (playlist.length > 1) {
+                audio.loop = false;
+                audio.onended = () => {
+                    let nextIndex = (parseInt(audio.dataset.currentIndex || "0", 10) + 1) % playlist.length;
+                    audio.dataset.currentIndex = String(nextIndex);
+                    audio.src = playlist[nextIndex];
+                    audio.play().then(() => {
+                        console.log("Playing next BGM track:", playlist[nextIndex]);
+                    }).catch(e => console.log("Next track play failed:", e));
+                };
+            } else {
+                audio.loop = true;
+                audio.onended = null;
+            }
         }
         
         let btn = document.getElementById('village-bgm-toggle');
