@@ -729,35 +729,18 @@ function getUserDashboardData(payload) {
 
     var questStatus = getActiveQuestStatus(phone, ss, logData, memberInfo.name);
 
-    // 5. [v47.1] 실시간 전체 회원 웰니스 랭킹 산출 엔진 (일일_활동_기록 누적합 기준)
+    // 5. [v47.1] 실시간 전체 회원 웰니스 랭킹 산출 엔진 (명예의 전당의 인바디 포함 온전 누적합과 100% 동기화!)
     var rank = "-";
     try {
-      if (summarySheet) {
-        var allData = summarySheet.getDataRange().getValues();
-        var scoreMap = {};
-        for (var rowIdx = 1; rowIdx < allData.length; rowIdx++) {
-          var rPhone = normalizePhoneDigits(allData[rowIdx][1] || "");
-          var rTotal = Number(allData[rowIdx][9] || 0); // J열: 총점(웰니스총점)
-          if (rPhone) {
-            scoreMap[rPhone] = (scoreMap[rPhone] || 0) + rTotal;
-          }
-        }
-        
-        // 현재 사용자의 실시간 점수(인바디 및 오늘 획득 포인트 실시간 반영)로 동기화 완료!
-        scoreMap[phone] = scores.lifetime;
-        
-        // 정렬용 배열 구축
-        var sortedScores = [];
-        for (var key in scoreMap) {
-          sortedScores.push(scoreMap[key]);
-        }
-        // 내림차순 정렬
-        sortedScores.sort(function(a, b) { return b - a; });
-        
-        // 현재 회원의 등수 검색
-        var myRankIdx = sortedScores.indexOf(scores.lifetime);
-        if (myRankIdx !== -1) {
-          rank = myRankIdx + 1;
+      var hof = getHallOfFameData();
+      if (hof && hof.success && hof.data && hof.data.total) {
+        var cleanName = memberInfo.name.replace(/\d{4}$/, "").trim();
+        var myRankEntry = hof.data.total.find(function(entry) {
+          var entryName = String(entry.name || "").trim();
+          return entryName === cleanName;
+        });
+        if (myRankEntry) {
+          rank = myRankEntry.rank;
         }
       }
     } catch (err) {
