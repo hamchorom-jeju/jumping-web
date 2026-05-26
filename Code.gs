@@ -511,6 +511,18 @@ function getUserDashboardData(payload) {
     var submissionDeadline = targetThursdayNoon;
     var lastWed = measurementDeadline; // 하위 호환성 유지용 선언
 
+    // [v65.70] 당월 1일 ~ 수학적 1주차 마감 수요일 Milestone 계산
+    var tYear = now.getFullYear();
+    var tMonth = now.getMonth();
+    var startOfMonth = new Date(tYear, tMonth, 1, 0, 0, 0, 0);
+    var firstDayOfWeek = startOfMonth.getDay(); // 0(일)~6(토)
+    var diffToWed = (3 - firstDayOfWeek + 7) % 7;
+    var baselineDeadline = new Date(tYear, tMonth, 1 + diffToWed);
+    if (typeof isCenterHoliday === "function" && isCenterHoliday(baselineDeadline)) {
+      baselineDeadline.setDate(baselineDeadline.getDate() + 1); // 공휴일 시 목요일 연장
+    }
+    baselineDeadline.setHours(23, 59, 59, 999);
+
     var firstEverInbody = null;
     var activeInbodySnapshot = null;
     var season0WeekInbody = null;
