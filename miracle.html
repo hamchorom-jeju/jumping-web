@@ -1032,7 +1032,10 @@
     // [v46.7] 모바일 기기 하드웨어 뒤로가기 버튼 연동 모달 제어 시스템 - 공통 bridge.js 글로벌 시스템으로 이관 및 리팩토링 완료!
 
     function formatAiFriendlyError(err) {
-      const errStr = String(err.message || err);
+      let errStr = String(err.message || err);
+      
+      // 🔒 API Key 및 쿼리파라미터 보안 마스킹 (에러 팝업에 키가 노출되는 현상 원천 차단)
+      errStr = errStr.replace(/key=[a-zA-Z0-9_-]+/g, "key=******");
       
       // 1. 구글 서버 과부하 (High Demand)
       if (errStr.includes("high demand") || errStr.includes("429") || errStr.includes("ResourceExhausted") || errStr.includes("quota")) {
@@ -1054,8 +1057,13 @@
         return "🚨 AI 보안 키 오류!\n\n등록된 구글 API 키가 만료되었거나 올바르지 않습니다. 우측 하단의 [설정] 메뉴에서 API 키가 잘 입력되어 있는지 확인해 주세요! 🔑";
       }
 
+      // ✂️ 잡다하고 길게 쏟아지는 Stack Trace 및 에러 텍스트 길이 정밀 제어 (최대 100자)
+      if (errStr.length > 100) {
+        errStr = errStr.substring(0, 100) + "...";
+      }
+
       // 기본 한국어 에러 메시지
-      return "🚨 지니 AI 스캔 일시 오류!\n\n지니가 분석하는 도중 잠시 삐끗했습니다. 5초 후에 스캔 시작 버튼을 한 번 더 눌러주세요! (계속 발생 시 사진을 바꿔보거나 이장님께 알려주세요!)\n\n(참고 에러: " + errStr + ")";
+      return "🚨 지니 AI 스캔 일시 오류!\n\n지니가 분석하는 도중 잠시 삐끗했습니다. 5초 후에 스캔 시작 버튼을 한 번 더 눌러주세요!\n(계속해서 실패할 경우 사진을 변경해 촬영해 보시길 권장합니다.)\n\n(참고 코드: " + errStr + ")";
     }
 
     let aiSelectedTime = 'morning';
