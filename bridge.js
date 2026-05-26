@@ -660,15 +660,53 @@ window.renderSharedWeatherParticles = function(weather, windSpeed = 0) {
 window.handleSharedBgm = function(enabled, url) {
   if (!url) return;
   
+  // 쉼표(,), 세미콜론(;), 줄바꿈/개행(\n, \r) 기준으로 쪼개어 플레이리스트 생성
+  const playlist = url.split(/[,;\n\r]+/).map(u => u.trim()).filter(u => u.length > 0);
+  if (playlist.length === 0) return;
+  
   let audio = document.getElementById('village-bgm-audio');
+  let isNewPlaylist = false;
+  
   if (!audio) {
     audio = document.createElement('audio');
     audio.id = 'village-bgm-audio';
-    audio.loop = true;
-    audio.src = url;
     document.body.appendChild(audio);
-  } else if (audio.src !== url) {
-    audio.src = url;
+    isNewPlaylist = true;
+  } else {
+    // [호환성 방어] dataset 대신 getAttribute/setAttribute를 활용하여 구형 기기 크래시 방지
+    const oldPlaylistStr = audio.getAttribute('data-playlist') || "";
+    const newPlaylistStr = playlist.join(",");
+    if (oldPlaylistStr !== newPlaylistStr) {
+      isNewPlaylist = true;
+    }
+  }
+  
+  if (isNewPlaylist) {
+    audio.setAttribute('data-playlist', playlist.join(","));
+    audio.setAttribute('data-current-index', "0");
+    audio.src = playlist[0];
+    
+    // 여러 곡일 경우 ended 이벤트를 이용하여 순환, 단일 곡일 경우 loop 처리
+    if (playlist.length > 1) {
+      audio.loop = false;
+      audio.onended = function() {
+        let currentIndex = parseInt(audio.getAttribute('data-current-index') || "0", 10);
+        let nextIndex = (currentIndex + 1) % playlist.length;
+        audio.setAttribute('data-current-index', String(nextIndex));
+        audio.src = playlist[nextIndex];
+        
+        // [호환성 방어] play() 반환 Promise가 undefined일 수 있는 구형 모바일 브라우저 예외 처리
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.then(function() {
+            console.log("Playing next shared BGM track:", playlist[nextIndex]);
+          }).catch(function(e) { console.log("Next track play failed:", e); });
+        }
+      };
+    } else {
+      audio.loop = true;
+      audio.onended = null;
+    }
   }
   
   let btn = document.getElementById('village-bgm-toggle');
@@ -689,11 +727,14 @@ window.handleSharedBgm = function(enabled, url) {
     
     btn.onclick = function() {
       if (audio.paused) {
-        audio.play().then(function() {
-          btn.querySelector('i').style.color = '#e74c3c';
-          btn.style.transform = 'scale(1.1) rotate(15deg)';
-          localStorage.setItem('v44_bgm_user_play', 'true');
-        }).catch(function(e) { console.log("BGM Play error:", e); });
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.then(function() {
+            btn.querySelector('i').style.color = '#e74c3c';
+            btn.style.transform = 'scale(1.1) rotate(15deg)';
+            localStorage.setItem('v44_bgm_user_play', 'true');
+          }).catch(function(e) { console.log("BGM Play error:", e); });
+        }
       } else {
         audio.pause();
         btn.querySelector('i').style.color = 'var(--v-wood)';
@@ -708,22 +749,28 @@ window.handleSharedBgm = function(enabled, url) {
   
   if (shouldPlay) {
     const startPlay = function() {
-      audio.play().then(function() {
-        btn.querySelector('i').style.color = '#e74c3c';
-        btn.style.transform = 'scale(1.1) rotate(15deg)';
-        document.removeEventListener('click', startPlay);
-        document.removeEventListener('touchstart', startPlay);
-      }).catch(function(e) { console.log("BGM play failed on interaction:", e); });
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.then(function() {
+          btn.querySelector('i').style.color = '#e74c3c';
+          btn.style.transform = 'scale(1.1) rotate(15deg)';
+          document.removeEventListener('click', startPlay);
+          document.removeEventListener('touchstart', startPlay);
+        }).catch(function(e) { console.log("BGM play failed on interaction:", e); });
+      }
     };
     
-    audio.play().then(function() {
-      btn.querySelector('i').style.color = '#e74c3c';
-      btn.style.transform = 'scale(1.1) rotate(15deg)';
-    }).catch(function(e) {
-      console.log("Auto-play blocked by browser; registering interaction fallback.");
-      document.addEventListener('click', startPlay);
-      document.addEventListener('touchstart', startPlay);
-    });
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.then(function() {
+        btn.querySelector('i').style.color = '#e74c3c';
+        btn.style.transform = 'scale(1.1) rotate(15deg)';
+      }).catch(function(e) {
+        console.log("Auto-play blocked by browser; registering interaction fallback.");
+        document.addEventListener('click', startPlay);
+        document.addEventListener('touchstart', startPlay);
+      });
+    }
   } else {
     audio.pause();
     btn.querySelector('i').style.color = 'var(--v-wood)';
