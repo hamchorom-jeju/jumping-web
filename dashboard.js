@@ -1645,9 +1645,9 @@ window.renderWellnessLogs = function(todayLogs, historyLogs) {
         else if (log.indexOf('칭찬') > -1) icon = '👏';
         else if (log.indexOf('보너스') > -1) icon = '✨';
 
-        // 점수 숫자 추출
-        let pointsMatch = log.match(/\d+/);
-        let points = pointsMatch ? Number(pointsMatch[0]) : 0;
+        // 점수 숫자 추출 (🔒 7000보 버그 방지: 괄호 안의 획득 점수만 고속 정밀 파싱)
+        let pointsMatch = log.match(/\((\d+)\)/);
+        let points = pointsMatch ? Number(pointsMatch[1]) : 0;
         calculatedTodayScore += points;
 
         // 깔끔하게 점수 형태 정제
