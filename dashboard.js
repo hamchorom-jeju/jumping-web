@@ -1413,8 +1413,8 @@ const Village = {
             document.body.appendChild(audio);
             isNewPlaylist = true;
         } else {
-            // 이전 플레이리스트와 구성이 달라졌다면 새 플레이리스트로 인식
-            const oldPlaylistStr = audio.dataset.playlist || "";
+            // [호환성 방어] dataset 대신 getAttribute/setAttribute를 활용하여 구형 기기 크래시 방지
+            const oldPlaylistStr = audio.getAttribute('data-playlist') || "";
             const newPlaylistStr = playlist.join(",");
             if (oldPlaylistStr !== newPlaylistStr) {
                 isNewPlaylist = true;
@@ -1422,20 +1422,26 @@ const Village = {
         }
         
         if (isNewPlaylist) {
-            audio.dataset.playlist = playlist.join(",");
-            audio.dataset.currentIndex = "0";
+            audio.setAttribute('data-playlist', playlist.join(","));
+            audio.setAttribute('data-current-index', "0");
             audio.src = playlist[0];
             
             // 여러 곡일 경우 ended 이벤트를 이용하여 순환, 단일 곡일 경우 loop 처리
             if (playlist.length > 1) {
                 audio.loop = false;
                 audio.onended = () => {
-                    let nextIndex = (parseInt(audio.dataset.currentIndex || "0", 10) + 1) % playlist.length;
-                    audio.dataset.currentIndex = String(nextIndex);
+                    let currentIndex = parseInt(audio.getAttribute('data-current-index') || "0", 10);
+                    let nextIndex = (currentIndex + 1) % playlist.length;
+                    audio.setAttribute('data-current-index', String(nextIndex));
                     audio.src = playlist[nextIndex];
-                    audio.play().then(() => {
-                        console.log("Playing next BGM track:", playlist[nextIndex]);
-                    }).catch(e => console.log("Next track play failed:", e));
+                    
+                    // [호환성 방어] play() 반환 Promise가 undefined일 수 있는 구형 모바일 브라우저 예외 처리
+                    const playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                            console.log("Playing next BGM track:", playlist[nextIndex]);
+                        }).catch(e => console.log("Next track play failed:", e));
+                    }
                 };
             } else {
                 audio.loop = true;

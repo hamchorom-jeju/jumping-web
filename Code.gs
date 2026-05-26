@@ -8365,17 +8365,13 @@ function getVillageSettings() {
     }
     
     // [v48.0] 불러올 때도 기존에 시트에 박혀있는 모든 Suno 단축/공유 링크를 오디오 다이렉트 주소로 초고속 해독!
-    if (settings.bgmUrl) {
-      settings.bgmUrl = resolveSunoUrl(settings.bgmUrl);
-    }
-    if (settings.bgmForceUrl) {
-      settings.bgmForceUrl = resolveSunoUrl(settings.bgmForceUrl);
-    }
-    for (var key in defaultBgmMap) {
+    // 오직 실제 BGM URL 주소 값을 가진 필드들만 엄격히 발라내어 해독 연산 수행! (불리언/설정 플래그 오작동 방지)
+    var bgmKeys = ["bgm_sun", "bgm_rain", "bgm_snow", "bgm_blossom", "bgm_leaves", "bgmForceUrl", "bgmUrl"];
+    bgmKeys.forEach(function(key) {
       if (settings[key]) {
         settings[key] = resolveSunoUrl(settings[key]);
       }
-    }
+    });
     
     // 5분 동안 설정 캐시 저장 (update 시 즉시 날라감)
     cache.put("global_village_settings", JSON.stringify(settings), 300);
@@ -8387,6 +8383,10 @@ function getVillageSettings() {
 
 function resolveSunoUrl(url) {
   if (!url) return url;
+  
+  // 만약 문자열 타입이 아니라면 문자열로 안전 강제 변환
+  url = String(url).trim();
+  if (!url) return "";
   
   // 쉼표(,), 세미콜론(;), 줄바꿈/개행(\n, \r) 구분자만 엄격하게 자르고 공백은 trim()으로 해결
   var urls = url.split(/[,;\n\r]+/);
