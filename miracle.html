@@ -1827,73 +1827,89 @@
             return;
           }
 
-          let html = `
-            <div style="overflow-x:auto; border-radius:18px; border:1.5px solid #edf2f7; background:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.02); width:100%;">
-              <table style="width:100%; border-collapse:collapse; font-size:0.75rem; text-align:center;">
-                <thead>
-                  <tr style="background:#f7fafc; border-bottom:1.5px solid #e2e8f0; color:#4a5568; font-weight:900;">
-                    <th style="padding:10px 2px; font-size:0.68rem; line-height:1.3;">측정일</th>
-                    <th style="padding:10px 2px; font-size:0.68rem; line-height:1.3;">체중<br><span style="font-size:0.55rem; color:#a0aec0; font-weight:700;">(kg)</span></th>
-                    <th style="padding:10px 2px; font-size:0.68rem; line-height:1.3;">골격근<br><span style="font-size:0.55rem; color:#a0aec0; font-weight:700;">(kg)</span></th>
-                    <th style="padding:10px 2px; font-size:0.68rem; line-height:1.3;">체지방<br><span style="font-size:0.55rem; color:#a0aec0; font-weight:700;">(%)</span></th>
-                    <th style="padding:10px 2px; font-size:0.68rem; line-height:1.3;">변화</th>
-                  </tr>
-                </thead>
-                <tbody>
-          `;
+          let html = `<div style="display: flex; flex-direction: column; gap: 15px; width: 100%;">`;
 
           res.records.forEach(function(r, idx) {
-            const isFirst = (idx === res.records.length - 1); // 가장 처음 등록한 최초 기준점 표시
-            const rowBg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+            const isFirst = (idx === res.records.length - 1);
             
-            // "2026-05-20" -> "26-05-20" 연도 2자리로 초슬림 정렬!
-            let dateStr = r.date;
-            if (dateStr && dateStr.length >= 10) {
-              dateStr = dateStr.substring(2, 10);
+            // 날짜 포맷: "2026.05.26 (화)" 형태로 변환
+            let dateObj = new Date(r.date);
+            let formattedDate = r.date;
+            if (!isNaN(dateObj.getTime())) {
+              const days = ['일', '월', '화', '수', '목', '금', '토'];
+              formattedDate = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')} (${days[dateObj.getDay()]})`;
             }
-            
-            // 점수 색상 디자인 강조 (주간, 월간, 평생 3단 변화 분할 매핑)
-            let scoreBadge = '';
+
             const wScore = Number(r.weeklyScore) || 0;
             const mScore = Number(r.monthlyScore) || 0;
             const tScore = Number(r.totalScore) || 0;
 
-            if (wScore > 0 || mScore > 0 || tScore > 0) {
-              let badges = [];
-              if (wScore > 0) {
-                badges.push(`<span style="background:#e0f2fe; color:#0369a1; border-radius:4px; padding:2px 4px; font-weight:900; font-size:0.62rem; display:inline-block; white-space:nowrap; margin:1px 0;">주 +${wScore}</span>`);
-              }
-              if (mScore > 0) {
-                badges.push(`<span style="background:#f3e8ff; color:#6b21a8; border-radius:4px; padding:2px 4px; font-weight:900; font-size:0.62rem; display:inline-block; white-space:nowrap; margin:1px 0;">월 +${mScore}</span>`);
-              }
-              if (tScore > 0) {
-                badges.push(`<span style="background:#fef3c7; color:#b45309; border-radius:4px; padding:2px 4px; font-weight:900; font-size:0.62rem; display:inline-block; white-space:nowrap; margin:1px 0;">평 +${tScore}</span>`);
-              }
-              scoreBadge = `<div style="display:flex; flex-direction:column; gap:2px; align-items:center; padding: 2px 0;">${badges.join('')}</div>`;
-            } else if (isFirst) {
-              scoreBadge = `<span style="background:#dbffe6; color:#15803d; border-radius:4px; padding:2px 4px; font-weight:900; font-size:0.62rem; display:inline-block; white-space:nowrap;">🌱 최초</span>`;
-            } else {
-              scoreBadge = `<span style="color:#a0aec0; font-weight:800; font-size:0.65rem;">-</span>`;
-            }
+            const weight = Number(r.weight) || 0;
+            const muscle = Number(r.muscle) || 0;
+            const fat = Number(r.fat) || 0;
 
             html += `
-              <tr style="background:${rowBg}; border-bottom:1px solid #edf2f7; font-weight:800; color:#4a5568;">
-                <td style="padding:11px 2px; font-weight:900; color:#1a202c; font-size:0.7rem; vertical-align:middle;">
-                  ${dateStr}
-                </td>
-                <td style="padding:11px 2px; font-size:0.75rem; color:#2d3748; vertical-align:middle;">${r.weight}</td>
-                <td style="padding:11px 2px; font-size:0.75rem; color:#16a34a; font-weight:900; vertical-align:middle;">${r.muscle}</td>
-                <td style="padding:11px 2px; font-size:0.75rem; color:#8b5cf6; font-weight:900; vertical-align:middle;">${r.fat}</td>
-                <td style="padding:4px 2px; vertical-align:middle;">${scoreBadge}</td>
-              </tr>
+              <div style="background: #fff; border-radius: 22px; border: 1.5px solid #edf2f7; padding: 18px; box-shadow: 0 6px 20px rgba(0,0,0,0.015); display: flex; flex-direction: column; gap: 12px; text-align: left;">
+                <!-- 헤더 (측정일 및 배지) -->
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px dashed #f1f5f9; padding-bottom: 10px; margin-bottom: 2px;">
+                  <span style="font-size: 0.85rem; font-weight: 900; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+                    📅 ${formattedDate}
+                  </span>
+                  ${isFirst ? '<span style="background: #d1fae5; color: #065f46; font-size: 0.65rem; font-weight: 900; padding: 4px 10px; border-radius: 10px; border: 1px solid #a7f3d0;">🌱 최초 기준</span>' : ''}
+                </div>
+
+                <!-- 신체 스탯 그리드 -->
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
+                  <div style="background: #f8fafc; border-radius: 14px; padding: 8px; display: flex; flex-direction: column; gap: 2px; border: 1px solid #e2e8f0;">
+                    <span style="font-size: 0.65rem; color: #64748b; font-weight: 800;">체중</span>
+                    <span style="font-size: 0.95rem; color: #1e293b; font-weight: 900;">${weight.toFixed(1)}<span style="font-size: 0.65rem; font-weight: 700; color: #64748b; margin-left: 1px;">kg</span></span>
+                  </div>
+                  <div style="background: #f0fdf4; border-radius: 14px; padding: 8px; display: flex; flex-direction: column; gap: 2px; border: 1px solid #bbf7d0;">
+                    <span style="font-size: 0.65rem; color: #16a34a; font-weight: 800;">골격근량</span>
+                    <span style="font-size: 0.95rem; color: #16a34a; font-weight: 900;">${muscle.toFixed(1)}<span style="font-size: 0.65rem; font-weight: 700; color: #16a34a; margin-left: 1px;">kg</span></span>
+                  </div>
+                  <div style="background: #faf5ff; border-radius: 14px; padding: 8px; display: flex; flex-direction: column; gap: 2px; border: 1px solid #e9d5ff;">
+                    <span style="font-size: 0.65rem; color: #7c3aed; font-weight: 800;">체지방률</span>
+                    <span style="font-size: 0.95rem; color: #7c3aed; font-weight: 900;">${fat.toFixed(1)}<span style="font-size: 0.65rem; font-weight: 700; color: #7c3aed; margin-left: 1px;">%</span></span>
+                  </div>
+                </div>
+
+                <!-- 3단 가산점 웰니스 EXP 현황 -->
+                <div style="display: flex; flex-direction: column; gap: 8px; background: #f8fafc; border-radius: 16px; padding: 12px 14px; border: 1px solid #e2e8f0;">
+                  <div style="font-size: 0.72rem; font-weight: 800; color: #64748b; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 2px;">🏆 웰니스 3단 가산점 획득 현황</div>
+                  
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <!-- 주간 -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
+                      <span style="color: #475569; font-weight: 800; display: flex; align-items: center; gap: 4px;">⚡ 주간 향상 <span style="font-size: 0.65rem; font-weight: 700; color: #94a3b8;">(지난주 대조)</span></span>
+                      <span style="font-weight: 900; color: ${wScore > 0 ? '#0284c7' : '#94a3b8'};">${wScore > 0 ? `+${wScore} EXP` : '0 EXP'}</span>
+                    </div>
+                    
+                    <!-- 월간 -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
+                      <span style="color: #475569; font-weight: 800; display: flex; align-items: center; gap: 4px;">🔮 월간 향상 <span style="font-size: 0.65rem; font-weight: 700; color: #94a3b8;">(월초 대조)</span></span>
+                      <span style="font-weight: 900; color: ${mScore > 0 ? '#7c3aed' : '#94a3b8'};">${mScore > 0 ? `+${mScore} EXP` : '0 EXP'}</span>
+                    </div>
+                    
+                    <!-- 평생 -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
+                      <span style="color: #475569; font-weight: 800; display: flex; align-items: center; gap: 4px;">👑 평생 토탈 <span style="font-size: 0.65rem; font-weight: 700; color: #94a3b8;">(최초 대조)</span></span>
+                      <span style="font-weight: 900; color: ${tScore > 0 ? '#d97706' : '#94a3b8'};">${tScore > 0 ? `+${tScore} EXP` : '0 EXP'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 비고 메모 (있는 경우만 출력) -->
+                ${r.memo ? `
+                  <div style="font-size: 0.72rem; color: #475569; font-weight: 800; background: #fffbeb; padding: 10px 12px; border-radius: 12px; border: 1px solid #fde68a;">
+                    💬 상담 메모: ${r.memo}
+                  </div>
+                ` : ''}
+              </div>
             `;
           });
 
-          html += `
-                </tbody>
-              </table>
-            </div>
-          `;
+          html += `</div>`;
           listContainer.innerHTML = html;
         })
         .withFailureHandler(function(err) {

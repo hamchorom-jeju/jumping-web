@@ -849,8 +849,18 @@
           <input type="number" id="editFat" class="form-control" step="0.1">
         </div>
         <div class="form-group">
-          <label class="form-label">인바디 점수 *</label>
-          <input type="number" id="editScore" class="form-control" step="0.1">
+          <label class="form-label">주간 변화 점수 (자동 계산)</label>
+          <input type="number" id="editWeeklyScore" class="form-control" style="background:#f1f5f9; color:#475569; cursor:not-allowed;" readonly>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="form-group">
+          <label class="form-label">월간 변화 점수 (자동 계산)</label>
+          <input type="number" id="editMonthlyScore" class="form-control" style="background:#f1f5f9; color:#475569; cursor:not-allowed;" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">토탈 변화 점수 (자동 계산)</label>
+          <input type="number" id="editTotalScore" class="form-control" style="background:#f1f5f9; color:#475569; cursor:not-allowed;" readonly>
         </div>
       </div>
       <div class="form-group">
@@ -3103,6 +3113,7 @@
       let html = noteHtml;
       displayRecords.forEach(r => {
         var scoreVal = r.score || 0;
+        var detailScores = '(주:' + (r.weeklyScore || 0) + ' 월:' + (r.monthlyScore || 0) + ' 평:' + (r.totalScore || 0) + ')';
         var memoHtml = '';
         if (r.memo) {
           memoHtml = '<div style="margin-top:8px; font-size:0.75rem; color:#718096; background:#fff; padding:6px 10px; border-radius:8px; border:1px dashed #edf2f7;">💬 ' + r.memo + '</div>';
@@ -3121,8 +3132,14 @@
             '<div style="background:#fff; padding:6px; border-radius:8px; border:1.5px solid #edf2f7; font-weight:700;">근육: <span style="color:#38a169;">' + r.muscle + 'kg</span></div>' +
             '<div style="background:#fff; padding:6px; border-radius:8px; border:1.5px solid #edf2f7; font-weight:700;">지방: <span style="color:#d97706;">' + r.fat + '%</span></div>' +
           '</div>' +
-          '<div style="margin-top:10px; font-size:0.82rem; color:#2d3748; display:flex; justify-content:space-between; align-items:center;">' +
-            '<span>🏆 점수: <strong style="color:#8a2be2; font-size:0.9rem;">' + scoreVal + '점</strong></span>' +
+          '<div style="margin-top:10px; font-size:0.75rem; color:#4a5568; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">' +
+            '<div style="display:flex; gap:6px; font-weight:800; align-items:center;">' +
+              '<span>⚡주: <strong style="color:#0284c7;">+' + (r.weeklyScore || 0) + '점</strong></span>' +
+              '<span style="color:#cbd5e0;">|</span>' +
+              '<span>🔮월: <strong style="color:#7c3aed;">+' + (r.monthlyScore || 0) + '점</strong></span>' +
+              '<span style="color:#cbd5e0;">|</span>' +
+              '<span>👑평: <strong style="color:#d97706;">+' + (r.totalScore || 0) + '점</strong></span>' +
+            '</div>' +
             '<button onclick="openInBodyEditModal(' + r.rowIdx + ')" style="background:#f1f5f9; color:#4a5568; border:1px solid #cbd5e0; padding:4px 10px; border-radius:8px; font-size:0.75rem; font-weight:800; cursor:pointer;">✏️ 수정</button>' +
           '</div>' +
           memoHtml +
@@ -3142,7 +3159,9 @@
       document.getElementById('editWeight').value = rec.weight;
       document.getElementById('editMuscle').value = rec.muscle;
       document.getElementById('editFat').value = rec.fat;
-      document.getElementById('editScore').value = rec.score;
+      document.getElementById('editWeeklyScore').value = rec.weeklyScore || 0;
+      document.getElementById('editMonthlyScore').value = rec.monthlyScore || 0;
+      document.getElementById('editTotalScore').value = rec.totalScore || 0;
       document.getElementById('editMemo').value = rec.memo;
       
       document.getElementById('inBodyEditModal').classList.add('show');
@@ -3170,7 +3189,12 @@
         weight: parseFloat(document.getElementById('editWeight').value) || 0,
         muscle: parseFloat(document.getElementById('editMuscle').value) || 0,
         fat: parseFloat(document.getElementById('editFat').value) || 0,
-        score: parseFloat(document.getElementById('editScore').value) || 0,
+        weeklyScore: parseFloat(document.getElementById('editWeeklyScore').value) || 0,
+        monthlyScore: parseFloat(document.getElementById('editMonthlyScore').value) || 0,
+        totalScore: parseFloat(document.getElementById('editTotalScore').value) || 0,
+        score: (parseFloat(document.getElementById('editWeeklyScore').value) || 0) + 
+               (parseFloat(document.getElementById('editMonthlyScore').value) || 0) + 
+               (parseFloat(document.getElementById('editTotalScore').value) || 0),
         memo: document.getElementById('editMemo').value.trim()
       };
       
@@ -3190,12 +3214,13 @@
           showAppAlert("성공적으로 수정되었습니다!", "success");
           closeInBodyEditModal();
           
-          // 로컬 캐시 갱신 및 재렌더링
-          const idx = window.allInBodyRecords.findIndex(r => r.rowIdx === Number(payload.rowIdx));
-          if (idx > -1) {
-            window.allInBodyRecords[idx] = payload;
-          }
-          filterInBodyHistory();
+              // 서버에서 실시간 재계산된 전체 기록 백그라운드로 가져와 필터링 유지하며 갱신
+          google.script.run.withSuccessHandler(function(refreshRes) {
+            if (refreshRes && refreshRes.records) {
+              window.allInBodyRecords = refreshRes.records;
+              filterInBodyHistory(); // 기존 어드민이 채워둔 검색 필터 유지한 채 리스트만 실시간 갱신!
+            }
+          }).getInBodyHistory();
         } else {
           alert("수정 실패: " + (res ? res.error : "서버 에러"));
         }

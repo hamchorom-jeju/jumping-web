@@ -660,9 +660,13 @@ function getUserDashboardData(payload) {
         }
       }
       
-      // (2) 시즌(월간) 인바디 점수: 월초 첫 주 기준 기록(season0WeekInbody)이 있고, 본인 최신 기록이 다를 때만 반영!
+      // (2) 시즌(월간) 인바디 점수: 월초 첫 주 기준 기록(season0WeekInbody)이 있고, 본인 최신 기록이 다를 때만 반영! (엄격 마감 규칙 적용)
       if (season0WeekInbody && currentInbody && season0WeekInbody !== currentInbody) {
-        inbodySeasonScore = calculateInbodyScoreHelper(season0WeekInbody, currentInbody);
+        if (isDateInLastWeekMonToWed(currentInbody.date)) {
+          inbodySeasonScore = calculateInbodyScoreHelper(season0WeekInbody, currentInbody);
+        } else {
+          inbodySeasonScore = 0;
+        }
       }
     }
 
@@ -1026,7 +1030,11 @@ function submitInBodyRecord(payload) {
     }
     
     if (baselineRecord && baselineRecord !== currentInbody) {
-      monthlyScore = calculateInbodyScoreHelper(baselineRecord, currentInbody);
+      if (isDateInLastWeekMonToWed(currentInbody.date)) {
+        monthlyScore = calculateInbodyScoreHelper(baselineRecord, currentInbody);
+      } else {
+        monthlyScore = 0;
+      }
     }
     
     // 7. 시트에 3단 확장 포맷으로 영구 기입
@@ -4603,6 +4611,10 @@ function getInBodyHistory() {
         dateVal = Utilities.formatDate(dateVal, "GMT+9", "yyyy-MM-dd");
       }
       
+      var wScore = row[6] !== "" ? Number(row[6]) : 0; // G열: 주간점수
+      var mScore = row[7] !== "" ? Number(row[7]) : 0; // H열: 월간점수
+      var tScore = row[8] !== "" ? Number(row[8]) : 0; // I열: 토탈점수
+      
       records.push({
         rowIdx: i + 1,
         date: String(dateVal || ""),
@@ -4611,8 +4623,11 @@ function getInBodyHistory() {
         weight: row[3] !== "" ? Number(row[3]) : 0, // D열: 체중
         muscle: row[4] !== "" ? Number(row[4]) : 0, // E열: 골격근량
         fat: row[5] !== "" ? Number(row[5]) : 0, // F열: 체지방률
-        score: row[6] !== "" ? Number(row[6]) : 0, // G열: 인바디점수
-        memo: String(row[7] || "") // H열: 비고/상담내용
+        weeklyScore: wScore,
+        monthlyScore: mScore,
+        totalScore: tScore,
+        score: wScore + mScore + tScore, // 합산점수
+        memo: String(row[9] || "") // J열: 비고
       });
     }
     // 최신순 정렬
@@ -4635,20 +4650,185 @@ function updateInBodyRecord(payload) {
     var rowIdx = Number(payload.rowIdx);
     if (!rowIdx || rowIdx < 2) return { success: false, error: "유효하지 않은 행 인덱스입니다." };
     
-    // 안전한 덮어쓰기 위해 날짜 타입 변환
+    var name = String(payload.name).trim();
+    var phone = formatPhoneNumber(payload.phone).replace(/[^0-9]/g, "");
+    var weight = Number(payload.weight || 0);
+    var muscle = Number(payload.muscle || 0);
+    var fat = Number(payload.fat || 0);
+    var memo = String(payload.memo || "").trim();
+    
     var targetDate = new Date(payload.date);
+    if (isNaN(targetDate.getTime())) {
+      return { success: false, error: "유효하지 않은 날짜 포맷입니다." };
+    }
     
-    // 시트 셀에 하나씩 매칭하여 저장
+    // 1. 전체 이력 조회 및 이번에 수정할 행을 반영한 가상 목록 구성
+    var data = sheet.getDataRange().getValues();
+    var userRecords = [];
+    
+    for (var i = 1; i < data.length; i++) {
+      var rowPhone = formatPhoneNumber(data[i][2]).replace(/[^0-9]/g, "");
+      if (rowPhone === phone) {
+        var rDate = new Date(data[i][0]);
+        if (isNaN(rDate.getTime())) continue;
+        
+        // 현재 수정 대상인 행인 경우 새 수치로 대체, 다른 행은 시트의 수치 사용
+        if (i + 1 === rowIdx) {
+          userRecords.push({
+            date: targetDate,
+            weight: weight,
+            muscle: muscle,
+            fat: fat,
+            rowIdx: i + 1
+          });
+        } else {
+          userRecords.push({
+            date: rDate,
+            weight: Number(data[i][3] || 0),
+            muscle: Number(data[i][4] || 0),
+            fat: Number(data[i][5] || 0),
+            rowIdx: i + 1
+          });
+        }
+      }
+    }
+    
+    // 만약 현재 수정 중인 행이 userRecords에 없다면 추가
+    var foundCurrent = false;
+    for (var rIdx = 0; rIdx < userRecords.length; rIdx++) {
+      if (userRecords[rIdx].rowIdx === rowIdx) {
+        foundCurrent = true;
+        break;
+      }
+    }
+    if (!foundCurrent) {
+      userRecords.push({
+        date: targetDate,
+        weight: weight,
+        muscle: muscle,
+        fat: fat,
+        rowIdx: rowIdx
+      });
+    }
+
+    // 날짜 순 정렬 (오름차순)하여 3단 스탯 변화를 타임라인으로 정밀 연산
+    userRecords.sort(function(a, b) { return a.date - b.date; });
+
+    // 인바디 계산 공통 헬퍼
+    function calculateInbodyScoreHelper(first, current) {
+      if (!first || !current) return 0;
+      var score = 0;
+      var diffW = Number((first.weight - current.weight).toFixed(2));
+      var diffM = Number((current.muscle - first.muscle).toFixed(2));
+      var diffFat = Number((first.fat - current.fat).toFixed(1));
+      
+      if (diffW > 0) score += (diffW * 10) * 50;
+      if (diffM > 0) score += (diffM * 10) * 200;
+      if (diffFat > 0) score += (diffFat * 10) * 100;
+      
+      var firstFatMass = first.weight * (first.fat / 100);
+      var currentFatMass = current.weight * (current.fat / 100);
+      var fatLossRate = 0;
+      if (firstFatMass > 0) {
+        fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
+      }
+      if (diffW >= 8.0 || fatLossRate >= 20.0) {
+        score += 1500;
+      }
+      if (Math.abs(diffW) <= 0.2) score += 100;
+      return score;
+    }
+
+    var targetRecord = null;
+    var targetIdxInList = -1;
+    for (var rIdx = 0; rIdx < userRecords.length; rIdx++) {
+      if (userRecords[rIdx].rowIdx === rowIdx) {
+        targetRecord = userRecords[rIdx];
+        targetIdxInList = rIdx;
+        break;
+      }
+    }
+
+    // 날짜 기준점 계산
+    var day = targetRecord.date.getDay();
+    var diffToThu = (day + 3) % 7; 
+    var startOfWeek = new Date(targetRecord.date.getFullYear(), targetRecord.date.getMonth(), targetRecord.date.getDate() - diffToThu);
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    var year = targetRecord.date.getFullYear();
+    var month = targetRecord.date.getMonth();
+    var startOfMonth = new Date(year, month, 1, 0, 0, 0, 0);
+    
+    var firstDayOfWeek = startOfMonth.getDay();
+    var diffToWed = (3 - firstDayOfWeek + 7) % 7;
+    var baselineDeadline = new Date(year, month, 1 + diffToWed);
+    if (typeof isCenterHoliday === "function" && isCenterHoliday(baselineDeadline)) {
+      baselineDeadline.setDate(baselineDeadline.getDate() + 1);
+    }
+    baselineDeadline.setHours(23, 59, 59, 999);
+
+    var firstEver = null;
+    var prevBeforeThisWeek = null;
+    var baselineRecord = null;
+
+    for (var j = 0; j <= targetIdxInList; j++) {
+      var r = userRecords[j];
+      
+      if (!firstEver || r.date < firstEver.date) {
+        firstEver = r;
+      }
+      
+      if (r.date < startOfWeek) {
+        var timeDiff = startOfWeek.getTime() - r.date.getTime();
+        var diffDays = timeDiff / (1000 * 60 * 60 * 24);
+        if (diffDays <= 7.5) {
+          if (!prevBeforeThisWeek || r.date > prevBeforeThisWeek.date) {
+            prevBeforeThisWeek = r;
+          }
+        }
+      }
+      
+      if (r.date >= startOfMonth && r.date <= baselineDeadline) {
+        if (!baselineRecord || r.date < baselineRecord.date) {
+          baselineRecord = r;
+        }
+      }
+    }
+
+    var weeklyScore = 0;
+    var monthlyScore = 0;
+    var totalScore = 0;
+
+    if (firstEver && firstEver !== targetRecord) {
+      totalScore = calculateInbodyScoreHelper(firstEver, targetRecord);
+    }
+    if (prevBeforeThisWeek) {
+      weeklyScore = calculateInbodyScoreHelper(prevBeforeThisWeek, targetRecord);
+    }
+    if (baselineRecord && baselineRecord !== targetRecord) {
+      if (isDateInLastWeekMonToWed(targetRecord.date)) {
+        monthlyScore = calculateInbodyScoreHelper(baselineRecord, targetRecord);
+      } else {
+        monthlyScore = 0;
+      }
+    }
+    
+    // 시트 셀에 하나씩 매칭하여 저장 (11열 포맷)
     sheet.getRange(rowIdx, 1).setValue(targetDate);
-    sheet.getRange(rowIdx, 2).setValue(String(payload.name).trim());
-    sheet.getRange(rowIdx, 3).setValue(String(payload.phone).trim());
-    sheet.getRange(rowIdx, 4).setValue(Number(payload.weight || 0));
-    sheet.getRange(rowIdx, 5).setValue(Number(payload.muscle || 0));
-    sheet.getRange(rowIdx, 6).setValue(Number(payload.fat || 0));
-    sheet.getRange(rowIdx, 7).setValue(Number(payload.score || 0));
-    sheet.getRange(rowIdx, 8).setValue(String(payload.memo || "").trim());
+    sheet.getRange(rowIdx, 2).setValue(name);
+    sheet.getRange(rowIdx, 3).setValue("'" + phone);
+    sheet.getRange(rowIdx, 4).setValue(weight);
+    sheet.getRange(rowIdx, 5).setValue(muscle);
+    sheet.getRange(rowIdx, 6).setValue(fat);
+    sheet.getRange(rowIdx, 7).setValue(weeklyScore);
+    sheet.getRange(rowIdx, 8).setValue(monthlyScore);
+    sheet.getRange(rowIdx, 9).setValue(totalScore);
+    sheet.getRange(rowIdx, 10).setValue(memo);
     
-    return { success: true, message: "기록이 안전하게 수정되었습니다." };
+    // [perf] 인바디 업로드 완료 시 대시보드 캐시 즉시 파괴
+    clearUserDashboardCache(phone);
+    
+    return { success: true, message: "기록이 수정되었으며 점수가 자동 재계산되었습니다." };
   } catch (e) {
     return { success: false, error: e.toString() };
   }
@@ -8898,10 +9078,10 @@ function getMyInbodyHistory(phone) {
     if (!sheet) return { success: false, error: "'33챌린지_인바디' 시트를 찾을 수 없습니다." };
 
     var data = sheet.getDataRange().getValues();
-    var records = [];
+    var rawRecords = [];
 
-    // 칼럼 매핑 순서:
-    // 0: 측정일 | 1: 회원명 | 2: 연락처 | 3: 체중 | 4: 골격근량 | 5: 체지방률 | 6: 변화점수 | 7: 비고 | 8: 등록일
+    // 칼럼 매핑 순서 (기존 및 신규 3단 분기 호환 지원)
+    // 0: 측정일 | 1: 회원명 | 2: 연락처 | 3: 체중 | 4: 골격근량 | 5: 체지방률 | ... | 비고/등록일 등
     for (var i = 1; i < data.length; i++) {
       var rawPhone = String(data[i][2] || "").trim();
       var rowPhone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, "");
@@ -8921,26 +9101,146 @@ function getMyInbodyHistory(phone) {
           formattedDate = String(data[i][0]);
         }
 
-        records.push({
+        // 비고 칼럼: 신규 포맷(index 9 - J열) 또는 구포맷(index 7 - H열) 동적 추출
+        var memoVal = "";
+        if (data[i].length >= 10) {
+          memoVal = String(data[i][9] || "");
+        } else {
+          memoVal = String(data[i][7] || "");
+        }
+
+        rawRecords.push({
           date: formattedDate,
           weight: Number(data[i][3]) || 0,
           muscle: Number(data[i][4]) || 0,
           fat: Number(data[i][5]) || 0,
-          weeklyScore: Number(data[i][6]) || 0,   // G열: 주간변화점수
-          monthlyScore: Number(data[i][7]) || 0,  // H열: 월간변화점수
-          totalScore: Number(data[i][8]) || 0,    // I열: 토탈변화점수
-          score: (Number(data[i][6]) || 0) + (Number(data[i][7]) || 0) + (Number(data[i][8]) || 0), // 합산 변화점수 (miracle.html 기록보기와 완벽 호환)
-          memo: String(data[i][9] || "")          // J열: 비고
+          memo: memoVal
         });
       }
     }
 
-    // 최신 순서(날짜 역순)로 정렬
-    records.sort(function(a, b) {
+    // 날짜 순 정렬 (오름차순)하여 3단 스탯 변화를 타임라인으로 정밀 연산
+    rawRecords.sort(function(a, b) {
+      return new Date(a.date) - new Date(b.date);
+    });
+
+    // 인바디 계산 헬퍼 복사
+    function localInbodyScoreHelper(first, current) {
+      if (!first || !current) return 0;
+      var score = 0;
+      var diffW = Number((first.weight - current.weight).toFixed(2));
+      var diffM = Number((current.muscle - first.muscle).toFixed(2));
+      var diffFat = Number((first.fat - current.fat).toFixed(1));
+      
+      if (diffW > 0) score += (diffW * 10) * 50;
+      if (diffM > 0) score += (diffM * 10) * 200;
+      if (diffFat > 0) score += (diffFat * 10) * 100;
+      
+      var firstFatMass = first.weight * (first.fat / 100);
+      var currentFatMass = current.weight * (current.fat / 100);
+      var fatLossRate = 0;
+      if (firstFatMass > 0) {
+        fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
+      }
+      if (diffW >= 8.0 || fatLossRate >= 20.0) {
+        score += 1500;
+      }
+      if (Math.abs(diffW) <= 0.2) score += 100;
+      return score;
+    }
+
+    var finalRecords = [];
+    for (var i = 0; i < rawRecords.length; i++) {
+      var currentInbody = rawRecords[i];
+      var currentDate = new Date(currentInbody.date);
+
+      // (1) 평생 최초 기록 구하기
+      var firstEver = rawRecords[0];
+
+      // (2) 이번 주 목요일 구하기
+      var day = currentDate.getDay();
+      var diffToThu = (day + 3) % 7; 
+      var startOfWeek = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - diffToThu);
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      // (3) 지난주 인바디 구하기: startOfWeek 이전의 가장 최근 기록이되, startOfWeek 기준 7.5일 이내인 것!
+      var prevBeforeThisWeek = null;
+      for (var j = 0; j < i; j++) {
+        var r = rawRecords[j];
+        var rDate = new Date(r.date);
+        if (rDate < startOfWeek) {
+          var timeDiff = startOfWeek.getTime() - rDate.getTime();
+          var diffDays = timeDiff / (1000 * 60 * 60 * 24);
+          if (diffDays <= 7.5) {
+            if (!prevBeforeThisWeek || rDate > new Date(prevBeforeThisWeek.date)) {
+              prevBeforeThisWeek = r;
+            }
+          }
+        }
+      }
+
+      // (4) 월초 시작일 및 1주차 수요일 마감 마일스톤 구하기
+      var year = currentDate.getFullYear();
+      var month = currentDate.getMonth();
+      var startOfMonth = new Date(year, month, 1, 0, 0, 0, 0);
+      var firstDayOfWeek = startOfMonth.getDay();
+      var diffToWed = (3 - firstDayOfWeek + 7) % 7;
+      var baselineDeadline = new Date(year, month, 1 + diffToWed);
+      if (typeof isCenterHoliday === "function" && isCenterHoliday(baselineDeadline)) {
+        baselineDeadline.setDate(baselineDeadline.getDate() + 1); // 공휴일 시 목요일 연장
+      }
+      baselineDeadline.setHours(23, 59, 59, 999);
+
+      // (5) 월초 기준 인바디 구하기: 당월 1일 ~ 1주차 마감 수요일 사이의 첫 기록
+      var baselineRecord = null;
+      for (var j = 0; j <= i; j++) {
+        var r = rawRecords[j];
+        var rDate = new Date(r.date);
+        if (rDate >= startOfMonth && rDate <= baselineDeadline) {
+          if (!baselineRecord || rDate < new Date(baselineRecord.date)) {
+            baselineRecord = r;
+          }
+        }
+      }
+
+      // 3단 점수 정교 연산
+      var weeklyScore = 0;
+      var monthlyScore = 0;
+      var totalScore = 0;
+
+      if (firstEver && firstEver !== currentInbody) {
+        totalScore = localInbodyScoreHelper(firstEver, currentInbody);
+      }
+      if (prevBeforeThisWeek) {
+        weeklyScore = localInbodyScoreHelper(prevBeforeThisWeek, currentInbody);
+      }
+      if (baselineRecord && baselineRecord !== currentInbody) {
+        if (isDateInLastWeekMonToWed(currentDate)) {
+          monthlyScore = localInbodyScoreHelper(baselineRecord, currentInbody);
+        } else {
+          monthlyScore = 0;
+        }
+      }
+
+      finalRecords.push({
+        date: currentInbody.date,
+        weight: currentInbody.weight,
+        muscle: currentInbody.muscle,
+        fat: currentInbody.fat,
+        weeklyScore: weeklyScore,
+        monthlyScore: monthlyScore,
+        totalScore: totalScore,
+        score: weeklyScore + monthlyScore + totalScore,
+        memo: currentInbody.memo
+      });
+    }
+
+    // 최신 순 정렬 (내림차순)
+    finalRecords.sort(function(a, b) {
       return new Date(b.date) - new Date(a.date);
     });
 
-    return { success: true, records: records };
+    return { success: true, records: finalRecords };
   } catch (e) {
     return { error: e.toString() };
   }
@@ -9557,6 +9857,40 @@ function isCenterHoliday(date) {
 }
 
 /**
+ * [v65.80] 주어진 날짜가 해당 월의 마지막 주 월~수요일(목요일 마감 연장선 포함) 범위 내에 해당하는지 판별합니다.
+ */
+function isDateInLastWeekMonToWed(date) {
+  if (!date || isNaN(date.getTime())) return false;
+  
+  var year = date.getFullYear();
+  var month = date.getMonth(); // 0-indexed
+  
+  // 1. 해당 월의 마지막 날짜 구하기
+  var lastDay = new Date(year, month + 1, 0);
+  
+  // 2. 해당 월의 마지막 수요일 구하기
+  var lastWed = new Date(year, month, lastDay.getDate());
+  while (lastWed.getDay() !== 3) { // 3은 수요일
+    lastWed.setDate(lastWed.getDate() - 1);
+  }
+  
+  // 3. 마지막 수요일이 공휴일/휴무일인 경우 목요일로 연장하는 규칙 반영
+  var deadline = new Date(lastWed.getTime());
+  var hasHoliday = (typeof isCenterHoliday === "function") && isCenterHoliday(lastWed);
+  if (hasHoliday) {
+    deadline.setDate(deadline.getDate() + 1); // 목요일로 연장
+  }
+  deadline.setHours(23, 59, 59, 999);
+  
+  // 4. 마지막 주 월요일 구하기 (마지막 수요일 기준 2일 전)
+  var lastMon = new Date(lastWed.getTime());
+  lastMon.setDate(lastWed.getDate() - 2);
+  lastMon.setHours(0, 0, 0, 0);
+  
+  return date >= lastMon && date <= deadline;
+}
+
+/**
  * [v5.0] 명예의 전당 (Hall of Fame) 데이터 실시간 취합 API
  */
 function getHallOfFameData(payload) {
@@ -9736,11 +10070,11 @@ function getHallOfFameData(payload) {
       }
       
       if (baselineRecord) {
-        // 당월 말일까지의 최신 인바디 탐색
+        // 당월 말일까지의 최신 인바디 탐색 (엄격 마감 규칙 적용)
         var latestInMonth = null;
         for (var rIdx = 0; rIdx < records.length; rIdx++) {
           var r = records[rIdx];
-          if (r.date >= startOfMonth && r.date <= endOfMonth) {
+          if (r.date >= startOfMonth && r.date <= endOfMonth && isDateInLastWeekMonToWed(r.date)) {
             if (!latestInMonth || r.date > latestInMonth.date) {
               latestInMonth = r;
             }
@@ -10774,7 +11108,7 @@ function archiveMonthlyRankingToSheet(period) {
               if (!baselineRecord || r.date < baselineRecord.date) baselineRecord = r;
             }
           }
-          if (r.date >= startOfMonth && r.date <= endOfMonth) {
+          if (r.date >= startOfMonth && r.date <= endOfMonth && isDateInLastWeekMonToWed(r.date)) {
             if (!latestInMonth || r.date > latestInMonth.date) latestInMonth = r;
           }
         }
@@ -10940,6 +11274,37 @@ function getChallengeArchiveData(payload) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var category = payload.category || "weekly"; // "weekly" or "monthly"
     
+    function getThuStartOfWeekLocal(date) {
+      var d = new Date(date.getTime());
+      var day = d.getDay();
+      var diffToThu = (day + 3) % 7; 
+      d.setDate(d.getDate() - diffToThu);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+    
+    function getWeekStringLocal(date) {
+      var thu = getThuStartOfWeekLocal(date);
+      var year = thu.getFullYear();
+      var month = thu.getMonth() + 1;
+      
+      var firstDayOfMonth = new Date(year, thu.getMonth(), 1);
+      var firstThu = new Date(year, thu.getMonth(), 1);
+      var firstDayOfWeek = firstDayOfMonth.getDay();
+      var diffToFirstThu = (4 - firstDayOfWeek + 7) % 7;
+      firstThu.setDate(1 + diffToFirstThu);
+      firstThu.setHours(0, 0, 0, 0);
+      
+      var weekNum = 1;
+      if (thu >= firstThu) {
+        weekNum = Math.floor((thu.getDate() - firstThu.getDate()) / 7) + 1;
+      } else {
+        var prevMonth = new Date(year, thu.getMonth(), 0);
+        return getWeekStringLocal(prevMonth);
+      }
+      return month + "월 " + weekNum + "주";
+    }
+
     var sheetName = category === "weekly" ? "33챌린지_주간성적아카이브" : "33챌린지_월간성적아카이브";
     var sheet = ss.getSheetByName(sheetName);
     
@@ -10958,7 +11323,13 @@ function getChallengeArchiveData(payload) {
     var periodSet = {};
     var periods = [];
     for (var i = data.length - 1; i >= 1; i--) {
-      var period = String(data[i][0] || "").trim();
+      var rawPeriod = data[i][0];
+      var period = "";
+      if (rawPeriod instanceof Date) {
+        period = (category === "weekly") ? getWeekStringLocal(rawPeriod) : (rawPeriod.getMonth() + 1) + "월";
+      } else {
+        period = String(rawPeriod || "").trim();
+      }
       if (period && !periodSet[period]) {
         periodSet[period] = true;
         periods.push(period);
@@ -10972,7 +11343,14 @@ function getChallengeArchiveData(payload) {
     
     if (targetPeriod) {
       for (var i = 1; i < data.length; i++) {
-        var rowPeriod = String(data[i][0] || "").trim();
+        var rawPeriod = data[i][0];
+        var rowPeriod = "";
+        if (rawPeriod instanceof Date) {
+          rowPeriod = (category === "weekly") ? getWeekStringLocal(rawPeriod) : (rawPeriod.getMonth() + 1) + "월";
+        } else {
+          rowPeriod = String(rawPeriod || "").trim();
+        }
+        
         if (rowPeriod === targetPeriod) {
           records.push({
             rank: Number(data[i][1] || 0),
@@ -10989,39 +11367,9 @@ function getChallengeArchiveData(payload) {
       // 순위별 오름차순 정렬
       records.sort(function(a, b) { return a.rank - b.rank; });
 
-      // 동적 날짜 범위 연산 헬퍼
+      // 동적 날짜 범위 연산
       try {
         if (category === "weekly") {
-          function getThuStartOfWeekLocal(date) {
-            var d = new Date(date.getTime());
-            var day = d.getDay();
-            var diffToThu = (day + 3) % 7; 
-            d.setDate(d.getDate() - diffToThu);
-            d.setHours(0, 0, 0, 0);
-            return d;
-          }
-          function getWeekStringLocal(date) {
-            var thu = getThuStartOfWeekLocal(date);
-            var year = thu.getFullYear();
-            var month = thu.getMonth() + 1;
-            
-            var firstDayOfMonth = new Date(year, thu.getMonth(), 1);
-            var firstThu = new Date(year, thu.getMonth(), 1);
-            var firstDayOfWeek = firstDayOfMonth.getDay();
-            var diffToFirstThu = (4 - firstDayOfWeek + 7) % 7;
-            firstThu.setDate(1 + diffToFirstThu);
-            firstThu.setHours(0, 0, 0, 0);
-            
-            var weekNum = 1;
-            if (thu >= firstThu) {
-              weekNum = Math.floor((thu.getDate() - firstThu.getDate()) / 7) + 1;
-            } else {
-              var prevMonth = new Date(year, thu.getMonth(), 0);
-              return getWeekStringLocal(prevMonth);
-            }
-            return month + "월 " + weekNum + "주";
-          }
-
           var summarySheet = ss.getSheetByName("일일_활동_기록");
           var summaryData = summarySheet ? summarySheet.getDataRange().getValues() : [];
           var matchDates = [];
