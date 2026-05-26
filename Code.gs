@@ -523,12 +523,14 @@ function getUserDashboardData(payload) {
         var recPhone = normalizePhoneDigits(inData[k][2]);
         if (recPhone === phone) {
           var iDate = new Date(inData[k][0]);
+          if (isNaN(iDate.getTime())) continue;
+          
           var remarksStr = String(inData[k][7] || "");
           var record = {
             date: iDate,
-            weight: Number(inData[k][3] || 0),
-            muscle: Number(inData[k][4] || 0),
-            fat: Number(inData[k][5] || 0),
+            weight: isNaN(Number(inData[k][3])) ? 0 : Number(inData[k][3]),
+            muscle: isNaN(Number(inData[k][4])) ? 0 : Number(inData[k][4]),
+            fat: isNaN(Number(inData[k][5])) ? 0 : Number(inData[k][5]),
             remarks: remarksStr
           };
           
@@ -570,26 +572,36 @@ function getUserDashboardData(payload) {
     // 인바디 개선 점수 연산 헬퍼 호출
     function calculateInbodyScoreHelper(first, current) {
       if (!first || !current) return 0;
+      
+      var fW = Number(first.weight) || 0;
+      var cW = Number(current.weight) || 0;
+      var fM = Number(first.muscle) || 0;
+      var cM = Number(current.muscle) || 0;
+      var fF = Number(first.fat) || 0;
+      var cF = Number(current.fat) || 0;
+      
       var score = 0;
-      var diffW = Number((first.weight - current.weight).toFixed(2));
-      var diffM = Number((current.muscle - first.muscle).toFixed(2));
-      var diffFat = Number((first.fat - current.fat).toFixed(1));
+      var diffW = Number((fW - cW).toFixed(2)) || 0;
+      var diffM = Number((cM - fM).toFixed(2)) || 0;
+      var diffFat = Number((fF - cF).toFixed(1)) || 0;
       
       if (diffW > 0) score += (diffW * 10) * 50;
       if (diffM > 0) score += (diffM * 10) * 200;
       if (diffFat > 0) score += (diffFat * 10) * 100;
       
-      var firstFatMass = first.weight * (first.fat / 100);
-      var currentFatMass = current.weight * (current.fat / 100);
+      var firstFatMass = fW * (fF / 100);
+      var currentFatMass = cW * (cF / 100);
       var fatLossRate = 0;
-      if (firstFatMass > 0) {
+      if (firstFatMass > 0 && !isNaN(firstFatMass)) {
         fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
       }
-      if (diffW >= 8.0 || fatLossRate >= 20.0) {
+      
+      if (diffW >= 8.0 || (fatLossRate >= 20.0 && !isNaN(fatLossRate))) {
         score += 1500;
       }
-      if (Math.abs(diffW) <= 0.2) score += 100;
-      return score;
+      if (Math.abs(diffW) <= 0.2 && fW > 0) score += 100;
+      
+      return isNaN(score) ? 0 : score;
     }
 
     // 평생 최초와 최신 기록이 동일한 기록 1개뿐인 경우(자기 대조) 점수 0점
