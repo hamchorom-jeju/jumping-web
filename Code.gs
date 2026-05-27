@@ -4430,6 +4430,86 @@ function getTodaySales() {
   return getSalesByDate(todayStr);
 }
 
+function updateSalesRecord(data) {
+  try {
+    if (!data.id) return { error: "매출 고유 ID가 누락되었습니다." };
+    
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var salesSheet = ss.getSheetByName("판매내역");
+    if (!salesSheet) return { error: "판매내역 시트가 없습니다." };
+    
+    var values = salesSheet.getDataRange().getValues();
+    var foundRow = -1;
+    
+    for (var i = 1; i < values.length; i++) {
+      if (String(values[i][0]).trim() === String(data.id).trim()) {
+        foundRow = i + 1; // row index (1-based)
+        break;
+      }
+    }
+    
+    if (foundRow === -1) {
+      return { error: "수정하려는 매출 내역을 찾을 수 없습니다." };
+    }
+    
+    // B열 날짜 셀 저장을 위해 시간 추출 및 보존
+    var oldDateTime = values[foundRow - 1][1]; 
+    var timeStr = "00:00:00";
+    if (oldDateTime instanceof Date) {
+      timeStr = Utilities.formatDate(oldDateTime, "GMT+9", "HH:mm:ss");
+    } else {
+      var parts = String(oldDateTime).split(" ");
+      if (parts.length > 1) {
+        timeStr = parts[1];
+      }
+    }
+    
+    var finalDateStr = data.date + " " + timeStr;
+    
+    // B열(날짜), C열(구분), D열(지급처/구입자), E열(세부항목명), F열(금액), G열(결제수단), H열(비고) 순차 업데이트
+    salesSheet.getRange(foundRow, 2).setValue(finalDateStr);
+    salesSheet.getRange(foundRow, 3).setValue(data.category);
+    salesSheet.getRange(foundRow, 4).setValue(data.buyer);
+    salesSheet.getRange(foundRow, 5).setValue(data.itemName || data.category);
+    salesSheet.getRange(foundRow, 6).setValue(Number(data.amount) || 0);
+    salesSheet.getRange(foundRow, 7).setValue(data.payMethod);
+    salesSheet.getRange(foundRow, 8).setValue(data.memo || "");
+    
+    return { success: true, message: "매출 기록이 성공적으로 수정되었습니다." };
+  } catch (e) {
+    return { error: "매출 수정 오류: " + e.toString() };
+  }
+}
+
+function deleteSalesRecord(id) {
+  try {
+    if (!id) return { error: "삭제하려는 고유 ID가 누락되었습니다." };
+    
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var salesSheet = ss.getSheetByName("판매내역");
+    if (!salesSheet) return { error: "판매내역 시트가 없습니다." };
+    
+    var values = salesSheet.getDataRange().getValues();
+    var foundRow = -1;
+    
+    for (var i = 1; i < values.length; i++) {
+      if (String(values[i][0]).trim() === String(id).trim()) {
+        foundRow = i + 1;
+        break;
+      }
+    }
+    
+    if (foundRow === -1) {
+      return { error: "삭제하려는 매출 내역을 찾을 수 없습니다." };
+    }
+    
+    salesSheet.deleteRow(foundRow);
+    return { success: true, message: "매출 기록이 성공적으로 삭제되었습니다." };
+  } catch (e) {
+    return { error: "매출 삭제 오류: " + e.toString() };
+  }
+}
+
 // ──────────────────────────────────────────────
 // 13. 관리자 전용 상세 출석 관리 API
 // ──────────────────────────────────────────────

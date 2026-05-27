@@ -2355,6 +2355,85 @@
     </div>
   </div>
 
+  <!-- 매출/지출 수정 및 삭제 모달 -->
+  <div class="modal-overlay" id="salesEditModal">
+    <div class="modal-content" style="max-height:85vh; overflow-y:auto; background:#ffffff; color:#1a202c; border-radius: 20px;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; margin-bottom: 20px;">
+        <span style="font-size: 1.15rem; font-weight: 800;">⚙️ 매출/지출 수정 및 삭제</span>
+      </div>
+
+      <input type="hidden" id="editSalesId">
+      <input type="hidden" id="editSalesOriginalDate">
+
+      <div class="form-group" style="margin-bottom: 15px;">
+        <label class="form-label" style="display: block; font-size: 0.85rem; font-weight: bold; color: #4a5568; margin-bottom: 6px;">📅 날짜 선택</label>
+        <input type="date" id="editSalesDate"
+          style="width:100%; padding:12px; font-size:1rem; border-radius:10px; background:#f7fafc; color:#1a202c; border:1px solid #e2e8f0; outline:none;">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 15px;">
+        <label class="form-label" style="display: block; font-size: 0.85rem; font-weight: bold; color: #4a5568; margin-bottom: 6px;">구분 선택</label>
+        <select id="editSalesCategory" onchange="handleEditSalesCategoryChange()"
+          style="width:100%; padding:12px; font-size:1rem; border-radius:10px; background:#f7fafc; color:#1a202c; border:1px solid #e2e8f0; outline:none; font-weight: 500;">
+          <optgroup label="📈 수입 (매출)">
+            <option value="등록비">등록비 (수입)</option>
+            <option value="제품판매">제품판매 (수입)</option>
+            <option value="점핑PT">점핑PT (수입)</option>
+            <option value="체험비">체험비 (수입)</option>
+            <option value="기타수입">기타 수입 (수입)</option>
+          </optgroup>
+          <optgroup label="💸 지출 (영업 비용)">
+            <option value="임대료&관리비">🏢 임대료&관리비 (지출)</option>
+            <option value="공과금">⚡ 공과금 (지출)</option>
+            <option value="렌탈료">🚴 렌탈료 (지출)</option>
+            <option value="운영비">🛠️ 운영비 (지출)</option>
+            <option value="기타지출">💸 기타 지출 (지출)</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 15px;">
+        <label class="form-label" id="editSalesBuyerLabel" style="display: block; font-size: 0.85rem; font-weight: bold; color: #4a5568; margin-bottom: 6px;">👤 구입자 이름</label>
+        <input type="text" id="editSalesBuyer" placeholder="예: 홍길동"
+          style="width:100%; padding:12px; font-size:1rem; border-radius:10px; background:#f7fafc; color:#1a202c; border:1px solid #e2e8f0; outline:none;">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 15px;">
+        <label class="form-label" style="display: block; font-size: 0.85rem; font-weight: bold; color: #4a5568; margin-bottom: 6px;">🛍️ 세부 항목명 / 지출 용도</label>
+        <input type="text" id="editSalesItemName" placeholder="예: 점핑 30회권, 찜질복 1벌..."
+          style="width:100%; padding:12px; font-size:1rem; border-radius:10px; background:#f7fafc; color:#1a202c; border:1px solid #e2e8f0; outline:none;">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 15px;">
+        <label class="form-label" style="display: block; font-size: 0.85rem; font-weight: bold; color: #4a5568; margin-bottom: 6px;">금액 (원)</label>
+        <input type="number" id="editSalesAmount" placeholder="예: 300000"
+          style="width:100%; padding:12px; font-size:1rem; border-radius:10px; background:#f7fafc; color:#1a202c; border:1px solid #e2e8f0; outline:none;">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 15px;">
+        <label class="form-label" style="display: block; font-size: 0.85rem; font-weight: bold; color: #4a5568; margin-bottom: 6px;">결제수단 / 지급방법</label>
+        <div class="select-grid" id="editPayMethodGrid" style="grid-template-columns: repeat(4, 1fr); gap: 6px; display: grid;">
+          <div class="select-btn" onclick="selectEditPayMethod(this)">카드</div>
+          <div class="select-btn" onclick="selectEditPayMethod(this)">현금</div>
+          <div class="select-btn" onclick="selectEditPayMethod(this)">계좌이체</div>
+          <div class="select-btn" onclick="selectEditPayMethod(this)">기타</div>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 15px;">
+        <label class="form-label" style="display: block; font-size: 0.85rem; font-weight: bold; color: #4a5568; margin-bottom: 6px;">비고 (선택)</label>
+        <input type="text" id="editSalesMemo" placeholder="추가 메모..."
+          style="width:100%; padding:12px; font-size:1rem; border-radius:10px; background:#f7fafc; color:#1a202c; border:1px solid #e2e8f0; outline:none;">
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px; margin-top:20px;">
+        <button class="btn-submit" onclick="submitSalesUpdate()" style="background:#553c9a; color:white; font-weight:bold; border-radius:12px; height:48px; border:none; cursor:pointer; width:100%; font-size:1rem;">💾 수정 완료하기</button>
+        <button class="btn-danger" onclick="deleteSalesRecordFromUi()" style="background:#e53e3e; color:white; font-weight:bold; border-radius:12px; height:48px; border:none; cursor:pointer; width:100%; font-size:1rem; transition:background 0.2s;">🗑️ 삭제하기</button>
+        <button class="btn-close" onclick="closeSalesEditModal()" style="background: #edf2f7; color: #4a5568; font-weight: bold; border-radius: 12px; height: 48px; border: none; cursor: pointer; width: 100%;">닫기</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let currentWorkLogStats = null;
 
@@ -3695,7 +3774,7 @@
                 signBg = '#f0fff4';
               }
 
-              detailHtml += '<div style="background:' + signBg + '; border:1px solid rgba(0,0,0,0.05); border-radius:12px; padding:15px; display:flex; justify-content:space-between; align-items:center;">' +
+              detailHtml += '<div style="background:' + signBg + '; border:1px solid rgba(0,0,0,0.05); border-radius:12px; padding:15px; display:flex; justify-content:space-between; align-items:center; gap:10px;">' +
                 '<div style="flex:1;">' +
                 '<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">' +
                 '<span style="font-weight:800; color:#2d3748; font-size:0.95rem;">' + item.buyer + '</span>' +
@@ -3704,8 +3783,22 @@
                 '<div style="font-size:0.8rem; color:#718096;">' + item.itemName + ' (' + (item.payMethod || '카드') + ')</div>' +
                 (item.memo ? '<div style="font-size:0.75rem; color:#a0aec0; margin-top:4px;">└ 비고: ' + item.memo + '</div>' : '') +
                 '</div>' +
+                '<div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">' +
                 '<div style="font-weight:800; font-size:1rem; color:' + signColor + ';">' + 
                 (isExpense ? '-' : '+') + Number(amountNum).toLocaleString() + '원' +
+                '</div>' +
+                '<button onclick="openSalesEditModal(\'' + 
+                  (item.id || '').replace(/'/g, "\\'") + '\', \'' + 
+                  (item.date || '').replace(/'/g, "\\'") + '\', \'' + 
+                  (item.category || '').replace(/'/g, "\\'") + '\', \'' + 
+                  (item.buyer || '').replace(/'/g, "\\'") + '\', \'' + 
+                  (item.itemName || '').replace(/'/g, "\\'") + '\', ' + 
+                  amountNum + ', \'' + 
+                  (item.payMethod || '카드').replace(/'/g, "\\'") + '\', \'' + 
+                  (item.memo || '').replace(/'/g, "\\'") + '\')" ' +
+                'style="background:#805ad5; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.72rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:2px; transition:background 0.2s;">' +
+                '✏️ 수정/삭제' +
+                '</button>' +
                 '</div>' +
                 '</div>';
             });
@@ -3729,6 +3822,203 @@
       document.getElementById('salesDetailModal').classList.remove('show');
       if (!isPopstate && window.registerModalClose) {
         window.registerModalClose(closeSalesDetailModal);
+      }
+    }
+
+    function openSalesEditModal(id, dateStr, category, buyer, itemName, amount, payMethod, memo) {
+      document.getElementById('editSalesId').value = id;
+      document.getElementById('editSalesOriginalDate').value = dateStr;
+      
+      // 날짜 파싱 (yyyy-MM-dd HH:mm:ss -> yyyy-MM-dd)
+      var dateOnly = dateStr.split(' ')[0];
+      document.getElementById('editSalesDate').value = dateOnly;
+      
+      // 카테고리 설정
+      var catSelect = document.getElementById('editSalesCategory');
+      catSelect.value = category;
+      handleEditSalesCategoryChange();
+      
+      // 필드 채우기
+      document.getElementById('editSalesBuyer').value = buyer;
+      document.getElementById('editSalesItemName').value = itemName;
+      document.getElementById('editSalesAmount').value = amount;
+      document.getElementById('editSalesMemo').value = memo || '';
+      
+      // 결제수단 설정
+      document.querySelectorAll('#editPayMethodGrid .select-btn').forEach(function (btn) {
+        if (btn.innerText.trim() === payMethod.trim()) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      
+      document.getElementById('salesEditModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeSalesEditModal);
+      }
+    }
+
+    function closeSalesEditModal(isPopstate) {
+      document.getElementById('salesEditModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeSalesEditModal);
+      }
+    }
+
+    function selectEditPayMethod(el) {
+      document.querySelectorAll('#editPayMethodGrid .select-btn').forEach(function (btn) { btn.classList.remove('active'); });
+      el.classList.add('active');
+    }
+
+    function handleEditSalesCategoryChange() {
+      var category = document.getElementById('editSalesCategory').value;
+      var expenseCategories = [
+        "임대료&관리비",
+        "공과금",
+        "렌탈료",
+        "운영비",
+        "기타지출"
+      ];
+      var isExpense = expenseCategories.indexOf(category) !== -1 || category.indexOf("지출") !== -1;
+      var label = document.getElementById('editSalesBuyerLabel');
+      if (label) {
+        label.innerText = isExpense ? "👤 지급처 이름" : "👤 구입자 이름";
+      }
+    }
+
+    function submitSalesUpdate() {
+      var id = document.getElementById('editSalesId').value;
+      var salesDate = document.getElementById('editSalesDate').value;
+      var category = document.getElementById('editSalesCategory').value;
+      var buyer = document.getElementById('editSalesBuyer').value.trim();
+      var itemName = document.getElementById('editSalesItemName').value.trim();
+      var amount = document.getElementById('editSalesAmount').value;
+      var payMethodBtn = document.querySelector('#editPayMethodGrid .select-btn.active');
+      var payMethod = payMethodBtn ? payMethodBtn.innerText : '카드';
+      var memo = document.getElementById('editSalesMemo').value.trim();
+
+      var expenseCategories = [
+        "임대료&관리비",
+        "공과금",
+        "렌탈료",
+        "운영비",
+        "기타지출"
+      ];
+      var isExpense = expenseCategories.indexOf(category) !== -1 || category.indexOf("지출") !== -1;
+
+      if (!buyer) return showAdminAlert(isExpense ? "지급처 이름을 입력해주세요." : "구입자 이름을 입력해주세요.", "error");
+      if (!amount || Number(amount) <= 0) return showAdminAlert("금액을 입력해주세요.", "error");
+
+      var btn = document.querySelector('#salesEditModal .btn-submit');
+      var originalBtnText = btn.innerText;
+      btn.innerText = "수정 중...";
+      btn.disabled = true;
+
+      var data = {
+        id: id,
+        date: salesDate,
+        category: category,
+        buyer: buyer,
+        itemName: itemName || category,
+        amount: Number(amount),
+        payMethod: payMethod,
+        memo: memo
+      };
+
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run
+          .withSuccessHandler(function (res) {
+            btn.innerText = originalBtnText;
+            btn.disabled = false;
+            
+            if (res.error) {
+              showAdminAlert(res.error, "error");
+              return;
+            }
+            
+            showAdminAlert("매출 정보가 수정되었습니다.", "success");
+            closeSalesEditModal();
+            
+            // 수정 완료 후, 수정 전/후 날짜에 맞추어 상세 내역 새로고침
+            openSalesDetailModal(salesDate);
+            
+            // 부모 장부 목록도 백그라운드 리로드 (Silent Refresh)
+            google.script.run
+              .withSuccessHandler(function (salesRes) {
+                if (!salesRes.error && salesRes.logs) {
+                  lastSalesLogs = salesRes.logs;
+                  renderSalesHistoryTab();
+                }
+              })
+              .getSalesHistory();
+          })
+          .withFailureHandler(function (err) {
+            btn.innerText = originalBtnText;
+            btn.disabled = false;
+            showAdminAlert("서버 오류: " + (err.message || err), "error");
+          })
+          .updateSalesRecord(data);
+      } else {
+        btn.innerText = originalBtnText;
+        btn.disabled = false;
+        showAdminAlert("매출 정보가 수정되었습니다. (목업)", "success");
+        closeSalesEditModal();
+      }
+    }
+
+    function deleteSalesRecordFromUi() {
+      var id = document.getElementById('editSalesId').value;
+      if (!id) return;
+      
+      var salesDate = document.getElementById('editSalesDate').value;
+      
+      if (!confirm("정말 이 매출/지출 기록을 삭제하시겠습니까? 삭제 후에는 복구할 수 없습니다.")) {
+        return;
+      }
+      
+      var btn = document.querySelector('#salesEditModal .btn-danger');
+      var originalBtnText = btn.innerText;
+      btn.innerText = "삭제 중...";
+      btn.disabled = true;
+      
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run
+          .withSuccessHandler(function (res) {
+            btn.innerText = originalBtnText;
+            btn.disabled = false;
+            
+            if (res.error) {
+              showAdminAlert(res.error, "error");
+              return;
+            }
+            
+            showAdminAlert("기록이 성공적으로 삭제되었습니다.", "success");
+            closeSalesEditModal();
+            
+            // 상세 내역 및 부모 목록 새로고침
+            openSalesDetailModal(salesDate);
+            
+            google.script.run
+              .withSuccessHandler(function (salesRes) {
+                if (!salesRes.error && salesRes.logs) {
+                  lastSalesLogs = salesRes.logs;
+                  renderSalesHistoryTab();
+                }
+              })
+              .getSalesHistory();
+          })
+          .withFailureHandler(function (err) {
+            btn.innerText = originalBtnText;
+            btn.disabled = false;
+            showAdminAlert("서버 오류: " + (err.message || err), "error");
+          })
+          .deleteSalesRecord(id);
+      } else {
+        btn.innerText = originalBtnText;
+        btn.disabled = false;
+        showAdminAlert("기록이 삭제되었습니다. (목업)", "success");
+        closeSalesEditModal();
       }
     }
 
