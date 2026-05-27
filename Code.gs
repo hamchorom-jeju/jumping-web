@@ -12775,6 +12775,49 @@ function calculateMonthlyRankingForPeriod(period) {
   }
 }
 
+/**
+ * [v67.51] 과거 잘못 계산된 5월 주차 명칭("5월 3주" -> "5월 4주" 등)을 시트에서 일괄 보정해주는 원클릭 마이그레이션 함수
+ * 구글 앱스 스크립트 에디터에서 이 함수를 선택하고 '실행'을 누르면 기존 시트의 데이터가 즉시 올바르게 마이그레이션됩니다.
+ */
+function migrateSheetPeriods() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("33챌린지_주간성적아카이브");
+    if (!sheet) {
+      Logger.log("33챌린지_주간성적아카이브 시트를 찾을 수 없습니다.");
+      return;
+    }
+    
+    var range = sheet.getDataRange();
+    var values = range.getValues();
+    var count = 0;
+    
+    for (var i = 1; i < values.length; i++) {
+      var period = String(values[i][0]).trim();
+      var rowNum = i + 1;
+      
+      // 기존에 잘못 기입된 주차 매핑 보정
+      if (period === "5월 3주") {
+        sheet.getRange(rowNum, 1).setValue("5월 4주");
+        count++;
+      } else if (period === "5월 2주") {
+        sheet.getRange(rowNum, 1).setValue("5월 3주");
+        count++;
+      } else if (period === "5월 1주") {
+        sheet.getRange(rowNum, 1).setValue("5월 2주");
+        count++;
+      } else if (period === "4월 5주") {
+        // 4월 30일 ~ 5월 6일 주차는 실질적으로 5월 1주가 맞음
+        sheet.getRange(rowNum, 1).setValue("5월 1주");
+        count++;
+      }
+    }
+    Logger.log("마이그레이션 완료: 총 " + count + "행의 주차명을 올바르게 보정했습니다.");
+  } catch (e) {
+    Logger.log("마이그레이션 에러: " + e.toString());
+  }
+}
+
 
 
 
