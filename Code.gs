@@ -10649,21 +10649,22 @@ function getThuStartOfWeekLocal(date) {
 
 function getWeekStringLocal(date) {
   var thu = getThuStartOfWeekLocal(date);
-  var year = thu.getFullYear();
-  var month = thu.getMonth() + 1;
+  var wed = new Date(thu.getTime() + 6 * 24 * 60 * 60 * 1000);
+  var year = wed.getFullYear();
+  var month = wed.getMonth() + 1;
   
-  var firstDayOfMonth = new Date(year, thu.getMonth(), 1);
-  var firstThu = new Date(year, thu.getMonth(), 1);
+  var firstDayOfMonth = new Date(year, wed.getMonth(), 1);
+  var firstWed = new Date(year, wed.getMonth(), 1);
   var firstDayOfWeek = firstDayOfMonth.getDay();
-  var diffToFirstThu = (4 - firstDayOfWeek + 7) % 7;
-  firstThu.setDate(1 + diffToFirstThu);
-  firstThu.setHours(0, 0, 0, 0);
+  var diffToFirstWed = (3 - firstDayOfWeek + 7) % 7;
+  firstWed.setDate(1 + diffToFirstWed);
+  firstWed.setHours(0, 0, 0, 0);
   
   var weekNum = 1;
-  if (thu >= firstThu) {
-    weekNum = Math.floor((thu.getDate() - firstThu.getDate()) / 7) + 1;
+  if (wed >= firstWed) {
+    weekNum = Math.floor((wed.getDate() - firstWed.getDate()) / 7) + 1;
   } else {
-    var prevMonth = new Date(year, thu.getMonth(), 0);
+    var prevMonth = new Date(year, wed.getMonth(), 0);
     return getWeekStringLocal(prevMonth);
   }
   return month + "월 " + weekNum + "주";
@@ -11817,21 +11818,22 @@ function backfillAllRankingArchives() {
     
     function getWeekStringLocal(date) {
       var thu = getThuStartOfWeekLocal(date);
-      var year = thu.getFullYear();
-      var month = thu.getMonth() + 1;
+      var wed = new Date(thu.getTime() + 6 * 24 * 60 * 60 * 1000);
+      var year = wed.getFullYear();
+      var month = wed.getMonth() + 1;
       
-      var firstDayOfMonth = new Date(year, thu.getMonth(), 1);
-      var firstThu = new Date(year, thu.getMonth(), 1);
+      var firstDayOfMonth = new Date(year, wed.getMonth(), 1);
+      var firstWed = new Date(year, wed.getMonth(), 1);
       var firstDayOfWeek = firstDayOfMonth.getDay();
-      var diffToFirstThu = (4 - firstDayOfWeek + 7) % 7;
-      firstThu.setDate(1 + diffToFirstThu);
-      firstThu.setHours(0, 0, 0, 0);
+      var diffToFirstWed = (3 - firstDayOfWeek + 7) % 7;
+      firstWed.setDate(1 + diffToFirstWed);
+      firstWed.setHours(0, 0, 0, 0);
       
       var weekNum = 1;
-      if (thu >= firstThu) {
-        weekNum = Math.floor((thu.getDate() - firstThu.getDate()) / 7) + 1;
+      if (wed >= firstWed) {
+        weekNum = Math.floor((wed.getDate() - firstWed.getDate()) / 7) + 1;
       } else {
-        var prevMonth = new Date(year, thu.getMonth(), 0);
+        var prevMonth = new Date(year, wed.getMonth(), 0);
         return getWeekStringLocal(prevMonth);
       }
       return month + "월 " + weekNum + "주";
@@ -11912,21 +11914,22 @@ function getChallengeArchiveData(payload) {
     
     function getWeekStringLocal(date) {
       var thu = getThuStartOfWeekLocal(date);
-      var year = thu.getFullYear();
-      var month = thu.getMonth() + 1;
+      var wed = new Date(thu.getTime() + 6 * 24 * 60 * 60 * 1000);
+      var year = wed.getFullYear();
+      var month = wed.getMonth() + 1;
       
-      var firstDayOfMonth = new Date(year, thu.getMonth(), 1);
-      var firstThu = new Date(year, thu.getMonth(), 1);
+      var firstDayOfMonth = new Date(year, wed.getMonth(), 1);
+      var firstWed = new Date(year, wed.getMonth(), 1);
       var firstDayOfWeek = firstDayOfMonth.getDay();
-      var diffToFirstThu = (4 - firstDayOfWeek + 7) % 7;
-      firstThu.setDate(1 + diffToFirstThu);
-      firstThu.setHours(0, 0, 0, 0);
+      var diffToFirstWed = (3 - firstDayOfWeek + 7) % 7;
+      firstWed.setDate(1 + diffToFirstWed);
+      firstWed.setHours(0, 0, 0, 0);
       
       var weekNum = 1;
-      if (thu >= firstThu) {
-        weekNum = Math.floor((thu.getDate() - firstThu.getDate()) / 7) + 1;
+      if (wed >= firstWed) {
+        weekNum = Math.floor((wed.getDate() - firstWed.getDate()) / 7) + 1;
       } else {
-        var prevMonth = new Date(year, thu.getMonth(), 0);
+        var prevMonth = new Date(year, wed.getMonth(), 0);
         return getWeekStringLocal(prevMonth);
       }
       return month + "월 " + weekNum + "주";
