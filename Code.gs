@@ -5654,21 +5654,7 @@ function getPendingSmsCount() {
  */
 function autoRefreshSmsLists() {
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("문자발송");
-    if (!sheet) return;
-    
-    var data = sheet.getDataRange().getValues();
-    // 아래에서부터 지워야 행 번호가 안 꼬임
-    for (var i = data.length - 1; i >= 1; i--) {
-      var category = String(data[i][3]);
-      var status = String(data[i][5]).trim();
-      
-      // 자동 생성 카테고리이면서 아직 발송하지 않은(대기) 건만 상태 변경
-      if ((category === "장기미방문" || category === "복귀권유" || category === "출석디버프") && status === "대기") {
-        sheet.getRange(i + 1, 6).setValue("완료(재방문)");
-      }
-    }
+    // 자동 생성 대기열은 각각의 안부/결석/디버프 스캔 함수 진입 시점에 안전하게 초기 청소 후 최신 정보로 재생성됩니다.
     
     // 다시 추출
 
@@ -5728,6 +5714,18 @@ function checkLongTermAbsentees() {
     
     if (!regSheet || !logSheet || !smsSheet) return { error: "필요한 시트(등록현황/출석기록/문자발송)가 없습니다." };
     
+    // [중복 업데이트 및 실시간 정밀 타임라인 덮어쓰기 알고리즘]
+    // 1. 기존에 시트에 존재하는 모든 '대기' 상태의 '장기미방문' 문자열 행들을 스캔하여 완벽히 삭제(Clean-up)합니다!
+    var smsDataForCleanup = smsSheet.getDataRange().getValues();
+    for (var i = smsDataForCleanup.length - 1; i >= 1; i--) {
+      var category = String(smsDataForCleanup[i][3]);
+      var status = String(smsDataForCleanup[i][5]).trim();
+      if (category === "장기미방문" && status === "대기") {
+        smsSheet.deleteRow(i + 1);
+      }
+    }
+    
+    // 삭제 처리 완료 후 최신 데이터 로드!
     var regData = regSheet.getDataRange().getDisplayValues();
     var logData = logSheet.getDataRange().getDisplayValues();
     var smsData = smsSheet.getDataRange().getDisplayValues();
@@ -5977,6 +5975,18 @@ function checkInactiveMembers() {
     
     if (!regSheet || !smsSheet) return { error: "필요한 시트(등록현황/문자발송)가 없습니다." };
     
+    // [중복 업데이트 및 실시간 정밀 타임라인 덮어쓰기 알고리즘]
+    // 1. 기존에 시트에 존재하는 모든 '대기' 상태의 '복귀권유' 문자열 행들을 스캔하여 완벽히 삭제(Clean-up)합니다!
+    var smsDataForCleanup = smsSheet.getDataRange().getValues();
+    for (var i = smsDataForCleanup.length - 1; i >= 1; i--) {
+      var category = String(smsDataForCleanup[i][3]);
+      var status = String(smsDataForCleanup[i][5]).trim();
+      if (category === "복귀권유" && status === "대기") {
+        smsSheet.deleteRow(i + 1);
+      }
+    }
+    
+    // 삭제 처리 완료 후 최신 데이터 로드!
     var regData = regSheet.getDataRange().getDisplayValues();
     var smsData = smsSheet.getDataRange().getDisplayValues();
     var logData = logSheet ? logSheet.getDataRange().getDisplayValues() : [];
@@ -6175,6 +6185,18 @@ function checkInactivityDebuffAbsentees() {
     
     if (!regSheet || !logSheet || !smsSheet) return { error: "필요한 시트(등록현황/출석기록/문자발송)가 없습니다." };
     
+    // [중복 업데이트 및 실시간 정밀 타임라인 덮어쓰기 알고리즘]
+    // 1. 기존에 시트에 존재하는 모든 '대기' 상태 of '출석디버프' 문자열 행들을 스캔하여 완벽히 삭제(Clean-up)합니다!
+    var smsDataForCleanup = smsSheet.getDataRange().getValues();
+    for (var i = smsDataForCleanup.length - 1; i >= 1; i--) {
+      var category = String(smsDataForCleanup[i][3]);
+      var status = String(smsDataForCleanup[i][5]).trim();
+      if (category === "출석디버프" && status === "대기") {
+        smsSheet.deleteRow(i + 1);
+      }
+    }
+    
+    // 삭제 처리 완료 후 최신 데이터 로드!
     var regData = regSheet.getDataRange().getDisplayValues();
     var logData = logSheet.getDataRange().getValues();
     var smsData = smsSheet.getDataRange().getDisplayValues();
