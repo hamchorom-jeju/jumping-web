@@ -10636,9 +10636,43 @@ function isDateInLastWeekMonToWed(date) {
 }
 
 /**
- * [v67.2] 아카이브 시트에서 가장 최신 마감된 주차/월의 전원 순위 리스트를 가볍고 빠르게 로드
+ * [v67.5] 목요일 시작일 및 주차 구하기 전역 헬퍼 함수
  */
-function getLatestArchivedRankings(sheetName, periodColIdx, rankColIdx, nameColIdx, scoreColIdx) {
+function getThuStartOfWeekLocal(date) {
+  var d = new Date(date.getTime());
+  var day = d.getDay();
+  var diffToThu = (day + 3) % 7; 
+  d.setDate(d.getDate() - diffToThu);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function getWeekStringLocal(date) {
+  var thu = getThuStartOfWeekLocal(date);
+  var year = thu.getFullYear();
+  var month = thu.getMonth() + 1;
+  
+  var firstDayOfMonth = new Date(year, thu.getMonth(), 1);
+  var firstThu = new Date(year, thu.getMonth(), 1);
+  var firstDayOfWeek = firstDayOfMonth.getDay();
+  var diffToFirstThu = (4 - firstDayOfWeek + 7) % 7;
+  firstThu.setDate(1 + diffToFirstThu);
+  firstThu.setHours(0, 0, 0, 0);
+  
+  var weekNum = 1;
+  if (thu >= firstThu) {
+    weekNum = Math.floor((thu.getDate() - firstThu.getDate()) / 7) + 1;
+  } else {
+    var prevMonth = new Date(year, thu.getMonth(), 0);
+    return getWeekStringLocal(prevMonth);
+  }
+  return month + "월 " + weekNum + "주";
+}
+
+/**
+ * [v67.5] 아카이브 시트에서 가장 최신 마감된 주차/월의 전원 순위 리스트를 가볍고 빠르게 로드 (체력/실천/회복 전 스탯 동기화 로드)
+ */
+function getLatestArchivedRankings(sheetName, isMonthly) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName(sheetName);
@@ -10646,18 +10680,25 @@ function getLatestArchivedRankings(sheetName, periodColIdx, rankColIdx, nameColI
     
     var data = sheet.getDataRange().getValues();
     // 데이터는 insertRowsAfter(1)로 삽입되므로 두 번째 행(인덱스 1)에 가장 최신 주차/월이 존재함!
-    var latestPeriod = String(data[1][periodColIdx] || "").trim();
+    var latestPeriod = String(data[1][0] || "").trim();
     if (!latestPeriod) return null;
     
     var list = [];
     for (var i = 1; i < data.length; i++) {
-      var p = String(data[i][periodColIdx] || "").trim();
+      var p = String(data[i][0] || "").trim();
       if (p === latestPeriod) {
-        list.push({
-          rank: Number(data[i][rankColIdx] || 0),
-          name: String(data[i][nameColIdx] || "").trim(),
-          score: Number(data[i][scoreColIdx] || 0)
-        });
+        var record = {
+          rank: Number(data[i][1] || 0),
+          name: String(data[i][2] || "").trim(),
+          health: Number(data[i][4] || 0), // E열: 체력
+          perf: Number(data[i][5] || 0),   // F열: 실천력
+          def: Number(data[i][6] || 0),    // G열: 회복력
+          score: Number(data[i][7] || 0)   // H열: 주간/월간토탈점수
+        };
+        if (isMonthly) {
+          record.attCount = Number(data[i][9] || 0); // J열: 출석기록
+        }
+        list.push(record);
       }
     }
     
@@ -10931,7 +10972,7 @@ function getHallOfFameData(payload) {
     var topMonthly = finalMonthlyScores.slice(0, 30);
     var topTotal = finalTotalScores; // 토탈은 무제한 노출 스크롤
     
-    // [v67.2] 시상식(목요일 / 1일) 당일 아카이브 시트 기반 오버라이딩 비즈니스 로직
+    // [v67.5] 시상식(목요일 / 1일) 당일 아카이브 시트 기반 오버라이딩 비즈니스 로직 (자가치유 실시간 마감 연산 보정 적용)
     var isWeeklyAward = false;
     var weeklyAwardPeriod = "";
     var isMonthlyAward = false;
@@ -10940,23 +10981,55 @@ function getHallOfFameData(payload) {
     var dayOfWeek = now.getDay(); // 0(일) ~ 6(토)
     var dateOfMonth = now.getDate(); // 1 ~ 31
     
+    // 이 시점의 아카이브 데이터 임시 보관
+    var tempArchiveWeekly = null;
+    var tempArchiveMonthly = null;
+    
     if (dayOfWeek === 4) { // 목요일 (주간 시상일)
-      var archivedWeekly = getLatestArchivedRankings("33챌린지_주간성적아카이브", 0, 1, 2, 7);
-      if (archivedWeekly && archivedWeekly.rankings.length > 0) {
+      var yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      var currentAwardPeriod = getWeekStringLocal(yesterday); // 예: "5월 4주"
+      
+      var archivedWeekly = getLatestArchivedRankings("33챌린지_주간성적아카이브", false);
+      if (archivedWeekly && archivedWeekly.period === currentAwardPeriod) {
         topWeekly = archivedWeekly.rankings;
         isWeeklyAward = true;
         weeklyAwardPeriod = archivedWeekly.period;
-        Logger.log("주간 시상식 오버라이드 적용 성공: " + weeklyAwardPeriod);
+        tempArchiveWeekly = archivedWeekly;
+        Logger.log("주간 시상식 오버라이드 (시트 기반): " + weeklyAwardPeriod);
+      } else {
+        // 아카이브 시트에 오늘 발표할 주차(5월 4주)가 아직 없으면 (트리거 돌기 전), 실시간으로 지난주차 최종 점수 정밀 연산!
+        var realTimeWeekly = calculateWeeklyRankingForPeriod(currentAwardPeriod);
+        if (realTimeWeekly && realTimeWeekly.rankings.length > 0) {
+          topWeekly = realTimeWeekly.rankings;
+          isWeeklyAward = true;
+          weeklyAwardPeriod = currentAwardPeriod;
+          tempArchiveWeekly = realTimeWeekly;
+          Logger.log("주간 시상식 오버라이드 (자가치유 실시간 연산 기반): " + weeklyAwardPeriod);
+        }
       }
     }
     
     if (dateOfMonth === 1) { // 매월 1일 (월간 시상일)
-      var archivedMonthly = getLatestArchivedRankings("33챌린지_월간성적아카이브", 0, 1, 2, 7);
-      if (archivedMonthly && archivedMonthly.rankings.length > 0) {
+      var yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      var currentAwardPeriod = (yesterday.getMonth() + 1) + "월"; // 예: "5월"
+      
+      var archivedMonthly = getLatestArchivedRankings("33챌린지_월간성적아카이브", true);
+      if (archivedMonthly && archivedMonthly.period === currentAwardPeriod) {
         topMonthly = archivedMonthly.rankings;
         isMonthlyAward = true;
         monthlyAwardPeriod = archivedMonthly.period;
-        Logger.log("월간 시상식 오버라이드 적용 성공: " + monthlyAwardPeriod);
+        tempArchiveMonthly = archivedMonthly;
+        Logger.log("월간 시상식 오버라이드 (시트 기반): " + monthlyAwardPeriod);
+      } else {
+        // 아카이브 시트에 오늘 발표할 월간(5월)이 아직 없으면, 실시간으로 지난달 최종 점수 정밀 연산!
+        var realTimeMonthly = calculateMonthlyRankingForPeriod(currentAwardPeriod);
+        if (realTimeMonthly && realTimeMonthly.rankings.length > 0) {
+          topMonthly = realTimeMonthly.rankings;
+          isMonthlyAward = true;
+          monthlyAwardPeriod = currentAwardPeriod;
+          tempArchiveMonthly = realTimeMonthly;
+          Logger.log("월간 시상식 오버라이드 (자가치유 실시간 연산 기반): " + monthlyAwardPeriod);
+        }
       }
     }
     
@@ -11152,6 +11225,71 @@ function getHallOfFameData(payload) {
             });
           }
         });
+      }
+      
+      // [자가치유 보정] 실시간 연산된 tempArchive가 존재하고 아직 아카이브 리스트에 없으면 역대 MVP 리스트 맨앞에 unshift하여 실시간으로 시상식을 띄워줌!
+      if (tempArchiveWeekly && tempArchiveWeekly.rankings && tempArchiveWeekly.rankings.length > 0) {
+        var existsW = archiveWeekly.some(function(item) {
+          return item.period === tempArchiveWeekly.period;
+        });
+        if (!existsW) {
+          var users = tempArchiveWeekly.rankings;
+          var winners = [];
+          var limit = Math.min(users.length, 3);
+          for (var w = 0; w < limit; w++) {
+            winners.push((w + 1) + "." + users[w].name + "(" + users[w].score.toLocaleString() + "p)");
+          }
+          if (winners.length > 0) {
+            archiveWeekly.unshift({
+              period: tempArchiveWeekly.period,
+              winners: "🥇 " + winners.join(" | "),
+              records: users.slice(0, 10)
+            });
+          }
+        }
+      }
+      
+      if (tempArchiveMonthly && tempArchiveMonthly.rankings && tempArchiveMonthly.rankings.length > 0) {
+        var existsM = archiveMonthly.some(function(item) {
+          return item.period === tempArchiveMonthly.period;
+        });
+        if (!existsM) {
+          var users = tempArchiveMonthly.rankings;
+          var winners = [];
+          var limit = Math.min(users.length, 3);
+          for (var w = 0; w < limit; w++) {
+            winners.push((w + 1) + "." + users[w].name + "(" + users[w].score.toLocaleString() + "p)");
+          }
+          if (winners.length > 0) {
+            archiveMonthly.unshift({
+              period: tempArchiveMonthly.period,
+              winners: "🥇 " + winners.join(" | "),
+              records: users.slice(0, 10)
+            });
+          }
+        }
+        
+        var existsAtt = archiveAttendance.some(function(item) {
+          return item.period === tempArchiveMonthly.period;
+        });
+        if (!existsAtt) {
+          var attUsers = [].concat(tempArchiveMonthly.rankings);
+          attUsers.sort(function(a, b) { return b.attCount - a.attCount; });
+          var attWinners = [];
+          var attLimit = Math.min(attUsers.length, 3);
+          for (var w = 0; w < attLimit; w++) {
+            var u = attUsers[w];
+            var medal = (w === 0) ? "🥇 1위" : (w === 1 ? "🥈 2위" : "🥉 3위");
+            attWinners.push(medal + " " + u.name + "(" + u.attCount + "회)");
+          }
+          if (attWinners.length > 0) {
+            archiveAttendance.unshift({
+              period: tempArchiveMonthly.period,
+              winners: attWinners.join(" | "),
+              records: attUsers.slice(0, 3)
+            });
+          }
+        }
       }
       
     } catch (arcErr) {
@@ -11564,232 +11702,13 @@ function archiveWeeklyRankingToSheet(period) {
       }
     }
     
-    // 주간 날짜 범위 정밀 계산
-    var summarySheet = ss.getSheetByName("일일_활동_기록");
-    var summaryData = summarySheet ? summarySheet.getDataRange().getValues() : [];
-    
-    function getThuStartOfWeekLocal(date) {
-      var d = new Date(date.getTime());
-      var day = d.getDay();
-      var diffToThu = (day + 3) % 7; 
-      d.setDate(d.getDate() - diffToThu);
-      d.setHours(0, 0, 0, 0);
-      return d;
+    // calculateWeeklyRankingForPeriod 호출하여 정확한 감량/체력 점수 및 총점이 합산된 정렬 순위를 가져옴!
+    var result = calculateWeeklyRankingForPeriod(period);
+    if (!result || !result.rankings || result.rankings.length === 0) {
+      return { success: false, message: "해당 주차의 데이터를 계산하지 못했습니다." };
     }
     
-    function getWeekStringLocal(date) {
-      var thu = getThuStartOfWeekLocal(date);
-      var year = thu.getFullYear();
-      var month = thu.getMonth() + 1;
-      
-      var firstDayOfMonth = new Date(year, thu.getMonth(), 1);
-      var firstThu = new Date(year, thu.getMonth(), 1);
-      var firstDayOfWeek = firstDayOfMonth.getDay();
-      var diffToFirstThu = (4 - firstDayOfWeek + 7) % 7;
-      firstThu.setDate(1 + diffToFirstThu);
-      firstThu.setHours(0, 0, 0, 0);
-      
-      var weekNum = 1;
-      if (thu >= firstThu) {
-        weekNum = Math.floor((thu.getDate() - firstThu.getDate()) / 7) + 1;
-      } else {
-        var prevMonth = new Date(year, thu.getMonth(), 0);
-        return getWeekStringLocal(prevMonth);
-      }
-      return month + "월 " + weekNum + "주";
-    }
-
-    var targetThuDate = null;
-    for (var j = 1; j < summaryData.length; j++) {
-      var recDateRaw = summaryData[j][0];
-      var recDate = (recDateRaw instanceof Date) ? recDateRaw : new Date(recDateRaw);
-      if (isNaN(recDate.getTime())) continue;
-      
-      if (getWeekStringLocal(recDate) === period) {
-        targetThuDate = getThuStartOfWeekLocal(recDate);
-        break;
-      }
-    }
-    
-    if (!targetThuDate) {
-      targetThuDate = getThuStartOfWeekLocal(new Date());
-    }
-    
-    var endOfWeekDate = new Date(targetThuDate.getTime() + 6 * 24 * 60 * 60 * 1000 + 23 * 60 * 60 * 1000 + 59 * 60 * 60 * 1000);
-
-    // 인바디 데이터 미리 로드 및 휴대폰 번호 매핑
-    var inbodySheet = ss.getSheetByName("33챌린지_인바디");
-    var inData = inbodySheet ? inbodySheet.getDataRange().getValues() : [];
-    var userInbodyMap = {};
-    for (var k = 1; k < inData.length; k++) {
-      var rawPhone = String(inData[k][2] || "").trim();
-      var phone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, "");
-      if (!phone) continue;
-      userInbodyMap[phone] = userInbodyMap[phone] || [];
-      userInbodyMap[phone].push({
-        date: new Date(inData[k][0]),
-        weight: Number(inData[k][3] || 0),
-        muscle: Number(inData[k][4] || 0),
-        fat: Number(inData[k][5] || 0)
-      });
-    }
-
-    // 회원명단에서 모든 회원의 목표체중 미리 로드
-    var userTargetWeightMap = {};
-    var memberSheet = ss.getSheetByName("회원명단");
-    if (memberSheet) {
-      var mData = memberSheet.getDataRange().getDisplayValues();
-      var mCols = getMemberSheetColumnIndices(memberSheet);
-      for (var i = 1; i < mData.length; i++) {
-        var mPhone = normalizePhoneDigits(mData[i][mCols.phone]);
-        if (mPhone) {
-          userTargetWeightMap[mPhone] = parseWeightSafely(mData[i][mCols.targetWeight]);
-        }
-      }
-    }
-
-    // 주차 결산 시점(endOfWeekDate) 기준 모든 회원의 일일 점수 누적 집계
-    var userStats = {}; // phone -> { name, health: 0, perf: 0, def: 0, weeklyTotalAct: 0, lifetimeTotalAct: 0 }
-    
-    for (var j = 1; j < summaryData.length; j++) {
-      var rawPhone = String(summaryData[j][1] || "").trim();
-      var phone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, "");
-      if (!phone) continue;
-      
-      var recDateRaw = summaryData[j][0];
-      var recDate = (recDateRaw instanceof Date) ? recDateRaw : new Date(recDateRaw);
-      if (isNaN(recDate.getTime())) continue;
-      
-      // 누적 토탈(Lifetime) 계산 - 결산 시점 수요일 자정 이전의 모든 기록 누적합
-      if (recDate <= endOfWeekDate) {
-        var name = String(summaryData[j][2] || "모험가").trim();
-        var visitScore = Number(summaryData[j][3] || 0);
-        var intensityScore = Number(summaryData[j][4] || 0);
-        var actScore = Number(summaryData[j][5] || 0);
-        var recScore = Number(summaryData[j][6] || 0);
-        var hpScore = Number(summaryData[j][7] || 0);
-        var rowTotal = Number(summaryData[j][9] || 0);
-        
-        if (!userStats[phone]) {
-          userStats[phone] = { name: name, health: 0, perf: 0, def: 0, weeklyTotalAct: 0, lifetimeTotalAct: 0 };
-        }
-        
-        var stat = userStats[phone];
-        stat.lifetimeTotalAct += rowTotal;
-        
-        // 해당 주차 내 성적 계산
-        if (recDate >= targetThuDate && recDate <= endOfWeekDate) {
-          stat.health += hpScore;
-          stat.perf += (visitScore + intensityScore + actScore);
-          stat.def += recScore;
-          stat.weeklyTotalAct += rowTotal;
-        }
-      }
-    }
-    
-    function localInbodyScoreHelper(first, current, targetWeight, scoreType) {
-      if (!first || !current) return 0;
-      var score = 0;
-      var fW = Number(first.weight) || 0;
-      var cW = Number(current.weight) || 0;
-      var fM = Number(first.muscle) || 0;
-      var cM = Number(current.muscle) || 0;
-      var fF = Number(first.fat) || 0;
-      var cF = Number(current.fat) || 0;
-      
-      var diffW = Number((fW - cW).toFixed(2)) || 0;
-      var diffM = Number((cM - fM).toFixed(2)) || 0;
-      var diffFat = Number((fF - cF).toFixed(1)) || 0;
-      
-      if (diffW > 0) score += (diffW * 10) * 50;
-      if (diffM > 0) score += (diffM * 10) * 200;
-      if (diffFat > 0) score += (diffFat * 10) * 100;
-      
-      var firstFatMass = fW * (fF / 100);
-      var currentFatMass = cW * (cF / 100);
-      var fatLossRate = 0;
-      if (firstFatMass > 0 && !isNaN(firstFatMass)) {
-        fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
-      }
-      if (diffW >= 8.0 || (fatLossRate >= 20.0 && !isNaN(fatLossRate))) {
-        score += 1500;
-      }
-      
-      // 🏆 체성분 명품 유지 보너스 판정 엔진 (±0.5kg 정교화)
-      if (targetWeight && targetWeight > 0) {
-        if (scoreType === "monthly") {
-          // 결산 시점(최신 기록)이 목표체중 상한선(목표체중 + 0.5kg) 이하로 유지 성공 시 1,000점 지급!
-          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
-          if (currentLowerOrEqualTarget) {
-            score += 1000;
-          }
-        } else if (scoreType === "lifetime") {
-          // 결산 시점(최신 기록)이 목표체중 상한선(목표체중 + 0.5kg) 이하로 유지 성공 시 1,000점 지급!
-          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
-          if (currentLowerOrEqualTarget) {
-            score += 1000;
-          }
-        }
-      }
-      
-      return isNaN(score) ? 0 : score;
-    }
-
-    var rankedUsers = [];
-    for (var phone in userStats) {
-      var stat = userStats[phone];
-      var records = userInbodyMap[phone] || [];
-      
-      var firstEver = null;
-      var latestEver = null;
-      var latestInWeek = null;
-      for (var rIdx = 0; rIdx < records.length; rIdx++) {
-        var r = records[rIdx];
-        if (r.date <= endOfWeekDate) {
-          if (!firstEver || r.date < firstEver.date) firstEver = r;
-          if (!latestEver || r.date > latestEver.date) latestEver = r;
-          if (r.date >= targetThuDate && r.date <= endOfWeekDate) {
-            if (!latestInWeek || r.date > latestInWeek.date) latestInWeek = r;
-          }
-        }
-      }
-
-      var targetWeight = userTargetWeightMap[phone] || 0;
-
-      // 주간 인바디 점수 (주간에는 유지 보너스 없음)
-      var inbodyWeeklyScore = 0;
-      if (latestInWeek) {
-        var prevBeforeThisWeek = null;
-        for (var rIdx = 0; rIdx < records.length; rIdx++) {
-          var r = records[rIdx];
-          if (r.date < targetThuDate) {
-            if (!prevBeforeThisWeek || r.date > prevBeforeThisWeek.date) prevBeforeThisWeek = r;
-          }
-        }
-        var baseRecord = prevBeforeThisWeek || firstEver;
-        inbodyWeeklyScore = localInbodyScoreHelper(baseRecord, latestInWeek, targetWeight, 'weekly');
-      }
-      
-      // 누적 인바디 점수 (결산 시점 최신본 기준)
-      var inbodyLifetimeScore = localInbodyScoreHelper(firstEver, latestEver, targetWeight, 'lifetime');
-      
-      var totalWeeklyExp = stat.weeklyTotalAct + inbodyWeeklyScore;
-      var totalLifetimeExp = stat.lifetimeTotalAct + inbodyLifetimeScore;
-      
-      rankedUsers.push({
-        name: stat.name,
-        phone: phone,
-        health: stat.health,
-        perf: stat.perf,
-        def: stat.def,
-        weeklyTotal: totalWeeklyExp,
-        lifetimeTotal: totalLifetimeExp
-      });
-    }
-    
-    // 주간 토탈 기준 정렬
-    rankedUsers.sort(function(a, b) { return b.weeklyTotal - a.weeklyTotal; });
-    
+    var rankedUsers = result.rankings;
     var rowsToAppend = [];
     for (var idx = 0; idx < rankedUsers.length; idx++) {
       var u = rankedUsers[idx];
@@ -11801,7 +11720,7 @@ function archiveWeeklyRankingToSheet(period) {
         u.health,
         u.perf,
         u.def,
-        u.weeklyTotal,
+        u.score, // weeklyTotal (주간토탈점수)
         u.lifetimeTotal
       ]);
     }
@@ -11839,228 +11758,16 @@ function archiveMonthlyRankingToSheet(period) {
       }
     }
     
-    // 월 날짜 범위 정밀 계산
-    var summarySheet = ss.getSheetByName("일일_활동_기록");
-    var summaryData = summarySheet ? summarySheet.getDataRange().getValues() : [];
-    
-    var targetYear = new Date().getFullYear();
-    var monthNum = parseInt(period.replace("월", "").trim());
-    if (isNaN(monthNum)) monthNum = new Date().getMonth() + 1;
-    
-    var startOfMonth = new Date(targetYear, monthNum - 1, 1, 0, 0, 0, 0);
-    var endOfMonth = new Date(targetYear, monthNum, 0, 23, 59, 59, 999);
-    
-    // 월초 기준 인바디 마감 기한 계산
-    var firstDayOfWeek = startOfMonth.getDay();
-    var diffToWed = (3 - firstDayOfWeek + 7) % 7;
-    var baselineDeadline = new Date(targetYear, monthNum - 1, 1 + diffToWed);
-    if (isCenterHoliday(baselineDeadline)) {
-      baselineDeadline.setDate(baselineDeadline.getDate() + 1);
-    }
-    baselineDeadline.setHours(23, 59, 59, 999);
-
-    // 인바디 데이터 매핑
-    var inbodySheet = ss.getSheetByName("33챌린지_인바디");
-    var inData = inbodySheet ? inbodySheet.getDataRange().getValues() : [];
-    var userInbodyMap = {};
-    for (var k = 1; k < inData.length; k++) {
-      var rawPhone = String(inData[k][2] || "").trim();
-      var phone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, "");
-      if (!phone) continue;
-      userInbodyMap[phone] = userInbodyMap[phone] || [];
-      userInbodyMap[phone].push({
-        date: new Date(inData[k][0]),
-        weight: Number(inData[k][3] || 0),
-        muscle: Number(inData[k][4] || 0),
-        fat: Number(inData[k][5] || 0)
-      });
-    }
-
-    // 회원명단에서 모든 회원의 목표체중 미리 로드
-    var userTargetWeightMap = {};
-    var memberSheet = ss.getSheetByName("회원명단");
-    if (memberSheet) {
-      var mData = memberSheet.getDataRange().getDisplayValues();
-      var mCols = getMemberSheetColumnIndices(memberSheet);
-      for (var i = 1; i < mData.length; i++) {
-        var mPhone = normalizePhoneDigits(mData[i][mCols.phone]);
-        if (mPhone) {
-          userTargetWeightMap[mPhone] = parseWeightSafely(mData[i][mCols.targetWeight]);
-        }
-      }
-    }
-
-    // 월간 데이터 집계
-    var userStats = {};
-    for (var j = 1; j < summaryData.length; j++) {
-      var rawPhone = String(summaryData[j][1] || "").trim();
-      var phone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, "");
-      if (!phone) continue;
-      
-      var recDateRaw = summaryData[j][0];
-      var recDate = (recDateRaw instanceof Date) ? recDateRaw : new Date(recDateRaw);
-      if (isNaN(recDate.getTime())) continue;
-      
-      if (recDate <= endOfMonth) {
-        var name = String(summaryData[j][2] || "모험가").trim();
-        var visitScore = Number(summaryData[j][3] || 0);
-        var intensityScore = Number(summaryData[j][4] || 0);
-        var actScore = Number(summaryData[j][5] || 0);
-        var recScore = Number(summaryData[j][6] || 0);
-        var hpScore = Number(summaryData[j][7] || 0);
-        var rowTotal = Number(summaryData[j][9] || 0);
-        
-        if (!userStats[phone]) {
-          userStats[phone] = { name: name, health: 0, perf: 0, def: 0, monthlyTotalAct: 0, lifetimeTotalAct: 0 };
-        }
-        
-        var stat = userStats[phone];
-        stat.lifetimeTotalAct += rowTotal;
-        
-        if (recDate >= startOfMonth && recDate <= endOfMonth) {
-          stat.health += hpScore;
-          stat.perf += (visitScore + intensityScore + actScore);
-          stat.def += recScore;
-          stat.monthlyTotalAct += rowTotal;
-        }
-      }
+    // calculateMonthlyRankingForPeriod 호출하여 정확한 감량/체력 점수 및 총점이 합산된 정렬 순위를 가져옴!
+    var result = calculateMonthlyRankingForPeriod(period);
+    if (!result || !result.rankings || result.rankings.length === 0) {
+      return { success: false, message: "해당 월의 데이터를 계산하지 못했습니다." };
     }
     
-    function localInbodyScoreHelper(first, current, targetWeight, scoreType) {
-      if (!first || !current) return 0;
-      var score = 0;
-      var fW = Number(first.weight) || 0;
-      var cW = Number(current.weight) || 0;
-      var fM = Number(first.muscle) || 0;
-      var cM = Number(current.muscle) || 0;
-      var fF = Number(first.fat) || 0;
-      var cF = Number(current.fat) || 0;
-      
-      var diffW = Number((fW - cW).toFixed(2)) || 0;
-      var diffM = Number((cM - fM).toFixed(2)) || 0;
-      var diffFat = Number((fF - cF).toFixed(1)) || 0;
-      
-      if (diffW > 0) score += (diffW * 10) * 50;
-      if (diffM > 0) score += (diffM * 10) * 200;
-      if (diffFat > 0) score += (diffFat * 10) * 100;
-      
-      var firstFatMass = fW * (fF / 100);
-      var currentFatMass = cW * (cF / 100);
-      var fatLossRate = 0;
-      if (firstFatMass > 0 && !isNaN(firstFatMass)) {
-        fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
-      }
-      if (diffW >= 8.0 || (fatLossRate >= 20.0 && !isNaN(fatLossRate))) {
-        score += 1500;
-      }
-      
-      // 🏆 체성분 명품 유지 보너스 판정 엔진 (±0.5kg 정교화)
-      if (targetWeight && targetWeight > 0) {
-        if (scoreType === "monthly") {
-          // 결산 시점(최신 기록)이 목표체중 상한선(목표체중 + 0.5kg) 이하로 유지 성공 시 1,000점 지급!
-          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
-          if (currentLowerOrEqualTarget) {
-            score += 1000;
-          }
-        } else if (scoreType === "lifetime") {
-          // 결산 시점(최신 기록)이 목표체중 상한선(목표체중 + 0.5kg) 이하로 유지 성공 시 1,000점 지급!
-          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
-          if (currentLowerOrEqualTarget) {
-            score += 1000;
-          }
-        }
-      }
-      
-      return isNaN(score) ? 0 : score;
-    }
-
-    var rankedUsers = [];
-    for (var phone in userStats) {
-      var stat = userStats[phone];
-      var records = userInbodyMap[phone] || [];
-      
-      var firstEver = null;
-      var latestEver = null;
-      var baselineRecord = null;
-      var latestInMonth = null;
-      
-      for (var rIdx = 0; rIdx < records.length; rIdx++) {
-        var r = records[rIdx];
-        if (r.date <= endOfMonth) {
-          if (!firstEver || r.date < firstEver.date) firstEver = r;
-          if (!latestEver || r.date > latestEver.date) latestEver = r;
-          
-          if (r.date >= startOfMonth && r.date <= baselineDeadline) {
-            var rDay = r.date.getDay();
-            var isValidDay = (rDay >= 1 && rDay <= 3) || (rDay === 4); // Mon~Thu
-            if (isValidDay) {
-              if (!baselineRecord || r.date < baselineRecord.date) baselineRecord = r;
-            }
-          }
-          if (r.date >= startOfMonth && r.date <= endOfMonth && isDateInLastWeekMonToWed(r.date)) {
-            if (!latestInMonth || r.date > latestInMonth.date) latestInMonth = r;
-          }
-        }
-      }
-      
-      var targetWeight = userTargetWeightMap[phone] || 0;
-
-      // 월간 인바디 점수
-      var inbodyMonthlyScore = 0;
-      if (baselineRecord && latestInMonth) {
-        inbodyMonthlyScore = localInbodyScoreHelper(baselineRecord, latestInMonth, targetWeight, 'monthly');
-      }
-      
-      // 누적 인바디 점수
-      var inbodyLifetimeScore = localInbodyScoreHelper(firstEver, latestEver, targetWeight, 'lifetime');
-      
-      var totalMonthlyExp = stat.monthlyTotalAct + inbodyMonthlyScore;
-      var totalLifetimeExp = stat.lifetimeTotalAct + inbodyLifetimeScore;
-      
-      rankedUsers.push({
-        name: stat.name,
-        phone: phone,
-        health: stat.health,
-        perf: stat.perf,
-        def: stat.def,
-        monthlyTotal: totalMonthlyExp,
-        lifetimeTotal: totalLifetimeExp
-      });
-    }
-    
-    // 월간 토탈 기준 정렬
-    rankedUsers.sort(function(a, b) { return b.monthlyTotal - a.monthlyTotal; });
-    
-    // 해당 월의 회원별 출석 횟수 집계
-    var monthlyAttendanceMap = {}; // phone -> count
-    try {
-      var attSheet = ss.getSheetByName("출석기록");
-      var attData = attSheet ? attSheet.getDataRange().getValues() : [];
-      if (attSheet && attData.length > 1) {
-        var attCols = getAttendanceColumnIndices(attSheet);
-        for (var aIdx = 1; aIdx < attData.length; aIdx++) {
-          var aRow = attData[aIdx];
-          var aPhoneRaw = String(aRow[attCols.phone] || "").trim();
-          var aPhone = formatPhoneNumber(aPhoneRaw).replace(/[^0-9]/g, "");
-          if (!aPhone) continue;
-          
-          var aDateRaw = aRow[attCols.date];
-          var aDate = (aDateRaw instanceof Date) ? aDateRaw : new Date(aDateRaw);
-          if (isNaN(aDate.getTime())) continue;
-          
-          if (aDate >= startOfMonth && aDate <= endOfMonth) {
-            monthlyAttendanceMap[aPhone] = (monthlyAttendanceMap[aPhone] || 0) + 1;
-          }
-        }
-      }
-    } catch (attErr) {
-      Logger.log("월간 아카이빙 중 출석기록 집계 오류: " + attErr.toString());
-    }
-
+    var rankedUsers = result.rankings;
     var rowsToAppend = [];
     for (var idx = 0; idx < rankedUsers.length; idx++) {
       var u = rankedUsers[idx];
-      var attCount = monthlyAttendanceMap[u.phone] || 0;
       rowsToAppend.push([
         period,
         idx + 1,
@@ -12069,9 +11776,9 @@ function archiveMonthlyRankingToSheet(period) {
         u.health,
         u.perf,
         u.def,
-        u.monthlyTotal,
+        u.score, // monthlyTotal (월간토탈점수)
         u.lifetimeTotal,
-        attCount // Column J: 출석기록
+        u.attCount
       ]);
     }
     
@@ -12716,6 +12423,352 @@ function getTodayTimetableAndRooms(targetDate) {
     };
   } catch(e) {
     return { error: "서버 오류: " + e.toString() };
+  }
+}
+
+/**
+ * [v67.5] 특정 주차의 랭킹을 마감 기준(어제 수요일 23:59:59)으로 실시간 정밀 집계 (체력 점수에 인바디 점수 및 보너스 합산!)
+ */
+function calculateWeeklyRankingForPeriod(period) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var summarySheet = ss.getSheetByName("일일_활동_기록");
+    var summaryData = summarySheet ? summarySheet.getDataRange().getValues() : [];
+    
+    var targetThuDate = null;
+    for (var j = 1; j < summaryData.length; j++) {
+      var recDateRaw = summaryData[j][0];
+      var recDate = (recDateRaw instanceof Date) ? recDateRaw : new Date(recDateRaw);
+      if (isNaN(recDate.getTime())) continue;
+      
+      if (getWeekStringLocal(recDate) === period) {
+        targetThuDate = getThuStartOfWeekLocal(recDate);
+        break;
+      }
+    }
+    
+    if (!targetThuDate) {
+      targetThuDate = getThuStartOfWeekLocal(new Date());
+    }
+    
+    var endOfWeekDate = new Date(targetThuDate.getTime() + 6 * 24 * 60 * 60 * 1000 + 23 * 60 * 60 * 1000 + 59 * 60 * 60 * 1000);
+    
+    // 인바디 로드
+    var inbodySheet = ss.getSheetByName("33챌린지_인바디");
+    var inData = inbodySheet ? inbodySheet.getDataRange().getValues() : [];
+    var userInbodyMap = {};
+    for (var k = 1; k < inData.length; k++) {
+      var rawPhone = String(inData[k][2] || "").trim();
+      var phone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, "");
+      if (!phone) continue;
+      userInbodyMap[phone] = userInbodyMap[phone] || [];
+      userInbodyMap[phone].push({
+        date: new Date(inData[k][0]),
+        weight: Number(inData[k][3] || 0),
+        muscle: Number(inData[k][4] || 0),
+        fat: Number(inData[k][5] || 0)
+      });
+    }
+    
+    // 회원명단에서 목표체중 로드
+    var userTargetWeightMap = {};
+    var memberSheet = ss.getSheetByName("회원명단");
+    if (memberSheet) {
+      var mData = memberSheet.getDataRange().getDisplayValues();
+      var mCols = getMemberSheetColumnIndices(memberSheet);
+      for (var i = 1; i < mData.length; i++) {
+        var mPhone = normalizePhoneDigits(mData[i][mCols.phone]);
+        if (mPhone) {
+          userTargetWeightMap[mPhone] = parseWeightSafely(mData[i][mCols.targetWeight]);
+        }
+      }
+    }
+    
+    // 일일 점수 누적 집계
+    var userStats = {};
+    for (var j = 1; j < summaryData.length; j++) {
+      var rawPhone = String(summaryData[j][1] || "").trim();
+      var phone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, "");
+      if (!phone) continue;
+      
+      var recDateRaw = summaryData[j][0];
+      var recDate = (recDateRaw instanceof Date) ? recDateRaw : new Date(recDateRaw);
+      if (isNaN(recDate.getTime())) continue;
+      
+      if (recDate <= endOfWeekDate) {
+        var name = String(summaryData[j][2] || "모험가").trim();
+        var visitScore = Number(summaryData[j][3] || 0);
+        var intensityScore = Number(summaryData[j][4] || 0);
+        var actScore = Number(summaryData[j][5] || 0);
+        var recScore = Number(summaryData[j][6] || 0);
+        var hpScore = Number(summaryData[j][7] || 0);
+        var rowTotal = Number(summaryData[j][9] || 0);
+        
+        if (!userStats[phone]) {
+          userStats[phone] = { name: name, health: 0, perf: 0, def: 0, weeklyTotalAct: 0, lifetimeTotalAct: 0 };
+        }
+        
+        var stat = userStats[phone];
+        stat.lifetimeTotalAct += rowTotal;
+        
+        if (recDate >= targetThuDate && recDate <= endOfWeekDate) {
+          stat.health += hpScore;
+          stat.perf += (visitScore + intensityScore + actScore);
+          stat.def += recScore;
+          stat.weeklyTotalAct += rowTotal;
+        }
+      }
+    }
+    
+    var list = [];
+    for (var phone in userStats) {
+      var stat = userStats[phone];
+      var records = userInbodyMap[phone] || [];
+      
+      var firstEver = null;
+      var latestEver = null;
+      var latestInWeek = null;
+      for (var rIdx = 0; rIdx < records.length; rIdx++) {
+        var r = records[rIdx];
+        if (r.date <= endOfWeekDate) {
+          if (!firstEver || r.date < firstEver.date) firstEver = r;
+          if (!latestEver || r.date > latestEver.date) latestEver = r;
+          if (r.date >= targetThuDate && r.date <= endOfWeekDate) {
+            if (!latestInWeek || r.date > latestInWeek.date) latestInWeek = r;
+          }
+        }
+      }
+      
+      var targetWeight = userTargetWeightMap[phone] || 0;
+      var inbodyWeeklyScore = 0;
+      if (latestInWeek) {
+        var prevBeforeThisWeek = null;
+        for (var rIdx = 0; rIdx < records.length; rIdx++) {
+          var r = records[rIdx];
+          if (r.date < targetThuDate) {
+            if (!prevBeforeThisWeek || r.date > prevBeforeThisWeek.date) prevBeforeThisWeek = r;
+          }
+        }
+        var baseRecord = prevBeforeThisWeek || firstEver;
+        inbodyWeeklyScore = localInbodyScoreHelper(baseRecord, latestInWeek, targetWeight, 'weekly');
+      }
+      
+      var inbodyLifetimeScore = localInbodyScoreHelper(firstEver, latestEver, targetWeight, 'lifetime');
+      
+      var totalWeeklyExp = stat.weeklyTotalAct + inbodyWeeklyScore;
+      var totalLifetimeExp = stat.lifetimeTotalAct + inbodyLifetimeScore;
+      
+      // 인바디 감량 점수 및 보너스 점수 등은 모두 체력으로 들어갑니다!
+      var healthScore = stat.health + inbodyWeeklyScore;
+      
+      list.push({
+        name: stat.name,
+        phone: phone,
+        health: healthScore,
+        perf: stat.perf,
+        def: stat.def,
+        score: totalWeeklyExp,
+        lifetimeTotal: totalLifetimeExp
+      });
+    }
+    
+    list.sort(function(a, b) { return b.score - a.score; });
+    for (var idx = 0; idx < list.length; idx++) {
+      list[idx].rank = idx + 1;
+    }
+    return { period: period, rankings: list };
+  } catch (e) {
+    Logger.log("calculateWeeklyRankingForPeriod 에러: " + e.toString());
+    return null;
+  }
+}
+
+/**
+ * [v67.5] 특정 월의 랭킹을 마감 기준으로 실시간 정밀 집계 (체력 점수에 인바디 점수 및 보너스 합산!)
+ */
+function calculateMonthlyRankingForPeriod(period) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var summarySheet = ss.getSheetByName("일일_활동_기록");
+    var summaryData = summarySheet ? summarySheet.getDataRange().getValues() : [];
+    
+    var targetYear = new Date().getFullYear();
+    var monthNum = parseInt(period.replace("월", "").trim());
+    if (isNaN(monthNum)) monthNum = new Date().getMonth() + 1;
+    
+    var startOfMonth = new Date(targetYear, monthNum - 1, 1, 0, 0, 0, 0);
+    var endOfMonth = new Date(targetYear, monthNum, 0, 23, 59, 59, 999);
+    
+    // 월초 인바디 마감 기한
+    var firstDay = new Date(targetYear, monthNum - 1, 1);
+    var firstDayOfWeek = firstDay.getDay();
+    var diffToWed = (3 - firstDayOfWeek + 7) % 7;
+    var baselineDeadline = new Date(targetYear, monthNum - 1, 1 + diffToWed);
+    var hasWedHoliday = isCenterHoliday(baselineDeadline);
+    if (hasWedHoliday) {
+      baselineDeadline.setDate(baselineDeadline.getDate() + 1);
+    }
+    baselineDeadline.setHours(23, 59, 59, 999);
+    
+    // 인바디 로드
+    var inbodySheet = ss.getSheetByName("33챌린지_인바디");
+    var inData = inbodySheet ? inbodySheet.getDataRange().getValues() : [];
+    var userInbodyMap = {};
+    for (var k = 1; k < inData.length; k++) {
+      var rawPhone = String(inData[k][2] || "").trim();
+      var phone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, "");
+      if (!phone) continue;
+      userInbodyMap[phone] = userInbodyMap[phone] || [];
+      userInbodyMap[phone].push({
+        date: new Date(inData[k][0]),
+        weight: Number(inData[k][3] || 0),
+        muscle: Number(inData[k][4] || 0),
+        fat: Number(inData[k][5] || 0)
+      });
+    }
+    
+    // 회원명단에서 목표체중 로드
+    var userTargetWeightMap = {};
+    var memberSheet = ss.getSheetByName("회원명단");
+    if (memberSheet) {
+      var mData = memberSheet.getDataRange().getDisplayValues();
+      var mCols = getMemberSheetColumnIndices(memberSheet);
+      for (var i = 1; i < mData.length; i++) {
+        var mPhone = normalizePhoneDigits(mData[i][mCols.phone]);
+        if (mPhone) {
+          userTargetWeightMap[mPhone] = parseWeightSafely(mData[i][mCols.targetWeight]);
+        }
+      }
+    }
+    
+    // 일일 점수 누적 집계
+    var userStats = {};
+    for (var j = 1; j < summaryData.length; j++) {
+      var rawPhone = String(summaryData[j][1] || "").trim();
+      var phone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, "");
+      if (!phone) continue;
+      
+      var recDateRaw = summaryData[j][0];
+      var recDate = (recDateRaw instanceof Date) ? recDateRaw : new Date(recDateRaw);
+      if (isNaN(recDate.getTime())) continue;
+      
+      if (recDate <= endOfMonth) {
+        var name = String(summaryData[j][2] || "모험가").trim();
+        var visitScore = Number(summaryData[j][3] || 0);
+        var intensityScore = Number(summaryData[j][4] || 0);
+        var actScore = Number(summaryData[j][5] || 0);
+        var recScore = Number(summaryData[j][6] || 0);
+        var hpScore = Number(summaryData[j][7] || 0);
+        var rowTotal = Number(summaryData[j][9] || 0);
+        
+        if (!userStats[phone]) {
+          userStats[phone] = { name: name, health: 0, perf: 0, def: 0, monthlyTotalAct: 0, lifetimeTotalAct: 0 };
+        }
+        
+        var stat = userStats[phone];
+        stat.lifetimeTotalAct += rowTotal;
+        
+        if (recDate >= startOfMonth && recDate <= endOfMonth) {
+          stat.health += hpScore;
+          stat.perf += (visitScore + intensityScore + actScore);
+          stat.def += recScore;
+          stat.monthlyTotalAct += rowTotal;
+        }
+      }
+    }
+    
+    var list = [];
+    for (var phone in userStats) {
+      var stat = userStats[phone];
+      var records = userInbodyMap[phone] || [];
+      
+      var firstEver = null;
+      var latestEver = null;
+      var baselineRecord = null;
+      var latestInMonth = null;
+      for (var rIdx = 0; rIdx < records.length; rIdx++) {
+        var r = records[rIdx];
+        if (r.date <= endOfMonth) {
+          if (!firstEver || r.date < firstEver.date) firstEver = r;
+          if (!latestEver || r.date > latestEver.date) latestEver = r;
+          
+          if (r.date >= startOfMonth && r.date <= baselineDeadline) {
+            var rDay = r.date.getDay();
+            var isValidDay = (rDay >= 1 && rDay <= 3) || (rDay === 4);
+            if (isValidDay) {
+              if (!baselineRecord || r.date < baselineRecord.date) baselineRecord = r;
+            }
+          }
+          if (r.date >= startOfMonth && r.date <= endOfMonth && isDateInLastWeekMonToWed(r.date)) {
+            if (!latestInMonth || r.date > latestInMonth.date) latestInMonth = r;
+          }
+        }
+      }
+      
+      var targetWeight = userTargetWeightMap[phone] || 0;
+      var inbodyMonthlyScore = 0;
+      if (baselineRecord && latestInMonth) {
+        inbodyMonthlyScore = localInbodyScoreHelper(baselineRecord, latestInMonth, targetWeight, 'monthly');
+      }
+      
+      var inbodyLifetimeScore = localInbodyScoreHelper(firstEver, latestEver, targetWeight, 'lifetime');
+      
+      var totalMonthlyExp = stat.monthlyTotalAct + inbodyMonthlyScore;
+      var totalLifetimeExp = stat.lifetimeTotalAct + inbodyLifetimeScore;
+      
+      // 인바디 감량 점수 및 명품 유지 보너스 등은 모두 체력으로 합산됩니다!
+      var healthScore = stat.health + inbodyMonthlyScore;
+      
+      list.push({
+        name: stat.name,
+        phone: phone,
+        health: healthScore,
+        perf: stat.perf,
+        def: stat.def,
+        score: totalMonthlyExp,
+        lifetimeTotal: totalLifetimeExp
+      });
+    }
+    
+    list.sort(function(a, b) { return b.score - a.score; });
+    for (var idx = 0; idx < list.length; idx++) {
+      list[idx].rank = idx + 1;
+    }
+    
+    // 출석 횟수 집계
+    var monthlyAttendanceMap = {};
+    try {
+      var attSheet = ss.getSheetByName("출석기록");
+      var attData = attSheet ? attSheet.getDataRange().getValues() : [];
+      if (attSheet && attData.length > 1) {
+        var attCols = getAttendanceColumnIndices(attSheet);
+        for (var aIdx = 1; aIdx < attData.length; aIdx++) {
+          var aRow = attData[aIdx];
+          var aPhoneRaw = String(aRow[attCols.phone] || "").trim();
+          var aPhone = formatPhoneNumber(aPhoneRaw).replace(/[^0-9]/g, "");
+          if (!aPhone) continue;
+          
+          var aDateRaw = aRow[attCols.date];
+          var aDate = (aDateRaw instanceof Date) ? aDateRaw : new Date(aDateRaw);
+          if (isNaN(aDate.getTime())) continue;
+          
+          if (aDate >= startOfMonth && aDate <= endOfMonth) {
+            monthlyAttendanceMap[aPhone] = (monthlyAttendanceMap[aPhone] || 0) + 1;
+          }
+        }
+      }
+    } catch (attErr) {
+      Logger.log("출석 횟수 실시간 집계 중 오류: " + attErr.toString());
+    }
+    
+    list.forEach(function(u) {
+      u.attCount = monthlyAttendanceMap[u.phone] || 0;
+    });
+    
+    return { period: period, rankings: list };
+  } catch (e) {
+    Logger.log("calculateMonthlyRankingForPeriod 에러: " + e.toString());
+    return null;
   }
 }
 
