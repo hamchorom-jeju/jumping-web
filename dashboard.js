@@ -97,6 +97,21 @@ const Village = {
     init() {
         console.log("v44.229 Real Data Sync Initialized.");
 
+        // [v69.0] 🌦️ BGM 및 기후 제주씽크 새로운 하루 자동 리셋 엔진
+        try {
+            const todayStr = new Date().toISOString().substring(0, 10); // YYYY-MM-DD
+            const lastVisit = localStorage.getItem('v44_last_visit_date');
+            if (lastVisit !== todayStr) {
+                // 새로운 날이 되었으므로, 어제 강제 정지했던 날씨/BGM 설정을 지워 관리자 기본 환경으로 강제 복구(리셋)합니다.
+                localStorage.removeItem('village_weather_disabled');
+                localStorage.removeItem('v44_bgm_user_play');
+                localStorage.setItem('v44_last_visit_date', todayStr);
+                console.log("🌦️ [Jeju Sync Daily Reset] It's a new day! Reactivating weather & BGM settings as configured by the admin.");
+            }
+        } catch (e) {
+            console.error("Daily Reset Check Error:", e);
+        }
+
         // [perf] 낙관적 렌더링: localStorage 캐시가 있으면 즉시 화면에 먼저 표시
         const cached = localStorage.getItem('v44_dashboard_cache');
         let cacheLoaded = false;
@@ -1354,9 +1369,11 @@ const Village = {
         
         let btn = document.getElementById('village-bgm-toggle');
         if (!enabled) {
-            // [원장님 피드백 반영] BGM이 비활성화 상태라면 화면에서 음악 버튼을 완전히 숨기고 즉시 정지!
+            // [원장님 피드백 반영] BGM이 비활성화 상태라면 화면에서 음악 버튼을 완전히 숨기고 즉시 정지 및 모바일 상단 미디어 제거!
             if (btn) btn.style.display = 'none';
             audio.pause();
+            audio.src = '';
+            try { audio.load(); } catch(e) {}
             return;
         }
         
@@ -1372,6 +1389,14 @@ const Village = {
             
             btn.onclick = () => {
                 if (audio.paused) {
+                    if (!audio.src || audio.src === window.location.href || audio.src === "") {
+                        const playlistStr = audio.getAttribute('data-playlist') || "";
+                        const playlist = playlistStr.split(",").filter(x => x);
+                        const curIdx = parseInt(audio.getAttribute('data-current-index') || "0", 10);
+                        if (playlist.length > 0) {
+                            audio.src = playlist[curIdx % playlist.length];
+                        }
+                    }
                     audio.play().then(() => {
                         btn.querySelector('i').style.color = '#e74c3c';
                         btn.style.transform = 'scale(1.1) rotate(15deg)';
@@ -1379,6 +1404,8 @@ const Village = {
                     }).catch(e => console.log("BGM Play error:", e));
                 } else {
                     audio.pause();
+                    audio.src = '';
+                    try { audio.load(); } catch(e) {}
                     btn.querySelector('i').style.color = 'var(--v-wood)';
                     btn.style.transform = 'scale(1) rotate(0deg)';
                     localStorage.setItem('v44_bgm_user_play', 'false');
@@ -1391,6 +1418,14 @@ const Village = {
         
         if (shouldPlay) {
             const startPlay = () => {
+                if (!audio.src || audio.src === window.location.href || audio.src === "") {
+                    const playlistStr = audio.getAttribute('data-playlist') || "";
+                    const playlist = playlistStr.split(",").filter(x => x);
+                    const curIdx = parseInt(audio.getAttribute('data-current-index') || "0", 10);
+                    if (playlist.length > 0) {
+                        audio.src = playlist[curIdx % playlist.length];
+                    }
+                }
                 audio.play().then(() => {
                     btn.querySelector('i').style.color = '#e74c3c';
                     btn.style.transform = 'scale(1.1) rotate(15deg)';
@@ -1409,6 +1444,8 @@ const Village = {
             });
         } else {
             audio.pause();
+            audio.src = '';
+            try { audio.load(); } catch(e) {}
             btn.querySelector('i').style.color = 'var(--v-wood)';
             btn.style.transform = 'scale(1) rotate(0deg)';
         }
@@ -1457,6 +1494,38 @@ const Village = {
             } else {
                 btn.innerHTML = '👁️ 끄기';
                 btn.classList.remove('disabled');
+            }
+        }
+        
+        // [v69.0] 제주씽크 일괄 제어 연동: 끄면 오디오 미디어 플레이어도 완전히 제거(언로드), 켜면 복구
+        if (newVal) {
+            localStorage.setItem('v44_bgm_user_play', 'false');
+            const audio = document.getElementById('village-bgm-audio');
+            if (audio) {
+                audio.pause();
+                audio.src = '';
+                try { audio.load(); } catch(e) {}
+            }
+            const bgmBtn = document.getElementById('village-bgm-toggle');
+            if (bgmBtn) {
+                bgmBtn.querySelector('i').style.color = 'var(--v-wood)';
+                bgmBtn.style.transform = 'scale(1) rotate(0deg)';
+            }
+        } else {
+            localStorage.setItem('v44_bgm_user_play', 'true');
+            const audio = document.getElementById('village-bgm-audio');
+            const bgmBtn = document.getElementById('village-bgm-toggle');
+            if (audio && bgmBtn) {
+                const playlistStr = audio.getAttribute('data-playlist') || "";
+                const playlist = playlistStr.split(",").filter(x => x);
+                const curIdx = parseInt(audio.getAttribute('data-current-index') || "0", 10);
+                if (playlist.length > 0) {
+                    audio.src = playlist[curIdx % playlist.length];
+                }
+                audio.play().then(() => {
+                    bgmBtn.querySelector('i').style.color = '#e74c3c';
+                    bgmBtn.style.transform = 'scale(1.1) rotate(15deg)';
+                }).catch(e => console.log("BGM restore failed:", e));
             }
         }
         
