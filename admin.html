@@ -4533,6 +4533,25 @@
     let selectedRankingCategory = '';
     let selectedRankingPeriod = '';
     let fetchedRankingRecords = [];
+    window.liveAttendanceMvp = []; // [v6.0] 실시간 출석왕 데이터 수령/캐싱용 전역 변수
+    window.historicalAttendanceMvp = {}; // [v6.0] 과거 월간 출석왕 데이터 아카이브 맵
+
+    // [v6.0] 명예의 전당 아카이브 Winners 문자열 파싱 유틸리티
+    function parseAttendanceWinners(winnersStr) {
+      if (!winnersStr) return [];
+      const list = [];
+      const tokens = winnersStr.split("|");
+      tokens.forEach(tok => {
+        const match = tok.match(/(?:🥇|🥈|🥉)?\s*(?:\d+위)?\s*([^(]+)\((\d+)회\)/);
+        if (match) {
+          list.push({
+            name: match[1].trim(),
+            count: parseInt(match[2].trim(), 10)
+          });
+        }
+      });
+      return list;
+    }
 
     function openChallengeRankingConsole() {
       selectedRankingCategory = '';
@@ -4546,6 +4565,40 @@
       document.getElementById('challengeRankingConsoleModal').classList.add('show');
       if (window.registerModalOpen) {
         window.registerModalOpen(closeChallengeRankingConsole);
+      }
+
+      // [v6.0] 인쇄 콘솔 오픈 시 실시간 및 과거 아카이브 출석왕 백그라운드 수령/캐싱
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            if (response && response.success && response.data) {
+              if (response.data.mvp) {
+                window.liveAttendanceMvp = response.data.mvp.monthlyAttendance || [];
+              }
+              window.historicalAttendanceMvp = {};
+              if (response.data.archive && response.data.archive.attendance) {
+                response.data.archive.attendance.forEach(item => {
+                  window.historicalAttendanceMvp[item.period] = parseAttendanceWinners(item.winners);
+                });
+              }
+              console.log("[v6.0] live & historical attendance MVP cached:", window.liveAttendanceMvp, window.historicalAttendanceMvp);
+            }
+          })
+          .getHallOfFameData();
+      } else {
+        // 로컬 테스트용 모크 세팅
+        window.liveAttendanceMvp = [
+          { name: "김영희", count: 24 },
+          { name: "이철수", count: 22 },
+          { name: "박민수", count: 21 }
+        ];
+        window.historicalAttendanceMvp = {
+          "5월": [
+            { name: "과거영희", count: 25 },
+            { name: "과거철수", count: 23 },
+            { name: "과거민수", count: 20 }
+          ]
+        };
       }
     }
 
@@ -4677,6 +4730,11 @@
               const liveList = response.data[selectedRankingCategory] || [];
               const liveTotalList = response.data['total'] || [];
               
+              // [v6.0] 실시간 출석왕 TOP 3 캐싱 연동
+              if (response.data.mvp && response.data.mvp.monthlyAttendance) {
+                window.liveAttendanceMvp = response.data.mvp.monthlyAttendance;
+              }
+              
               fetchedRankingRecords = liveList.map(item => {
                 return {
                   rank: item.rank,
@@ -4725,6 +4783,17 @@
             if (response && response.success) {
               fetchedRankingRecords = response.records || [];
               window.currentRankingDateRange = response.dateRange || "";
+              
+              // [v6.0] 과거 월간 조회 시 해당 과거 월의 진짜 출석왕 캐시를 바인딩하여 정합성 100% 보장
+              if (selectedRankingCategory === 'monthly' && period !== 'live') {
+                const cleanPeriod = period.endsWith('월') ? period : period + '월';
+                if (window.historicalAttendanceMvp && window.historicalAttendanceMvp[cleanPeriod]) {
+                  window.liveAttendanceMvp = window.historicalAttendanceMvp[cleanPeriod];
+                } else {
+                  window.liveAttendanceMvp = []; // 데이터가 없으면 비워둠
+                }
+              }
+              
               renderConsoleTable();
             } else {
               alert("성적 조회 실패: " + (response ? response.error : "Unknown"));
@@ -4847,27 +4916,51 @@
           '</tbody>' +
         '</table>';
 
-      // 2부: 누적 토탈 랭킹 (1~3위 스냅샷)
-      const sortedLifetime = [...fetchedRankingRecords]
-        .filter(x => x.lifetimeTotal > 0)
-        .sort((a, b) => b.lifetimeTotal - a.lifetimeTotal)
-        .slice(0, 3);
-        
-      let lifetimeHTML = '';
-      if (sortedLifetime.length > 0) {
-        lifetimeHTML += '<div style="margin-top: 12px; border: 1.5px solid black; border-radius: 12px; padding: 8px 12px; background: #fafafa;">' +
-            '<h4 style="font-size: 0.82rem; font-weight: 900; margin-bottom: 6px; text-align: center; color: black; letter-spacing: -0.5px;">⚡ ' + periodLabel + ' 누적 토탈 랭킹 순위</h4>' +
-            '<div style="display: flex; gap: 8px; justify-content: center; width: 100%;">';
-            
-        sortedLifetime.forEach((w, lIdx) => {
-          const medal = lIdx === 0 ? '🥇 1위' : lIdx === 1 ? '🥈 2위' : '🥉 3위';
-          lifetimeHTML += '<div style="flex: 1; text-align: center; border: 1.2px solid black; border-radius: 8px; padding: 4px; background: white;">' +
-              '<span style="font-size: 0.68rem; font-weight: 900; color: black; display: block; margin-bottom: 1px;">' + medal + '</span>' +
-              '<strong style="font-size: 0.75rem; font-weight: 900; color: black; display: block; margin-bottom: 1px;">' + w.name + '</strong>' +
-              '<span style="font-size: 0.65rem; font-weight: 700; color: #555;">' + w.lifetimeTotal.toLocaleString() + '</span>' +
+      // [v6.0] 2부: 카테고리별 분기 처리 (주간: 누적 토탈 랭킹, 월간: 이달의 출석왕 TOP 3)
+      let bottomSectionHTML = '';
+      
+      if (selectedRankingCategory === 'weekly') {
+        const sortedLifetime = [...fetchedRankingRecords]
+          .filter(x => x.lifetimeTotal > 0)
+          .sort((a, b) => b.lifetimeTotal - a.lifetimeTotal)
+          .slice(0, 3);
+          
+        if (sortedLifetime.length > 0) {
+          bottomSectionHTML += '<div style="margin-top: 12px; border: 1.5px solid black; border-radius: 12px; padding: 8px 12px; background: #fafafa;">' +
+              '<h4 style="font-size: 0.82rem; font-weight: 900; margin-bottom: 6px; text-align: center; color: black; letter-spacing: -0.5px;">⚡ ' + periodLabel + ' 누적 토탈 랭킹 순위</h4>' +
+              '<div style="display: flex; gap: 8px; justify-content: center; width: 100%;">';
+              
+          sortedLifetime.forEach((w, lIdx) => {
+            const medal = lIdx === 0 ? '🥇 1위' : lIdx === 1 ? '🥈 2위' : '🥉 3위';
+            bottomSectionHTML += '<div style="flex: 1; text-align: center; border: 1.2px solid black; border-radius: 8px; padding: 4px; background: white;">' +
+                '<span style="font-size: 0.68rem; font-weight: 900; color: black; display: block; margin-bottom: 1px;">' + medal + '</span>' +
+                '<strong style="font-size: 0.75rem; font-weight: 900; color: black; display: block; margin-bottom: 1px;">' + w.name + '</strong>' +
+                '<span style="font-size: 0.65rem; font-weight: 700; color: #555;">' + w.lifetimeTotal.toLocaleString() + '</span>' +
+              '</div>';
+          });
+          bottomSectionHTML += '</div></div>';
+        }
+      } else {
+        const mvpList = window.liveAttendanceMvp || [];
+        if (mvpList.length > 0) {
+          bottomSectionHTML += '<div style="margin-top: 12px; border: 1.5px solid black; border-radius: 12px; padding: 8px 12px; background: #fafafa;">' +
+              '<h4 style="font-size: 0.85rem; font-weight: 950; margin-bottom: 6px; text-align: center; color: black; letter-spacing: -0.5px;">🏃 이달의 출석왕 TOP 3 🏆</h4>' +
+              '<div style="display: flex; gap: 8px; justify-content: center; width: 100%;">';
+              
+          mvpList.forEach((w, lIdx) => {
+            const medal = lIdx === 0 ? '🥇 1위' : lIdx === 1 ? '🥈 2위' : '🥉 3위';
+            bottomSectionHTML += '<div style="flex: 1; text-align: center; border: 1.2px solid black; border-radius: 8px; padding: 6px 4px; background: white;">' +
+                '<span style="font-size: 0.68rem; font-weight: 900; color: black; display: block; margin-bottom: 2px;">' + medal + '</span>' +
+                '<strong style="font-size: 0.78rem; font-weight: 900; color: black; display: block; margin-bottom: 2px;">' + w.name + '</strong>' +
+                '<span style="font-size: 0.68rem; font-weight: 800; color: #10b981; background: #e6fbf4; padding: 1px 6px; border-radius: 20px; display: inline-block; border: 1px solid #a7f3d0;">' + w.count + '회 출석</span>' +
+              '</div>';
+          });
+          bottomSectionHTML += '</div></div>';
+        } else {
+          bottomSectionHTML += '<div style="margin-top: 12px; border: 1.5px solid black; border-radius: 12px; padding: 12px; background: #fafafa; text-align: center; font-size: 0.78rem; font-weight: 800; color: #555;">' +
+              '🏃 이달의 출석왕 데이터를 불러오는 중... (잠시 후 다시 시도해 주세요)' +
             '</div>';
-        });
-        lifetimeHTML += '</div></div>';
+        }
       }
 
       const stampHTML = '<div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: flex-end;">' +
@@ -4886,7 +4979,7 @@
           '<hr style="border: none; border-top: 2px solid black; margin: 8px 0 12px 0;">' +
         '</div>' +
         detailsTableHTML +
-        lifetimeHTML +
+        bottomSectionHTML +
         stampHTML;
 
       document.body.classList.add('print-preview-active');
