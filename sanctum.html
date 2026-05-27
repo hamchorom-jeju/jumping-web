@@ -926,7 +926,74 @@
     }
 
     function loadScheduledQuests() {
-      if (typeof google === 'undefined') return;
+      if (typeof google === 'undefined') {
+        // 🔮 로컬 오프라인 실행 환경을 위한 초호화 가상 돌발 캘린더 데이터 생성 (시각화 시연)
+        console.log("🔮 Local development environment detected: Generating mock calendar data.");
+        const mockList = [];
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        const todayKst = new Date(Date.now() - offset);
+        
+        const mockQuests = [
+          "단백질 day!", "식이섬유 day!", "건강한 지방 섭취하기!", "인슐린 day!", 
+          "비타민 day!", "유산균 day!", "디톡스 온수 & 허브티 day!", "하루 15분 햇빛 샤워 day!"
+        ];
+
+        for (let d = 0; d < 45; d++) {
+          const targetDate = new Date(todayKst.getTime() + d * 24 * 60 * 60 * 1000);
+          const targetDateStr = targetDate.toISOString().split('T')[0];
+          const dayOfWeek = targetDate.getDay();
+          
+          if (dayOfWeek === 6) {
+            mockList.push({
+              rowIdx: null,
+              date: targetDateStr,
+              title: "주말 미션! 홈트 & 운동 day!",
+              description: "집에서 가벼운 홈트레이닝 또는 야외 운동인증 💪",
+              method: "사진",
+              score: 15,
+              isManual: false
+            });
+          } else if (dayOfWeek === 0) {
+            mockList.push({
+              rowIdx: null,
+              date: targetDateStr,
+              title: "주말 미션! 초록 힐링 야외 산책 day!",
+              description: "근처 공원이나 산책길을 걸으며 마주한 자연 풍경 인증 🌳",
+              method: "사진",
+              score: 15,
+              isManual: false
+            });
+          } else if (d === 3 || d === 8) {
+            // 수동 예약 시뮬레이션
+            mockList.push({
+              rowIdx: 10 + d,
+              date: targetDateStr,
+              title: `👑 [이장지정] 특별 웰니스 미션 ${d === 3 ? 'A' : 'B'}!`,
+              description: "이장님이 선포한 오늘의 아주 특별하고 활력 넘치는 돌발 도전! ⚡",
+              method: d === 3 ? "게시판" : "사진",
+              score: 30,
+              isManual: true
+            });
+          } else {
+            // 일반 자동 퀘스트 시뮬레이션
+            const qTitle = mockQuests[d % mockQuests.length];
+            mockList.push({
+              rowIdx: null,
+              date: targetDateStr,
+              title: qTitle,
+              description: "오늘 하루 양질의 웰니스 생활 습관을 찾아 건강하게 실천해 주세요! ✨",
+              method: d % 3 === 0 ? "게시판" : "사진",
+              score: 15,
+              isManual: false
+            });
+          }
+        }
+        
+        renderScheduledQuests(mockList);
+        return;
+      }
+      
       google.script.run.withSuccessHandler(list => {
         renderScheduledQuests(list);
       }).getScheduledQuests();
