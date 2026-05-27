@@ -11992,7 +11992,55 @@ function getChallengeArchiveData(payload) {
       }
     }
     
-    return { success: true, periods: periods, records: records, dateRange: dateRange };
+    // [v6.0] 과거 월간 조회 시, 해당 과거 월(targetPeriod, 예: "5월")의 진짜 출석왕 TOP 3를 집계하여 반환
+    var attendanceMvp = [];
+    if (category === "monthly" && targetPeriod) {
+      try {
+        var attSheet = ss.getSheetByName("출석기록");
+        var attData = attSheet ? attSheet.getDataRange().getValues() : [];
+        if (attSheet && attData.length > 1) {
+          var attCols = getAttendanceColumnIndices(attSheet);
+          var monthlyAttendanceMap = {}; // phone -> { name, count }
+          
+          var targetYear = new Date().getFullYear();
+          var monthNum = parseInt(targetPeriod.replace("월", "").trim());
+          if (!isNaN(monthNum)) {
+            var startM = new Date(targetYear, monthNum - 1, 1, 0, 0, 0, 0);
+            var endM = new Date(targetYear, monthNum, 0, 23, 59, 59, 999);
+            
+            for (var aIdx = 1; aIdx < attData.length; aIdx++) {
+              var aRow = attData[aIdx];
+              var aPhoneRaw = String(aRow[attCols.phone] || "").trim();
+              var aPhone = formatPhoneNumber(aPhoneRaw).replace(/[^0-9]/g, "");
+              if (!aPhone) continue;
+              
+              var aName = String(aRow[attCols.name] || "모험가").replace(/\d{4}$/, "").trim();
+              var aDateRaw = aRow[attCols.date];
+              var aDate = (aDateRaw instanceof Date) ? aDateRaw : new Date(aDateRaw);
+              if (isNaN(aDate.getTime())) continue;
+              
+              if (aDate >= startM && aDate <= endM) {
+                if (!monthlyAttendanceMap[aPhone]) {
+                  monthlyAttendanceMap[aPhone] = { name: aName, count: 0 };
+                }
+                monthlyAttendanceMap[aPhone].count++;
+              }
+            }
+            
+            var attList = [];
+            for (var key in monthlyAttendanceMap) {
+              attList.push(monthlyAttendanceMap[key]);
+            }
+            attList.sort(function(a, b) { return b.count - a.count; });
+            attendanceMvp = attList.slice(0, 3);
+          }
+        }
+      } catch (attErr) {
+        Logger.log("getChallengeArchiveData 출석왕 집계 오류: " + attErr.toString());
+      }
+    }
+    
+    return { success: true, periods: periods, records: records, dateRange: dateRange, attendanceMvp: attendanceMvp };
   } catch (e) {
     return { success: false, error: e.toString() };
   }

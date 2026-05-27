@@ -4533,25 +4533,7 @@
     let selectedRankingCategory = '';
     let selectedRankingPeriod = '';
     let fetchedRankingRecords = [];
-    window.liveAttendanceMvp = []; // [v6.0] 실시간 출석왕 데이터 수령/캐싱용 전역 변수
-    window.historicalAttendanceMvp = {}; // [v6.0] 과거 월간 출석왕 데이터 아카이브 맵
-
-    // [v6.0] 명예의 전당 아카이브 Winners 문자열 파싱 유틸리티
-    function parseAttendanceWinners(winnersStr) {
-      if (!winnersStr) return [];
-      const list = [];
-      const tokens = winnersStr.split("|");
-      tokens.forEach(tok => {
-        const match = tok.match(/(?:🥇|🥈|🥉)?\s*(?:\d+위)?\s*([^(]+)\((\d+)회\)/);
-        if (match) {
-          list.push({
-            name: match[1].trim(),
-            count: parseInt(match[2].trim(), 10)
-          });
-        }
-      });
-      return list;
-    }
+    window.liveAttendanceMvp = []; // [v6.0] 월간 출석왕 탑 3 전역 변수
 
     function openChallengeRankingConsole() {
       selectedRankingCategory = '';
@@ -4567,21 +4549,12 @@
         window.registerModalOpen(closeChallengeRankingConsole);
       }
 
-      // [v6.0] 인쇄 콘솔 오픈 시 실시간 및 과거 아카이브 출석왕 백그라운드 수령/캐싱
+      // [v6.0] 인쇄 콘솔 오픈 시 실시간 당월 출석왕 백그라운드 수령
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(function(response) {
-            if (response && response.success && response.data) {
-              if (response.data.mvp) {
-                window.liveAttendanceMvp = response.data.mvp.monthlyAttendance || [];
-              }
-              window.historicalAttendanceMvp = {};
-              if (response.data.archive && response.data.archive.attendance) {
-                response.data.archive.attendance.forEach(item => {
-                  window.historicalAttendanceMvp[item.period] = parseAttendanceWinners(item.winners);
-                });
-              }
-              console.log("[v6.0] live & historical attendance MVP cached:", window.liveAttendanceMvp, window.historicalAttendanceMvp);
+            if (response && response.success && response.data && response.data.mvp) {
+              window.liveAttendanceMvp = response.data.mvp.monthlyAttendance || [];
             }
           })
           .getHallOfFameData();
@@ -4592,13 +4565,6 @@
           { name: "이철수", count: 22 },
           { name: "박민수", count: 21 }
         ];
-        window.historicalAttendanceMvp = {
-          "5월": [
-            { name: "과거영희", count: 25 },
-            { name: "과거철수", count: 23 },
-            { name: "과거민수", count: 20 }
-          ]
-        };
       }
     }
 
@@ -4784,14 +4750,9 @@
               fetchedRankingRecords = response.records || [];
               window.currentRankingDateRange = response.dateRange || "";
               
-              // [v6.0] 과거 월간 조회 시 해당 과거 월의 진짜 출석왕 캐시를 바인딩하여 정합성 100% 보장
-              if (selectedRankingCategory === 'monthly' && period !== 'live') {
-                const cleanPeriod = period.endsWith('월') ? period : period + '월';
-                if (window.historicalAttendanceMvp && window.historicalAttendanceMvp[cleanPeriod]) {
-                  window.liveAttendanceMvp = window.historicalAttendanceMvp[cleanPeriod];
-                } else {
-                  window.liveAttendanceMvp = []; // 데이터가 없으면 비워둠
-                }
+              // [v6.0] 과거 월간 조회 시 백엔드 시트에서 다이렉트로 긁어온 진짜 당월 출석왕 탑 3 매핑
+              if (selectedRankingCategory === 'monthly') {
+                window.liveAttendanceMvp = response.attendanceMvp || [];
               }
               
               renderConsoleTable();
