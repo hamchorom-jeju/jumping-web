@@ -229,7 +229,7 @@ const Village = {
                         if (res.villageSettings) {
                             this.applyVillageEnvironment(res.villageSettings);
                         }
-                        // 📢 전령의 기둥 공지 단독 바인딩 (돌발 퀘스트 롤링 제외) [v66.0]
+                                                // 📢 전령의 기둥 공지 단독 바인딩 (돌발 퀘스트 롤링 제외) [v66.0]
                         if (res.pillarNotice) {
                             const noticeEl = document.getElementById('village-notice-banner');
                             if (noticeEl) {
@@ -261,40 +261,29 @@ const Village = {
                                         if (window.noticeInterval) clearTimeout(window.noticeInterval);
                                         window.noticeInterval = setTimeout(transitionToNext, 5000);
                                     };
-   
-                                     const transitionToNext = () => {
-                                                    textEl.textContent = nextTitle.trim();
-                                                    textEl.style.opacity = '1';
-                                                    
-                                                    // 타겟 링크 및 액션 버튼 디자인 즉시 최신화
-                                                    const badgeContainer = noticeEl.querySelector('.v-notice-badge');
-                                                    const actionContainer = noticeEl.querySelector('.v-banner-badge');
-                                                    
-                                                    if (badgeContainer) {
-                                                        const newBadgeHtml = getNoticeBadgeHtml(nextSudden, nextTitle);
-                                                        badgeContainer.outerHTML = newBadgeHtml;
-                                                    }
-                                                    
-                                                    if (actionContainer) {
-                                                        const newActionHtml = getActionHtml(nextSudden, nextDone, nextTitle);
-                                                        actionContainer.outerHTML = newActionHtml;
-                                                    }
-                                                    
-                                                    updateSuddenClasses(noticeEl, nextSudden, nextTitle);
-                                                    
-                                                    noticeEl.dataset.targetUrl = getNoticeTargetUrl(nextSudden, nextTitle);
-                                                    
-                                                    curIdx = nextIdx;
-                                                    
-                                                    const delay = nextSudden ? 10000 : 5000;
-                                                    if (window.noticeInterval) clearTimeout(window.noticeInterval);
-                                                    window.noticeInterval = setTimeout(transitionToNext, delay);
-                                                }, 250);
-                                            } else {
-                                                // 안전대책 예외 처리
+                                    
+                                    const transitionToNext = () => {
+                                        const nextIdx = (curIdx + 1) % notices.length;
+                                        const nextItem = notices[nextIdx];
+                                        const nextTitle = nextItem.title || nextItem.content || '';
+                                        
+                                        const textEl = noticeEl.querySelector('.v-notice-text');
+                                        if (textEl) {
+                                            textEl.style.transition = 'opacity 0.25s ease';
+                                            textEl.style.opacity = '0';
+                                            
+                                            setTimeout(() => {
+                                                textEl.textContent = nextTitle.trim();
+                                                textEl.style.opacity = '1';
+                                                
                                                 curIdx = nextIdx;
-                                                renderInitial();
-                                            }
+                                                
+                                                if (window.noticeInterval) clearTimeout(window.noticeInterval);
+                                                window.noticeInterval = setTimeout(transitionToNext, 5000);
+                                            }, 250);
+                                        } else {
+                                            curIdx = nextIdx;
+                                            renderInitial();
                                         }
                                     };
                                     
