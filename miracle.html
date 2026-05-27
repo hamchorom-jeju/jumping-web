@@ -2258,7 +2258,12 @@
     window.currentWaterL = 1.2;
 
     function showInfoPopup(key) {
-      if (key === 'bonus' && window.activeSuddenQuest) {
+      if (key === 'bonus') {
+        if (!window.activeSuddenQuest) {
+          showAppAlert("🕊️ 오늘은 예정된 돌발 퀘스트가 없는 날입니다.<br><span style='font-size:0.8rem; font-weight:500; color:var(--text-sub); display:block; margin-top:5px;'>이장님이 새로운 돌발 퀘스트를 선포하실 때까지 편안하게 건강 루틴을 즐겨주세요!</span>", "info", "돌발 퀘스트 미발동");
+          return;
+        }
+        
         const qTitle = window.activeSuddenQuest.title || "";
         const cleanQuestName = qTitle.split('!')[0].replace("⚡", "").replace("[돌발]", "").trim();
         POPUP_DATA.bonus.title = `⚡ [돌발] ${cleanQuestName}`;
@@ -2515,7 +2520,11 @@
     // 공통 인증 모달 열기
     window.currentCertKey = null;
     function openCertModal(key) {
-      if (key === 'bonus' && window.activeSuddenQuest) {
+      if (key === 'bonus') {
+        if (!window.activeSuddenQuest) {
+          showAppAlert("돌발 퀘스트가 예약되지 않은 날입니다.", "error");
+          return;
+        }
         if (window.activeSuddenQuest.method === '게시판') {
           showAppAlert("오늘의 돌발 퀘스트는 게시판 작성 전용입니다. 오아시스에서 작성해 주세요! ✍️", "error");
           setTimeout(() => {
@@ -2585,6 +2594,10 @@
       const d = POPUP_DATA[key];
       if (!d) return;
       if (!TARGET_PHONE) return showAppAlert('로그인이 필요합니다.', 'error');
+
+      if (key === 'bonus' && !window.activeSuddenQuest) {
+        return showAppAlert("돌발 퀘스트가 예약되지 않아 제출할 수 없습니다.", "error");
+      }
 
       // [v50.9] 이미 사진 인증(인증/Tier/S)을 최종 완료한 경우만 차단! (체크만 된 상태는 업로드 허용)
       const isAlreadyCertified = window.lastDoneList && window.lastDoneList.some(item => {
