@@ -12790,31 +12790,60 @@ function migrateSheetPeriods() {
       return;
     }
     
+    // 1. 기존 과거 주차 이름 보정 및 지난주 버그 행 일괄 삭제 (역순 처리로 밀림 방지)
     var range = sheet.getDataRange();
     var values = range.getValues();
     var count = 0;
     
-    for (var i = 1; i < values.length; i++) {
+    for (var i = values.length - 1; i >= 1; i--) {
       var period = String(values[i][0]).trim();
       var rowNum = i + 1;
       
-      // 기존에 잘못 기입된 주차 매핑 보정
-      if (period === "5월 3주") {
-        sheet.getRange(rowNum, 1).setValue("5월 4주");
-        count++;
-      } else if (period === "5월 2주") {
+      if (period === "5월 2주") {
         sheet.getRange(rowNum, 1).setValue("5월 3주");
         count++;
       } else if (period === "5월 1주") {
         sheet.getRange(rowNum, 1).setValue("5월 2주");
         count++;
       } else if (period === "4월 5주") {
-        // 4월 30일 ~ 5월 6일 주차는 실질적으로 5월 1주가 맞음
         sheet.getRange(rowNum, 1).setValue("5월 1주");
         count++;
+      } else if (period === "5월 3주" || period === "5월 4주") {
+        // [체력 0점 버그 해결] 지난주(5월 21일~27일) 기록은 옛날 버그 코드로 잘못 적힌 행들이므로 삭제하고 새로 씁니다!
+        sheet.deleteRow(rowNum);
       }
     }
-    Logger.log("마이그레이션 완료: 총 " + count + "행의 주차명을 올바르게 보정했습니다.");
+    
+    // 2. 지난주(5월 21일~27일, 즉 "5월 4주") 성적을 정확한 점수 계산법(인바디 및 보너스가 합산된 체력점수 포함!)으로 실시간 재계산해서 깔끔히 재적재!
+    var targetPeriod = "5월 4주";
+    var result = calculateWeeklyRankingForPeriod(targetPeriod);
+    if (result && result.rankings && result.rankings.length > 0) {
+      var rankedUsers = result.rankings;
+      var rowsToAppend = [];
+      for (var idx = 0; idx < rankedUsers.length; idx++) {
+        var u = rankedUsers[idx];
+        rowsToAppend.push([
+          targetPeriod,
+          idx + 1,
+          u.name,
+          "'" + u.phone,
+          u.health,
+          u.perf,
+          u.def,
+          u.score, // weeklyTotal (주간토탈)
+          u.lifetimeTotal
+        ]);
+      }
+      
+      if (rowsToAppend.length > 0) {
+        sheet.insertRowsAfter(1, rowsToAppend.length);
+        sheet.getRange(2, 1, rowsToAppend.length, rowsToAppend[0].length).setValues(rowsToAppend);
+        count += rowsToAppend.length;
+        Logger.log("지난주 5월 4주차 성적(체력점수 정상 합산본)을 신규 마이그레이션 적재하였습니다.");
+      }
+    }
+    
+    Logger.log("마이그레이션 최종 완료: 총 " + count + "행의 데이터 및 주차명을 성공적으로 올바르게 보정했습니다.");
   } catch (e) {
     Logger.log("마이그레이션 에러: " + e.toString());
   }
