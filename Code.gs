@@ -1146,7 +1146,9 @@ function submitInBodyRecord(payload) {
       success: true, 
       weeklyScore: weeklyScore, 
       monthlyScore: monthlyScore, 
-      totalScore: totalScore 
+      totalScore: totalScore,
+      targetWeight: targetWeight,
+      weight: weight
     };
   } catch (e) { 
     return { success: false, error: e.toString() }; 
@@ -6781,7 +6783,7 @@ function recordAppAccess(data) {
 function getDailyActiveAdventurers() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("앱_접속_로그");
+    var sheet = ss.getSheetByName("일일_활동_기록");
     if (!sheet) return 0;
     
     var data = sheet.getDataRange().getValues();
@@ -6789,9 +6791,13 @@ function getDailyActiveAdventurers() {
     var activeUsers = new Set();
     
     for (var i = 1; i < data.length; i++) {
-      var logDate = (data[i][0] instanceof Date) ? Utilities.formatDate(data[i][0], "GMT+9", "yyyy-MM-dd") : String(data[i][0]);
-      if (logDate === todayStr) {
-        activeUsers.add(data[i][2]); // 연락처(Unique ID) 기준
+      var dateRaw = data[i][0];
+      var dateStr = (dateRaw instanceof Date) ? Utilities.formatDate(dateRaw, "GMT+9", "yyyy-MM-dd") : String(dateRaw);
+      if (dateStr.indexOf(todayStr) > -1) {
+        var score = Number(data[i][9]) || 0; // J열: 웰니스총점 (index 9)
+        if (score >= 1) {
+          activeUsers.add(normalizePhoneDigits(data[i][1])); // B열: 전화번호 (index 1)
+        }
       }
     }
     return activeUsers.size;
@@ -7610,16 +7616,21 @@ function updatePillarNotice(payload) {
 function getDailyActiveAdventurers() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("출석기록");
+    var sheet = ss.getSheetByName("일일_활동_기록");
     if (!sheet) return 0;
+    
     var data = sheet.getDataRange().getValues();
     var todayStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
     var activeUsers = new Set();
+    
     for (var i = 1; i < data.length; i++) {
       var dateRaw = data[i][0];
       var dateStr = (dateRaw instanceof Date) ? Utilities.formatDate(dateRaw, "GMT+9", "yyyy-MM-dd") : String(dateRaw);
       if (dateStr.indexOf(todayStr) > -1) {
-        activeUsers.add(String(data[i][3])); // D열: 전화번호
+        var score = Number(data[i][9]) || 0; // J열: 웰니스총점 (index 9)
+        if (score >= 1) {
+          activeUsers.add(normalizePhoneDigits(data[i][1])); // B열: 전화번호 (index 1)
+        }
       }
     }
     return activeUsers.size;
