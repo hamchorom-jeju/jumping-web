@@ -10486,9 +10486,8 @@ function getAlgorithmicSuddenQuest(dateStr) {
               score: 15
             };
           } else {
-            var displayWeek = (firstThursdayDay <= 3) ? (reviewWeekIndex - 1) : (reviewWeekIndex - 1);
             return {
-              title: displayWeek + "주차 주간 & " + prevMonth + "월 월간 통합 결산일!",
+              title: "주간 & " + prevMonth + "월 월간 통합 결산일!",
               description: "지난 한 주간의 성찰과 더불어, " + prevMonth + "월 챌린지의 풍성했던 최종 결과를 종합적으로 성찰하여 오아시스에 자랑해 보세요! 📝🏆",
               method: "게시판",
               score: 15
@@ -10509,10 +10508,9 @@ function getAlgorithmicSuddenQuest(dateStr) {
               score: 15
             };
           } else {
-            var displayWeek = (firstThursdayDay <= 3) ? (reviewWeekIndex - 1) : (reviewWeekIndex - 1);
             return {
-              title: displayWeek + "주차 결산 & " + month + "월 목표 세우기!",
-              description: "지난 " + displayWeek + "주간의 웰니스 성적 성찰과 더불어, 이번 " + month + "월 한 달 동안 꼭 이루어낼 다이어트/건강 목표와 다짐을 오아시스에 당차게 남겨주세요! 📝🎯",
+              title: "주간 결산 & " + month + "월 목표 세우기!",
+              description: "지난 한 주간의 웰니스 성적 성찰과 더불어, 이번 " + month + "월 한 달 동안 꼭 이루어낼 다이어트/건강 목표와 다짐을 오아시스에 당차게 남겨주세요! 📝🎯",
               method: "게시판",
               score: 15
             };
@@ -10554,9 +10552,8 @@ function getAlgorithmicSuddenQuest(dateStr) {
             weekText = prevMonth + "월 최종 결산일!";
             descText = "지난 " + prevMonth + "월 챌린지의 최종 결과를 되돌아보고 고생한 나에게 칭찬 한마디와 수고의 메시지를 오아시스에 뜨겁게 남겨주세요! 📝🏆";
           } else {
-            var displayWeek = (firstThursdayDay <= 3) ? (reviewWeekIndex - 1) : (reviewWeekIndex - 1);
-            weekText = displayWeek + "주차 주간 결산일!";
-            descText = displayWeek + "주간의 나의 웰니스 성적을 되돌아보고, 남은 챌린지 기간 동안의 각오와 다짐을 작성하여 오아시스에 선포해 주세요! 📝🔥";
+            weekText = "주간 결산일!";
+            descText = "한 주간의 나의 웰니스 성적을 되돌아보고, 남은 챌린지 기간 동안의 각오와 다짐을 작성하여 오아시스에 선포해 주세요! 📝🔥";
           }
           return {
             title: weekText,
