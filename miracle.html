@@ -1861,20 +1861,24 @@
             // 🏆 체성분 명품 유지 보너스 달성 여부 판정 (목표체중이 설정되어 있고, 체중이 목표체중 + 0.5kg 이하인 경우)
             const hasBonus = (res.targetWeight && res.targetWeight > 0 && weight <= res.targetWeight + 0.5);
 
-            let mScoreHtml = '';
+            // 🔮 월간 가산점 상세 캡션 구성 (목표체중 유지 조건 달성 시)
+            let mBonusCaption = '';
             if (hasBonus && mScore >= 1000) {
-              const pureM = mScore - 1000;
-              mScoreHtml = `<span style="font-weight: 900; color: #7c3aed; text-align: right; line-height: 1.35;">+${mScore} EXP <span style="font-size: 0.62rem; color: #9333ea; font-weight: 800; display: block; margin-top: 1px;">(+${pureM} 감량 + 🏆 유지 1,000)</span></span>`;
-            } else {
-              mScoreHtml = `<span style="font-weight: 900; color: ${mScore > 0 ? '#7c3aed' : '#94a3b8'};">${mScore > 0 ? `+${mScore} EXP` : '0 EXP'}</span>`;
+              mBonusCaption = `
+                <div style="text-align: right; font-size: 0.62rem; color: #7c3aed; font-weight: 800; background: #faf5ff; padding: 4px 10px; border-radius: 10px; align-self: flex-end; border: 0.8px solid #e9d5ff; margin-top: 2px; display: inline-block;">
+                  📊 순수 감량 +${mScore - 1000} EXP | 🏆 유지 보너스 +1,000 EXP
+                </div>
+              `;
             }
 
-            let tScoreHtml = '';
+            // 👑 평생 가산점 상세 캡션 구성 (목표체중 유지 조건 달성 시)
+            let tBonusCaption = '';
             if (hasBonus && tScore >= 1000) {
-              const pureT = tScore - 1000;
-              tScoreHtml = `<span style="font-weight: 900; color: #d97706; text-align: right; line-height: 1.35;">+${tScore} EXP <span style="font-size: 0.62rem; color: #b45309; font-weight: 800; display: block; margin-top: 1px;">(+${pureT} 감량 + 🏆 유지 1,000)</span></span>`;
-            } else {
-              tScoreHtml = `<span style="font-weight: 900; color: ${tScore > 0 ? '#d97706' : '#94a3b8'};">${tScore > 0 ? `+${tScore} EXP` : '0 EXP'}</span>`;
+              tBonusCaption = `
+                <div style="text-align: right; font-size: 0.62rem; color: #b45309; font-weight: 800; background: #fffbeb; padding: 4px 10px; border-radius: 10px; align-self: flex-end; border: 0.8px solid #fde68a; margin-top: 2px; display: inline-block;">
+                  📊 순수 감량 +${tScore - 1000} EXP | 🏆 유지 보너스 +1,000 EXP
+                </div>
+              `;
             }
 
             html += `
@@ -1904,10 +1908,10 @@
                 </div>
 
                 <!-- 3단 가산점 웰니스 EXP 현황 -->
-                <div style="display: flex; flex-direction: column; gap: 8px; background: #f8fafc; border-radius: 16px; padding: 12px 14px; border: 1px solid #e2e8f0;">
+                <div style="display: flex; flex-direction: column; gap: 10px; background: #f8fafc; border-radius: 16px; padding: 12px 14px; border: 1px solid #e2e8f0;">
                   <div style="font-size: 0.72rem; font-weight: 800; color: #64748b; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 2px;">🏆 웰니스 3단 가산점 획득 현황</div>
                   
-                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
                     <!-- 주간 -->
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
                       <span style="color: #475569; font-weight: 800; display: flex; align-items: center; gap: 4px;">⚡ 주간 향상 <span style="font-size: 0.65rem; font-weight: 700; color: #94a3b8;">(지난주 대조)</span></span>
@@ -1915,15 +1919,21 @@
                     </div>
                     
                     <!-- 월간 -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
-                      <span style="color: #475569; font-weight: 800; display: flex; align-items: center; gap: 4px;">🔮 월간 향상 <span style="font-size: 0.65rem; font-weight: 700; color: #94a3b8;">(월초 대조)</span></span>
-                      ${mScoreHtml}
+                    <div style="display: flex; flex-direction: column; gap: 3px; font-size: 0.75rem; align-items: flex-end;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span style="color: #475569; font-weight: 800; display: flex; align-items: center; gap: 4px;">🔮 월간 향상 <span style="font-size: 0.65rem; font-weight: 700; color: #94a3b8;">(월초 대조)</span></span>
+                        <span style="font-weight: 900; color: ${mScore > 0 ? '#7c3aed' : '#94a3b8'};">${mScore > 0 ? `+${mScore} EXP` : '0 EXP'}</span>
+                      </div>
+                      ${mBonusCaption}
                     </div>
                     
                     <!-- 평생 -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
-                      <span style="color: #475569; font-weight: 800; display: flex; align-items: center; gap: 4px;">👑 평생 토탈 <span style="font-size: 0.65rem; font-weight: 700; color: #94a3b8;">(최초 대조)</span></span>
-                      ${tScoreHtml}
+                    <div style="display: flex; flex-direction: column; gap: 3px; font-size: 0.75rem; align-items: flex-end;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span style="color: #475569; font-weight: 800; display: flex; align-items: center; gap: 4px;">👑 평생 토탈 <span style="font-size: 0.65rem; font-weight: 700; color: #94a3b8;">(최초 대조)</span></span>
+                        <span style="font-weight: 900; color: ${tScore > 0 ? '#d97706' : '#94a3b8'};">${tScore > 0 ? `+${tScore} EXP` : '0 EXP'}</span>
+                      </div>
+                      ${tBonusCaption}
                     </div>
                   </div>
                 </div>
