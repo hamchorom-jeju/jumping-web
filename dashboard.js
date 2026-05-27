@@ -710,6 +710,25 @@ const Village = {
         const scoreEl = document.getElementById('total-score');
         if (scoreEl) scoreEl.innerText = (this.user.totalScore || 0).toLocaleString();
 
+        // [v68.0] 주간/월간 관점에 따른 총점 계산 및 각 토글 버튼 텍스트 동적 업데이트 (에러 완벽 방지, 대칭 정밀 유지)
+        const toggleView = this.perspective || 'weekly';
+        const toggleStats = this.user && this.user.stats ? this.user.stats : null;
+        const toggleCurrentData = toggleStats && toggleStats[toggleView] ? toggleStats[toggleView] : { health: 0, perf: 0, def: 0 };
+        const totalPerspectiveScore = (toggleCurrentData.health || 0) + (toggleCurrentData.perf || 0) + (toggleCurrentData.def || 0);
+
+        const btnW = document.getElementById('btn-weekly');
+        const btnM = document.getElementById('btn-monthly');
+        
+        if (btnW && btnM) {
+            if (toggleView === 'weekly') {
+                btnW.innerText = `주간 누적 ${Math.floor(totalPerspectiveScore).toLocaleString()}점`;
+                btnM.innerText = `월간`;
+            } else {
+                btnW.innerText = `주간`;
+                btnM.innerText = `월간 누적 ${Math.floor(totalPerspectiveScore).toLocaleString()}점`;
+            }
+        }
+
         const rankEl = document.getElementById('current-rank');
         if (rankEl) rankEl.innerText = this.user.rank;
 
