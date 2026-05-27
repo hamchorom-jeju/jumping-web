@@ -1719,8 +1719,8 @@ function setupDatabase() {
   var workLogSheet = ss.getSheetByName("업무일지");
   if (!workLogSheet) {
     workLogSheet = ss.insertSheet("업무일지");
-    workLogSheet.appendRow(["날짜", "작성자(미진/현정)", "점핑목록", "근력목록", "09시출석", "10시출석", "17시출석", "18시출석", "19시출석", "20시출석", "전체출석수", "테라피인원", "특이사항", "시설고장_파손"]);
-    workLogSheet.getRange("A1:N1").setFontWeight("bold").setBackground("#fff3cd");
+    workLogSheet.appendRow(["날짜", "작성자", "점핑목록", "근력목록", "09시", "10시", "17시", "18시", "19시", "20시", "총출석", "점핑인원", "테라피인원", "특이사항", "시설파손"]);
+    workLogSheet.getRange("A1:O1").setFontWeight("bold").setBackground("#fff3cd");
     workLogSheet.setFrozenRows(1);
   }
 
@@ -4388,6 +4388,10 @@ function submitWorkLog(data) {
   } catch (e) {
     return { error: e.toString() };
   }
+}
+
+function updateWorkLog(data) {
+  return submitWorkLog(data);
 }
 
 function getWorkLogHistory() {

@@ -2230,7 +2230,7 @@
   <div class="modal-overlay" id="workLogModal">
     <div class="modal-content">
       <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; margin-bottom: 20px;">
-        <span style="font-size: 1.15rem; font-weight: 800;">📝 일일 업무일지 작성</span>
+        <span id="workLogModalTitle" style="font-size: 1.15rem; font-weight: 800;">📝 일일 업무일지 작성</span>
         <button onclick="closeWorkLogModal(); setTimeout(function() { openWorkLogHistoryModal(); }, 150);" 
                 style="background: #3182ce; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: background 0.2s;">
           📁 일지조회
@@ -2436,6 +2436,7 @@
 
   <script>
     let currentWorkLogStats = null;
+    let isWorkLogEditMode = false;
 
     function getTodayDateStr() {
       const d = new Date();
@@ -2443,6 +2444,12 @@
     }
 
     function openWorkLogModal() {
+      isWorkLogEditMode = false;
+      document.getElementById('workLogModalTitle').innerText = '📝 일일 업무일지 작성';
+      var btn = document.querySelector('#workLogModal .btn-submit');
+      if (btn) btn.innerText = '일지 제출하기';
+      document.getElementById('wlDate').disabled = false;
+
       const today = getTodayDateStr();
       document.getElementById('wlDate').value = today;
       document.getElementById('workLogStats').innerHTML = '<div>통계 불러오는 중...</div>';
@@ -2509,6 +2516,7 @@
     }
 
     function closeWorkLogModal(isPopstate) {
+      document.getElementById('wlDate').disabled = false;
       document.getElementById('workLogModal').classList.remove('show');
       if (!isPopstate && window.registerModalClose) {
         window.registerModalClose(closeWorkLogModal);
@@ -2611,6 +2619,47 @@
       }
     }
 
+    function loadEditWorkLog(idx) {
+      var log = lastWorkLogs[idx];
+      if (!log) return;
+
+      var dateStr = log.date;
+      if (dateStr instanceof Date) dateStr = dateStr.toLocaleDateString();
+      else dateStr = String(dateStr).split('T')[0];
+
+      // 일지 목록 모달을 닫습니다.
+      closeWorkLogHistoryModal();
+
+      isWorkLogEditMode = true;
+      document.getElementById('workLogModalTitle').innerText = '📝 일일 업무일지 수정';
+      var btn = document.querySelector('#workLogModal .btn-submit');
+      if (btn) btn.innerText = '✏️ 일지 수정하기';
+
+      // 일지 작성 모달을 엽니다.
+      document.getElementById('wlDate').value = dateStr;
+      document.getElementById('wlDate').disabled = true; // 수정 모드 시 날짜 고정 잠금
+      document.getElementById('wlAuthor').value = log.author || "미진";
+      document.getElementById('wlJumping').value = log.jumpingList || "";
+      document.getElementById('wlMuscle').value = log.muscleList || "";
+      document.getElementById('wlRemarks').value = log.remarks || "";
+      document.getElementById('wlIssues').value = log.issues || "";
+
+      // 통계도 바로 불러옵니다.
+      loadStatsForDate();
+      
+      document.getElementById('workLogModal').classList.add('show');
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeWorkLogModal);
+      }
+    }
+
+    function closeWorkLogHistoryModal(isPopstate) {
+      document.getElementById('workLogHistoryModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeWorkLogHistoryModal);
+      }
+    }
+
     function openWorkLogHistoryModal() {
       document.getElementById('workLogHistoryList').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-sub);">기록 불러오는 중...</div>';
       document.getElementById('workLogHistoryModal').classList.add('show');
@@ -2642,7 +2691,10 @@
                 '<div style="font-weight:800; color:#1a202c; font-size:1.1rem;">📅 ' + dateStr + '</div>' +
                 '<div style="font-size:0.85rem; color:#718096; margin-top:4px;">👤 작성자: ' + log.author + '</div>' +
                 '</div>' +
+                '<div style="display:flex; align-items:center; gap:12px;">' +
+                '<button onclick="event.stopPropagation(); loadEditWorkLog(' + idx + ')" style="background:#f1f5f9; border:1px solid #cbd5e0; padding:6px 12px; border-radius:8px; font-size:0.8rem; font-weight:800; color:#4a5568; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background=\'#edf2f7\'" onmouseout="this.style.background=\'#f1f5f9\'">✏️ 수정</button>' +
                 '<div style="color:#cbd5e0; font-size:1.2rem;">❯</div>' +
+                '</div>' +
                 '</div>';
             });
             document.getElementById('workLogHistoryList').innerHTML = html;
@@ -4094,7 +4146,8 @@
       var issues = document.getElementById('wlIssues').value.trim();
 
       var btn = document.querySelector('#workLogModal .btn-submit');
-      btn.innerText = "제출 중...";
+      var originalText = isWorkLogEditMode ? "✏️ 일지 수정하기" : "일지 제출하기";
+      btn.innerText = isWorkLogEditMode ? "수정 중..." : "제출 중...";
       btn.disabled = true;
 
       var data = {
@@ -4108,9 +4161,9 @@
       };
 
       if (typeof google !== 'undefined' && google.script) {
-        google.script.run.withSuccessHandler(function (res) {
+        var runner = google.script.run.withSuccessHandler(function (res) {
           btn.disabled = false;
-          btn.innerText = "일지 제출하기";
+          btn.innerText = originalText;
           if (res.error) { showAdminErrorModal("저장 실패: " + res.error); }
           else {
             showAdminSuccessModal(res.message);
@@ -4119,11 +4172,26 @@
             document.getElementById('wlMuscle').value = '';
             document.getElementById('wlRemarks').value = '';
             document.getElementById('wlIssues').value = '';
+            
+            // 수정 모드 성공 완료 시 조회 목록 자동 리프레시
+            if (isWorkLogEditMode) {
+              setTimeout(function() { openWorkLogHistoryModal(); }, 150);
+            }
           }
-        }).submitWorkLog(data);
+        }).withFailureHandler(function (err) {
+          btn.disabled = false;
+          btn.innerText = originalText;
+          showAdminErrorModal("서버 오류: " + (err.message || err));
+        });
+
+        if (isWorkLogEditMode) {
+          runner.updateWorkLog(data);
+        } else {
+          runner.submitWorkLog(data);
+        }
       } else {
         btn.disabled = false;
-        btn.innerText = "일지 제출하기";
+        btn.innerText = originalText;
       }
     }
 
