@@ -12432,6 +12432,55 @@ function getTodayTimetableAndRooms(targetDate) {
 }
 
 /**
+ * [v67.51] 전역 인바디/유지 점수 계산 헬퍼 함수
+ */
+function globalInbodyScoreHelper(first, current, targetWeight, scoreType) {
+  if (!first || !current) return 0;
+  var score = 0;
+  var fW = Number(first.weight) || 0;
+  var cW = Number(current.weight) || 0;
+  var fM = Number(first.muscle) || 0;
+  var cM = Number(current.muscle) || 0;
+  var fF = Number(first.fat) || 0;
+  var cF = Number(current.fat) || 0;
+  
+  var diffW = Number((fW - cW).toFixed(2)) || 0;
+  var diffM = Number((cM - fM).toFixed(2)) || 0;
+  var diffFat = Number((fF - cF).toFixed(1)) || 0;
+  
+  if (diffW > 0) score += (diffW * 10) * 50;
+  if (diffM > 0) score += (diffM * 10) * 200;
+  if (diffFat > 0) score += (diffFat * 10) * 100;
+  
+  var firstFatMass = fW * (fF / 100);
+  var currentFatMass = cW * (cF / 100);
+  var fatLossRate = 0;
+  if (firstFatMass > 0 && !isNaN(firstFatMass)) {
+    fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
+  }
+  if (diffW >= 8.0 || (fatLossRate >= 20.0 && !isNaN(fatLossRate))) {
+    score += 1500;
+  }
+  
+  // 🏆 체성분 명품 유지 보너스 판정 엔진 (±0.5kg 정교화)
+  if (targetWeight && targetWeight > 0) {
+    if (scoreType === "monthly") {
+      var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
+      if (currentLowerOrEqualTarget) {
+        score += 1000;
+      }
+    } else if (scoreType === "lifetime") {
+      var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
+      if (currentLowerOrEqualTarget) {
+        score += 1000;
+      }
+    }
+  }
+  
+  return isNaN(score) ? 0 : score;
+}
+
+/**
  * [v67.5] 특정 주차의 랭킹을 마감 기준(어제 수요일 23:59:59)으로 실시간 정밀 집계 (체력 점수에 인바디 점수 및 보너스 합산!)
  */
 function calculateWeeklyRankingForPeriod(period) {
@@ -12555,10 +12604,10 @@ function calculateWeeklyRankingForPeriod(period) {
           }
         }
         var baseRecord = prevBeforeThisWeek || firstEver;
-        inbodyWeeklyScore = localInbodyScoreHelper(baseRecord, latestInWeek, targetWeight, 'weekly');
+        inbodyWeeklyScore = globalInbodyScoreHelper(baseRecord, latestInWeek, targetWeight, 'weekly');
       }
       
-      var inbodyLifetimeScore = localInbodyScoreHelper(firstEver, latestEver, targetWeight, 'lifetime');
+      var inbodyLifetimeScore = globalInbodyScoreHelper(firstEver, latestEver, targetWeight, 'lifetime');
       
       var totalWeeklyExp = stat.weeklyTotalAct + inbodyWeeklyScore;
       var totalLifetimeExp = stat.lifetimeTotalAct + inbodyLifetimeScore;
@@ -12713,10 +12762,10 @@ function calculateMonthlyRankingForPeriod(period) {
       var targetWeight = userTargetWeightMap[phone] || 0;
       var inbodyMonthlyScore = 0;
       if (baselineRecord && latestInMonth) {
-        inbodyMonthlyScore = localInbodyScoreHelper(baselineRecord, latestInMonth, targetWeight, 'monthly');
+        inbodyMonthlyScore = globalInbodyScoreHelper(baselineRecord, latestInMonth, targetWeight, 'monthly');
       }
       
-      var inbodyLifetimeScore = localInbodyScoreHelper(firstEver, latestEver, targetWeight, 'lifetime');
+      var inbodyLifetimeScore = globalInbodyScoreHelper(firstEver, latestEver, targetWeight, 'lifetime');
       
       var totalMonthlyExp = stat.monthlyTotalAct + inbodyMonthlyScore;
       var totalLifetimeExp = stat.lifetimeTotalAct + inbodyLifetimeScore;
