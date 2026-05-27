@@ -2198,7 +2198,7 @@
           if (res.success) {
             closeInbodyModal();
             // [v65.70] 프리미엄 3단 보상 모달 표출
-            openInbodyRewardModal(res.weeklyScore, res.monthlyScore, res.totalScore);
+            openInbodyRewardModal(res.weeklyScore, res.monthlyScore, res.totalScore, res.targetWeight, res.weight);
           } else {
             showAppAlert("인바디 시트 저장 실패: " + res.error, "error");
             submitBtn.disabled = false;
@@ -2221,10 +2221,13 @@
     }
 
     // 📊 [NEW v65.70] 웰니스 인바디 3단 성적표 모달 오픈/클로즈 헬퍼
-    function openInbodyRewardModal(weeklyScore, monthlyScore, totalScore) {
+    function openInbodyRewardModal(weeklyScore, monthlyScore, totalScore, targetWeight, currentWeight) {
       document.getElementById('reward-weekly-score').innerText = weeklyScore > 0 ? `+${weeklyScore} EXP` : "0 EXP";
       document.getElementById('reward-monthly-score').innerText = monthlyScore > 0 ? `+${monthlyScore} EXP` : "0 EXP";
       document.getElementById('reward-lifetime-score').innerText = totalScore > 0 ? `+${totalScore} EXP` : "0 EXP";
+
+      // 🏆 유지 보너스 달성 감지
+      const hasBonus = (targetWeight && targetWeight > 0 && currentWeight <= targetWeight + 0.5);
 
       // 0점일 경우 동기부여 문구 분기 처리
       const wDesc = document.getElementById('reward-weekly-desc');
@@ -2235,14 +2238,18 @@
       }
 
       const mDesc = document.getElementById('reward-monthly-desc');
-      if (monthlyScore > 0) {
+      if (hasBonus && monthlyScore >= 1000) {
+        mDesc.innerHTML = `<span style="color:#065f46; font-weight:900;">🏆 유지보너스 1,000 EXP 적용!</span><br>목표 체중(${targetWeight}kg) 유지를 성공하여 1,000 보너스 EXP가 가산되었습니다!`;
+      } else if (monthlyScore > 0) {
         mDesc.innerText = "월초 기준 기록 대비 눈부신 신체 향상 성과를 달성했습니다! 🔮";
       } else {
         mDesc.innerText = "월초 1주차 최초 기록과 대조해 스탯이 산정됩니다. 🌟";
       }
 
       const lDesc = document.getElementById('reward-lifetime-desc');
-      if (totalScore > 0) {
+      if (hasBonus && totalScore >= 1000) {
+        lDesc.innerHTML = `<span style="color:#b45309; font-weight:900;">🏆 유지보너스 1,000 EXP 적용!</span><br>감량 스탯(${totalScore - 1000} EXP) + 유지 보너스(1,000 EXP)가 합산된 총 스탯입니다!`;
+      } else if (totalScore > 0) {
         lDesc.innerText = "지니클럽과 함께한 생애 최초 대비 통합 스탯입니다. 최고예요! 👑";
       } else {
         lDesc.innerText = "지니클럽과 함께한 평생의 땀방울 기록입니다. 🌱";
