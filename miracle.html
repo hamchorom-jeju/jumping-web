@@ -907,10 +907,6 @@
         setTimeout(() => showInfoPopup('water'), 400);
       } else if (tabParam === 'visit' || catParam === 'visit') {
         setTimeout(() => showInfoPopup('water'), 400);
-      } else if (tabParam === 'bonus' || catParam === 'bonus' || itemKey === 'bonus') {
-        if (autoOpen !== 'camera') {
-          setTimeout(() => showInfoPopup('bonus'), 400);
-        }
       } else if (tabParam === 'meal' || catParam === 'meal') {
         setTimeout(() => {
           const mealSec = document.querySelector('.arc-section');
@@ -938,19 +934,24 @@
                   }
                 }
 
-                // auto_open=camera 유입 처리
+                // [v66.0] 돌발 퀘스트 안전 유입 처리 (서버 데이터를 완전히 받아와 activeSuddenQuest가 준비된 뒤에만 팝업/모달을 띄움)
                 const tabParam = urlParams.get('tab') || '';
                 const catParam = urlParams.get('cat') || '';
                 const itemKey = urlParams.get('item') || '';
                 const autoOpen = urlParams.get('auto_open') || '';
-                if (autoOpen === 'camera' && (tabParam === 'bonus' || catParam === 'bonus' || itemKey === 'bonus')) {
-                  if (res.quests.todayQuest.method === '게시판') {
-                    showAppAlert("오늘의 돌발 퀘스트는 게시판 작성 전용입니다. 오아시스에서 작성해 주세요! ✍️", "error");
-                    setTimeout(() => {
-                      location.href = 'oasis.html?write=sudden-quest';
-                    }, 1500);
+                
+                if (tabParam === 'bonus' || catParam === 'bonus' || itemKey === 'bonus') {
+                  if (autoOpen === 'camera') {
+                    if (res.quests.todayQuest.method === '게시판') {
+                      showAppAlert("오늘의 돌발 퀘스트는 게시판 작성 전용입니다. 오아시스에서 작성해 주세요! ✍️", "error");
+                      setTimeout(() => {
+                        location.href = 'oasis.html?write=sudden-quest';
+                      }, 1500);
+                    } else {
+                      setTimeout(() => { openCertModal('bonus'); }, 400);
+                    }
                   } else {
-                    openCertModal('bonus');
+                    setTimeout(() => { showInfoPopup('bonus'); }, 400);
                   }
                 }
               }
