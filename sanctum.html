@@ -379,8 +379,11 @@
       <input type="text" id="calendar-quest-title" class="pillar-input" placeholder="퀘스트 제목 (예: 쉐이크 믹서기 인증!)">
       <textarea id="calendar-quest-desc" class="pillar-input" style="height: 65px; resize: none;" placeholder="수행 가이드 (예: 쉐이크를 타는 역동적인 순간 인증샷)"></textarea>
       
-      <button class="btn-gold" style="background: linear-gradient(135deg, var(--sanctum-purple) 0%, var(--sanctum-purple-light) 100%);" onclick="addScheduledQuest()">
+      <button class="btn-gold" id="btn-quest-submit" style="background: linear-gradient(135deg, var(--sanctum-purple) 0%, var(--sanctum-purple-light) 100%);" onclick="addScheduledQuest()">
         📅 퀘스트 캘린더 예약하기
+      </button>
+      <button class="btn-gold" id="btn-quest-edit-cancel" style="background: #4a5568; display: none; margin-top: 6px; font-size: 0.72rem; height: 35px;" onclick="cancelEditQuest()">
+        ❌ 수정 취소하고 새로 예약하기
       </button>
 
       <div style="margin-top: 20px; font-size: 0.8rem; font-weight: 800; color: var(--sanctum-gold-light); border-bottom: 1px solid var(--sanctum-border); padding-bottom: 8px;">
@@ -752,6 +755,9 @@
       }).getScheduledQuests();
     }
 
+    window.editingQuestRowIdx = null;
+    window.editingQuestOriginalDate = null;
+
     function renderScheduledQuests(list) {
       const container = document.getElementById('calendar-list');
       if (!list || list.length === 0) {
@@ -774,19 +780,60 @@
         const methodBadge = q.method === '게시판' 
           ? `<span style="background: rgba(225, 29, 72, 0.2); border: 1px solid #f43f5e; color: #f43f5e; font-size: 0.65rem; padding: 2px 6px; border-radius: 6px; font-weight: 900; margin-left: 6px; display: inline-flex; align-items: center; gap: 2px;">📝 글쓰기</span>` 
           : `<span style="background: rgba(14, 165, 233, 0.2); border: 1px solid #0ea5e9; color: #38bdf8; font-size: 0.65rem; padding: 2px 6px; border-radius: 6px; font-weight: 900; margin-left: 6px; display: inline-flex; align-items: center; gap: 2px;">📸 사진</span>`;
+        
+        const safeTitle = (q.title || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const safeDesc = (q.description || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+
         return `
           <div class="calendar-item">
-            <div class="calendar-info">
+            <div class="calendar-info" style="flex:1; min-width:0;">
               <h4 style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
                 📅 [${q.date}] ${q.title} (+${q.score} EXP)
                 ${methodBadge}
               </h4>
               <p>${q.description}</p>
             </div>
-            <button class="calendar-del-btn" onclick="deleteQuest(${q.rowIdx})">제거</button>
+            <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
+              <button class="calendar-edit-btn" onclick="startEditQuest('${q.date}', ${q.score}, '${q.method}', '${safeTitle}', '${safeDesc}', ${q.rowIdx})" style="background:#5d4037; color:#fff; border:none; padding:6px 12px; border-radius:8px; font-size:0.68rem; font-weight:bold; cursor:pointer;">수정</button>
+              <button class="calendar-del-btn" onclick="deleteQuest(${q.rowIdx})">제거</button>
+            </div>
           </div>
         `;
       }).join('');
+    }
+
+    function startEditQuest(date, score, method, title, desc, rowIdx) {
+      window.editingQuestRowIdx = rowIdx;
+      window.editingQuestOriginalDate = date;
+
+      document.getElementById('calendar-quest-date').value = date;
+      document.getElementById('calendar-quest-score').value = score;
+      document.getElementById('calendar-quest-method').value = method;
+      document.getElementById('calendar-quest-title').value = title;
+      document.getElementById('calendar-quest-desc').value = desc;
+
+      const submitBtn = document.getElementById('btn-quest-submit');
+      submitBtn.innerText = "💾 돌발 퀘스트 수정 완료하기";
+      submitBtn.style.background = "linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)";
+
+      document.getElementById('btn-quest-edit-cancel').style.display = "block";
+      
+      // 입력 폼 영역으로 부드럽게 스크롤 포커스 이동
+      document.getElementById('section-quests').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function cancelEditQuest() {
+      window.editingQuestRowIdx = null;
+      window.editingQuestOriginalDate = null;
+
+      document.getElementById('calendar-quest-title').value = '';
+      document.getElementById('calendar-quest-desc').value = '';
+
+      const submitBtn = document.getElementById('btn-quest-submit');
+      submitBtn.innerText = "📅 퀘스트 캘린더 예약하기";
+      submitBtn.style.background = "linear-gradient(135deg, var(--sanctum-purple) 0%, var(--sanctum-purple-light) 100%)";
+
+      document.getElementById('btn-quest-edit-cancel').style.display = "none";
     }
 
     function addScheduledQuest() {
@@ -801,25 +848,50 @@
         return;
       }
 
-      showLoading("자정 돌발 퀘스트 예약을 기록하는 중...");
+      showLoading(window.editingQuestRowIdx ? "돌발 퀘스트 수정을 동기화하는 중..." : "자정 돌발 퀘스트 예약을 기록하는 중...");
 
-      google.script.run.withSuccessHandler(res => {
-        hideLoading();
-        if (res.success) {
-          alert(res.message);
-          document.getElementById('calendar-quest-title').value = '';
-          document.getElementById('calendar-quest-desc').value = '';
-          loadScheduledQuests();
-        } else {
-          alert("예약 실패: " + res.error);
-        }
-      }).saveScheduledQuest({
+      const payload = {
         date: date,
         score: parseInt(score),
         method: method,
         title: title,
         description: desc
-      });
+      };
+
+      // 💡 [수정 트랜잭션 분기 처리] 날짜 정보가 변경되었을 경우
+      if (window.editingQuestRowIdx && date !== window.editingQuestOriginalDate) {
+        // 기존 날짜 예약 레코드는 삭제 처리하고, 새 날짜로 레코드 신설 (이적 처리!)
+        google.script.run.withSuccessHandler(delRes => {
+          if (delRes.success) {
+            // 연달아 새 날짜 등록 실행
+            google.script.run.withSuccessHandler(saveRes => {
+              hideLoading();
+              if (saveRes.success) {
+                alert("돌발 퀘스트 날짜 변경 및 예약 수정이 성공적으로 완료되었습니다! 📅✨");
+                cancelEditQuest();
+                loadScheduledQuests();
+              } else {
+                alert("수정 등록 실패: " + saveRes.error);
+              }
+            }).saveScheduledQuest(payload);
+          } else {
+            hideLoading();
+            alert("기존 예약 삭제 실패: " + delRes.error);
+          }
+        }).deleteScheduledQuest(window.editingQuestRowIdx);
+      } else {
+        // 날짜 변경이 없거나 신규 등록인 경우: 백엔드 saveScheduledQuest로 직행 (기존 날짜는 자체 덮어쓰기 됨)
+        google.script.run.withSuccessHandler(res => {
+          hideLoading();
+          if (res.success) {
+            alert(window.editingQuestRowIdx ? "돌발 퀘스트 수정이 완료되었습니다! 💾⚡" : res.message);
+            cancelEditQuest();
+            loadScheduledQuests();
+          } else {
+            alert("저장 실패: " + res.error);
+          }
+        }).saveScheduledQuest(payload);
+      }
     }
 
     function deleteQuest(rowIdx) {
