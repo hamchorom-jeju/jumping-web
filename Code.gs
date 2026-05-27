@@ -10352,6 +10352,14 @@ function getAlgorithmicSuddenQuest(dateStr) {
       // E. 일반 평일 14대 테라피 로테이션
       var quest = shuffledQuests[rotationIdx % 14];
       var count = countMap[quest.key] || 0;
+      
+      // ⚠️ 영양제 정리 미션은 한 달에 최대 1회만 출현하도록 제한하는 최적화 건너뛰기 룰
+      if (quest.key === "영양제" && count >= 1) {
+        rotationIdx++;
+        quest = shuffledQuests[rotationIdx % 14];
+        count = countMap[quest.key] || 0;
+      }
+      
       count++;
       countMap[quest.key] = count;
       
