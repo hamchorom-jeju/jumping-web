@@ -1211,6 +1211,118 @@
       border-color: rgba(251, 191, 36, 0.5) !important;
       box-shadow: 0 4px 10px rgba(251, 191, 36, 0.15) !important;
     }
+
+    /* 📊 웰니스 랭킹 A4 인쇄물 규격 테이블 스타일 */
+    .hof-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-top: 10px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      font-size: 0.76rem;
+      background: rgba(15, 23, 42, 0.4);
+    }
+    .hof-table th {
+      background: rgba(139, 92, 246, 0.15);
+      color: #d8b4fe;
+      padding: 10px 6px;
+      font-weight: 800;
+      text-align: center;
+      border-bottom: 1.5px solid rgba(139, 92, 246, 0.25);
+    }
+    .hof-table td {
+      padding: 10px 6px;
+      text-align: center;
+      border-bottom: 1px solid rgba(139, 92, 246, 0.08);
+      color: #e2e8f0;
+      font-weight: 600;
+      vertical-align: middle;
+    }
+    .hof-table tr:last-child td {
+      border-bottom: none;
+    }
+    .hof-table tr.rank-row-1 {
+      background: rgba(251, 191, 36, 0.08);
+    }
+    .hof-table tr.rank-row-1 td {
+      color: #fbbf24;
+      font-weight: 800;
+    }
+    .hof-table tr.rank-row-2 {
+      background: rgba(241, 245, 249, 0.04);
+    }
+    .hof-table tr.rank-row-2 td {
+      color: #cbd5e1;
+    }
+    .hof-table tr.rank-row-3 {
+      background: rgba(249, 115, 22, 0.04);
+    }
+    .hof-table tr.rank-row-3 td {
+      color: #fdba74;
+    }
+    .hof-table .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+    .hof-table tr.rank-row-1 .rank-badge {
+      background: #fbbf24;
+      color: #78350f;
+    }
+    .hof-table tr.rank-row-2 .rank-badge {
+      background: #cbd5e1;
+      color: #1e293b;
+    }
+    .hof-table tr.rank-row-3 .rank-badge {
+      background: #ca8a04;
+      color: #ffffff;
+    }
+
+    @media print {
+      .hof-table {
+        background: white !important;
+        color: black !important;
+        border: 2px solid black !important;
+      }
+      .hof-table th {
+        background: #f1f5f9 !important;
+        color: black !important;
+        border-bottom: 2.5px solid black !important;
+        border-top: 1px solid black !important;
+      }
+      .hof-table td {
+        color: black !important;
+        border-bottom: 1px solid #000 !important;
+      }
+      .hof-table tr.rank-row-1 {
+        background: #fffdf5 !important;
+      }
+      .hof-table tr.rank-row-1 td {
+        color: black !important;
+      }
+      .hof-table tr.rank-row-1 .rank-badge {
+        background: #fbbf24 !important;
+        color: #451a03 !important;
+        border: 1px solid black !important;
+      }
+      .hof-table tr.rank-row-2 .rank-badge {
+        background: #cbd5e1 !important;
+        color: black !important;
+        border: 1px solid black !important;
+      }
+      .hof-table tr.rank-row-3 .rank-badge {
+        background: #ca8a04 !important;
+        color: white !important;
+        border: 1px solid black !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1266,14 +1378,14 @@
 
 
     <!-- 🏆 역대 MVP 명예의 전당 (지난 분기 기록) -->
-    <h2 class="archive-section-title">🏆 역대 MVP 명예의 전당</h2>
-    <p class="archive-section-desc">지난 분기 및 과거 월간/주간 부문별 영웅들의 확정 기록 목록</p>
+    <h2 class="archive-section-title">🏆 역대 MVP</h2>
+    <p class="archive-section-desc">과거 주간 및 월간 부문별 확정 기록</p>
     
     <div class="archive-container">
       <!-- 1. 주간 랭킹 아카이브 아코디언 -->
       <div class="archive-card" id="card-weekly-archive">
         <div class="archive-header" onclick="toggleArchiveAccordion('weekly-archive')">
-          <span>🏆 주간 랭킹 명예의 전당</span>
+          <span>🏆 역대 주간 MVP</span>
           <i class="fa-solid fa-chevron-down chevron-icon"></i>
         </div>
         <div id="weekly-archive" class="archive-content" style="display: none;">
@@ -1284,7 +1396,7 @@
       <!-- 2. 월간 랭킹 아카이브 아코디언 -->
       <div class="archive-card" id="card-monthly-archive">
         <div class="archive-header" onclick="toggleArchiveAccordion('monthly-archive')">
-          <span>📅 월간 랭킹 명예의 전당</span>
+          <span>📅 역대 월간 MVP</span>
           <i class="fa-solid fa-chevron-down chevron-icon"></i>
         </div>
         <div id="monthly-archive" class="archive-content" style="display: none;">
@@ -1295,7 +1407,7 @@
       <!-- 3. 출석왕 리스트 아카이브 아코디언 -->
       <div class="archive-card" id="card-attendance-archive">
         <div class="archive-header" onclick="toggleArchiveAccordion('attendance-archive')">
-          <span>🏃 역대 출석왕 리스트</span>
+          <span>🏃 역대 출석왕</span>
           <i class="fa-solid fa-chevron-down chevron-icon"></i>
         </div>
         <div id="attendance-archive" class="archive-content" style="display: none;">
@@ -1453,13 +1565,43 @@
       },
       archive: {
         weekly: [
-          { period: "5월 4주", winners: "🥇 1.김순희(344p) | 2.박노형(320p) | 3.이순례(310p)" },
+          { 
+            period: "5월 4주", 
+            winners: "🥇 1.김순희(344p) | 2.박노형(320p) | 3.이순례(310p)",
+            records: [
+              { rank: 1, name: "김순희", health: 120, perf: 150, def: 74, score: 344 },
+              { rank: 2, name: "박노형", health: 110, perf: 130, def: 80, score: 320 },
+              { rank: 3, name: "이순례", health: 100, perf: 120, def: 90, score: 310 },
+              { rank: 4, name: "최미진", health: 90, perf: 110, def: 85, score: 285 },
+              { rank: 5, name: "정다은", health: 85, perf: 105, def: 80, score: 270 },
+              { rank: 6, name: "강동우", health: 80, perf: 100, def: 75, score: 255 },
+              { rank: 7, name: "임수빈", health: 75, perf: 95, def: 70, score: 240 },
+              { rank: 8, name: "조상혁", health: 70, perf: 90, def: 65, score: 225 },
+              { rank: 9, name: "한지원", health: 65, perf: 85, def: 60, score: 210 },
+              { rank: 10, name: "윤도현", health: 60, perf: 80, def: 55, score: 195 }
+            ]
+          },
           { period: "5월 3주", winners: "🥇 1.이만수(350p) | 2.김순희(330p) | 3.정점례(290p)" },
           { period: "5월 2주", winners: "🥇 1.정점례(320p) | 2.박노형(315p) | 3.김순희(298p)" },
           { period: "5월 1주", winners: "🥇 1.박노형(330p) | 2.이만수(310p) | 3.김순희(295p)" }
         ],
         monthly: [
-          { period: "5월", winners: "🥇 1.김순희(1,240p) | 2.박노형(1,150p) | 3.정점례(1,080p)" }
+          { 
+            period: "5월", 
+            winners: "🥇 1.김순희(1,240p) | 2.박노형(1,150p) | 3.정점례(1,080p)",
+            records: [
+              { rank: 1, name: "김순희", health: 480, perf: 520, def: 240, score: 1240, attCount: 22 },
+              { rank: 2, name: "박노형", health: 450, perf: 490, def: 210, score: 1150, attCount: 20 },
+              { rank: 3, name: "정점례", health: 420, perf: 460, def: 200, score: 1080, attCount: 19 },
+              { rank: 4, name: "이만수", health: 400, perf: 440, def: 180, score: 1020, attCount: 18 },
+              { rank: 5, name: "최미진", health: 380, perf: 420, def: 170, score: 970, attCount: 17 },
+              { rank: 6, name: "정다은", health: 360, perf: 400, def: 160, score: 920, attCount: 16 },
+              { rank: 7, name: "강동우", health: 340, perf: 380, def: 150, score: 870, attCount: 15 },
+              { rank: 8, name: "임수빈", health: 320, perf: 360, def: 140, score: 820, attCount: 14 },
+              { rank: 9, name: "조상혁", health: 300, perf: 340, def: 130, score: 770, attCount: 13 },
+              { rank: 10, name: "한지원", health: 280, perf: 320, def: 120, score: 720, attCount: 12 }
+            ]
+          }
         ],
         attendance: [
           { period: "5월", winners: "🥇 1위 정순렬(20회) | 🥈 2위 진금희(18회) | 🥉 3위 홍양숙(17회)" }
@@ -1676,24 +1818,24 @@
       if (containerId === 'weekly-archive') {
         titleHTML = `
           <div class="print-only-title">
-            <h1>🏆 역대 주간 MVP 명예의 전당 🏆</h1>
-            <p>노형점핑을 가장 뜨겁게 빛낸 주간 부문별 영웅들의 확정 기록</p>
+            <h1>🏆 역대 주간 MVP 🏆</h1>
+            <p>주간 부문별 웰니스 영웅들의 확정 기록</p>
             <hr>
           </div>
         `;
       } else if (containerId === 'monthly-archive') {
         titleHTML = `
           <div class="print-only-title">
-            <h1>📅 역대 월간 MVP 명예의 전당 📅</h1>
-            <p>노형점핑의 매달을 찬란하게 수놓은 월간 부문별 영웅들의 확정 기록</p>
+            <h1>📅 역대 월간 MVP 📅</h1>
+            <p>월간 부문별 웰니스 영웅들의 확정 기록</p>
             <hr>
           </div>
         `;
       } else if (containerId === 'attendance-archive') {
         titleHTML = `
           <div class="print-only-title">
-            <h1>🏃 역대 출석왕 명예의 전당 🏃</h1>
-            <p>꾸준함과 성실함으로 매일의 기적을 만든 출석 부문별 영웅들의 확정 기록</p>
+            <h1>🏃 역대 출석왕 🏃</h1>
+            <p>성실함으로 기적을 만든 출석 영웅들의 확정 기록</p>
             <hr>
           </div>
         `;
@@ -1712,7 +1854,7 @@
                 </button>
               </div>
               <div class="latest-award-container">
-                ${formatLatestArchiveWinners(item.winners)}
+                ${formatLatestArchiveWinners(item.winners, item.records, containerId)}
               </div>
             </div>
           `;
@@ -1753,61 +1895,98 @@
       return { rank, name, score };
     }
 
-    function formatLatestArchiveWinners(winnersStr) {
+    function formatLatestArchiveWinners(winnersStr, records, containerId) {
+      if (records && Array.isArray(records) && records.length > 0) {
+        let isMonthly = containerId === 'monthly-archive';
+        let html = `
+          <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 6px;">
+            <table class="hof-table">
+              <thead>
+                <tr>
+                  <th style="width: 50px;">순위</th>
+                  <th>이름</th>
+                  <th style="width: 55px;">체력</th>
+                  <th style="width: 55px;">실천</th>
+                  <th style="width: 55px;">회복</th>
+                  <th style="width: 70px;">총점</th>
+                  ${isMonthly ? '<th style="width: 55px;">출석</th>' : ''}
+                </tr>
+              </thead>
+              <tbody>
+        `;
+        
+        records.forEach((r, idx) => {
+          let rank = r.rank || (idx + 1);
+          let rowClass = (rank <= 3) ? `rank-row-${rank}` : '';
+          let rankText = (rank === 1) ? '🥇' : (rank === 2) ? '🥈' : (rank === 3) ? '🥉' : `${rank}`;
+          let name = r.name || '-';
+          let health = typeof r.health === 'number' ? r.health.toLocaleString() : (r.health || '0');
+          let perf = typeof r.perf === 'number' ? r.perf.toLocaleString() : (r.perf || '0');
+          let def = typeof r.def === 'number' ? r.def.toLocaleString() : (r.def || '0');
+          let score = typeof r.score === 'number' ? r.score.toLocaleString() : (r.score || '0');
+          let attCount = typeof r.attCount === 'number' ? `${r.attCount}회` : (r.attCount || '0회');
+          
+          html += `
+            <tr class="${rowClass}">
+              <td>
+                <span class="rank-badge">${rankText}</span>
+              </td>
+              <td style="font-weight: 800;">${name}</td>
+              <td style="font-size: 0.72rem; color: #a78bfa;">${health}</td>
+              <td style="font-size: 0.72rem; color: #34d399;">${perf}</td>
+              <td style="font-size: 0.72rem; color: #f59e0b;">${def}</td>
+              <td style="font-weight: 800; font-size: 0.82rem;">${score}p</td>
+              ${isMonthly ? `<td style="font-size: 0.72rem; color: #38bdf8;">${attCount}</td>` : ''}
+            </tr>
+          `;
+        });
+        
+        html += `
+              </tbody>
+            </table>
+          </div>
+        `;
+        return html;
+      }
+
       if (!winnersStr) return '';
       const tokens = winnersStr.split('|');
       const winners = tokens.map((token, index) => parseWinnerToken(token, index));
       
-      const top3 = winners.filter(w => w.rank <= 3);
-      const runners = winners.filter(w => w.rank > 3 && w.rank <= 10);
+      let html = `
+        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 6px;">
+          <table class="hof-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">순위</th>
+                <th>이름</th>
+                <th style="text-align: right; padding-right: 15px;">총점</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
       
-      let html = '';
+      winners.forEach((w, idx) => {
+        let rank = w.rank || (idx + 1);
+        let rowClass = (rank <= 3) ? `rank-row-${rank}` : '';
+        let rankText = (rank === 1) ? '🥇' : (rank === 2) ? '🥈' : (rank === 3) ? '🥉' : `${rank}`;
+        
+        html += `
+          <tr class="${rowClass}">
+            <td>
+              <span class="rank-badge">${rankText}</span>
+            </td>
+            <td style="font-weight: 800;">${w.name}</td>
+            <td style="text-align: right; padding-right: 15px; font-weight: 800; font-size: 0.82rem;">${w.score}</td>
+          </tr>
+        `;
+      });
       
-      // Render Top 3 Grid (Podium Order: 2nd, 1st, 3rd)
-      if (top3.length > 0) {
-        html += `<div class="award-top3-grid">`;
-        const sortedTop3 = [];
-        const rank1 = top3.find(w => w.rank === 1);
-        const rank2 = top3.find(w => w.rank === 2);
-        const rank3 = top3.find(w => w.rank === 3);
-        
-        if (rank2) sortedTop3.push(rank2);
-        if (rank1) sortedTop3.push(rank1);
-        if (rank3) sortedTop3.push(rank3);
-        
-        const displayTop3 = sortedTop3.length > 0 ? sortedTop3 : top3;
-        
-        displayTop3.forEach(w => {
-          let medal = '🏅';
-          if (w.rank === 1) medal = '🥇';
-          if (w.rank === 2) medal = '🥈';
-          if (w.rank === 3) medal = '🥉';
-          
-          html += `
-            <div class="award-card rank-${w.rank}">
-              <div class="award-medal">${medal}</div>
-              <div class="award-name">${w.name}</div>
-              <div class="award-score">${w.score}</div>
-            </div>
-          `;
-        });
-        html += `</div>`;
-      }
-      
-      // Render Runners Grid (4th ~ 10th Place, 2-column compact)
-      if (runners.length > 0) {
-        html += `<div class="award-runners-grid">`;
-        runners.forEach(w => {
-          html += `
-            <div class="runner-card">
-              <span class="runner-badge">${w.rank}위</span>
-              <span class="runner-name">${w.name}</span>
-              <span class="runner-score">${w.score}</span>
-            </div>
-          `;
-        });
-        html += `</div>`;
-      }
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
       
       return html;
     }
@@ -1903,106 +2082,126 @@
         scoreLabel = '출석 횟수';
       }
 
-      const top3 = winners.filter(w => w.rank <= 3);
-      const runners = winners.filter(w => w.rank > 3);
-
-      let top3HTML = '';
-      if (top3.length > 0) {
-        top3HTML += `<div class="preview-podium-container" style="display: flex; align-items: flex-end; justify-content: center; gap: 15px; margin: 30px 0 40px; padding-top: 15px;">`;
-        
-        const rank1 = top3.find(w => w.rank === 1);
-        const rank2 = top3.find(w => w.rank === 2);
-        const rank3 = top3.find(w => w.rank === 3);
-
-        const getInitials = (name) => name.length >= 2 ? name.substring(name.length - 2) : name;
-
-        // 2nd Place
-        if (rank2) {
-          top3HTML += `
-            <div class="preview-podium-card rank-2nd" style="flex: 1; border: 2px solid black; border-radius: 12px; display: flex; flex-direction: column; align-items: center; padding: 15px 5px; height: 110px; background: #fafafa; position: relative;">
-              <div class="preview-avatar" style="width: 38px; height: 38px; border-radius: 50%; border: 2px solid black; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; margin-bottom: 5px; background: #eee; color: black;">${getInitials(rank2.name)}</div>
-              <div class="preview-name" style="font-size: 0.9rem; font-weight: 900; color: black; margin-bottom: 2px;">${rank2.name}</div>
-              <div class="preview-score" style="font-size: 0.75rem; color: #444;"><strong>${rank2.score}</strong></div>
-              <div class="preview-badge" style="position: absolute; bottom: -8px; background: white; border: 1px solid black; border-radius: 10px; padding: 1px 8px; font-size: 0.58rem; font-weight: 900; color: black;">2ND</div>
-            </div>
-          `;
-        } else {
-          top3HTML += `<div style="flex: 1; height: 110px;"></div>`;
+      // 캐싱된 rawData로부터 records 찾기
+      let records = null;
+      if (rawData && rawData.archive && rawData.archive[type]) {
+        const found = rawData.archive[type].find(item => item.period === period);
+        if (found) {
+          records = found.records;
         }
-
-        // 1st Place
-        if (rank1) {
-          top3HTML += `
-            <div class="preview-podium-card rank-1st" style="flex: 1; border: 3px solid #fbbf24; border-radius: 14px; display: flex; flex-direction: column; align-items: center; padding: 15px 5px; height: 135px; background: #fffdf5; position: relative; transform: scale(1.05);">
-              <div style="font-size: 1.2rem; position: absolute; top: -14px;">👑</div>
-              <div class="preview-avatar" style="width: 44px; height: 44px; border-radius: 50%; border: 2px solid #fbbf24; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem; margin-bottom: 5px; background: #fffbeb; color: black;">${getInitials(rank1.name)}</div>
-              <div class="preview-name" style="font-size: 0.95rem; font-weight: 900; color: black; margin-bottom: 2px;">${rank1.name}</div>
-              <div class="preview-score" style="font-size: 0.8rem; color: black; font-weight: 700;"><strong>${rank1.score}</strong></div>
-              <div class="preview-badge" style="position: absolute; bottom: -8px; background: #fbbf24; border: 1px solid black; border-radius: 10px; padding: 1px 8px; font-size: 0.6rem; font-weight: 900; color: #451a03;">1ST CHAMP</div>
-            </div>
-          `;
-        }
-
-        // 3rd Place
-        if (rank3) {
-          top3HTML += `
-            <div class="preview-podium-card rank-3rd" style="flex: 1; border: 2px solid black; border-radius: 12px; display: flex; flex-direction: column; align-items: center; padding: 15px 5px; height: 110px; background: #fafafa; position: relative;">
-              <div class="preview-avatar" style="width: 38px; height: 38px; border-radius: 50%; border: 2px solid black; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; margin-bottom: 5px; background: #eee; color: black;">${getInitials(rank3.name)}</div>
-              <div class="preview-name" style="font-size: 0.9rem; font-weight: 900; color: black; margin-bottom: 2px;">${rank3.name}</div>
-              <div class="preview-score" style="font-size: 0.75rem; color: #444;"><strong>${rank3.score}</strong></div>
-              <div class="preview-badge" style="position: absolute; bottom: -8px; background: white; border: 1px solid black; border-radius: 10px; padding: 1px 8px; font-size: 0.58rem; font-weight: 900; color: black;">3RD</div>
-            </div>
-          `;
-        } else {
-          top3HTML += `<div style="flex: 1; height: 110px;"></div>`;
-        }
-
-        top3HTML += `</div>`;
       }
 
-      let runnersHTML = '';
-      if (runners.length > 0) {
-        runnersHTML += `
-          <div class="preview-table-container" style="margin-top: 30px;">
-            <h4 style="font-size: 1rem; font-weight: 800; border-bottom: 2px solid black; padding-bottom: 6px; margin-bottom: 12px; text-align: left; color: black;">🏅 순위권 수상자 명단</h4>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-        `;
-        runners.forEach(w => {
-          runnersHTML += `
-            <div style="display: flex; align-items: center; justify-content: space-between; border: 1px solid black; border-radius: 8px; padding: 8px 12px; background: white;">
-              <span style="font-size: 0.78rem; font-weight: 800; background: #eee; border: 1px solid black; border-radius: 6px; padding: 2px 8px; color: black;">${w.rank}위</span>
-              <span style="font-size: 0.85rem; font-weight: 800; flex: 1; text-align: left; margin-left: 10px; color: black;">${w.name}</span>
-              <span style="font-size: 0.8rem; font-weight: 700; color: #333;">${w.score}</span>
-            </div>
-          `;
-        });
-        runnersHTML += `
-            </div>
-          </div>
-        `;
-      } else if (winners.length > 3) {
-        runnersHTML += `
-          <div class="preview-table-container" style="margin-top: 30px;">
-            <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+      let tableHTML = '';
+      if (records && Array.isArray(records) && records.length > 0) {
+        let isMonthly = type === 'monthly';
+        tableHTML = `
+          <div style="margin-top: 20px;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 2.5px solid black; font-family: 'Noto Sans KR', sans-serif;">
               <thead>
-                <tr style="border-bottom: 2px solid black;">
-                  <th style="padding: 8px; text-align: center; font-weight: 800; font-size: 0.9rem; width: 80px; color: black;">순위</th>
-                  <th style="padding: 8px; text-align: left; font-weight: 800; font-size: 0.9rem; color: black;">이름</th>
-                  <th style="padding: 8px; text-align: right; font-weight: 800; font-size: 0.9rem; width: 120px; color: black;">${scoreLabel}</th>
+                <tr style="background: #f1f5f9; border-bottom: 2.5px solid black;">
+                  <th style="padding: 10px 8px; border: 1px solid black; text-align: center; font-weight: 900; font-size: 0.85rem; width: 60px; color: black;">순위</th>
+                  <th style="padding: 10px 8px; border: 1px solid black; text-align: left; font-weight: 900; font-size: 0.85rem; color: black; padding-left: 12px;">이름</th>
+                  <th style="padding: 10px 8px; border: 1px solid black; text-align: center; font-weight: 900; font-size: 0.85rem; width: 65px; color: black;">체력</th>
+                  <th style="padding: 10px 8px; border: 1px solid black; text-align: center; font-weight: 900; font-size: 0.85rem; width: 65px; color: black;">실천</th>
+                  <th style="padding: 10px 8px; border: 1px solid black; text-align: center; font-weight: 900; font-size: 0.85rem; width: 65px; color: black;">회복</th>
+                  <th style="padding: 10px 8px; border: 1px solid black; text-align: right; font-weight: 900; font-size: 0.85rem; width: 90px; color: black; padding-right: 12px;">총점</th>
+                  ${isMonthly ? '<th style="padding: 10px 8px; border: 1px solid black; text-align: center; font-weight: 900; font-size: 0.85rem; width: 65px; color: black;">출석</th>' : ''}
                 </tr>
               </thead>
               <tbody>
         `;
-        winners.forEach(w => {
-          runnersHTML += `
-            <tr style="border-bottom: 1px solid #ddd;">
-              <td style="padding: 8px; text-align: center; font-weight: 800; font-size: 0.85rem; color: black;">${w.rank}위</td>
-              <td style="padding: 8px; text-align: left; font-weight: 800; font-size: 0.85rem; color: black;">${w.name}</td>
-              <td style="padding: 8px; text-align: right; font-weight: 700; font-size: 0.85rem; color: black;">${w.score}</td>
+        
+        records.forEach((r, idx) => {
+          let rank = r.rank || (idx + 1);
+          let bgStyle = '';
+          let textWeight = 'font-weight: 700;';
+          let rankBadge = '';
+          
+          if (rank === 1) {
+            bgStyle = 'background-color: #fffdf5;';
+            textWeight = 'font-weight: 900; color: #d97706;';
+            rankBadge = '🥇 ';
+          } else if (rank === 2) {
+            bgStyle = 'background-color: #fafafa;';
+            textWeight = 'font-weight: 800;';
+            rankBadge = '🥈 ';
+          } else if (rank === 3) {
+            bgStyle = 'background-color: #fafafa;';
+            textWeight = 'font-weight: 800;';
+            rankBadge = '🥉 ';
+          } else {
+            rankBadge = `${rank}위`;
+          }
+          
+          let name = r.name || '-';
+          let health = typeof r.health === 'number' ? r.health.toLocaleString() : (r.health || '0');
+          let perf = typeof r.perf === 'number' ? r.perf.toLocaleString() : (r.perf || '0');
+          let def = typeof r.def === 'number' ? r.def.toLocaleString() : (r.def || '0');
+          let score = typeof r.score === 'number' ? r.score.toLocaleString() : (r.score || '0');
+          let attCount = typeof r.attCount === 'number' ? `${r.attCount}회` : (r.attCount || '0회');
+          
+          tableHTML += `
+            <tr style="border-bottom: 1px solid black; ${bgStyle}">
+              <td style="padding: 10px 8px; border: 1px solid black; text-align: center; font-weight: 900; font-size: 0.85rem; color: black;">${rankBadge}</td>
+              <td style="padding: 10px 8px; border: 1px solid black; text-align: left; ${textWeight} font-size: 0.9rem; padding-left: 12px; color: black;">${name}</td>
+              <td style="padding: 10px 8px; border: 1px solid black; text-align: center; font-size: 0.85rem; color: black;">${health}</td>
+              <td style="padding: 10px 8px; border: 1px solid black; text-align: center; font-size: 0.85rem; color: black;">${perf}</td>
+              <td style="padding: 10px 8px; border: 1px solid black; text-align: center; font-size: 0.85rem; color: black;">${def}</td>
+              <td style="padding: 10px 8px; border: 1px solid black; text-align: right; font-weight: 900; font-size: 0.9rem; padding-right: 12px; color: black;">${score}p</td>
+              ${isMonthly ? `<td style="padding: 10px 8px; border: 1px solid black; text-align: center; font-size: 0.85rem; color: black;">${attCount}</td>` : ''}
             </tr>
           `;
         });
-        runnersHTML += `
+        
+        tableHTML += `
+              </tbody>
+            </table>
+          </div>
+        `;
+      } else {
+        tableHTML += `
+          <div style="margin-top: 20px;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 2.5px solid black; font-family: 'Noto Sans KR', sans-serif;">
+              <thead>
+                <tr style="background: #f1f5f9; border-bottom: 2.5px solid black;">
+                  <th style="padding: 10px 8px; border: 1px solid black; text-align: center; font-weight: 900; font-size: 0.85rem; width: 80px; color: black;">순위</th>
+                  <th style="padding: 10px 8px; border: 1px solid black; text-align: left; font-weight: 900; font-size: 0.85rem; color: black;">이름</th>
+                  <th style="padding: 10px 8px; border: 1px solid black; text-align: right; font-weight: 900; font-size: 0.85rem; width: 150px; color: black; padding-right: 15px;">${scoreLabel}</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+        winners.forEach((w, idx) => {
+          let rank = w.rank || (idx + 1);
+          let bgStyle = '';
+          let textWeight = 'font-weight: 700;';
+          let rankBadge = '';
+          
+          if (rank === 1) {
+            bgStyle = 'background-color: #fffdf5;';
+            textWeight = 'font-weight: 900; color: #d97706;';
+            rankBadge = '🥇 ';
+          } else if (rank === 2) {
+            bgStyle = 'background-color: #fafafa;';
+            textWeight = 'font-weight: 800;';
+            rankBadge = '🥈 ';
+          } else if (rank === 3) {
+            bgStyle = 'background-color: #fafafa;';
+            textWeight = 'font-weight: 800;';
+            rankBadge = '🥉 ';
+          } else {
+            rankBadge = `${rank}위`;
+          }
+          
+          tableHTML += `
+            <tr style="border-bottom: 1px solid black; ${bgStyle}">
+              <td style="padding: 10px 8px; border: 1px solid black; text-align: center; font-weight: 900; font-size: 0.85rem; color: black;">${rankBadge}</td>
+              <td style="padding: 10px 8px; border: 1px solid black; text-align: left; ${textWeight} font-size: 0.9rem; color: black;">${w.name}</td>
+              <td style="padding: 10px 8px; border: 1px solid black; text-align: right; font-weight: 900; font-size: 0.9rem; padding-right: 15px; color: black;">${w.score}</td>
+            </tr>
+          `;
+        });
+        tableHTML += `
               </tbody>
             </table>
           </div>
@@ -2027,8 +2226,7 @@
           <p style="font-size: 0.9rem; color: #333; font-weight: 500; margin: 0;">${subtitle}</p>
           <hr style="border: none; border-top: 2.5px solid black; margin: 15px 0 25px 0;">
         </div>
-        ${top3HTML}
-        ${runnersHTML}
+        ${tableHTML}
         ${stampHTML}
       `;
 

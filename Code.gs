@@ -11042,221 +11042,120 @@ function getHallOfFameData(payload) {
     var archiveAttendance = [];
     
     try {
-      // (1) 목요일 기준 주간의 시작일(목요일 00:00:00)을 구하는 헬퍼 함수
-      function getThuStartOfWeekLocal(date) {
-        var d = new Date(date.getTime());
-        var day = d.getDay(); // 0(일)~6(토)
-        var diffToThu = (day + 3) % 7; 
-        d.setDate(d.getDate() - diffToThu);
-        d.setHours(0, 0, 0, 0);
-        return d;
-      }
-      
-      // (2) 임의의 날짜에 대해 목요일 기준의 "M월 W주" 문자열을 구하는 헬퍼 함수
-      function getWeekStringLocal(date) {
-        var thu = getThuStartOfWeekLocal(date);
-        var year = thu.getFullYear();
-        var month = thu.getMonth() + 1; // 1~12
+      // (1) 주간 성적 아카이브 로드
+      var wArcSheet = ss.getSheetByName("33챌린지_주간성적아카이브");
+      if (wArcSheet && wArcSheet.getLastRow() > 1) {
+        var wArcData = wArcSheet.getDataRange().getValues();
+        var wGroups = {}; // period -> [ { name, rank, health, perf, def, score } ]
+        var wPeriodsSorted = []; // unique periods in order of appearance
         
-        // 이 달의 첫 번째 목요일 구하기
-        var firstDayOfMonth = new Date(year, thu.getMonth(), 1);
-        var firstThu = new Date(year, thu.getMonth(), 1);
-        var firstDayOfWeek = firstDayOfMonth.getDay();
-        var diffToFirstThu = (4 - firstDayOfWeek + 7) % 7;
-        firstThu.setDate(1 + diffToFirstThu);
-        firstThu.setHours(0, 0, 0, 0);
-        
-        var weekNum = 1;
-        if (thu >= firstThu) {
-          weekNum = Math.floor((thu.getDate() - firstThu.getDate()) / 7) + 1;
-        } else {
-          // 이전 달의 마지막 주에 속함
-          var prevMonth = new Date(year, thu.getMonth(), 0); // 이전 달 마지막 날
-          return getWeekStringLocal(prevMonth);
-        }
-        return month + "월 " + weekNum + "주";
-      }
-
-      // (3) 과거 주간 및 월간 웰니스총점 집계
-      // summaryData 에는 모든 회원들의 일일 기록이 들어있습니다.
-      // 현재 주차 시작일(startOfWeek) 및 현재 월 시작일(startOfMonth)은 앞단에서 계산되었습니다.
-      var weeklyGroups = {}; // "5월 3주" -> { thuDate, users: { phone -> { name, score } } }
-      var monthlyGroups = {}; // "5월" -> { yearMonthDate, users: { phone -> { name, score } } }
-      
-      for (var sIdx = 1; sIdx < summaryData.length; sIdx++) {
-        var row = summaryData[sIdx];
-        var sPhoneRaw = String(row[1] || "").trim();
-        var sPhone = formatPhoneNumber(sPhoneRaw).replace(/[^0-9]/g, "");
-        if (!sPhone) continue;
-        
-        var sName = String(row[2] || "모험가").replace(/\d{4}$/, "").trim();
-        var sDateRaw = row[0];
-        var sDate = (sDateRaw instanceof Date) ? sDateRaw : new Date(sDateRaw);
-        if (isNaN(sDate.getTime())) continue;
-        
-        var rowWellnessTotal = Number(row[9] || 0); // J열: 웰니스총점
-        if (rowWellnessTotal <= 0) continue;
-        
-        // A. 과거 주간 집계 (현재 실시간 주간 제외)
-        if (sDate < startOfWeek) {
-          var weekKey = getWeekStringLocal(sDate);
-          if (!weeklyGroups[weekKey]) {
-            weeklyGroups[weekKey] = {
-              thuDate: getThuStartOfWeekLocal(sDate), // 정렬을 위해 주차 목요일 시작일 저장
-              users: {}
-            };
-          }
-          var group = weeklyGroups[weekKey];
-          if (!group.users[sPhone]) {
-            group.users[sPhone] = { name: sName, score: 0 };
-          }
-          group.users[sPhone].score += rowWellnessTotal;
-        }
-        
-        // B. 과거 월간 집계 (현재 실시간 월 제외)
-        if (sDate < startOfMonth) {
-          var monthKey = (sDate.getFullYear()) + "년 " + (sDate.getMonth() + 1) + "월";
-          if (!monthlyGroups[monthKey]) {
-            monthlyGroups[monthKey] = {
-              yearMonthDate: new Date(sDate.getFullYear(), sDate.getMonth(), 1), // 정렬용
-              users: {}
-            };
-          }
-          var mGroup = monthlyGroups[monthKey];
-          if (!mGroup.users[sPhone]) {
-            mGroup.users[sPhone] = { name: sName, score: 0 };
-          }
-          mGroup.users[sPhone].score += rowWellnessTotal;
-        }
-      }
-      
-      // C. 과거 주간 데이터 정렬 및 1~3위 추출
-      var weeklyKeys = Object.keys(weeklyGroups);
-      // 목요일 날짜 기준 내림차순 정렬 (최신 주차가 위로 가게)
-      weeklyKeys.sort(function(a, b) {
-        return weeklyGroups[b].thuDate - weeklyGroups[a].thuDate;
-      });
-      
-      weeklyKeys.forEach(function(weekKey, idx) {
-        var usersMap = weeklyGroups[weekKey].users;
-        var usersArr = [];
-        for (var ph in usersMap) {
-          usersArr.push(usersMap[ph]);
-        }
-        usersArr.sort(function(a, b) { return b.score - a.score; });
-        
-        var winners = [];
-        var limit = (idx === 0) ? Math.min(usersArr.length, 10) : Math.min(usersArr.length, 3);
-        for (var w = 0; w < limit; w++) {
-          var u = usersArr[w];
-          winners.push((w + 1) + "." + u.name + "(" + u.score.toLocaleString() + "p)");
-        }
-        if (winners.length > 0) {
-          archiveWeekly.push({
-            period: weekKey,
-            winners: "🥇 " + winners.join(" | ")
-          });
-        }
-      });
-      
-      // D. 과거 월간 데이터 정렬 및 1~3위 추출
-      var monthlyKeys = Object.keys(monthlyGroups);
-      // 연월 날짜 기준 내림차순 정렬 (최신 월이 위로 가게)
-      monthlyKeys.sort(function(a, b) {
-        return monthlyGroups[b].yearMonthDate - monthlyGroups[a].yearMonthDate;
-      });
-      
-      monthlyKeys.forEach(function(monthKey, idx) {
-        var usersMap = monthlyGroups[monthKey].users;
-        var usersArr = [];
-        for (var ph in usersMap) {
-          usersArr.push(usersMap[ph]);
-        }
-        usersArr.sort(function(a, b) { return b.score - a.score; });
-        
-        var winners = [];
-        var limit = (idx === 0) ? Math.min(usersArr.length, 10) : Math.min(usersArr.length, 3);
-        for (var w = 0; w < limit; w++) {
-          var u = usersArr[w];
-          winners.push((w + 1) + "." + u.name + "(" + u.score.toLocaleString() + "p)");
-        }
-        if (winners.length > 0) {
-          // 표시할 때는 연도를 떼고 깔끔하게 "5월", "4월" 형태로 출력
-          var displayPeriod = monthKey.split("년 ")[1];
-          archiveMonthly.push({
-            period: displayPeriod,
-            winners: "🥇 " + winners.join(" | ")
-          });
-        }
-      });
-      
-      // E. 과거 출석왕 집계 및 정렬 (현재 월 제외)
-      // attData 에는 출석 데이터가 들어있습니다.
-      var attCols = getAttendanceColumnIndices(attSheet);
-      var attendanceGroups = {}; // "5월" -> { yearMonthDate, users: { phone -> { name, count } } }
-      
-      if (attSheet && attData.length > 1) {
-        for (var aIdx = 1; aIdx < attData.length; aIdx++) {
-          var aRow = attData[aIdx];
-          var aPhoneRaw = String(aRow[attCols.phone] || "").trim();
-          var aPhone = formatPhoneNumber(aPhoneRaw).replace(/[^0-9]/g, "");
-          if (!aPhone) continue;
+        for (var rowIdx = 1; rowIdx < wArcData.length; rowIdx++) {
+          var pVal = String(wArcData[rowIdx][0] || "").trim();
+          if (!pVal) continue;
           
-          var aName = String(aRow[attCols.name] || "모험가").replace(/\d{4}$/, "").trim();
-          var aDateRaw = aRow[attCols.date];
-          var aDate = (aDateRaw instanceof Date) ? aDateRaw : new Date(aDateRaw);
-          if (isNaN(aDate.getTime())) continue;
-          
-          // 과거 출석왕 집계 (현재 월 미만)
-          if (aDate < startOfMonth) {
-            var attMonthKey = (aDate.getFullYear()) + "년 " + (aDate.getMonth() + 1) + "월";
-            if (!attendanceGroups[attMonthKey]) {
-              attendanceGroups[attMonthKey] = {
-                yearMonthDate: new Date(aDate.getFullYear(), aDate.getMonth(), 1), // 정렬용
-                users: {}
-              };
-            }
-            var attGroup = attendanceGroups[attMonthKey];
-            if (!attGroup.users[aPhone]) {
-              attGroup.users[aPhone] = { name: aName, count: 0 };
-            }
-            attGroup.users[aPhone].count++;
+          if (!wGroups[pVal]) {
+            wGroups[pVal] = [];
+            wPeriodsSorted.push(pVal);
           }
-        }
-      }
-      
-      var attKeys = Object.keys(attendanceGroups);
-      // 내림차순 정렬 (최신 월이 위로 가게)
-      attKeys.sort(function(a, b) {
-        return attendanceGroups[b].yearMonthDate - attendanceGroups[a].yearMonthDate;
-      });
-      
-      attKeys.forEach(function(attKey) {
-        var usersMap = attendanceGroups[attKey].users;
-        var usersArr = [];
-        for (var ph in usersMap) {
-          usersArr.push(usersMap[ph]);
-        }
-        usersArr.sort(function(a, b) { return b.count - a.count; });
-        
-        var winners = [];
-        var limit = Math.min(usersArr.length, 3);
-        var medals = ["🥇 1위", "🥈 2위", "🥉 3위"];
-        for (var w = 0; w < limit; w++) {
-          var u = usersArr[w];
-          winners.push(medals[w] + " " + u.name + "(" + u.count + "회)");
-        }
-        if (winners.length > 0) {
-          var displayPeriod = attKey.split("년 ")[1];
-          archiveAttendance.push({
-            period: displayPeriod,
-            winners: winners.join(" | ")
+          wGroups[pVal].push({
+            rank: Number(wArcData[rowIdx][1] || 0),
+            name: String(wArcData[rowIdx][2] || "").trim(),
+            health: Number(wArcData[rowIdx][4] || 0),
+            perf: Number(wArcData[rowIdx][5] || 0),
+            def: Number(wArcData[rowIdx][6] || 0),
+            score: Number(wArcData[rowIdx][7] || 0)
           });
         }
-      });
+        
+        // 각 주차별 Winners 가공
+        wPeriodsSorted.forEach(function(periodKey) {
+          var users = wGroups[periodKey];
+          users.sort(function(a, b) { return a.rank - b.rank; });
+          
+          var winners = [];
+          var limit = Math.min(users.length, 3);
+          for (var w = 0; w < limit; w++) {
+            var u = users[w];
+            winners.push((w + 1) + "." + u.name + "(" + u.score.toLocaleString() + "p)");
+          }
+          if (winners.length > 0) {
+            archiveWeekly.push({
+              period: periodKey,
+              winners: "🥇 " + winners.join(" | "),
+              records: users.slice(0, 10) // 상위 10인의 디테일 레코드 반환
+            });
+          }
+        });
+      }
+      
+      // (2) 월간 및 출석 아카이브 로드
+      var mArcSheet = ss.getSheetByName("33챌린지_월간성적아카이브");
+      if (mArcSheet && mArcSheet.getLastRow() > 1) {
+        var mArcData = mArcSheet.getDataRange().getValues();
+        var mGroups = {}; // period -> [ { name, rank, health, perf, def, score, attCount } ]
+        var mPeriodsSorted = []; // unique periods in order of appearance
+        
+        for (var rowIdx = 1; rowIdx < mArcData.length; rowIdx++) {
+          var pVal = String(mArcData[rowIdx][0] || "").trim();
+          if (!pVal) continue;
+          
+          if (!mGroups[pVal]) {
+            mGroups[pVal] = [];
+            mPeriodsSorted.push(pVal);
+          }
+          mGroups[pVal].push({
+            rank: Number(mArcData[rowIdx][1] || 0),
+            name: String(mArcData[rowIdx][2] || "").trim(),
+            health: Number(mArcData[rowIdx][4] || 0),
+            perf: Number(mArcData[rowIdx][5] || 0),
+            def: Number(mArcData[rowIdx][6] || 0),
+            score: Number(mArcData[rowIdx][7] || 0),
+            attCount: Number(mArcData[rowIdx][9] || 0) // J열: 출석기록
+          });
+        }
+        
+        // 각 월별 Winners 및 출석왕 가공
+        mPeriodsSorted.forEach(function(periodKey) {
+          var users = mGroups[periodKey];
+          
+          // A. 월간 랭킹 가공 (순위 오름차순)
+          users.sort(function(a, b) { return a.rank - b.rank; });
+          var winners = [];
+          var limit = Math.min(users.length, 3);
+          for (var w = 0; w < limit; w++) {
+            var u = users[w];
+            winners.push((w + 1) + "." + u.name + "(" + u.score.toLocaleString() + "p)");
+          }
+          if (winners.length > 0) {
+            archiveMonthly.push({
+              period: periodKey,
+              winners: "🥇 " + winners.join(" | "),
+              records: users.slice(0, 10) // 상위 10인의 디테일 레코드 반환
+            });
+          }
+          
+          // B. 출석왕 가공 (출석 횟수 내림차순 정렬)
+          var attUsers = [].concat(users);
+          attUsers.sort(function(a, b) { return b.attCount - a.attCount; });
+          var attWinners = [];
+          var attLimit = Math.min(attUsers.length, 3);
+          for (var w = 0; w < attLimit; w++) {
+            var u = attUsers[w];
+            var medal = (w === 0) ? "🥇 1위" : (w === 1 ? "🥈 2위" : "🥉 3위");
+            attWinners.push(medal + " " + u.name + "(" + u.attCount + "회)");
+          }
+          if (attWinners.length > 0) {
+            archiveAttendance.push({
+              period: periodKey,
+              winners: attWinners.join(" | "),
+              records: attUsers.slice(0, 3) // 출석왕 TOP 3
+            });
+          }
+        });
+      }
       
     } catch (arcErr) {
-      Logger.log("역대 명예의 전당 아카이브 완전 자동화 연산 오류: " + arcErr.toString());
+      Logger.log("역대 명예의 전당 아카이브 시트 연동 오류: " + arcErr.toString());
     }
 
     return {
