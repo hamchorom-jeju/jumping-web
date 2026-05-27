@@ -10731,16 +10731,21 @@ function getHallOfFameData(payload) {
       }
     }
     
-    // 1. 날짜 범위 계산
+    // 1. 날짜 범위 계산 (KST GMT+9 표준 시간 보정 적용)
+    var kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    var curYear = kstNow.getUTCFullYear();
+    var curMonth = kstNow.getUTCMonth(); // 0-11
+    var curDate = kstNow.getUTCDate();
+    var curDay = kstNow.getUTCDay(); // 0-6
+    
     // (1) 주간: 목요일 00:00:00 ~ 수요일 23:59:59 (매주 목요일 00:00 리셋)
-    var day = now.getDay(); // 0(일)~6(토)
-    var diffToThu = (day + 3) % 7; 
-    var startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToThu);
+    var diffToThu = (curDay + 3) % 7; 
+    var startOfWeek = new Date(curYear, curMonth, curDate - diffToThu);
     startOfWeek.setHours(0, 0, 0, 0);
     
     // (2) 월간: 매달 1일 00:00:00 ~ 말일 23:59:59
-    var startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-    var endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    var startOfMonth = new Date(curYear, curMonth, 1, 0, 0, 0, 0);
+    var endOfMonth = new Date(curYear, curMonth + 1, 0, 23, 59, 59, 999);
     
     // 2. 인바디 기록 미리 로드 및 휴대폰 번호 매핑
     var inbodySheet = ss.getSheetByName("33챌린지_인바디");
@@ -10976,8 +10981,8 @@ function getHallOfFameData(payload) {
     var isMonthlyAward = false;
     var monthlyAwardPeriod = "";
     
-    var dayOfWeek = now.getDay(); // 0(일) ~ 6(토)
-    var dateOfMonth = now.getDate(); // 1 ~ 31
+    var dayOfWeek = curDay; // 0(일) ~ 6(토)
+    var dateOfMonth = curDate; // 1 ~ 31
     
     // 이 시점의 아카이브 데이터 임시 보관
     var tempArchiveWeekly = null;
