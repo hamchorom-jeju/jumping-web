@@ -1828,7 +1828,16 @@
             return;
           }
 
-          let html = `<div style="display: flex; flex-direction: column; gap: 15px; width: 100%;">`;
+          let html = '';
+          if (res.targetWeight && res.targetWeight > 0) {
+            html += `
+              <div style="background: #f0fdf4; border-radius: 18px; border: 1.5px solid #bbf7d0; padding: 12px 16px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; font-weight: 800; color: #16a34a; box-shadow: 0 4px 12px rgba(22,163,74,0.03);">
+                <span>🎯 나의 공식 목표 체중</span>
+                <span style="font-size: 0.95rem; font-weight: 900;">${res.targetWeight.toFixed(1)}kg</span>
+              </div>
+            `;
+          }
+          html += `<div style="display: flex; flex-direction: column; gap: 15px; width: 100%;">`;
 
           res.records.forEach(function(r, idx) {
             const isFirst = (idx === res.records.length - 1);
@@ -1848,6 +1857,25 @@
             const weight = Number(r.weight) || 0;
             const muscle = Number(r.muscle) || 0;
             const fat = Number(r.fat) || 0;
+
+            // 🏆 체성분 명품 유지 보너스 달성 여부 판정 (목표체중이 설정되어 있고, 체중이 목표체중 + 0.5kg 이하인 경우)
+            const hasBonus = (res.targetWeight && res.targetWeight > 0 && weight <= res.targetWeight + 0.5);
+
+            let mScoreHtml = '';
+            if (hasBonus && mScore >= 1000) {
+              const pureM = mScore - 1000;
+              mScoreHtml = `<span style="font-weight: 900; color: #7c3aed; text-align: right; line-height: 1.35;">+${mScore} EXP <span style="font-size: 0.62rem; color: #9333ea; font-weight: 800; display: block; margin-top: 1px;">(+${pureM} 감량 + 🏆 유지 1,000)</span></span>`;
+            } else {
+              mScoreHtml = `<span style="font-weight: 900; color: ${mScore > 0 ? '#7c3aed' : '#94a3b8'};">${mScore > 0 ? `+${mScore} EXP` : '0 EXP'}</span>`;
+            }
+
+            let tScoreHtml = '';
+            if (hasBonus && tScore >= 1000) {
+              const pureT = tScore - 1000;
+              tScoreHtml = `<span style="font-weight: 900; color: #d97706; text-align: right; line-height: 1.35;">+${tScore} EXP <span style="font-size: 0.62rem; color: #b45309; font-weight: 800; display: block; margin-top: 1px;">(+${pureT} 감량 + 🏆 유지 1,000)</span></span>`;
+            } else {
+              tScoreHtml = `<span style="font-weight: 900; color: ${tScore > 0 ? '#d97706' : '#94a3b8'};">${tScore > 0 ? `+${tScore} EXP` : '0 EXP'}</span>`;
+            }
 
             html += `
               <div style="background: #fff; border-radius: 22px; border: 1.5px solid #edf2f7; padding: 18px; box-shadow: 0 6px 20px rgba(0,0,0,0.015); display: flex; flex-direction: column; gap: 12px; text-align: left;">
@@ -1889,13 +1917,13 @@
                     <!-- 월간 -->
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
                       <span style="color: #475569; font-weight: 800; display: flex; align-items: center; gap: 4px;">🔮 월간 향상 <span style="font-size: 0.65rem; font-weight: 700; color: #94a3b8;">(월초 대조)</span></span>
-                      <span style="font-weight: 900; color: ${mScore > 0 ? '#7c3aed' : '#94a3b8'};">${mScore > 0 ? `+${mScore} EXP` : '0 EXP'}</span>
+                      ${mScoreHtml}
                     </div>
                     
                     <!-- 평생 -->
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
                       <span style="color: #475569; font-weight: 800; display: flex; align-items: center; gap: 4px;">👑 평생 토탈 <span style="font-size: 0.65rem; font-weight: 700; color: #94a3b8;">(최초 대조)</span></span>
-                      <span style="font-weight: 900; color: ${tScore > 0 ? '#d97706' : '#94a3b8'};">${tScore > 0 ? `+${tScore} EXP` : '0 EXP'}</span>
+                      ${tScoreHtml}
                     </div>
                   </div>
                 </div>

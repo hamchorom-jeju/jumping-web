@@ -1111,6 +1111,20 @@ function submitInBodyRecord(payload) {
     
     // 7. 시트에 3단 확장 포맷으로 영구 기입
     var uploadDate = new Date();
+    
+    var finalRemarks = payload.remarks || "";
+    if (targetWeight && targetWeight > 0) {
+      var cW = Number(currentInbody.weight) || 0;
+      if (cW <= targetWeight + 0.5) {
+        var bonusMsg = "[🏆 체성분 명품 유지 보너스 적용 (목표: " + targetWeight + "kg / 현재: " + cW.toFixed(1) + "kg)]";
+        if (finalRemarks) {
+          finalRemarks += " " + bonusMsg;
+        } else {
+          finalRemarks = bonusMsg;
+        }
+      }
+    }
+
     sheet.appendRow([
       dateValue,              // Column A: 측정일 (Measurement Date)
       name,                   // Column B: 회원명
@@ -1121,7 +1135,7 @@ function submitInBodyRecord(payload) {
       weeklyScore,            // Column G: 주간변화점수 [NEW]
       monthlyScore,           // Column H: 월간변화점수 [NEW]
       totalScore,             // Column I: 토탈변화점수 [NEW]
-      payload.remarks || "",  // Column J: 비고
+      finalRemarks,           // Column J: 비고
       uploadDate              // Column K: 등록일 (Record Date)
     ]);
     
@@ -9640,7 +9654,7 @@ function getMyInbodyHistory(phone) {
       return new Date(b.date) - new Date(a.date);
     });
 
-    return { success: true, records: finalRecords };
+    return { success: true, records: finalRecords, targetWeight: targetWeight };
   } catch (e) {
     return { error: e.toString() };
   }
