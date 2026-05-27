@@ -819,39 +819,29 @@ const Village = {
         };
         
         // ⚡ [v66.0] 오늘의 돌발 퀘스트 전용 프리미엄 아코디언 배너 동적 데이터 바인딩
-        const suddenBanner = document.getElementById('sudden-quest-accordion-banner');
+                const suddenBanner = document.getElementById('sudden-quest-accordion-banner');
         if (suddenBanner) {
             if (quests.todayQuest) {
-                suddenBanner.style.display = 'flex';
-                
-                const badgeEl = document.getElementById('sudden-badge-type');
-                const titleEl = document.getElementById('sudden-title-text');
-                const descEl = document.getElementById('sudden-desc-text');
-                const rewardEl = document.getElementById('sudden-reward-text');
-                const methodEl = document.getElementById('sudden-method-text');
-                const actionBtn = document.getElementById('sudden-action-btn');
-                
                 const q = quests.todayQuest;
                 const isCompleted = (this.user && this.user.doneList && Array.isArray(this.user.doneList) && q && q.title) ?
                     this.user.doneList.some(item => typeof item === 'string' && (item.indexOf(q.title) > -1 || item.indexOf('돌발퀘스트') > -1)) : false;
                 
-                // 테마 초기화
-                suddenBanner.classList.remove('theme-rose', 'theme-purple', 'theme-green');
-                
                 if (isCompleted) {
-                    suddenBanner.classList.add('theme-green');
-                    if (badgeEl) badgeEl.innerText = '🎉 완료됨';
-                    if (titleEl) titleEl.innerText = `🎉 ${q.title}`;
-                    if (descEl) descEl.innerText = '오늘의 돌발 퀘스트를 성공적으로 수행하여 수호 점수를 획득했습니다! 참 잘하셨습니다! 👍';
-                    if (rewardEl) rewardEl.innerText = '완료됨';
-                    if (methodEl) methodEl.innerText = `${q.method} 인증`;
-                    if (actionBtn) {
-                        actionBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> 미션 완료! 수호 점수 획득';
-                        actionBtn.disabled = true;
-                        actionBtn.dataset.targetUrl = '';
-                        actionBtn.style.opacity = '0.8';
-                    }
+                    // [UX 개선] 오늘의 돌발 미션을 완료한 경우, 대시보드 공간 절약을 위해 배너를 완전히 숨깁니다!
+                    suddenBanner.style.display = 'none';
                 } else {
+                    suddenBanner.style.display = 'flex';
+                    
+                    const badgeEl = document.getElementById('sudden-badge-type');
+                    const titleEl = document.getElementById('sudden-title-text');
+                    const descEl = document.getElementById('sudden-desc-text');
+                    const rewardEl = document.getElementById('sudden-reward-text');
+                    const methodEl = document.getElementById('sudden-method-text');
+                    const actionBtn = document.getElementById('sudden-action-btn');
+                    
+                    // 테마 초기화
+                    suddenBanner.classList.remove('theme-rose', 'theme-purple', 'theme-green');
+                    
                     const methodStr = String(q.method || '사진').trim();
                     if (methodStr === '게시판') {
                         suddenBanner.classList.add('theme-purple');
