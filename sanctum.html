@@ -144,6 +144,183 @@
       color: #fca5a5; padding: 4px 8px; border-radius: 8px; cursor: pointer; font-size: 0.65rem; font-weight: 900;
     }
 
+    /* 📅 [v66.0] 생텀 프리미엄 하이브리드 달력 그리드 디자인 */
+    .sanctum-calendar-container {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 12px;
+      margin-top: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .sanctum-calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+    .sanctum-calendar-title {
+      font-size: 0.85rem;
+      font-weight: 900;
+      color: var(--sanctum-gold-light);
+    }
+    .sanctum-calendar-nav {
+      display: flex;
+      gap: 6px;
+    }
+    .sanctum-calendar-nav-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.68rem;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+    .sanctum-calendar-nav-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    .sanctum-calendar-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .sanctum-weekday {
+      font-size: 0.62rem;
+      font-weight: 800;
+      color: var(--text-sub);
+      padding: 4px 0;
+    }
+    .sanctum-weekday.sun { color: #f87171; }
+    .sanctum-weekday.sat { color: #60a5fa; }
+    
+    .sanctum-calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+    .sanctum-calendar-cell {
+      aspect-ratio: 1 / 1.1;
+      min-height: 62px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 12px;
+      padding: 5px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      position: relative;
+      cursor: pointer;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+      overflow: hidden;
+      text-align: left;
+    }
+    .sanctum-calendar-cell:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+    .sanctum-calendar-cell.cell-today {
+      border: 1.5px solid #ea580c !important;
+      background: rgba(234, 88, 12, 0.05) !important;
+      box-shadow: 0 0 10px rgba(234, 88, 12, 0.2);
+    }
+    .sanctum-calendar-cell.cell-manual {
+      background: linear-gradient(135deg, rgba(88, 28, 135, 0.15) 0%, rgba(124, 58, 237, 0.15) 100%) !important;
+      border: 1px solid #a78bfa !important;
+    }
+    .sanctum-calendar-cell.cell-manual:hover {
+      background: linear-gradient(135deg, rgba(88, 28, 135, 0.25) 0%, rgba(124, 58, 237, 0.25) 100%) !important;
+      border-color: #c084fc !important;
+    }
+    .sanctum-calendar-cell.cell-auto {
+      background: rgba(255, 255, 255, 0.03) !important;
+      border: 1px dashed rgba(255, 255, 255, 0.15) !important;
+    }
+    .sanctum-calendar-cell.cell-empty {
+      opacity: 0.15;
+      cursor: default;
+      pointer-events: none;
+    }
+    .sanctum-calendar-cell.cell-past {
+      opacity: 0.45;
+      background: rgba(0, 0, 0, 0.15) !important;
+      border: 1px solid rgba(255, 255, 255, 0.02) !important;
+    }
+    .cell-day-num {
+      font-size: 0.65rem;
+      font-weight: 900;
+      color: #94a3b8;
+    }
+    .cell-day-num.sun { color: #f87171; }
+    .cell-day-num.sat { color: #60a5fa; }
+    
+    .cell-badge {
+      font-size: 0.5rem;
+      font-weight: 900;
+      padding: 1px 4px;
+      border-radius: 4px;
+      display: inline-block;
+      line-height: 1.1;
+      margin-top: 2px;
+      transform: scale(0.9);
+      transform-origin: left top;
+    }
+    .cell-badge.badge-manual {
+      background: #a78bfa;
+      color: #1e1b4b;
+    }
+    .cell-badge.badge-auto {
+      background: rgba(255, 255, 255, 0.15);
+      color: #e2e8f0;
+    }
+    
+    .cell-quest-title {
+      font-size: 0.58rem;
+      font-weight: 800;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+      margin-top: 4px;
+      text-align: left;
+    }
+    .cell-quest-title.title-auto {
+      color: #94a3b8;
+      font-style: italic;
+    }
+    
+    .cell-del-btn {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: 13px;
+      height: 13px;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+      font-size: 0.5rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.15s ease;
+    }
+    .cell-del-btn:hover {
+      background: #ef4444;
+      color: #fff;
+    }
+
     /* 🚪 GOLDEN SCROLL EDITOR MODAL */
     .scroll-modal {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -757,49 +934,172 @@
 
     window.editingQuestRowIdx = null;
     window.editingQuestOriginalDate = null;
+    window.scheduledQuestsList = [];
+
+    // 📅 [v66.0] 달력 연도/월 전역 추적 (기본값 오늘)
+    const todayKst = new Date();
+    window.currentCalendarYear = todayKst.getFullYear();
+    window.currentCalendarMonth = todayKst.getMonth() + 1; // 1-indexed
 
     function renderScheduledQuests(list) {
-      const container = document.getElementById('calendar-list');
-      if (!list || list.length === 0) {
-        container.innerHTML = '<div style="text-align:center; font-size:0.7rem; color:var(--text-sub); padding:15px; font-weight:700;">예약된 자정 자동 돌발 퀘스트가 없습니다.</div>';
-        return;
+      if (list) {
+        window.scheduledQuestsList = list;
+      } else {
+        list = window.scheduledQuestsList || [];
       }
-      
-      // 📅 [원장님 피드백 반영] 오늘을 포함한 미래의 돌발 퀘스트만 필터링하여 노출 (지나간 과거 퀘스트는 제외)
+
+      const container = document.getElementById('calendar-list');
+      if (!container) return;
+
+      const year = window.currentCalendarYear;
+      const month = window.currentCalendarMonth;
+
+      // 1. 달력 연/월 헤더 렌더링
+      let html = `
+        <div class="sanctum-calendar-container">
+          <div class="sanctum-calendar-header">
+            <button class="sanctum-calendar-nav-btn" onclick="changeCalendarMonth(-1)">◀ 이전달</button>
+            <div class="sanctum-calendar-title">${year}년 ${month}월</div>
+            <button class="sanctum-calendar-nav-btn" onclick="changeCalendarMonth(1)">다음달 ▶</button>
+          </div>
+          
+          <div class="sanctum-calendar-weekdays">
+            <div class="sanctum-weekday sun">일</div>
+            <div class="sanctum-weekday">월</div>
+            <div class="sanctum-weekday">화</div>
+            <div class="sanctum-weekday">수</div>
+            <div class="sanctum-weekday">목</div>
+            <div class="sanctum-weekday">금</div>
+            <div class="sanctum-weekday sat">토</div>
+          </div>
+          
+          <div class="sanctum-calendar-grid">
+      `;
+
+      // 2. 해당 월의 일수 및 첫째날 요일 구하기
+      const firstDayOfWeek = new Date(year, month - 1, 1).getDay(); // 0: 일, 1: 월...
+      const daysInMonth = new Date(year, month, 0).getDate();
+
+      // 3. 오늘 날짜 구하기 (KST)
       const now = new Date();
       const offset = now.getTimezoneOffset() * 60000;
       const todayStr = new Date(Date.now() - offset).toISOString().split('T')[0];
-      const activeQuests = list.filter(q => q.date >= todayStr);
 
-      if (activeQuests.length === 0) {
-        container.innerHTML = '<div style="text-align:center; font-size:0.7rem; color:var(--text-sub); padding:15px; font-weight:700;">진행 대기 또는 예정된 돌발 퀘스트가 없습니다. 📅</div>';
-        return;
+      // 4. 빈 셀 렌더링 (1일 시작 전 요일 메꿈)
+      for (let i = 0; i < firstDayOfWeek; i++) {
+        html += `<div class="sanctum-calendar-cell cell-empty"></div>`;
       }
 
-      container.innerHTML = activeQuests.map(q => {
-        const methodBadge = q.method === '게시판' 
-          ? `<span style="background: rgba(225, 29, 72, 0.2); border: 1px solid #f43f5e; color: #f43f5e; font-size: 0.65rem; padding: 2px 6px; border-radius: 6px; font-weight: 900; margin-left: 6px; display: inline-flex; align-items: center; gap: 2px;">📝 글쓰기</span>` 
-          : `<span style="background: rgba(14, 165, 233, 0.2); border: 1px solid #0ea5e9; color: #38bdf8; font-size: 0.65rem; padding: 2px 6px; border-radius: 6px; font-weight: 900; margin-left: 6px; display: inline-flex; align-items: center; gap: 2px;">📸 사진</span>`;
+      // 5. 날짜별 셀 렌더링
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${month < 10 ? '0' + month : month}-${day < 10 ? '0' + day : day}`;
+        const cellDayOfWeek = new Date(year, month - 1, day).getDay();
         
-        const safeTitle = (q.title || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const safeDesc = (q.description || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+        let isSunday = (cellDayOfWeek === 0);
+        let isSaturday = (cellDayOfWeek === 6);
+        let dayClass = isSunday ? 'sun' : (isSaturday ? 'sat' : '');
+        
+        // 오늘 여부 판별
+        const isToday = (dateStr === todayStr);
+        const isPast = (dateStr < todayStr);
+        
+        // 리스트 매칭 스캔
+        const q = list.find(item => item.date === dateStr);
+        
+        let cellClass = "sanctum-calendar-cell";
+        if (isPast) cellClass += " cell-past";
+        if (isToday) cellClass += " cell-today";
+        
+        let contentHtml = "";
+        let delBtnHtml = "";
+        let clickAttr = "";
 
-        return `
-          <div class="calendar-item">
-            <div class="calendar-info" style="flex:1; min-width:0;">
-              <h4 style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
-                📅 [${q.date}] ${q.title} (+${q.score} EXP)
-                ${methodBadge}
-              </h4>
-              <p>${q.description}</p>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
-              <button class="calendar-edit-btn" onclick="startEditQuest('${q.date}', ${q.score}, '${q.method}', '${safeTitle}', '${safeDesc}', ${q.rowIdx})" style="background:#5d4037; color:#fff; border:none; padding:6px 12px; border-radius:8px; font-size:0.68rem; font-weight:bold; cursor:pointer;">수정</button>
-              <button class="calendar-del-btn" onclick="deleteQuest(${q.rowIdx})">제거</button>
-            </div>
+        if (q) {
+          const isManual = !!q.isManual;
+          cellClass += isManual ? " cell-manual" : " cell-auto";
+          
+          const badgeClass = isManual ? "badge-manual" : "badge-auto";
+          const badgeText = isManual ? "✏️ 수동" : "🤖 자동";
+          const titleClass = isManual ? "" : "title-auto";
+          
+          contentHtml = `
+            <span class="cell-badge ${badgeClass}">${badgeText}</span>
+            <div class="cell-quest-title ${titleClass}">${q.title}</div>
+          `;
+          
+          if (isManual && q.rowIdx) {
+            delBtnHtml = `<div class="cell-del-btn" title="이장 특별 예약 제거" onclick="event.stopPropagation(); deleteQuest(${q.rowIdx})">✕</div>`;
+          }
+          
+          const safeTitle = (q.title || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+          const safeDesc = (q.description || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+          
+          clickAttr = `onclick="selectCalendarCell('${q.date}', ${q.score}, '${q.method}', '${safeTitle}', '${safeDesc}', ${q.rowIdx || 'null'})"`;
+        } else {
+          if (isPast) {
+            clickAttr = `style="cursor: default;"`;
+          } else {
+            clickAttr = `onclick="selectEmptyCell('${dateStr}')"`;
+          }
+        }
+
+        html += `
+          <div class="${cellClass}" ${clickAttr}>
+            <span class="cell-day-num ${dayClass}">${day}</span>
+            ${contentHtml}
+            ${delBtnHtml}
           </div>
         `;
-      }).join('');
+      }
+
+      html += `
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    function changeCalendarMonth(direction) {
+      window.currentCalendarMonth += direction;
+      if (window.currentCalendarMonth < 1) {
+        window.currentCalendarMonth = 12;
+        window.currentCalendarYear -= 1;
+      } else if (window.currentCalendarMonth > 12) {
+        window.currentCalendarMonth = 1;
+        window.currentCalendarYear += 1;
+      }
+      renderScheduledQuests();
+    }
+
+    function selectCalendarCell(date, score, method, title, desc, rowIdx) {
+      window.editingQuestRowIdx = rowIdx;
+      window.editingQuestOriginalDate = date;
+
+      document.getElementById('calendar-quest-date').value = date;
+      document.getElementById('calendar-quest-score').value = score;
+      document.getElementById('calendar-quest-method').value = method;
+      document.getElementById('calendar-quest-title').value = title;
+      document.getElementById('calendar-quest-desc').value = desc;
+
+      const submitBtn = document.getElementById('btn-quest-submit');
+      if (rowIdx) {
+        submitBtn.innerText = "💾 이장 예약 퀘스트 수정 완료하기";
+        submitBtn.style.background = "linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)";
+        document.getElementById('btn-quest-edit-cancel').style.display = "block";
+      } else {
+        submitBtn.innerText = "✏️ 특별 이장 퀘스트로 고정하기";
+        submitBtn.style.background = "linear-gradient(135deg, var(--sanctum-purple) 0%, var(--sanctum-purple-light) 100%)";
+        document.getElementById('btn-quest-edit-cancel').style.display = "block";
+      }
+
+      document.getElementById('calendar-quest-date').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function selectEmptyCell(dateStr) {
+      cancelEditQuest();
+      document.getElementById('calendar-quest-date').value = dateStr;
+      document.getElementById('calendar-quest-date').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function startEditQuest(date, score, method, title, desc, rowIdx) {

@@ -7059,8 +7059,6 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
 
         if (dateStr === todayStr) {
           result.todayQuest = { title: title, description: desc, score: qScore, method: qMethod };
-        } else if (dateStr === tomorrowStr) {
-          result.tomorrowQuest = { title: title, description: desc, score: qScore, method: qMethod };
         }
       }
 
@@ -7273,6 +7271,18 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
           progress: attendCount,
           deadlineStr: latestGlycogenQuest.deadlineStr,
           startStr: latestGlycogenQuest.startStr
+        };
+      }
+    }
+    // ⚠️ [v66.0] 오늘의 돌발 퀘스트 누락 시 안전한 동적 백필 (자가치유 방어막)
+    if (!result.todayQuest) {
+      var algoQuest = getAlgorithmicSuddenQuest(todayStr);
+      if (algoQuest) {
+        result.todayQuest = {
+          title: algoQuest.title,
+          description: algoQuest.description,
+          score: algoQuest.score || 15,
+          method: algoQuest.method || "사진"
         };
       }
     }
@@ -8972,28 +8982,71 @@ function blessActivityReaction(payload) {
  * 📅 돌발 퀘스트 날짜별 캘린더 선세팅 API
  * ==========================================
  */
+/**
+ * ==========================================
+ * 📅 돌발 퀘스트 날짜별 캘린더 선세팅 API (하이브리드 병합 모드)
+ * ==========================================
+ */
 function getScheduledQuests() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = checkAndCreateQuestRegistrySheet();
     var data = sheet.getDataRange().getDisplayValues();
-    var list = [];
     
+    // 1. 스프레드시트에 기 적재되어 있는 모든 수동 예약 퀘스트들을 맵(Map)에 적재
+    var manualMap = {};
     for (var i = 1; i < data.length; i++) {
       if (data[i][2] === "이장") {
-        list.push({
+        var dStr = String(data[i][1]).trim();
+        manualMap[dStr] = {
           rowIdx: i + 1,
-          date: data[i][1],
+          date: dStr,
           title: data[i][3],
           description: data[i][4],
           status: data[i][7] || "대기",
           score: data[i].length > 8 ? Number(data[i][8] || 15) : 15,
-          method: data[i].length > 9 ? (data[i][9] || "사진") : "사진"
-        });
+          method: data[i].length > 9 ? (data[i][9] || "사진") : "사진",
+          isManual: true
+        };
       }
     }
-    return list.reverse(); // 최근 등록 순
+    
+    // 2. 오늘부터 앞으로 45일간의 날짜에 대해 수동 또는 자동화 퀘스트 매칭
+    var list = [];
+    var now = new Date();
+    // 타임존 오프셋 반영하여 KST 기준 오늘 날짜 구하기
+    var offset = now.getTimezoneOffset() * 60000;
+    var todayKst = new Date(Date.now() - offset);
+    
+    for (var d = 0; d < 45; d++) {
+      var targetDate = new Date(todayKst.getTime() + d * 24 * 60 * 60 * 1000);
+      var targetDateStr = Utilities.formatDate(targetDate, "GMT+9", "yyyy-MM-dd");
+      
+      if (manualMap[targetDateStr]) {
+        // 수동 예약이 이미 존재하는 경우
+        list.push(manualMap[targetDateStr]);
+      } else {
+        // 수동 예약이 없는 미래 날짜 ➡️ 실시간 계산기를 돌려 자동화 가상 예약 주입!
+        var algoQuest = getAlgorithmicSuddenQuest(targetDateStr);
+        if (algoQuest) {
+          list.push({
+            rowIdx: null,
+            date: targetDateStr,
+            title: algoQuest.title,
+            description: algoQuest.description,
+            status: "진행",
+            score: algoQuest.score || 15,
+            method: algoQuest.method || "사진",
+            isManual: false
+          });
+        }
+      }
+    }
+    
+    // 시간 오름차순 (가까운 날짜 순) 정렬하여 반환
+    return list;
   } catch (e) {
+    Logger.log("getScheduledQuests 에러: " + e.toString());
     return [];
   }
 }
@@ -9965,6 +10018,277 @@ function isCenterHoliday(date) {
 }
 
 /**
+ * 🎰 [v66.0] 연-월(Year-Month) 시드 기반의 의사 난수 생성기 (PRNG)
+ * 동일 월 내에서는 항상 일관된 셔플 결과를 반환하여 데이터 정합성을 보장합니다.
+ */
+function SeededRandom(seed) {
+  var m = 0x80000000; // 2**31
+  var a = 1103515245;
+  var c = 12345;
+  var state = seed ? seed : Math.floor(Math.random() * (m - 1));
+  this.next = function() {
+    state = (a * state + c) % m;
+    return state / (m - 1);
+  };
+}
+
+/**
+ * ⚡ [v66.0] 하이브리드 돌발 퀘스트 자동화 코어 계산기
+ * 날짜(yyyy-MM-dd)를 기반으로 요일, 주말, 임시휴무/공휴일, 월초 결산을 실시간 연산하여 당일 퀘스트를 동적 리턴합니다.
+ */
+function getAlgorithmicSuddenQuest(dateStr) {
+  try {
+    var parts = dateStr.split("-");
+    var year = parseInt(parts[0], 10);
+    var month = parseInt(parts[1], 10);
+    var day = parseInt(parts[2], 10);
+    
+    // 한국 시간(KST) 기준으로 정확하게 날짜 객체 생성
+    var targetDate = new Date(year, month - 1, day, 12, 0, 0); 
+    
+    // 1. 14대 명품 웰니스 테라피 정의 (영양 9대 + 습관 5대)
+    var baseQuests = [
+      { key: "단백질", title: "단백질 day!", description: "오늘 하루, 양질의 단백질(닭가슴살, 계란, 두부, 살코기 등)이 풍부한 식단을 맛있게 챙겨 드시고 인증해주세요! 🍗🍳", method: "사진", score: 15 },
+      { key: "지방", title: "건강한 지방 섭취하기!", description: "불포화지방산이 풍부한 아보카도, 견과류, 등푸른 생선, 올리브유 등 건강한 지방을 섭취하고 인증해주세요! 🥑🐟", method: "사진", score: 15 },
+      { key: "탄수화물", title: "착한 탄수화물 day!", description: "정제되지 않은 현미밥, 고구마, 단호박, 통밀빵 등 몸에 좋은 착한 탄수화물을 찾아 맛있게 드시고 인증해주세요! 🍠🌾", method: "사진", score: 15 },
+      { key: "인슐린", title: "인슐린 day!", description: "혈당 스파이크를 방지하는 GI(당지수) 낮은 음식 선택이나 식사 순서(채소->단백질->탄수화물)를 실천하고 인증해주세요! 🥗📉", method: "사진", score: 15 },
+      { key: "식이섬유", title: "식이섬유 day!", description: "장 건강과 포만감을 책임지는 신선한 쌈채소, 브로콜리, 버섯 등 식이섬유가 풍부한 식단을 드시고 인증해주세요! 🥦🥬", method: "사진", score: 15 },
+      { key: "간식", title: "건강한 간식 day!", description: "가공식품이나 당류가 높은 간식 대신, 견과류, 요거트, 방울토마토 등 건강한 간식을 선택해 드시고 인증해주세요! 🍅🥜", method: "사진", score: 15 },
+      { key: "비타민", title: "비타민 day!", description: "피로 해소와 면역력을 높여주는 신선한 과일, 채소 혹은 매일 챙겨 먹는 종합 비타민/영양제 섭취를 인증해주세요! 🍊💊", method: "사진", score: 15 },
+      { key: "유산균", title: "유산균 day!", description: "장내 유익균을 늘려주는 요거트, 김치, 낫또 등 유산균이 풍부한 음식이나 유산균 영양제 섭취를 인증해주세요! 🥛🦠", method: "사진", score: 15 },
+      { key: "칼슘", title: "칼슘 day!", description: "뼈 건강을 지켜주는 멸치, 우유, 치즈, 두부 등 칼슘이 풍부한 음식이나 칼슘 영양제 섭취를 인증해주세요! 🧀🦴", method: "사진", score: 15 },
+      { key: "햇빛", title: "하루 15분 햇빛 샤워 day!", description: "식욕을 억제하고 항상성을 지켜주는 자연의 선물 비타민D! 오늘 낮 동안 따뜻한 햇살 아래서 15분간 광합성을 하며, 나의 발과 그림자 또는 쏟아지는 햇살 스팟을 사진으로 담아 인증해 주세요! ☀️👣", method: "사진", score: 15 },
+      { key: "온수", title: "디톡스 온수 & 허브티 day!", description: "오늘만큼은 카페인이 가득한 커피나 인공 감미료 탄산음료 대신, 차분하게 몸을 따뜻하게 데워줄 순수한 온수나 향긋한 허브차 한 잔을 즐겨보세요! 예쁜 잔에 담긴 따뜻한 차 사진을 인증해 주세요. 🍵✨", method: "사진", score: 15 },
+      { key: "영양제", title: "나의 웰니스 보물창고 정리 day!", description: "내가 매일 먹는 영양제들이 보관된 서랍이나 식탁 위 약 상자를 깨끗하게 정비해 보세요! 나를 건강하게 지켜주는 든든한 영양제 군단(영양제 병들이 예쁘게 정돈된 샷)을 인증샷으로 자랑해 주세요! 💊📦", method: "사진", score: 15 },
+      { key: "책", title: "뇌 휴식! 종이책 10분 읽기 day!", description: "오늘 단 10분간만 스마트폰을 멀리하고 종이책(소설, 잡지, 시집 등 무엇이든)을 읽으며 뇌에 진정한 휴식을 선물해 보세요. 지금 읽고 있는 책의 표지나 마음에 깊이 닿은 한 페이지를 찍어 평온한 생각과 함께 인증해 주세요! 📖☕", method: "사진", score: 15 },
+      { key: "감사", title: "마음 따뜻 감사 칭찬 day!", description: "긍정적인 감정은 웰니스 항상성을 극대화합니다! 오늘 하루 고마웠던 가족, 친구, 혹은 클럽 동료나 헌신적인 코치님에게 감사한 마음을 담아 오아시스 게시판에 따스한 응원과 칭찬 한마디를 남겨보세요 💖📝", method: "게시판", score: 15 }
+    ];
+    
+    // 2. 월별 시드값 셔플 (Year + Month ➡️ PRNG 시드화)
+    var seedVal = year * 100 + month; // 예: 2026-06 ➡️ 202606
+    var rng = new SeededRandom(seedVal);
+    var shuffledQuests = baseQuests.slice();
+    for (var i = shuffledQuests.length - 1; i > 0; i--) {
+      var j = Math.floor(rng.next() * (i + 1));
+      var temp = shuffledQuests[i];
+      shuffledQuests[i] = shuffledQuests[j];
+      shuffledQuests[j] = temp;
+    }
+    
+    // 3. 당월 1일부터 주어진 targetDate까지 하루씩 전진하며 배정 알고리즘 구동
+    var rotationIdx = 0;
+    var countMap = {};
+    var usedDays = []; // 월초 결산/목표세우기용 사용 가능 평일 추적
+    
+    // 해당 월의 1일부터 targetDate까지 매일의 퀘스트를 계산
+    for (var d = 1; d <= day; d++) {
+      var curDate = new Date(year, month - 1, d, 12, 0, 0);
+      var curDayOfWeek = curDate.getDay(); // 0:일, 1:월, ..., 6:토
+      var curDateStr = year + "-" + (month < 10 ? "0" + month : month) + "-" + (d < 10 ? "0" + d : d);
+      
+      // A. 주말 미션 (토: 홈트&운동, 일: 야외산책)
+      if (curDayOfWeek === 6) {
+        if (d === day) {
+          return {
+            title: "주말 미션! 홈트 & 운동 day!",
+            description: "활기찬 주말의 시작! 집에서 가벼운 홈트레이닝을 하거나 헬스, 필라테스, 등산, 라이딩 등 주말 스포츠를 즐기는 활기찬 내 모습을 인증해 주세요! 🏃‍♂️💪",
+            method: "사진",
+            score: 15
+          };
+        }
+        continue;
+      }
+      if (curDayOfWeek === 0) {
+        if (d === day) {
+          return {
+            title: "주말 미션! 초록 힐링 야외 산책 day!",
+            description: "일요일은 숲과 바람과 함께 마음을 정화하는 날! 근처 공원이나 산책길을 걸으며 마주한 싱그러운 초록 자연 풍경이나 산책 중인 내 모습을 사진에 담아 인증해 주세요! 🌳🚶‍♀️",
+            method: "사진",
+            score: 15
+          };
+        }
+        continue;
+      }
+      
+      // B. 임시 지정 휴무일 및 법정 공휴일 (주말 미션 우회 배정)
+      if (isCenterHoliday(curDate)) {
+        if (d === day) {
+          if (d % 2 === 1) {
+            return {
+              title: "주말 미션! 홈트 & 운동 day!",
+              description: "센터 휴무일이지만 우리의 웰니스는 계속됩니다! 가벼운 홈트레이닝이나 야외 스포츠를 즐기는 건강한 에너지를 멋지게 인증해 주세요! 🏃‍♂️💪",
+              method: "사진",
+              score: 15
+            };
+          } else {
+            return {
+              title: "주말 미션! 초록 힐링 야외 산책 day!",
+              description: "센터 휴무일을 맞아 마음에 힐링을 주는 시간! 근처 공원이나 산책길을 걸으며 마주한 아름다운 자연 풍경이나 싱그러운 산책길 모습을 인증해 주세요! 🌳🚶‍♀️",
+              method: "사진",
+              score: 15
+            };
+          }
+        }
+        continue;
+      }
+      
+      // C. 주중 사용 가능한 평일 체크 (목요일 포함!)
+      usedDays.push(d);
+      var isMonthlyReviewDay = (usedDays.length === 1);
+      var isGoalSettingDay = (usedDays.length === 2);
+      
+      // 🚀 정식 출시 2026년 6월 특별 예외 필터링 (5월 결산 생략 ➡️ 1일에 즉시 목표 세우기 가동!)
+      var isLaunchMonth = (year === 2026 && month === 6);
+      if (isLaunchMonth) {
+        isMonthlyReviewDay = false; // 5월 결산 완벽 스킵
+        isGoalSettingDay = (usedDays.length === 1); // 6월 1일에 즉시 목표 세우기 매핑!
+      }
+      
+      // D. 주간 결산일 판정
+      var tempDate = new Date(year, month - 1, 1, 12, 0, 0);
+      while (tempDate.getDay() !== 4) {
+        tempDate.setDate(tempDate.getDate() + 1);
+      }
+      var firstThursdayDay = tempDate.getDate();
+      
+      var isWeeklyReview = false;
+      var reviewWeekIndex = -1;
+      
+      if (curDayOfWeek === 4) {
+        var weekIndex = Math.floor((d - firstThursdayDay) / 7) + 1;
+        if (firstThursdayDay <= 3) {
+          isWeeklyReview = true;
+          reviewWeekIndex = weekIndex;
+        } else {
+          if (weekIndex >= 2) {
+            isWeeklyReview = true;
+            reviewWeekIndex = weekIndex;
+          }
+        }
+      }
+      
+      var prevMonth = month === 1 ? 12 : month - 1;
+      
+      // E. 결산 & 목표 & 주간 중첩 판정 플로우
+      if (isMonthlyReviewDay && isWeeklyReview) {
+        // 월결산일과 주간결산일이 겹친 경우 (예: 1일 또는 2/3일이 목요일인 경우)
+        if (d === day) {
+          if (firstThursdayDay <= 3 && reviewWeekIndex === 1) {
+            return {
+              title: prevMonth + "월 월간 최종 결산일!",
+              description: "지난 " + prevMonth + "월 한 달간의 챌린지 전체 여정을 돌아보는 최종 결산 및 성찰 피드백을 오아시스 게시판에 뜨겁게 남겨주세요! 📝🏆",
+              method: "게시판",
+              score: 15
+            };
+          } else {
+            var displayWeek = (firstThursdayDay <= 3) ? (reviewWeekIndex - 1) : (reviewWeekIndex - 1);
+            return {
+              title: displayWeek + "주차 주간 & " + prevMonth + "월 월간 통합 결산일!",
+              description: "지난 한 주간의 성찰과 더불어, " + prevMonth + "월 챌린지의 풍성했던 최종 결과를 종합적으로 성찰하여 오아시스에 자랑해 보세요! 📝🏆",
+              method: "게시판",
+              score: 15
+            };
+          }
+        }
+        continue;
+      }
+      
+      if (isGoalSettingDay && isWeeklyReview) {
+        // 목표세우기와 주간결산일이 겹친 경우 (예: 2일 또는 3일이 목요일인 경우)
+        if (d === day) {
+          if (firstThursdayDay <= 3 && reviewWeekIndex === 1) {
+            return {
+              title: prevMonth + "월 최종 결산 & " + month + "월 목표 세우기!",
+              description: "지난 " + prevMonth + "월의 여정을 돌아보는 최종 결산 피드백과 함께, 새로운 " + month + "월 한 달 동안 달성하고 싶은 건강 목표와 다짐을 오아시스에 선포해 주세요! 📝🎯",
+              method: "게시판",
+              score: 15
+            };
+          } else {
+            var displayWeek = (firstThursdayDay <= 3) ? (reviewWeekIndex - 1) : (reviewWeekIndex - 1);
+            return {
+              title: displayWeek + "주차 결산 & " + month + "월 목표 세우기!",
+              description: "지난 " + displayWeek + "주간의 웰니스 성적 성찰과 더불어, 이번 " + month + "월 한 달 동안 꼭 이루어낼 다이어트/건강 목표와 다짐을 오아시스에 당차게 남겨주세요! 📝🎯",
+              method: "게시판",
+              score: 15
+            };
+          }
+        }
+        continue;
+      }
+      
+      // 단일 매핑 처리
+      if (isMonthlyReviewDay) {
+        if (d === day) {
+          return {
+            title: prevMonth + "월 월간 결산일!",
+            description: "지난 " + prevMonth + "월 한 달간의 나의 웰니스 점수와 성취도를 최종 점검하고 나 스스로에 대한 솔직한 평가와 응원의 한마디를 오아시스에 남겨보세요! 🏆✨",
+            method: "게시판",
+            score: 15
+          };
+        }
+        continue;
+      }
+      
+      if (isGoalSettingDay) {
+        if (d === day) {
+          return {
+            title: month + "월 목표 세우기!",
+            description: "새로운 " + month + "월이 시작되었습니다! 이번 한 달간 꼭 이루고 싶은 나의 웰니스/체중 감량 목표와 건강 루틴을 세우고 오아시스에 당차게 선포해 보세요! 🎯📝",
+            method: "게시판",
+            score: 15
+          };
+        }
+        continue;
+      }
+      
+      if (isWeeklyReview) {
+        if (d === day) {
+          var weekText = "";
+          var descText = "";
+          if (firstThursdayDay <= 3 && reviewWeekIndex === 1) {
+            weekText = prevMonth + "월 최종 결산일!";
+            descText = "지난 " + prevMonth + "월 챌린지의 최종 결과를 되돌아보고 고생한 나에게 칭찬 한마디와 수고의 메시지를 오아시스에 뜨겁게 남겨주세요! 📝🏆";
+          } else {
+            var displayWeek = (firstThursdayDay <= 3) ? (reviewWeekIndex - 1) : (reviewWeekIndex - 1);
+            weekText = displayWeek + "주차 주간 결산일!";
+            descText = displayWeek + "주간의 나의 웰니스 성적을 되돌아보고, 남은 챌린지 기간 동안의 각오와 다짐을 작성하여 오아시스에 선포해 주세요! 📝🔥";
+          }
+          return {
+            title: weekText,
+            description: descText,
+            method: "게시판",
+            score: 15
+          };
+        }
+        continue;
+      }
+      
+      // E. 일반 평일 14대 테라피 로테이션
+      var quest = shuffledQuests[rotationIdx % 14];
+      var count = countMap[quest.key] || 0;
+      count++;
+      countMap[quest.key] = count;
+      
+      if (d === day) {
+        var finalTitle = (count > 1) ? count + "차 " + quest.title : quest.title;
+        return {
+          title: finalTitle,
+          description: quest.description,
+          method: quest.method,
+          score: quest.score
+        };
+      }
+      rotationIdx++;
+    }
+    
+    return null;
+  } catch (err) {
+    Logger.log("getAlgorithmicSuddenQuest 에러: " + err.toString());
+    return null;
+  }
+}
+
+/**
  * [v65.80] 주어진 날짜가 해당 월의 마지막 주 월~수요일(목요일 마감 연장선 포함) 범위 내에 해당하는지 판별합니다.
  */
 function isDateInLastWeekMonToWed(date) {
@@ -10753,7 +11077,8 @@ function getMonthlyRankingNoticePreview() {
 }
 
 /**
- * 📬 [v60.0] 오늘자 돌발 퀘스트 시상식/공지 쪽지 내용 실시간 생성 및 미리보기 함수
+ * 📬 [v66.0] 오늘자 돌발 퀘스트 시상식/공지 쪽지 내용 실시간 생성 및 미리보기 함수
+ * 수동 예약이 없을 시 실시간 자동 알고리즘 계산기로 가상 미리보기를 지원하여 무중력 상태를 유지합니다.
  */
 function getDailyQuestNoticePreview() {
   try {
@@ -10767,6 +11092,8 @@ function getDailyQuestNoticePreview() {
     var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
     
     var todayQuest = null;
+    var isManual = false;
+    
     for (var i = 1; i < data.length; i++) {
       var type = String(data[i][2] || "").trim();
       var dateStr = String(data[i][1] || "").trim();
@@ -10785,52 +11112,106 @@ function getDailyQuestNoticePreview() {
         }
         
         todayQuest = { title: title, description: desc, score: qScore, method: qMethod };
+        isManual = true;
         break;
       }
     }
     
+    // 만약 오늘자 수동 예약이 없다면 ➡️ 알고리즘 계산기 작동하여 가상 프리뷰 생성!
     if (!todayQuest) {
-      return { success: false, error: "오늘(" + todayStr + ") 자 돌발 퀘스트가 시트에 등록되어 있지 않습니다." };
+      var algoQuest = getAlgorithmicSuddenQuest(todayStr);
+      if (algoQuest) {
+        todayQuest = {
+          title: algoQuest.title,
+          description: algoQuest.description,
+          score: algoQuest.score || 15,
+          method: algoQuest.method || "사진"
+        };
+      }
     }
     
-    var title = "⚡ [돌발 퀘스트] " + todayQuest.title + " 선포! ✉️";
+    if (!todayQuest) {
+      return { success: false, error: "오늘(" + todayStr + ") 자 돌발 퀘스트를 판정할 수 없습니다." };
+    }
+    
+    var title = "⚡ [오늘의 돌발 퀘스트] " + todayQuest.title + " ✉️";
     var content = "📢 [이장님의 긴급 돌발 퀘스트 선포!] 📢\n\n" +
-                  "오늘의 돌발 퀘스트가 선포되었습니다! 오늘 자정까지 완수하고 추가 보너스 에너지를 획득하세요!\n\n" +
+                  "오늘의 돌발 퀘스트가 공식적으로 선포되었습니다! 오늘 자정 전까지 완수하고 추가 경험치를 획득해 보세요!\n\n" +
+                  "📅 [시행 일자]: " + todayStr + " (오늘 밤 자정 마감)\n" +
                   "🔥 [돌발 퀘스트]: " + todayQuest.title + "\n" +
                   "📝 [임무 설명]: " + todayQuest.description + "\n" +
                   "💎 [보상 EXP]: +" + todayQuest.score + " EXP\n" +
                   "🎯 [인증 방법]: " + todayQuest.method + " 인증\n\n" +
-                  "지금 즉시 대시보드에서 돌발 퀘스트를 인증하고 수호 점수를 획득해 보세요! ⚔️";
+                  "지금 즉시 대시보드에서 아코디언 서랍을 열어 퀘스트 상세 가이드를 확인하고 도전해 보세요! ⚔️";
                   
-    return { success: true, title: title, content: content };
+    return { success: true, title: title, content: content, quest: todayQuest, isManual: isManual };
   } catch (err) {
     return { success: false, error: err.toString() };
   }
 }
 
 /**
- * 📬 [v60.0] 매일 새벽 0시 1분 실행되는 오늘자 돌발 퀘스트 자동 선포 및 우편 발송 트리거
+ * 📬 [v66.0] 매일 새벽 0시 1분 실행되는 오늘자 돌발 퀘스트 자동 선포 및 우편 발송 트리거
+ * 비어있는 날짜는 자정에 즉시 실시간 계산하여 시트에 영구 적재(Persistent) 후 전체 쪽지를 선포합니다.
  */
 function autoSendDailyQuestNotice() {
   try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = checkAndCreateQuestRegistrySheet();
+    var now = new Date();
+    var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    
+    // 1. 프리뷰 엔진 작동 (수동이 없으면 가상 알고리즘 퀘스트 탑재)
     var preview = getDailyQuestNoticePreview();
     if (!preview || !preview.success) {
       Logger.log("돌발 퀘스트 프리뷰 생성 실패로 트리거 종료: " + (preview ? preview.error : ""));
       return;
     }
     
+    var questInfo = preview.quest;
+    var isManual = preview.isManual;
+    
+    // 2. 수동과 자동 분기 처리하여 시트 등기/진행 상태 기록
+    if (isManual) {
+      // 오늘자 수동 예약을 찾아 '진행' 상태로 변경
+      var data = sheet.getDataRange().getDisplayValues();
+      for (var i = 1; i < data.length; i++) {
+        if (data[i][2] === "이장" && data[i][1] === todayStr) {
+          sheet.getRange(i + 1, 8).setValue("진행"); // H열: 상태를 진행으로 세팅
+          Logger.log("✅ 오늘 자 수동 예약 돌발 퀘스트를 '진행'으로 공식 활성화 완료!");
+          break;
+        }
+      }
+    } else {
+      // 오늘자 자동 퀘스트를 시트(돌발퀘스트_목록)에 등기 적재 (appendRow)
+      var newId = "Q_AUTO_" + Date.now();
+      sheet.appendRow([
+        newId,
+        todayStr,
+        "이장",
+        questInfo.title,
+        questInfo.description,
+        todayStr + " 23:59:59", // 만료 시간
+        "ALL_MEMBERS",
+        "진행", // 등록과 동시에 '진행' 상태로 기록!
+        questInfo.score,
+        questInfo.method
+      ]);
+      Logger.log("✅ 오늘 자 자동화 돌발 퀘스트 '" + questInfo.title + "'를 시트에 영구 등기 적재 완료!");
+    }
+    
+    // 3. 전체 회원 쪽지 발송
     var title = preview.title;
     var content = preview.content;
-    
-    // [v64.50] 전체회원 대상 돌발 퀘스트는 개인알림 시트 용량 낭비를 방지하기 위해 '전체_알림_목록' 시트에 단 1개의 글로벌 레코드로 적재 발송합니다!
     var res = sendGlobalNotification("quest", title, content);
+    
     if (res && res.success) {
-      Logger.log("돌발 퀘스트 자동 전체 알림 등록 완료! GLOBAL_ID: " + res.globalId);
+      Logger.log("🚀 돌발 퀘스트 자동 전체 알림 등록 및 발송 완료! GLOBAL_ID: " + res.globalId);
     } else {
-      Logger.log("돌발 퀘스트 자동 전체 알림 등록 실패: " + (res ? res.error : "알 수 없음"));
+      Logger.log("⚠️ 돌발 퀘스트 자동 전체 알림 등록 실패: " + (res ? res.error : "알 수 없음"));
     }
   } catch (err) {
-    Logger.log("돌발 퀘스트 자동 전체 알림 발송 오류: " + err.toString());
+    Logger.log("❌ autoSendDailyQuestNotice 오류: " + err.toString());
   }
 }
 

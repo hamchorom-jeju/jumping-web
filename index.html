@@ -107,6 +107,213 @@
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
             box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4) !important;
         }
+        
+        /* ⚡ [v66.0] 아코디언 돌발 퀘스트 전용 럭셔리 배너 디자인 */
+        .v-banner-sudden-quest {
+            background: #1e1b4b; /* 기본 어두운 스킨 */
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 0px !important;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        
+        .v-sudden-header {
+            height: 55px;
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .v-sudden-header .v-notice-badge {
+            font-size: 0.58rem !important;
+            padding: 3px 6px !important;
+            border-radius: 9px !important;
+            min-width: 52px !important;
+            text-align: center;
+            line-height: 1.15;
+            display: inline-block;
+        }
+        
+        .v-sudden-header .v-notice-text {
+            font-size: 0.76rem;
+            font-weight: 900;
+            color: #ffffff;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 35px; /* 화살표 침범 방지 */
+        }
+        
+        .v-accordion-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85rem;
+            transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        
+        /* 펼쳐지는 서랍 바디 */
+        .v-sudden-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), padding 0.35s ease;
+            padding: 0 18px;
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+        
+        .v-banner-sudden-quest.open .v-sudden-body {
+            max-height: 280px; /* 상세가 다 나오기에 넉넉한 높이 */
+            padding: 15px 18px 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .v-banner-sudden-quest.open .v-accordion-icon {
+            transform: translateY(-50%) rotate(180deg);
+            color: #ffffff;
+        }
+        
+        /* 상세 텍스트 */
+        .v-sudden-desc {
+            font-size: 0.73rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            line-height: 1.45;
+            word-break: keep-all;
+            text-align: left;
+            margin-bottom: 12px;
+        }
+        
+        /* 보상/인증 메타 정보 */
+        .v-sudden-info-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        
+        .v-info-item {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+        }
+        
+        .v-info-label {
+            font-size: 0.58rem;
+            font-weight: 800;
+            color: #94a3b8;
+        }
+        
+        .v-info-val {
+            font-size: 0.72rem;
+            font-weight: 900;
+            color: #ffffff;
+        }
+        
+        /* 액션 도약 버튼 */
+        .v-sudden-action-btn {
+            width: 100%;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .v-sudden-action-btn:active {
+            transform: scale(0.98);
+        }
+        
+        /* 🎭 상태별 럭셔리 네온 그라데이션 및 애니메이션 테마 */
+        
+        /* 1. 사진 인증 미완수 (로즈 테마) */
+        .v-banner-sudden-quest.theme-rose {
+            background: linear-gradient(135deg, #4c0519 0%, #881337 100%) !important;
+            border: 1px solid #f43f5e !important;
+            box-shadow: 0 0 20px rgba(244, 63, 94, 0.2) !important;
+            animation: vSuddenPulseRose 2.5s infinite ease-in-out;
+        }
+        .v-banner-sudden-quest.theme-rose .v-sudden-action-btn {
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+            box-shadow: 0 4px 15px rgba(244, 63, 94, 0.4);
+        }
+        .v-banner-sudden-quest.theme-rose .v-sudden-action-btn:hover {
+            background: linear-gradient(135deg, #fb7185 0%, #f43f5e 100%);
+        }
+        @keyframes vSuddenPulseRose {
+            0% { box-shadow: 0 0 12px rgba(244, 63, 94, 0.15); }
+            50% { box-shadow: 0 0 25px rgba(244, 63, 94, 0.45); }
+            100% { box-shadow: 0 0 12px rgba(244, 63, 94, 0.15); }
+        }
+        
+        /* 2. 글쓰기/게시판 인증 미완수 (퍼플 테마) */
+        .v-banner-sudden-quest.theme-purple {
+            background: linear-gradient(135deg, #1e1b4b 0%, #2e1065 100%) !important;
+            border: 1px solid #8b5cf6 !important;
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.2) !important;
+            animation: vSuddenPulsePurple 2.5s infinite ease-in-out;
+        }
+        .v-banner-sudden-quest.theme-purple .v-sudden-action-btn {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+        }
+        .v-banner-sudden-quest.theme-purple .v-sudden-action-btn:hover {
+            background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+        }
+        @keyframes vSuddenPulsePurple {
+            0% { box-shadow: 0 0 12px rgba(139, 92, 246, 0.15); }
+            50% { box-shadow: 0 0 25px rgba(139, 92, 246, 0.45); }
+            100% { box-shadow: 0 0 12px rgba(139, 92, 246, 0.15); }
+        }
+        
+        /* 3. 퀘스트 완수 상태 (에메랄드 젠 테마) */
+        .v-banner-sudden-quest.theme-green {
+            background: linear-gradient(135deg, #022c22 0%, #064e3b 100%) !important;
+            border: 1px solid #10b981 !important;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.15) !important;
+            animation: none !important;
+        }
+        .v-banner-sudden-quest.theme-green .v-sudden-action-btn {
+            background: rgba(16, 185, 129, 0.1) !important;
+            border: 1.5px solid #10b981 !important;
+            color: #10b981 !important;
+            box-shadow: none !important;
+            font-weight: 900;
+        }
+        .v-banner-sudden-quest.theme-green .v-sudden-action-btn i {
+            color: #10b981 !important;
+        }
     </style>
     <script>
         // [v44.219] 최우선 순위로 로그인 상태를 체크합니다.
@@ -146,6 +353,31 @@
                 <span class="v-notice-text">마을 사료 보관소에서 공지를 호출중...</span>
             </div>
             <span class="v-banner-badge">전체보기 <i class="fa-solid fa-chevron-right"></i></span>
+        </div>
+
+        <!-- ⚡ [v66.0] 오늘의 돌발 퀘스트 전용 프리미엄 아코디언 배너 -->
+        <div class="v-banner-sudden-quest" id="sudden-quest-accordion-banner" style="display: none;">
+            <div class="v-sudden-header" onclick="toggleSuddenQuestAccordion(event)">
+                <span class="v-notice-badge" id="sudden-badge-type">📸 사진돌발</span>
+                <span class="v-notice-text" id="sudden-title-text">⚡ 오늘의 돌발 퀘스트를 판정하는 중...</span>
+                <span class="v-accordion-icon"><i class="fa-solid fa-chevron-down"></i></span>
+            </div>
+            <div class="v-sudden-body">
+                <div class="v-sudden-desc" id="sudden-desc-text">상세 로딩 중...</div>
+                <div class="v-sudden-info-row">
+                    <div class="v-info-item">
+                        <span class="v-info-label">💎 보상 점수</span>
+                        <span class="v-info-val" id="sudden-reward-text">+15 EXP</span>
+                    </div>
+                    <div class="v-info-item">
+                        <span class="v-info-label">🎯 인증 방식</span>
+                        <span class="v-info-val" id="sudden-method-text">사진인증</span>
+                    </div>
+                </div>
+                <button class="v-sudden-action-btn" id="sudden-action-btn" onclick="warpToSuddenQuestAuth(event)">
+                    <i class="fa-solid fa-camera"></i> 사진 인증하러 가기
+                </button>
+            </div>
         </div>
 
         <div class="v-banner-ranking-container" onclick="Village.warpToRanking(event)">
@@ -324,6 +556,31 @@
             </div>
         </div>
     </div>
+
+    <!-- ⚡ [v66.0] 오늘의 돌발 퀘스트 아코디언 전용 UI 스크립트 -->
+    <script>
+        function toggleSuddenQuestAccordion(event) {
+            const banner = document.getElementById('sudden-quest-accordion-banner');
+            if (!banner) return;
+            
+            // 만약 클릭된 요소가 내부 액션 버튼(인증하러 가기 등)이 아닐 때만 여닫음
+            if (event.target.closest('#sudden-action-btn')) return;
+            
+            banner.classList.toggle('open');
+        }
+
+        function warpToSuddenQuestAuth(event) {
+            event.stopPropagation(); // 아코디언 헤더 클릭 이벤트 전파 차단
+            
+            const btn = document.getElementById('sudden-action-btn');
+            if (!btn || btn.disabled) return;
+            
+            const targetUrl = btn.dataset.targetUrl || '';
+            if (targetUrl) {
+                window.location.href = targetUrl;
+            }
+        }
+    </script>
 
     <script src="dashboard.js?v=62.0"></script>
 </body>
