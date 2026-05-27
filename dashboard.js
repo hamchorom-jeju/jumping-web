@@ -833,7 +833,7 @@ const Village = {
                 
                 const q = quests.todayQuest;
                 const isCompleted = (this.user && this.user.doneList && Array.isArray(this.user.doneList) && q && q.title) ?
-                    this.user.doneList.some(item => typeof item === 'string' && item.indexOf(q.title) > -1) : false;
+                    this.user.doneList.some(item => typeof item === 'string' && (item.indexOf(q.title) > -1 || item.indexOf('돌발퀘스트') > -1)) : false;
                 
                 // 테마 초기화
                 suddenBanner.classList.remove('theme-rose', 'theme-purple', 'theme-green');
