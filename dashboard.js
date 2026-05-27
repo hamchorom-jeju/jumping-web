@@ -207,7 +207,11 @@ const Village = {
                         }
 
                         if (res.quests) {
-                            this.renderQuestWidgets(res.quests);
+                            try {
+                                this.renderQuestWidgets(res.quests);
+                            } catch (e) {
+                                console.error("Error rendering quest widgets:", e);
+                            }
                         }
                         if (res.inactiveDays !== undefined) {
                             this.renderInactivityDebuff(res.inactiveDays, res.inactivityPenalty);
@@ -839,7 +843,8 @@ const Village = {
                 const actionBtn = document.getElementById('sudden-action-btn');
                 
                 const q = quests.todayQuest;
-                const isCompleted = this.user.doneList && this.user.doneList.some(item => item.indexOf(q.title) > -1);
+                const isCompleted = (this.user && this.user.doneList && Array.isArray(this.user.doneList) && q && q.title) ?
+                    this.user.doneList.some(item => typeof item === 'string' && item.indexOf(q.title) > -1) : false;
                 
                 // 테마 초기화
                 suddenBanner.classList.remove('theme-rose', 'theme-purple', 'theme-green');

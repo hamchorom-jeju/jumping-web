@@ -9058,9 +9058,10 @@ function getScheduledQuests() {
     // 2. 오늘부터 앞으로 45일간의 날짜에 대해 수동 또는 자동화 퀘스트 매칭
     var list = [];
     var now = new Date();
-    // 타임존 오프셋 반영하여 KST 기준 오늘 날짜 구하기
-    var offset = now.getTimezoneOffset() * 60000;
-    var todayKst = new Date(Date.now() - offset);
+    // 타임존 오프셋 반영하여 KST 기준 오늘 날짜 구하기 (더블 오프셋 버그 방지를 위해 포맷 후 재파싱)
+    var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    var parts = todayStr.split("-");
+    var todayKst = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), 12, 0, 0);
     
     for (var d = 0; d < 45; d++) {
       var targetDate = new Date(todayKst.getTime() + d * 24 * 60 * 60 * 1000);
