@@ -603,8 +603,8 @@ const Village = {
             });
         }
 
-        // (2) 월간 랭킹 TOP 3 (1~3일: 지난달 확정 시상 배너로 자동 스위칭)
-        const isMonthlyConfirmedDay = (dateOfMonth >= 1 && dateOfMonth <= 3); // 매월 1일 ~ 3일
+        // (2) 월간 랭킹 TOP 3 (1일: 지난달 확정 시상 배너로 자동 스위칭)
+        const isMonthlyConfirmedDay = (dateOfMonth === 1); // 매월 1일 단 하루만 시상 배너 노출
         const hasMonthlyArchive = (data.archive && data.archive.monthly && data.archive.monthly.length > 0);
         
         if (isMonthlyConfirmedDay && hasMonthlyArchive) {

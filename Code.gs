@@ -10636,6 +10636,41 @@ function isDateInLastWeekMonToWed(date) {
 }
 
 /**
+ * [v67.2] 아카이브 시트에서 가장 최신 마감된 주차/월의 전원 순위 리스트를 가볍고 빠르게 로드
+ */
+function getLatestArchivedRankings(sheetName, periodColIdx, rankColIdx, nameColIdx, scoreColIdx) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName(sheetName);
+    if (!sheet || sheet.getLastRow() <= 1) return null;
+    
+    var data = sheet.getDataRange().getValues();
+    // 데이터는 insertRowsAfter(1)로 삽입되므로 두 번째 행(인덱스 1)에 가장 최신 주차/월이 존재함!
+    var latestPeriod = String(data[1][periodColIdx] || "").trim();
+    if (!latestPeriod) return null;
+    
+    var list = [];
+    for (var i = 1; i < data.length; i++) {
+      var p = String(data[i][periodColIdx] || "").trim();
+      if (p === latestPeriod) {
+        list.push({
+          rank: Number(data[i][rankColIdx] || 0),
+          name: String(data[i][nameColIdx] || "").trim(),
+          score: Number(data[i][scoreColIdx] || 0)
+        });
+      }
+    }
+    
+    // 순위 오름차순 정렬
+    list.sort(function(a, b) { return a.rank - b.rank; });
+    return { period: latestPeriod, rankings: list };
+  } catch (e) {
+    Logger.log("getLatestArchivedRankings 에러 (" + sheetName + "): " + e.toString());
+    return null;
+  }
+}
+
+/**
  * [v5.0] 명예의 전당 (Hall of Fame) 데이터 실시간 취합 API
  */
 function getHallOfFameData(payload) {
@@ -10891,10 +10926,39 @@ function getHallOfFameData(payload) {
     sortAndRank(finalMonthlyScores);
     sortAndRank(finalTotalScores);
     
-    // Top 10 필터링
+    // Top 30 필터링
     var topWeekly = finalWeeklyScores.slice(0, 30);
     var topMonthly = finalMonthlyScores.slice(0, 30);
     var topTotal = finalTotalScores; // 토탈은 무제한 노출 스크롤
+    
+    // [v67.2] 시상식(목요일 / 1일) 당일 아카이브 시트 기반 오버라이딩 비즈니스 로직
+    var isWeeklyAward = false;
+    var weeklyAwardPeriod = "";
+    var isMonthlyAward = false;
+    var monthlyAwardPeriod = "";
+    
+    var dayOfWeek = now.getDay(); // 0(일) ~ 6(토)
+    var dateOfMonth = now.getDate(); // 1 ~ 31
+    
+    if (dayOfWeek === 4) { // 목요일 (주간 시상일)
+      var archivedWeekly = getLatestArchivedRankings("33챌린지_주간성적아카이브", 0, 1, 2, 7);
+      if (archivedWeekly && archivedWeekly.rankings.length > 0) {
+        topWeekly = archivedWeekly.rankings;
+        isWeeklyAward = true;
+        weeklyAwardPeriod = archivedWeekly.period;
+        Logger.log("주간 시상식 오버라이드 적용 성공: " + weeklyAwardPeriod);
+      }
+    }
+    
+    if (dateOfMonth === 1) { // 매월 1일 (월간 시상일)
+      var archivedMonthly = getLatestArchivedRankings("33챌린지_월간성적아카이브", 0, 1, 2, 7);
+      if (archivedMonthly && archivedMonthly.rankings.length > 0) {
+        topMonthly = archivedMonthly.rankings;
+        isMonthlyAward = true;
+        monthlyAwardPeriod = archivedMonthly.period;
+        Logger.log("월간 시상식 오버라이드 적용 성공: " + monthlyAwardPeriod);
+      }
+    }
     
     // 4. MVP 집계 연산
     // (1) 출석기록 집계 (당월 출석왕 vs 역대 출석의 신)
@@ -11201,6 +11265,10 @@ function getHallOfFameData(payload) {
         weekly: topWeekly,
         monthly: topMonthly,
         total: topTotal,
+        isWeeklyAward: isWeeklyAward,
+        weeklyAwardPeriod: weeklyAwardPeriod,
+        isMonthlyAward: isMonthlyAward,
+        monthlyAwardPeriod: monthlyAwardPeriod,
         archive: {
           weekly: archiveWeekly,
           monthly: archiveMonthly,

@@ -1221,7 +1221,7 @@
       <i class="fa-solid fa-print"></i> 🖨️ 클럽 A4 인쇄
     </button>
     <h1>🏆 명예의 전당</h1>
-    <p>노형점핑을 빛내는 웰니스 영웅들 <span class="live-indicator"><span class="live-dot"></span>실시간 라이브</span></p>
+    <p id="hofSubtitle">노형점핑을 빛내는 웰니스 영웅들 <span class="live-indicator"><span class="live-dot"></span>실시간 라이브</span></p>
   </header>
 
   <div class="container">
@@ -1526,6 +1526,18 @@
     }
 
     function renderRankings() {
+      // [v67.2] 시상식 기간 중 럭셔리 인디고 배지 및 타이틀 실시간 전환 연출
+      const subtitleEl = document.getElementById('hofSubtitle');
+      if (subtitleEl) {
+        if (currentTab === 'weekly' && rawData && rawData.isWeeklyAward) {
+          subtitleEl.innerHTML = `🏆 ${rawData.weeklyAwardPeriod} 주간 시상식 진행 중 <span class="live-indicator award" style="background:rgba(139, 92, 246, 0.12); border:1px solid rgba(139, 92, 246, 0.3); color:#a78bfa; padding:3px 10px; border-radius:50px; font-size:0.72rem; font-weight:800; margin-left:6px; vertical-align:middle; display:inline-flex; align-items:center; gap:4px; box-shadow:0 0 10px rgba(139, 92, 246, 0.15);"><span class="live-dot" style="background-color:#fbbf24; box-shadow:0 0 6px #fbbf24;"></span>시상식</span>`;
+        } else if (currentTab === 'monthly' && rawData && rawData.isMonthlyAward) {
+          subtitleEl.innerHTML = `📅 ${rawData.monthlyAwardPeriod} 월간 시상식 진행 중 <span class="live-indicator award" style="background:rgba(139, 92, 246, 0.12); border:1px solid rgba(139, 92, 246, 0.3); color:#a78bfa; padding:3px 10px; border-radius:50px; font-size:0.72rem; font-weight:800; margin-left:6px; vertical-align:middle; display:inline-flex; align-items:center; gap:4px; box-shadow:0 0 10px rgba(139, 92, 246, 0.15);"><span class="live-dot" style="background-color:#fbbf24; box-shadow:0 0 6px #fbbf24;"></span>시상식</span>`;
+        } else {
+          subtitleEl.innerHTML = `노형점핑을 빛내는 웰니스 영웅들 <span class="live-indicator"><span class="live-dot"></span>실시간 라이브</span>`;
+        }
+      }
+
       const list = rawData[currentTab] || [];
       const podiumArea = document.getElementById('podiumArea');
       const listArea = document.getElementById('listArea');
