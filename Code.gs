@@ -11544,8 +11544,9 @@ function archiveWeeklyRankingToSheet(period) {
     }
     
     if (rowsToAppend.length > 0) {
-      sheet.getRange(sheet.getLastRow() + 1, 1, rowsToAppend.length, rowsToAppend[0].length).setValues(rowsToAppend);
-      Logger.log(period + " 주간 성적 아카이브 저장 완료: 총 " + rowsToAppend.length + "행");
+      sheet.insertRowsAfter(1, rowsToAppend.length);
+      sheet.getRange(2, 1, rowsToAppend.length, rowsToAppend[0].length).setValues(rowsToAppend);
+      Logger.log(period + " 주간 성적 아카이브 최신 탑 적재 완료: 총 " + rowsToAppend.length + "행");
     }
     return { success: true, message: "아카이브 저장 성공" };
   } catch (e) {
@@ -11562,8 +11563,8 @@ function archiveMonthlyRankingToSheet(period) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("33챌린지_월간성적아카이브") || ss.insertSheet("33챌린지_월간성적아카이브");
     
-    if (sheet.getLastRow() === 0) {
-      var headers = ["월", "순위", "이름", "연락처", "체력", "실천력", "회복력", "월간토탈점수", "누적토탈점수"];
+    if (sheet.getLastRow() === 0 || sheet.getLastColumn() < 10) {
+      var headers = ["월", "순위", "이름", "연락처", "체력", "실천력", "회복력", "월간토탈점수", "누적토탈점수", "출석기록"];
       sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground("#f1f3f5");
     }
     
@@ -11727,9 +11728,36 @@ function archiveMonthlyRankingToSheet(period) {
     // 월간 토탈 기준 정렬
     rankedUsers.sort(function(a, b) { return b.monthlyTotal - a.monthlyTotal; });
     
+    // 해당 월의 회원별 출석 횟수 집계
+    var monthlyAttendanceMap = {}; // phone -> count
+    try {
+      var attSheet = ss.getSheetByName("출석기록");
+      var attData = attSheet ? attSheet.getDataRange().getValues() : [];
+      if (attSheet && attData.length > 1) {
+        var attCols = getAttendanceColumnIndices(attSheet);
+        for (var aIdx = 1; aIdx < attData.length; aIdx++) {
+          var aRow = attData[aIdx];
+          var aPhoneRaw = String(aRow[attCols.phone] || "").trim();
+          var aPhone = formatPhoneNumber(aPhoneRaw).replace(/[^0-9]/g, "");
+          if (!aPhone) continue;
+          
+          var aDateRaw = aRow[attCols.date];
+          var aDate = (aDateRaw instanceof Date) ? aDateRaw : new Date(aDateRaw);
+          if (isNaN(aDate.getTime())) continue;
+          
+          if (aDate >= startOfMonth && aDate <= endOfMonth) {
+            monthlyAttendanceMap[aPhone] = (monthlyAttendanceMap[aPhone] || 0) + 1;
+          }
+        }
+      }
+    } catch (attErr) {
+      Logger.log("월간 아카이빙 중 출석기록 집계 오류: " + attErr.toString());
+    }
+
     var rowsToAppend = [];
     for (var idx = 0; idx < rankedUsers.length; idx++) {
       var u = rankedUsers[idx];
+      var attCount = monthlyAttendanceMap[u.phone] || 0;
       rowsToAppend.push([
         period,
         idx + 1,
@@ -11739,13 +11767,15 @@ function archiveMonthlyRankingToSheet(period) {
         u.perf,
         u.def,
         u.monthlyTotal,
-        u.lifetimeTotal
+        u.lifetimeTotal,
+        attCount // Column J: 출석기록
       ]);
     }
     
     if (rowsToAppend.length > 0) {
-      sheet.getRange(sheet.getLastRow() + 1, 1, rowsToAppend.length, rowsToAppend[0].length).setValues(rowsToAppend);
-      Logger.log(period + " 월간 성적 아카이브 저장 완료: 총 " + rowsToAppend.length + "행");
+      sheet.insertRowsAfter(1, rowsToAppend.length);
+      sheet.getRange(2, 1, rowsToAppend.length, rowsToAppend[0].length).setValues(rowsToAppend);
+      Logger.log(period + " 월간 성적 아카이브 최신 탑 적재 완료: 총 " + rowsToAppend.length + "행");
     }
     return { success: true, message: "아카이브 저장 성공" };
   } catch (e) {
@@ -11947,7 +11977,8 @@ function getChallengeArchiveData(payload) {
             perf: Number(data[i][5] || 0),
             def: Number(data[i][6] || 0),
             periodTotal: Number(data[i][7] || 0),
-            lifetimeTotal: Number(data[i][8] || 0)
+            lifetimeTotal: Number(data[i][8] || 0),
+            attendanceCount: data[i][9] !== undefined ? Number(data[i][9] || 0) : 0
           });
         }
       }
@@ -11992,51 +12023,18 @@ function getChallengeArchiveData(payload) {
       }
     }
     
-    // [v6.0] 과거 월간 조회 시, 해당 과거 월(targetPeriod, 예: "5월")의 진짜 출석왕 TOP 3를 집계하여 반환
+    // [v6.0] 과거 월간 조회 시, 해당 과거 월(targetPeriod, 예: "5월")의 진짜 출석왕 TOP 3를 아카이브 시트에서 다이렉트로 추출
     var attendanceMvp = [];
     if (category === "monthly" && targetPeriod) {
       try {
-        var attSheet = ss.getSheetByName("출석기록");
-        var attData = attSheet ? attSheet.getDataRange().getValues() : [];
-        if (attSheet && attData.length > 1) {
-          var attCols = getAttendanceColumnIndices(attSheet);
-          var monthlyAttendanceMap = {}; // phone -> { name, count }
-          
-          var targetYear = new Date().getFullYear();
-          var monthNum = parseInt(targetPeriod.replace("월", "").trim());
-          if (!isNaN(monthNum)) {
-            var startM = new Date(targetYear, monthNum - 1, 1, 0, 0, 0, 0);
-            var endM = new Date(targetYear, monthNum, 0, 23, 59, 59, 999);
-            
-            for (var aIdx = 1; aIdx < attData.length; aIdx++) {
-              var aRow = attData[aIdx];
-              var aPhoneRaw = String(aRow[attCols.phone] || "").trim();
-              var aPhone = formatPhoneNumber(aPhoneRaw).replace(/[^0-9]/g, "");
-              if (!aPhone) continue;
-              
-              var aName = String(aRow[attCols.name] || "모험가").replace(/\d{4}$/, "").trim();
-              var aDateRaw = aRow[attCols.date];
-              var aDate = (aDateRaw instanceof Date) ? aDateRaw : new Date(aDateRaw);
-              if (isNaN(aDate.getTime())) continue;
-              
-              if (aDate >= startM && aDate <= endM) {
-                if (!monthlyAttendanceMap[aPhone]) {
-                  monthlyAttendanceMap[aPhone] = { name: aName, count: 0 };
-                }
-                monthlyAttendanceMap[aPhone].count++;
-              }
-            }
-            
-            var attList = [];
-            for (var key in monthlyAttendanceMap) {
-              attList.push(monthlyAttendanceMap[key]);
-            }
-            attList.sort(function(a, b) { return b.count - a.count; });
-            attendanceMvp = attList.slice(0, 3);
-          }
-        }
+        var sortedRecs = records.concat().sort(function(a, b) {
+          return b.attendanceCount - a.attendanceCount;
+        });
+        attendanceMvp = sortedRecs.slice(0, 3).map(function(r) {
+          return { name: r.name, count: r.attendanceCount };
+        });
       } catch (attErr) {
-        Logger.log("getChallengeArchiveData 출석왕 집계 오류: " + attErr.toString());
+        Logger.log("getChallengeArchiveData 아카이브 출석왕 집계 오류: " + attErr.toString());
       }
     }
     
