@@ -10002,20 +10002,66 @@ function getFriendlyName(fullName) {
  * [v60.0] 대한민국 공식 법정공휴일 판독기
  * Google Calendar API 연동 및 고정식 공휴일 하이브리드 자동 판정
  */
-function isKoreanPublicHoliday(date) {
+var globalPublicHolidayMap = null;
+var globalFlashHolidayMap = null;
+
+function loadPublicHolidaysOnce() {
+  if (globalPublicHolidayMap) return;
+  globalPublicHolidayMap = {};
+  
   try {
+    var now = new Date();
+    // 오늘부터 앞으로 60일간의 대한민국 공식 공휴일을 단 1회의 Google Calendar API 호출로 일괄 캐싱!
+    var future = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
     var cal = CalendarApp.getCalendarById("ko.south_korea#holiday@group.v.calendar.google.com");
     if (cal) {
-      var events = cal.getEventsForDay(date);
-      if (events.length > 0) {
-        return true;
+      var events = cal.getEvents(now, future);
+      for (var i = 0; i < events.length; i++) {
+        var eventDate = events[i].getStartTime();
+        var dateStr = Utilities.formatDate(eventDate, "GMT+9", "yyyy-MM-dd");
+        globalPublicHolidayMap[dateStr] = true;
       }
+      Logger.log("✅ [성능 최적화] 대한민국 공휴일 일괄 조회 및 캐싱 완료 (공휴일 수: " + events.length + ")");
     }
   } catch (e) {
-    Logger.log("CalendarApp 조회 실패, 로컬 룰로 검사합니다: " + e.toString());
+    Logger.log("⚠️ CalendarApp 일괄 캐싱 실패, 로컬 고정 공휴일 룰로 폴백 작동: " + e.toString());
+  }
+}
+
+function loadFlashHolidayMapOnce() {
+  if (globalFlashHolidayMap) return;
+  globalFlashHolidayMap = {};
+  
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var flashSheet = ss.getSheetByName('벙개테라피 및 휴일 설정');
+    if (flashSheet) {
+      // 벙개테라피/휴일 설정을 단 1회 전체 데이터를 가져와서 메모리 맵으로 고속 로드!
+      var flashData = flashSheet.getDataRange().getDisplayValues();
+      for (var f = 1; f < flashData.length; f++) {
+        var rawDate = flashData[f][0];
+        var fDateStr = normalizeDateStr(rawDate);
+        if (fDateStr) {
+          globalFlashHolidayMap[fDateStr] = String(flashData[f][1]).trim(); // "휴무" 또는 "벙개"
+        }
+      }
+      Logger.log("✅ [성능 최적화] 센터 휴무/벙개 설정 시트 일괄 캐싱 완료!");
+    }
+  } catch (e) {
+    Logger.log("⚠️ loadFlashHolidayMapOnce 시트 로드 오류: " + e.toString());
+  }
+}
+
+function isKoreanPublicHoliday(date) {
+  var dateStr = Utilities.formatDate(date, "GMT+9", "yyyy-MM-dd");
+  
+  // 1. 공휴일 캐시 맵이 작동한다면 O(1) 초고속 조회
+  loadPublicHolidaysOnce();
+  if (globalPublicHolidayMap) {
+    return !!globalPublicHolidayMap[dateStr];
   }
   
-  // 로컬 Fallback: 고정 법정공휴일 패턴 매칭 (신정, 삼일절, 어린이날, 현충일, 광복절, 개천절, 한글날, 성탄절)
+  // 2. 캐시 실패 시 로컬 Fallback: 고정 법정공휴일 패턴 매칭 (신정, 삼일절, 어린이날, 현충일, 광복절, 개천절, 한글날, 성탄절)
   var mm = date.getMonth() + 1;
   var dd = date.getDate();
   var md = mm + "-" + dd;
@@ -10030,39 +10076,30 @@ function isKoreanPublicHoliday(date) {
     "12-25"  // 성탄절
   ];
   return (fixedHolidays.indexOf(md) > -1);
-  return (fixedHolidays.indexOf(md) > -1);
 }
 
 /**
- * [v5.0] 센터 공식 휴일 및 공휴일 감지기
+ * [v5.0] 센터 공식 휴일 및 공휴일 감지기 (메모리 맵 일괄 조회 캐싱 최적화)
  */
 function isCenterHoliday(date) {
   var dayOfWeek = date.getDay();
   if (dayOfWeek === 0) return true; // 일요일 기본 휴무
   
+  // 1. 대한민국 법정 공휴일 조회 (캐시 연동)
   if (isKoreanPublicHoliday(date)) return true;
   
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var flashSheet = ss.getSheetByName('벙개테라피 및 휴일 설정');
-    if (flashSheet) {
-      var flashData = flashSheet.getDataRange().getValues();
-      var dateStr = Utilities.formatDate(date, "GMT+9", "yyyy-MM-dd");
-      for (var f = 1; f < flashData.length; f++) {
-        var fDate = flashData[f][0];
-        var fDateStr = (fDate instanceof Date) ? Utilities.formatDate(fDate, "GMT+9", "yyyy-MM-dd") : String(fDate).trim();
-        if (fDateStr === dateStr) {
-          if (String(flashData[f][1]) === "휴무") {
-            return true;
-          } else if (String(flashData[f][1]) === "벙개") {
-            return false; // 벙개는 휴무 제외
-          }
-        }
-      }
+  // 2. 센터 설정 휴무 조회 (캐시 연동)
+  loadFlashHolidayMapOnce();
+  var dateStr = Utilities.formatDate(date, "GMT+9", "yyyy-MM-dd");
+  if (globalFlashHolidayMap && globalFlashHolidayMap[dateStr] !== undefined) {
+    var type = globalFlashHolidayMap[dateStr];
+    if (type === "휴무") {
+      return true;
+    } else if (type === "벙개") {
+      return false; // 벙개는 휴무 제외
     }
-  } catch (e) {
-    Logger.log("휴일 설정 시트 조회 오류: " + e.toString());
   }
+  
   return false;
 }
 
