@@ -377,6 +377,21 @@ function getUserDashboardData(payload) {
       }
     }
 
+    // 회원명단 시트에서 목표체중 로드
+    var targetWeight = 0;
+    var memberSheet = ss.getSheetByName("회원명단");
+    if (memberSheet) {
+      var mData = memberSheet.getDataRange().getDisplayValues();
+      var mCols = getMemberSheetColumnIndices(memberSheet);
+      for (var i = 1; i < mData.length; i++) {
+        var mPhone = normalizePhoneDigits(mData[i][mCols.phone]);
+        if (mPhone === phone || (phone.length >= 8 && mPhone.endsWith(phone.substring(phone.length - 8)))) {
+          targetWeight = parseWeightSafely(mData[i][mCols.targetWeight]);
+          break;
+        }
+      }
+    }
+
     // [v45.8] 일일_활동_기록 (10컬럼 집약 체계)
     var summarySheet = ss.getSheetByName("일일_활동_기록") || ss.insertSheet("일일_활동_기록");
     var doneList = []; 
@@ -584,7 +599,7 @@ function getUserDashboardData(payload) {
     }
 
     // 인바디 개선 점수 연산 헬퍼 호출
-    function calculateInbodyScoreHelper(first, current) {
+    function calculateInbodyScoreHelper(first, current, targetWeight, scoreType) {
       if (!first || !current) return 0;
       
       var fW = Number(first.weight) || 0;
@@ -613,7 +628,25 @@ function getUserDashboardData(payload) {
       if (diffW >= 8.0 || (fatLossRate >= 20.0 && !isNaN(fatLossRate))) {
         score += 1500;
       }
-      if (Math.abs(diffW) <= 0.2 && fW > 0) score += 100;
+      
+      // 🏆 체성분 명품 유지 보너스 판정 엔진 (±0.5kg 정교화)
+      if (targetWeight && targetWeight > 0) {
+        if (scoreType === "monthly") {
+          // 월초 첫 주 기록이 목표체중 범위 내(±0.5kg)였는지 대조
+          var firstWithinTarget = (Math.abs(fW - targetWeight) <= 0.5);
+          // 최신 기록이 목표체중 상한선(목표체중 + 0.5kg) 이하인지 대조
+          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
+          if (firstWithinTarget && currentLowerOrEqualTarget) {
+            score += 1000;
+          }
+        } else if (scoreType === "lifetime") {
+          // 결산 시점(최신 기록)이 목표체중 상한선(목표체중 + 0.5kg) 이하인지 대조
+          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
+          if (currentLowerOrEqualTarget) {
+            score += 1000;
+          }
+        }
+      }
       
       return isNaN(score) ? 0 : score;
     }
@@ -621,7 +654,7 @@ function getUserDashboardData(payload) {
     // 평생 최초와 최신 기록이 동일한 기록 1개뿐인 경우(자기 대조) 점수 0점
     var inbodyLifetimeScore = 0;
     if (firstEverInbody && latestInbody && firstEverInbody !== latestInbody) {
-      inbodyLifetimeScore = calculateInbodyScoreHelper(firstEverInbody, latestInbody);
+      inbodyLifetimeScore = calculateInbodyScoreHelper(firstEverInbody, latestInbody, targetWeight, 'lifetime');
     }
     
     // [v46.42] 주간 및 시즌(월간) 인바디 점수 정밀 계산 (v65.70 strict rules)
@@ -658,14 +691,14 @@ function getUserDashboardData(payload) {
         }
         // 지난주 기록(prevBeforeThisWeek)이 있을 때만 주간 점수 부여! 없으면 무조건 0점.
         if (prevBeforeThisWeek) {
-          inbodyWeeklyScore = calculateInbodyScoreHelper(prevBeforeThisWeek, currentInbody);
+          inbodyWeeklyScore = calculateInbodyScoreHelper(prevBeforeThisWeek, currentInbody, targetWeight, 'weekly');
         }
       }
       
       // (2) 시즌(월간) 인바디 점수: 월초 첫 주 기준 기록(season0WeekInbody)이 있고, 본인 최신 기록이 다를 때만 반영! (엄격 마감 규칙 적용)
       if (season0WeekInbody && currentInbody && season0WeekInbody !== currentInbody) {
         if (isDateInLastWeekMonToWed(currentInbody.date)) {
-          inbodySeasonScore = calculateInbodyScoreHelper(season0WeekInbody, currentInbody);
+          inbodySeasonScore = calculateInbodyScoreHelper(season0WeekInbody, currentInbody, targetWeight, 'monthly');
         } else {
           inbodySeasonScore = 0;
         }
@@ -887,6 +920,21 @@ function submitInBodyRecord(payload) {
     var weight = Number(payload.weight);
     var muscle = Number(payload.muscle);
     var fat = Number(payload.fat);
+
+    // 회원명단 시트에서 목표체중 로드
+    var targetWeight = 0;
+    var memberSheet = ss.getSheetByName("회원명단");
+    if (memberSheet) {
+      var mData = memberSheet.getDataRange().getDisplayValues();
+      var mCols = getMemberSheetColumnIndices(memberSheet);
+      for (var i = 1; i < mData.length; i++) {
+        var mPhone = normalizePhoneDigits(mData[i][mCols.phone]);
+        if (mPhone === phone || (phone.length >= 8 && mPhone.endsWith(phone.substring(phone.length - 8)))) {
+          targetWeight = parseWeightSafely(mData[i][mCols.targetWeight]);
+          break;
+        }
+      }
+    }
     
     var dateValue = new Date();
     if (payload.customDate) {
@@ -939,28 +987,54 @@ function submitInBodyRecord(payload) {
     simulatedRecords.sort(function(a, b) { return a.date - b.date; });
     
     // 3. 인바디 점수 연산 공통 헬퍼
-    function calculateInbodyScoreHelper(first, current) {
+    function calculateInbodyScoreHelper(first, current, targetWeight, scoreType) {
       if (!first || !current) return 0;
       var score = 0;
-      var diffW = Number((first.weight - current.weight).toFixed(2));
-      var diffM = Number((current.muscle - first.muscle).toFixed(2));
-      var diffFat = Number((first.fat - current.fat).toFixed(1));
+      var fW = Number(first.weight) || 0;
+      var cW = Number(current.weight) || 0;
+      var fM = Number(first.muscle) || 0;
+      var cM = Number(current.muscle) || 0;
+      var fF = Number(first.fat) || 0;
+      var cF = Number(current.fat) || 0;
+      
+      var diffW = Number((fW - cW).toFixed(2)) || 0;
+      var diffM = Number((cM - fM).toFixed(2)) || 0;
+      var diffFat = Number((fF - cF).toFixed(1)) || 0;
       
       if (diffW > 0) score += (diffW * 10) * 50;
       if (diffM > 0) score += (diffM * 10) * 200;
       if (diffFat > 0) score += (diffFat * 10) * 100;
       
-      var firstFatMass = first.weight * (first.fat / 100);
-      var currentFatMass = current.weight * (current.fat / 100);
+      var firstFatMass = fW * (fF / 100);
+      var currentFatMass = cW * (cF / 100);
       var fatLossRate = 0;
-      if (firstFatMass > 0) {
+      if (firstFatMass > 0 && !isNaN(firstFatMass)) {
         fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
       }
-      if (diffW >= 8.0 || fatLossRate >= 20.0) {
+      if (diffW >= 8.0 || (fatLossRate >= 20.0 && !isNaN(fatLossRate))) {
         score += 1500;
       }
-      if (Math.abs(diffW) <= 0.2) score += 100;
-      return score;
+      
+      // 🏆 체성분 명품 유지 보너스 판정 엔진 (±0.5kg 정교화)
+      if (targetWeight && targetWeight > 0) {
+        if (scoreType === "monthly") {
+          // 월초 첫 주 기록이 목표체중 범위 내(±0.5kg)였는지 대조
+          var firstWithinTarget = (Math.abs(fW - targetWeight) <= 0.5);
+          // 최신 기록이 목표체중 상한선(목표체중 + 0.5kg) 이하인지 대조
+          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
+          if (firstWithinTarget && currentLowerOrEqualTarget) {
+            score += 1000;
+          }
+        } else if (scoreType === "lifetime") {
+          // 결산 시점(최신 기록)이 목표체중 상한선(목표체중 + 0.5kg) 이하인지 대조
+          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
+          if (currentLowerOrEqualTarget) {
+            score += 1000;
+          }
+        }
+      }
+      
+      return isNaN(score) ? 0 : score;
     }
     
     // 4. 날짜 기준점 계산
@@ -1024,16 +1098,16 @@ function submitInBodyRecord(payload) {
     
     // 최초 기록과 본인의 기록이 단 1개뿐인 경우(자기 대조) 점수 0점
     if (firstEver && firstEver !== currentInbody) {
-      totalScore = calculateInbodyScoreHelper(firstEver, currentInbody);
+      totalScore = calculateInbodyScoreHelper(firstEver, currentInbody, targetWeight, 'lifetime');
     }
     
     if (prevBeforeThisWeek) {
-      weeklyScore = calculateInbodyScoreHelper(prevBeforeThisWeek, currentInbody);
+      weeklyScore = calculateInbodyScoreHelper(prevBeforeThisWeek, currentInbody, targetWeight, 'weekly');
     }
     
     if (baselineRecord && baselineRecord !== currentInbody) {
       if (isDateInLastWeekMonToWed(currentInbody.date)) {
-        monthlyScore = calculateInbodyScoreHelper(baselineRecord, currentInbody);
+        monthlyScore = calculateInbodyScoreHelper(baselineRecord, currentInbody, targetWeight, 'monthly');
       } else {
         monthlyScore = 0;
       }
@@ -1217,6 +1291,35 @@ function handleRequest(e) {
 
 
 
+
+/**
+ * [지능형] 회원명단 시트의 열을 동적으로 추적하여 인식하는 지능형 컬럼 매퍼
+ */
+function getMemberSheetColumnIndices(sheet) {
+  var fullData = sheet.getRange(1, 1, 5, Math.min(sheet.getLastColumn(), 30)).getValues();
+  var map = { name: 1, phone: 2, targetWeight: 14 }; // defaults
+  
+  for (var r = 0; r < fullData.length; r++) {
+    var hasName = false;
+    for (var c = 0; c < fullData[r].length; c++) {
+      var title = String(fullData[r][c] || "").trim().replace(/\s/g, "");
+      if (title.indexOf("이름") !== -1 || title.indexOf("회원명") !== -1) {
+        map.name = c;
+        hasName = true;
+      }
+      if (title.indexOf("휴대폰") !== -1 || title.indexOf("전화번호") !== -1 || title.indexOf("연락처") !== -1) {
+        map.phone = c;
+      }
+      if (title.indexOf("목표체중") !== -1 || title.indexOf("목표몸무게") !== -1) {
+        map.targetWeight = c;
+      }
+    }
+    if (hasName) {
+      break; 
+    }
+  }
+  return map;
+}
 
 /**
  * [지능형] 시트 제목을 읽어 열 번호를 자동으로 찾아주는 함수
@@ -4738,6 +4841,21 @@ function updateInBodyRecord(payload) {
     var muscle = Number(payload.muscle || 0);
     var fat = Number(payload.fat || 0);
     var memo = String(payload.memo || "").trim();
+
+    // 회원명단 시트에서 목표체중 로드
+    var targetWeight = 0;
+    var memberSheet = ss.getSheetByName("회원명단");
+    if (memberSheet) {
+      var mData = memberSheet.getDataRange().getDisplayValues();
+      var mCols = getMemberSheetColumnIndices(memberSheet);
+      for (var i = 1; i < mData.length; i++) {
+        var mPhone = normalizePhoneDigits(mData[i][mCols.phone]);
+        if (mPhone === phone || (phone.length >= 8 && mPhone.endsWith(phone.substring(phone.length - 8)))) {
+          targetWeight = parseWeightSafely(mData[i][mCols.targetWeight]);
+          break;
+        }
+      }
+    }
     
     var targetDate = new Date(payload.date);
     if (isNaN(targetDate.getTime())) {
@@ -4797,28 +4915,54 @@ function updateInBodyRecord(payload) {
     userRecords.sort(function(a, b) { return a.date - b.date; });
 
     // 인바디 계산 공통 헬퍼
-    function calculateInbodyScoreHelper(first, current) {
+    function calculateInbodyScoreHelper(first, current, targetWeight, scoreType) {
       if (!first || !current) return 0;
       var score = 0;
-      var diffW = Number((first.weight - current.weight).toFixed(2));
-      var diffM = Number((current.muscle - first.muscle).toFixed(2));
-      var diffFat = Number((first.fat - current.fat).toFixed(1));
+      var fW = Number(first.weight) || 0;
+      var cW = Number(current.weight) || 0;
+      var fM = Number(first.muscle) || 0;
+      var cM = Number(current.muscle) || 0;
+      var fF = Number(first.fat) || 0;
+      var cF = Number(current.fat) || 0;
+      
+      var diffW = Number((fW - cW).toFixed(2)) || 0;
+      var diffM = Number((cM - fM).toFixed(2)) || 0;
+      var diffFat = Number((fF - cF).toFixed(1)) || 0;
       
       if (diffW > 0) score += (diffW * 10) * 50;
       if (diffM > 0) score += (diffM * 10) * 200;
       if (diffFat > 0) score += (diffFat * 10) * 100;
       
-      var firstFatMass = first.weight * (first.fat / 100);
-      var currentFatMass = current.weight * (current.fat / 100);
+      var firstFatMass = fW * (fF / 100);
+      var currentFatMass = cW * (cF / 100);
       var fatLossRate = 0;
-      if (firstFatMass > 0) {
+      if (firstFatMass > 0 && !isNaN(firstFatMass)) {
         fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
       }
-      if (diffW >= 8.0 || fatLossRate >= 20.0) {
+      if (diffW >= 8.0 || (fatLossRate >= 20.0 && !isNaN(fatLossRate))) {
         score += 1500;
       }
-      if (Math.abs(diffW) <= 0.2) score += 100;
-      return score;
+      
+      // 🏆 체성분 명품 유지 보너스 판정 엔진 (±0.5kg 정교화)
+      if (targetWeight && targetWeight > 0) {
+        if (scoreType === "monthly") {
+          // 월초 첫 주 기록이 목표체중 범위 내(±0.5kg)였는지 대조
+          var firstWithinTarget = (Math.abs(fW - targetWeight) <= 0.5);
+          // 최신 기록이 목표체중 상한선(목표체중 + 0.5kg) 이하인지 대조
+          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
+          if (firstWithinTarget && currentLowerOrEqualTarget) {
+            score += 1000;
+          }
+        } else if (scoreType === "lifetime") {
+          // 결산 시점(최신 기록)이 목표체중 상한선(목표체중 + 0.5kg) 이하인지 대조
+          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
+          if (currentLowerOrEqualTarget) {
+            score += 1000;
+          }
+        }
+      }
+      
+      return isNaN(score) ? 0 : score;
     }
 
     var targetRecord = null;
@@ -4882,14 +5026,14 @@ function updateInBodyRecord(payload) {
     var totalScore = 0;
 
     if (firstEver && firstEver !== targetRecord) {
-      totalScore = calculateInbodyScoreHelper(firstEver, targetRecord);
+      totalScore = calculateInbodyScoreHelper(firstEver, targetRecord, targetWeight, 'lifetime');
     }
     if (prevBeforeThisWeek) {
-      weeklyScore = calculateInbodyScoreHelper(prevBeforeThisWeek, targetRecord);
+      weeklyScore = calculateInbodyScoreHelper(prevBeforeThisWeek, targetRecord, targetWeight, 'weekly');
     }
     if (baselineRecord && baselineRecord !== targetRecord) {
       if (isDateInLastWeekMonToWed(targetRecord.date)) {
-        monthlyScore = calculateInbodyScoreHelper(baselineRecord, targetRecord);
+        monthlyScore = calculateInbodyScoreHelper(baselineRecord, targetRecord, targetWeight, 'monthly');
       } else {
         monthlyScore = 0;
       }
@@ -6181,6 +6325,16 @@ function formatPhoneNumber(phoneStr) {
   }
   
   return phoneStr; 
+}
+
+/**
+ * ⚖️ [체중 안전 파서] "50kg", "50킬로", "목표 50.5", "50.5" 등의 다양한 텍스트에서 숫자(실수)만 안전하게 추출합니다.
+ */
+function parseWeightSafely(val) {
+  if (val === undefined || val === null || val === "") return 0;
+  var str = String(val).trim();
+  var match = str.match(/([0-9]+(?:\.[0-9]+)?)/);
+  return match ? (Number(match[1]) || 0) : 0;
 }
 
 /**
@@ -9287,6 +9441,21 @@ function getMyInbodyHistory(phone) {
     if (!cleanPhone) return { error: "올바른 연락처 정보가 없습니다." };
 
     var ss = SpreadsheetApp.getActiveSpreadsheet();
+    
+    // 회원명단 시트에서 목표체중 로드
+    var targetWeight = 0;
+    var memberSheet = ss.getSheetByName("회원명단");
+    if (memberSheet) {
+      var mData = memberSheet.getDataRange().getDisplayValues();
+      var mCols = getMemberSheetColumnIndices(memberSheet);
+      for (var i = 1; i < mData.length; i++) {
+        var mPhone = normalizePhoneDigits(mData[i][mCols.phone]);
+        if (mPhone === cleanPhone || (cleanPhone.length >= 8 && mPhone.endsWith(cleanPhone.substring(cleanPhone.length - 8)))) {
+          targetWeight = parseWeightSafely(mData[i][mCols.targetWeight]);
+          break;
+        }
+      }
+    }
     var sheet = ss.getSheetByName("33챌린지_인바디");
     if (!sheet) return { success: false, error: "'33챌린지_인바디' 시트를 찾을 수 없습니다." };
 
@@ -9338,28 +9507,54 @@ function getMyInbodyHistory(phone) {
     });
 
     // 인바디 계산 헬퍼 복사
-    function localInbodyScoreHelper(first, current) {
+    function localInbodyScoreHelper(first, current, targetWeight, scoreType) {
       if (!first || !current) return 0;
       var score = 0;
-      var diffW = Number((first.weight - current.weight).toFixed(2));
-      var diffM = Number((current.muscle - first.muscle).toFixed(2));
-      var diffFat = Number((first.fat - current.fat).toFixed(1));
+      var fW = Number(first.weight) || 0;
+      var cW = Number(current.weight) || 0;
+      var fM = Number(first.muscle) || 0;
+      var cM = Number(current.muscle) || 0;
+      var fF = Number(first.fat) || 0;
+      var cF = Number(current.fat) || 0;
+      
+      var diffW = Number((fW - cW).toFixed(2)) || 0;
+      var diffM = Number((cM - fM).toFixed(2)) || 0;
+      var diffFat = Number((fF - cF).toFixed(1)) || 0;
       
       if (diffW > 0) score += (diffW * 10) * 50;
       if (diffM > 0) score += (diffM * 10) * 200;
       if (diffFat > 0) score += (diffFat * 10) * 100;
       
-      var firstFatMass = first.weight * (first.fat / 100);
-      var currentFatMass = current.weight * (current.fat / 100);
+      var firstFatMass = fW * (fF / 100);
+      var currentFatMass = cW * (cF / 100);
       var fatLossRate = 0;
-      if (firstFatMass > 0) {
+      if (firstFatMass > 0 && !isNaN(firstFatMass)) {
         fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
       }
-      if (diffW >= 8.0 || fatLossRate >= 20.0) {
+      if (diffW >= 8.0 || (fatLossRate >= 20.0 && !isNaN(fatLossRate))) {
         score += 1500;
       }
-      if (Math.abs(diffW) <= 0.2) score += 100;
-      return score;
+      
+      // 🏆 체성분 명품 유지 보너스 판정 엔진 (±0.5kg 정교화)
+      if (targetWeight && targetWeight > 0) {
+        if (scoreType === "monthly") {
+          // 월초 첫 주 기록이 목표체중 범위 내(±0.5kg)였는지 대조
+          var firstWithinTarget = (Math.abs(fW - targetWeight) <= 0.5);
+          // 최신 기록이 목표체중 상한선(목표체중 + 0.5kg) 이하인지 대조
+          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
+          if (firstWithinTarget && currentLowerOrEqualTarget) {
+            score += 1000;
+          }
+        } else if (scoreType === "lifetime") {
+          // 결산 시점(최신 기록)이 목표체중 상한선(목표체중 + 0.5kg) 이하인지 대조
+          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
+          if (currentLowerOrEqualTarget) {
+            score += 1000;
+          }
+        }
+      }
+      
+      return isNaN(score) ? 0 : score;
     }
 
     var finalRecords = [];
@@ -9422,14 +9617,14 @@ function getMyInbodyHistory(phone) {
       var totalScore = 0;
 
       if (firstEver && firstEver !== currentInbody) {
-        totalScore = localInbodyScoreHelper(firstEver, currentInbody);
+        totalScore = localInbodyScoreHelper(firstEver, currentInbody, targetWeight, 'lifetime');
       }
       if (prevBeforeThisWeek) {
-        weeklyScore = localInbodyScoreHelper(prevBeforeThisWeek, currentInbody);
+        weeklyScore = localInbodyScoreHelper(prevBeforeThisWeek, currentInbody, targetWeight, 'weekly');
       }
       if (baselineRecord && baselineRecord !== currentInbody) {
         if (isDateInLastWeekMonToWed(currentDate)) {
-          monthlyScore = localInbodyScoreHelper(baselineRecord, currentInbody);
+          monthlyScore = localInbodyScoreHelper(baselineRecord, currentInbody, targetWeight, 'monthly');
         } else {
           monthlyScore = 0;
         }
@@ -10427,6 +10622,20 @@ function getHallOfFameData(payload) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var now = new Date();
     
+    // 회원명단에서 모든 회원의 목표체중 미리 로드 (1회 조회로 극속 처리!)
+    var userTargetWeightMap = {};
+    var memberSheet = ss.getSheetByName("회원명단");
+    if (memberSheet) {
+      var mData = memberSheet.getDataRange().getDisplayValues();
+      var mCols = getMemberSheetColumnIndices(memberSheet);
+      for (var i = 1; i < mData.length; i++) {
+        var mPhone = normalizePhoneDigits(mData[i][mCols.phone]);
+        if (mPhone) {
+          userTargetWeightMap[mPhone] = parseWeightSafely(mData[i][mCols.targetWeight]);
+        }
+      }
+    }
+    
     // 1. 날짜 범위 계산
     // (1) 주간: 목요일 00:00:00 ~ 수요일 23:59:59 (매주 목요일 00:00 리셋)
     var day = now.getDay(); // 0(일)~6(토)
@@ -10521,29 +10730,54 @@ function getHallOfFameData(payload) {
     }
     
     // 인바디 계산 헬퍼 복사
-    function localInbodyScoreHelper(first, current) {
+    function localInbodyScoreHelper(first, current, targetWeight, scoreType) {
       if (!first || !current) return 0;
       var score = 0;
-      var diffW = Number((first.weight - current.weight).toFixed(2));
-      var diffM = Number((current.muscle - first.muscle).toFixed(2));
-      var diffFat = Number((first.fat - current.fat).toFixed(1));
+      var fW = Number(first.weight) || 0;
+      var cW = Number(current.weight) || 0;
+      var fM = Number(first.muscle) || 0;
+      var cM = Number(current.muscle) || 0;
+      var fF = Number(first.fat) || 0;
+      var cF = Number(current.fat) || 0;
+      
+      var diffW = Number((fW - cW).toFixed(2)) || 0;
+      var diffM = Number((cM - fM).toFixed(2)) || 0;
+      var diffFat = Number((fF - cF).toFixed(1)) || 0;
       
       if (diffW > 0) score += (diffW * 10) * 50;
       if (diffM > 0) score += (diffM * 10) * 200;
       if (diffFat > 0) score += (diffFat * 10) * 100;
       
-      var firstFatMass = first.weight * (first.fat / 100);
-      var currentFatMass = current.weight * (current.fat / 100);
+      var firstFatMass = fW * (fF / 100);
+      var currentFatMass = cW * (cF / 100);
       var fatLossRate = 0;
-      if (firstFatMass > 0) {
+      if (firstFatMass > 0 && !isNaN(firstFatMass)) {
         fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
       }
-      if (diffW >= 8.0 || fatLossRate >= 20.0) {
+      if (diffW >= 8.0 || (fatLossRate >= 20.0 && !isNaN(fatLossRate))) {
         score += 1500;
       }
       
-      if (Math.abs(diffW) <= 0.2) score += 100;
-      return score;
+      // 🏆 체성분 명품 유지 보너스 판정 엔진 (±0.5kg 정교화)
+      if (targetWeight && targetWeight > 0) {
+        if (scoreType === "monthly") {
+          // 월초 첫 주 기록이 목표체중 범위 내(±0.5kg)였는지 대조
+          var firstWithinTarget = (Math.abs(fW - targetWeight) <= 0.5);
+          // 최신 기록이 목표체중 상한선(목표체중 + 0.5kg) 이하인지 대조
+          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
+          if (firstWithinTarget && currentLowerOrEqualTarget) {
+            score += 1000;
+          }
+        } else if (scoreType === "lifetime") {
+          // 결산 시점(최신 기록)이 목표체중 상한선(목표체중 + 0.5kg) 이하인지 대조
+          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
+          if (currentLowerOrEqualTarget) {
+            score += 1000;
+          }
+        }
+      }
+      
+      return isNaN(score) ? 0 : score;
     }
     
     // 각 회원에 대한 인바디 점수 반영
@@ -10554,6 +10788,7 @@ function getHallOfFameData(payload) {
     for (var phone in userScoresMap) {
       var entry = userScoresMap[phone];
       var records = userInbodyMap[phone] || [];
+      var targetWeight = userTargetWeightMap[phone] || 0;
       
       // 1) 최초 및 최신 구하기 (전체 누적용)
       var firstEver = null;
@@ -10563,7 +10798,7 @@ function getHallOfFameData(payload) {
         if (!firstEver || r.date < firstEver.date) firstEver = r;
         if (!latestEver || r.date > latestEver.date) latestEver = r;
       }
-      var inbodyLifetimeScore = localInbodyScoreHelper(firstEver, latestEver);
+      var inbodyLifetimeScore = localInbodyScoreHelper(firstEver, latestEver, targetWeight, 'lifetime');
       
       // 2) 주간 인바디 구하기
       var inbodyWeeklyScore = 0;
@@ -10578,7 +10813,7 @@ function getHallOfFameData(payload) {
           }
         }
         var baseRecord = prevBeforeThisWeek || firstEver;
-        inbodyWeeklyScore = localInbodyScoreHelper(baseRecord, latestEver);
+        inbodyWeeklyScore = localInbodyScoreHelper(baseRecord, latestEver, targetWeight, 'weekly');
       }
       
       // 3) 월간 인바디 구하기 (원장님 피드백 반영 - 월초 기준점 Mon~Wed 필수)
@@ -10610,7 +10845,7 @@ function getHallOfFameData(payload) {
           }
         }
         if (latestInMonth) {
-          inbodyMonthlyScore = localInbodyScoreHelper(baselineRecord, latestInMonth);
+          inbodyMonthlyScore = localInbodyScoreHelper(baselineRecord, latestInMonth, targetWeight, 'monthly');
         }
       }
       
@@ -11413,6 +11648,20 @@ function archiveWeeklyRankingToSheet(period) {
       });
     }
 
+    // 회원명단에서 모든 회원의 목표체중 미리 로드
+    var userTargetWeightMap = {};
+    var memberSheet = ss.getSheetByName("회원명단");
+    if (memberSheet) {
+      var mData = memberSheet.getDataRange().getDisplayValues();
+      var mCols = getMemberSheetColumnIndices(memberSheet);
+      for (var i = 1; i < mData.length; i++) {
+        var mPhone = normalizePhoneDigits(mData[i][mCols.phone]);
+        if (mPhone) {
+          userTargetWeightMap[mPhone] = parseWeightSafely(mData[i][mCols.targetWeight]);
+        }
+      }
+    }
+
     // 주차 결산 시점(endOfWeekDate) 기준 모든 회원의 일일 점수 누적 집계
     var userStats = {}; // phone -> { name, health: 0, perf: 0, def: 0, weeklyTotalAct: 0, lifetimeTotalAct: 0 }
     
@@ -11452,28 +11701,51 @@ function archiveWeeklyRankingToSheet(period) {
       }
     }
     
-    function localInbodyScoreHelper(first, current) {
+    function localInbodyScoreHelper(first, current, targetWeight, scoreType) {
       if (!first || !current) return 0;
       var score = 0;
-      var diffW = Number((first.weight - current.weight).toFixed(2));
-      var diffM = Number((current.muscle - first.muscle).toFixed(2));
-      var diffFat = Number((first.fat - current.fat).toFixed(1));
+      var fW = Number(first.weight) || 0;
+      var cW = Number(current.weight) || 0;
+      var fM = Number(first.muscle) || 0;
+      var cM = Number(current.muscle) || 0;
+      var fF = Number(first.fat) || 0;
+      var cF = Number(current.fat) || 0;
+      
+      var diffW = Number((fW - cW).toFixed(2)) || 0;
+      var diffM = Number((cM - fM).toFixed(2)) || 0;
+      var diffFat = Number((fF - cF).toFixed(1)) || 0;
       
       if (diffW > 0) score += (diffW * 10) * 50;
       if (diffM > 0) score += (diffM * 10) * 200;
       if (diffFat > 0) score += (diffFat * 10) * 100;
       
-      var firstFatMass = first.weight * (first.fat / 100);
-      var currentFatMass = current.weight * (current.fat / 100);
+      var firstFatMass = fW * (fF / 100);
+      var currentFatMass = cW * (cF / 100);
       var fatLossRate = 0;
-      if (firstFatMass > 0) {
+      if (firstFatMass > 0 && !isNaN(firstFatMass)) {
         fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
       }
-      if (diffW >= 8.0 || fatLossRate >= 20.0) {
+      if (diffW >= 8.0 || (fatLossRate >= 20.0 && !isNaN(fatLossRate))) {
         score += 1500;
       }
-      if (Math.abs(diffW) <= 0.2) score += 100;
-      return score;
+      
+      // 🏆 체성분 명품 유지 보너스 판정 엔진 (±0.5kg 정교화)
+      if (targetWeight && targetWeight > 0) {
+        if (scoreType === "monthly") {
+          var firstWithinTarget = (Math.abs(fW - targetWeight) <= 0.5);
+          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
+          if (firstWithinTarget && currentLowerOrEqualTarget) {
+            score += 1000;
+          }
+        } else if (scoreType === "lifetime") {
+          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
+          if (currentLowerOrEqualTarget) {
+            score += 1000;
+          }
+        }
+      }
+      
+      return isNaN(score) ? 0 : score;
     }
 
     var rankedUsers = [];
@@ -11495,7 +11767,9 @@ function archiveWeeklyRankingToSheet(period) {
         }
       }
 
-      // 주간 인바디 점수
+      var targetWeight = userTargetWeightMap[phone] || 0;
+
+      // 주간 인바디 점수 (주간에는 유지 보너스 없음)
       var inbodyWeeklyScore = 0;
       if (latestInWeek) {
         var prevBeforeThisWeek = null;
@@ -11506,11 +11780,11 @@ function archiveWeeklyRankingToSheet(period) {
           }
         }
         var baseRecord = prevBeforeThisWeek || firstEver;
-        inbodyWeeklyScore = localInbodyScoreHelper(baseRecord, latestInWeek);
+        inbodyWeeklyScore = localInbodyScoreHelper(baseRecord, latestInWeek, targetWeight, 'weekly');
       }
       
       // 누적 인바디 점수 (결산 시점 최신본 기준)
-      var inbodyLifetimeScore = localInbodyScoreHelper(firstEver, latestEver);
+      var inbodyLifetimeScore = localInbodyScoreHelper(firstEver, latestEver, targetWeight, 'lifetime');
       
       var totalWeeklyExp = stat.weeklyTotalAct + inbodyWeeklyScore;
       var totalLifetimeExp = stat.lifetimeTotalAct + inbodyLifetimeScore;
@@ -11615,6 +11889,20 @@ function archiveMonthlyRankingToSheet(period) {
       });
     }
 
+    // 회원명단에서 모든 회원의 목표체중 미리 로드
+    var userTargetWeightMap = {};
+    var memberSheet = ss.getSheetByName("회원명단");
+    if (memberSheet) {
+      var mData = memberSheet.getDataRange().getDisplayValues();
+      var mCols = getMemberSheetColumnIndices(memberSheet);
+      for (var i = 1; i < mData.length; i++) {
+        var mPhone = normalizePhoneDigits(mData[i][mCols.phone]);
+        if (mPhone) {
+          userTargetWeightMap[mPhone] = parseWeightSafely(mData[i][mCols.targetWeight]);
+        }
+      }
+    }
+
     // 월간 데이터 집계
     var userStats = {};
     for (var j = 1; j < summaryData.length; j++) {
@@ -11651,28 +11939,51 @@ function archiveMonthlyRankingToSheet(period) {
       }
     }
     
-    function localInbodyScoreHelper(first, current) {
+    function localInbodyScoreHelper(first, current, targetWeight, scoreType) {
       if (!first || !current) return 0;
       var score = 0;
-      var diffW = Number((first.weight - current.weight).toFixed(2));
-      var diffM = Number((current.muscle - first.muscle).toFixed(2));
-      var diffFat = Number((first.fat - current.fat).toFixed(1));
+      var fW = Number(first.weight) || 0;
+      var cW = Number(current.weight) || 0;
+      var fM = Number(first.muscle) || 0;
+      var cM = Number(current.muscle) || 0;
+      var fF = Number(first.fat) || 0;
+      var cF = Number(current.fat) || 0;
+      
+      var diffW = Number((fW - cW).toFixed(2)) || 0;
+      var diffM = Number((cM - fM).toFixed(2)) || 0;
+      var diffFat = Number((fF - cF).toFixed(1)) || 0;
       
       if (diffW > 0) score += (diffW * 10) * 50;
       if (diffM > 0) score += (diffM * 10) * 200;
       if (diffFat > 0) score += (diffFat * 10) * 100;
       
-      var firstFatMass = first.weight * (first.fat / 100);
-      var currentFatMass = current.weight * (current.fat / 100);
+      var firstFatMass = fW * (fF / 100);
+      var currentFatMass = cW * (cF / 100);
       var fatLossRate = 0;
-      if (firstFatMass > 0) {
+      if (firstFatMass > 0 && !isNaN(firstFatMass)) {
         fatLossRate = ((firstFatMass - currentFatMass) / firstFatMass) * 100;
       }
-      if (diffW >= 8.0 || fatLossRate >= 20.0) {
+      if (diffW >= 8.0 || (fatLossRate >= 20.0 && !isNaN(fatLossRate))) {
         score += 1500;
       }
-      if (Math.abs(diffW) <= 0.2) score += 100;
-      return score;
+      
+      // 🏆 체성분 명품 유지 보너스 판정 엔진 (±0.5kg 정교화)
+      if (targetWeight && targetWeight > 0) {
+        if (scoreType === "monthly") {
+          var firstWithinTarget = (Math.abs(fW - targetWeight) <= 0.5);
+          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
+          if (firstWithinTarget && currentLowerOrEqualTarget) {
+            score += 1000;
+          }
+        } else if (scoreType === "lifetime") {
+          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
+          if (currentLowerOrEqualTarget) {
+            score += 1000;
+          }
+        }
+      }
+      
+      return isNaN(score) ? 0 : score;
     }
 
     var rankedUsers = [];
@@ -11704,14 +12015,16 @@ function archiveMonthlyRankingToSheet(period) {
         }
       }
       
+      var targetWeight = userTargetWeightMap[phone] || 0;
+
       // 월간 인바디 점수
       var inbodyMonthlyScore = 0;
       if (baselineRecord && latestInMonth) {
-        inbodyMonthlyScore = localInbodyScoreHelper(baselineRecord, latestInMonth);
+        inbodyMonthlyScore = localInbodyScoreHelper(baselineRecord, latestInMonth, targetWeight, 'monthly');
       }
       
       // 누적 인바디 점수
-      var inbodyLifetimeScore = localInbodyScoreHelper(firstEver, latestEver);
+      var inbodyLifetimeScore = localInbodyScoreHelper(firstEver, latestEver, targetWeight, 'lifetime');
       
       var totalMonthlyExp = stat.monthlyTotalAct + inbodyMonthlyScore;
       var totalLifetimeExp = stat.lifetimeTotalAct + inbodyLifetimeScore;
