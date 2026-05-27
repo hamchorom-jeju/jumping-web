@@ -461,6 +461,9 @@
         } else {
           dates.forEach(date => {
             const list = data[date];
+            // 💡 [원장님 UX 지침] 예약이 없는 날은 카드를 렌더링하지 않고 완벽하게 건너뛰기!
+            if (!list || list.length === 0) return;
+
             const isToday = (date === today);
             const dateObj = new Date(date);
             const dayName = ["일","월","화","수","목","금","토"][dateObj.getDay()];
@@ -473,8 +476,7 @@
                   ${isToday ? '<span class="today-badge">오늘</span>' : ''}
                 </div>
                 <div class="card-body">
-                  ${list.length === 0 ? '<div class="no-res">예약 없음</div>' : 
-                    list.map(r => `
+                  ${list.map(r => `
                       <div class="res-row">
                         <span class="res-time">${r.time}</span>
                         <span class="res-name">${r.name}</span>
@@ -487,6 +489,18 @@
             `;
           });
         }
+
+        // 예약이 단 한 건도 없는 경우를 감지하여 예쁜 감성 메시지 대체 노출
+        if (h === "") {
+          h = `
+            <div style="text-align:center; padding:35px 20px; background:#fff; border-radius:20px; border:1.5px dashed rgba(93, 64, 55, 0.15); color:var(--text-dim); font-weight:800; font-size:0.9rem; line-height:1.5;">
+              🌿 예정된 테라피 예약이 없습니다.<br>
+              <span style="font-size:0.78rem; font-weight:600; color:#94a3b8; display:block; margin-top:6px;">
+                우측의 [테라피 예약] 버튼을 통해 간편하게 예약해 보세요!
+              </span>
+            </div>`;
+        }
+
         document.getElementById('summary-list').innerHTML = `<div class="cards-container">${h}</div>`;
       }).getTodaySummary();
     }
