@@ -1009,122 +1009,148 @@
     window.currentCalendarMonth = todayKst.getMonth() + 1; // 1-indexed
 
     function renderScheduledQuests(list) {
-      if (list) {
-        window.scheduledQuestsList = list;
-      } else {
-        list = window.scheduledQuestsList || [];
-      }
-
-      const container = document.getElementById('calendar-list');
-      if (!container) return;
-
-      const year = window.currentCalendarYear;
-      const month = window.currentCalendarMonth;
-
-      // 1. 달력 연/월 헤더 렌더링
-      let html = `
-        <div class="sanctum-calendar-container">
-          <div class="sanctum-calendar-header">
-            <button class="sanctum-calendar-nav-btn" onclick="changeCalendarMonth(-1)">◀ 이전달</button>
-            <div class="sanctum-calendar-title">${year}년 ${month}월</div>
-            <button class="sanctum-calendar-nav-btn" onclick="changeCalendarMonth(1)">다음달 ▶</button>
-          </div>
-          
-          <div class="sanctum-calendar-weekdays">
-            <div class="sanctum-weekday sun">일</div>
-            <div class="sanctum-weekday">월</div>
-            <div class="sanctum-weekday">화</div>
-            <div class="sanctum-weekday">수</div>
-            <div class="sanctum-weekday">목</div>
-            <div class="sanctum-weekday">금</div>
-            <div class="sanctum-weekday sat">토</div>
-          </div>
-          
-          <div class="sanctum-calendar-grid">
-      `;
-
-      // 2. 해당 월의 일수 및 첫째날 요일 구하기
-      const firstDayOfWeek = new Date(year, month - 1, 1).getDay(); // 0: 일, 1: 월...
-      const daysInMonth = new Date(year, month, 0).getDate();
-
-      // 3. 오늘 날짜 구하기 (KST)
-      const now = new Date();
-      const offset = now.getTimezoneOffset() * 60000;
-      const todayStr = new Date(Date.now() - offset).toISOString().split('T')[0];
-
-      // 4. 빈 셀 렌더링 (1일 시작 전 요일 메꿈)
-      for (let i = 0; i < firstDayOfWeek; i++) {
-        html += `<div class="sanctum-calendar-cell cell-empty"></div>`;
-      }
-
-      // 5. 날짜별 셀 렌더링
-      for (let day = 1; day <= daysInMonth; day++) {
-        const dateStr = `${year}-${month < 10 ? '0' + month : month}-${day < 10 ? '0' + day : day}`;
-        const cellDayOfWeek = new Date(year, month - 1, day).getDay();
+      try {
+        console.log("📊 [renderScheduledQuests] Received list:", list);
         
-        let isSunday = (cellDayOfWeek === 0);
-        let isSaturday = (cellDayOfWeek === 6);
-        let dayClass = isSunday ? 'sun' : (isSaturday ? 'sat' : '');
-        
-        // 오늘 여부 판별
-        const isToday = (dateStr === todayStr);
-        const isPast = (dateStr < todayStr);
-        
-        // 리스트 매칭 스캔
-        const q = list.find(item => item.date === dateStr);
-        
-        let cellClass = "sanctum-calendar-cell";
-        if (isPast) cellClass += " cell-past";
-        if (isToday) cellClass += " cell-today";
-        
-        let contentHtml = "";
-        let delBtnHtml = "";
-        let clickAttr = "";
-
-        if (q) {
-          const isManual = !!q.isManual;
-          cellClass += isManual ? " cell-manual" : " cell-auto";
-          
-          const badgeClass = isManual ? "badge-manual" : "badge-auto";
-          const badgeText = isManual ? "✏️ 수동" : "🤖 자동";
-          const titleClass = isManual ? "" : "title-auto";
-          
-          contentHtml = `
-            <span class="cell-badge ${badgeClass}">${badgeText}</span>
-            <div class="cell-quest-title ${titleClass}">${q.title}</div>
-          `;
-          
-          if (isManual && q.rowIdx) {
-            delBtnHtml = `<div class="cell-del-btn" title="이장 특별 예약 제거" onclick="event.stopPropagation(); deleteQuest(${q.rowIdx})">✕</div>`;
+        // 1. 방어적 타입 보정 (배열이 아니면 빈 배열로 안전 장치)
+        if (list && Array.isArray(list)) {
+          window.scheduledQuestsList = list;
+        } else if (list && list.success && Array.isArray(list.data)) {
+          window.scheduledQuestsList = list.data;
+        } else if (list && typeof list === 'object') {
+          console.warn("⚠️ Received list is an object instead of array:", list);
+          // 만약 에러 메시지가 담겨 있다면 콘솔에 상세 경고
+          if (list.error) {
+            console.error("❌ Backend error details:", list.error, list.details);
           }
+        }
+        
+        const container = document.getElementById('calendar-list');
+        if (!container) return;
+
+        // 최종 사용할 퀘스트 배열 안전 필터링
+        const quests = Array.isArray(window.scheduledQuestsList) ? window.scheduledQuestsList : [];
+
+        const year = window.currentCalendarYear;
+        const month = window.currentCalendarMonth;
+
+        // 2. 달력 연/월 헤더 렌더링
+        let html = `
+          <div class="sanctum-calendar-container">
+            <div class="sanctum-calendar-header">
+              <button class="sanctum-calendar-nav-btn" onclick="changeCalendarMonth(-1)">◀ 이전달</button>
+              <div class="sanctum-calendar-title">${year}년 ${month}월</div>
+              <button class="sanctum-calendar-nav-btn" onclick="changeCalendarMonth(1)">다음달 ▶</button>
+            </div>
+            
+            <div class="sanctum-calendar-weekdays">
+              <div class="sanctum-weekday sun">일</div>
+              <div class="sanctum-weekday">월</div>
+              <div class="sanctum-weekday">화</div>
+              <div class="sanctum-weekday">수</div>
+              <div class="sanctum-weekday">목</div>
+              <div class="sanctum-weekday">금</div>
+              <div class="sanctum-weekday sat">토</div>
+            </div>
+            
+            <div class="sanctum-calendar-grid">
+        `;
+
+        // 3. 해당 월의 일수 및 첫째날 요일 구하기
+        const firstDayOfWeek = new Date(year, month - 1, 1).getDay(); // 0: 일, 1: 월...
+        const daysInMonth = new Date(year, month, 0).getDate();
+
+        // 4. 오늘 날짜 구하기 (KST)
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        const todayStr = new Date(Date.now() - offset).toISOString().split('T')[0];
+
+        // 5. 빈 셀 렌더링 (1일 시작 전 요일 메꿈)
+        for (let i = 0; i < firstDayOfWeek; i++) {
+          html += `<div class="sanctum-calendar-cell cell-empty"></div>`;
+        }
+
+        // 6. 날짜별 셀 렌더링
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateStr = `${year}-${month < 10 ? '0' + month : month}-${day < 10 ? '0' + day : day}`;
+          const cellDayOfWeek = new Date(year, month - 1, day).getDay();
           
-          const safeTitle = (q.title || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-          const safeDesc = (q.description || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+          let isSunday = (cellDayOfWeek === 0);
+          let isSaturday = (cellDayOfWeek === 6);
+          let dayClass = isSunday ? 'sun' : (isSaturday ? 'sat' : '');
           
-          clickAttr = `onclick="selectCalendarCell('${q.date}', ${q.score}, '${q.method}', '${safeTitle}', '${safeDesc}', ${q.rowIdx || 'null'})"`;
-        } else {
-          if (isPast) {
-            clickAttr = `style="cursor: default;"`;
+          // 오늘 여부 판별
+          const isToday = (dateStr === todayStr);
+          const isPast = (dateStr < todayStr);
+          
+          // 리스트 매칭 스캔 (안전성 강화)
+          const q = quests.find(item => item && item.date === dateStr);
+          
+          let cellClass = "sanctum-calendar-cell";
+          if (isPast) cellClass += " cell-past";
+          if (isToday) cellClass += " cell-today";
+          
+          let contentHtml = "";
+          let delBtnHtml = "";
+          let clickAttr = "";
+
+          if (q) {
+            const isManual = !!q.isManual;
+            cellClass += isManual ? " cell-manual" : " cell-auto";
+            
+            const badgeClass = isManual ? "badge-manual" : "badge-auto";
+            const badgeText = isManual ? "✏️ 수동" : "🤖 자동";
+            const titleClass = isManual ? "" : "title-auto";
+            
+            contentHtml = `
+              <span class="cell-badge ${badgeClass}">${badgeText}</span>
+              <div class="cell-quest-title ${titleClass}">${q.title || ''}</div>
+            `;
+            
+            if (isManual && q.rowIdx) {
+              delBtnHtml = `<div class="cell-del-btn" title="이장 특별 예약 제거" onclick="event.stopPropagation(); deleteQuest(${q.rowIdx})">✕</div>`;
+            }
+            
+            const safeTitle = (q.title || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const safeDesc = (q.description || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+            
+            clickAttr = `onclick="selectCalendarCell('${q.date}', ${q.score || 15}, '${q.method || '사진'}', '${safeTitle}', '${safeDesc}', ${q.rowIdx || 'null'})"`;
           } else {
-            clickAttr = `onclick="selectEmptyCell('${dateStr}')"`;
+            if (isPast) {
+              clickAttr = `style="cursor: default;"`;
+            } else {
+              clickAttr = `onclick="selectEmptyCell('${dateStr}')"`;
+            }
           }
+
+          html += `
+            <div class="${cellClass}" ${clickAttr}>
+              <span class="cell-day-num ${dayClass}">${day}</span>
+              ${contentHtml}
+              ${delBtnHtml}
+            </div>
+          `;
         }
 
         html += `
-          <div class="${cellClass}" ${clickAttr}>
-            <span class="cell-day-num ${dayClass}">${day}</span>
-            ${contentHtml}
-            ${delBtnHtml}
+            </div>
           </div>
         `;
+
+        container.innerHTML = html;
+      } catch (err) {
+        console.error("❌ [renderScheduledQuests] Rendering Error:", err);
+        const container = document.getElementById('calendar-list');
+        if (container) {
+          container.innerHTML = `
+            <div style="text-align:center; padding:20px; border:1px dashed #ef4444; border-radius:15px; background:rgba(239,68,68,0.08); margin-top:15px;">
+              <div style="font-size:0.85rem; font-weight:900; color:#fca5a5; margin-bottom:8px;">⚠️ 달력 렌더링 중 오류 발생</div>
+              <div style="font-size:0.7rem; color:var(--text-sub); line-height:1.4;">${err.toString()}</div>
+              <div style="font-size:0.65rem; color:#fca5a5; margin-top:8px; font-weight:700;">시트 또는 서버 원격 데이터 수신 과정에 충돌이 있는 것 같습니다.</div>
+            </div>
+          `;
+        }
       }
-
-      html += `
-          </div>
-        </div>
-      `;
-
-      container.innerHTML = html;
     }
 
     function changeCalendarMonth(direction) {

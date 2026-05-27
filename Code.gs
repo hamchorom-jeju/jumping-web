@@ -8984,30 +8984,74 @@ function blessActivityReaction(payload) {
  */
 /**
  * ==========================================
- * 📅 돌발 퀘스트 날짜별 캘린더 선세팅 API (하이브리드 병합 모드)
+ * 📅 [v66.1] 돌발 퀘스트 날짜별 캘린더 선세팅 API (하이브리드 병합 모드)
  * ==========================================
  */
+
+/**
+ * 📅 수동/자동 날짜 문자열 규격화 함수
+ * "2026. 6. 1.", "2026/06/01", "2026-06-01" 등 다양한 날짜 포맷을 "yyyy-MM-dd" 표준형으로 통일합니다.
+ */
+function normalizeDateStr(str) {
+  if (!str) return "";
+  if (str instanceof Date) {
+    return Utilities.formatDate(str, "GMT+9", "yyyy-MM-dd");
+  }
+  str = String(str).trim();
+  if (!str) return "";
+  
+  // 1. 온점(.), 슬래시(/), 대시(-) 혼용 분절 파싱
+  var parts = str.split(/[\.\-\/]/);
+  // 끝에 온점이 붙어서 생기는 빈 문자열 요소 등 필터링
+  parts = parts.filter(function(p) { return p.trim() !== ""; });
+  
+  if (parts.length >= 3) {
+    var y = parts[0].trim();
+    var m = parts[1].trim();
+    var d = parts[2].trim();
+    
+    if (y.length === 4 && !isNaN(y) && !isNaN(m) && !isNaN(d)) {
+      var mm = parseInt(m, 10);
+      var dd = parseInt(d, 10);
+      return y + "-" + (mm < 10 ? "0" + mm : mm) + "-" + (dd < 10 ? "0" + dd : dd);
+    }
+  }
+  
+  // 2. yyyyMMdd (8자리 숫자형) 파싱
+  if (str.length === 8 && !isNaN(str)) {
+    var y = str.substring(0, 4);
+    var m = str.substring(4, 6);
+    var d = str.substring(6, 8);
+    return y + "-" + m + "-" + d;
+  }
+  
+  return str;
+}
+
 function getScheduledQuests() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = checkAndCreateQuestRegistrySheet();
     var data = sheet.getDataRange().getDisplayValues();
     
-    // 1. 스프레드시트에 기 적재되어 있는 모든 수동 예약 퀘스트들을 맵(Map)에 적재
+    // 1. 스프레드시트에 기 적재되어 있는 모든 수동 예약 퀘스트들을 맵(Map)에 적재 (날짜 표준화 적용)
     var manualMap = {};
     for (var i = 1; i < data.length; i++) {
       if (data[i][2] === "이장") {
-        var dStr = String(data[i][1]).trim();
-        manualMap[dStr] = {
-          rowIdx: i + 1,
-          date: dStr,
-          title: data[i][3],
-          description: data[i][4],
-          status: data[i][7] || "대기",
-          score: data[i].length > 8 ? Number(data[i][8] || 15) : 15,
-          method: data[i].length > 9 ? (data[i][9] || "사진") : "사진",
-          isManual: true
-        };
+        var rawDate = data[i][1];
+        var dStr = normalizeDateStr(rawDate);
+        if (dStr) {
+          manualMap[dStr] = {
+            rowIdx: i + 1,
+            date: dStr, // 표준 포맷 전달
+            title: data[i][3],
+            description: data[i][4],
+            status: data[i][7] || "대기",
+            score: data[i].length > 8 ? Number(data[i][8] || 15) : 15,
+            method: data[i].length > 9 ? (data[i][9] || "사진") : "사진",
+            isManual: true
+          };
+        }
       }
     }
     
@@ -9056,24 +9100,26 @@ function saveScheduledQuest(payload) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = checkAndCreateQuestRegistrySheet();
     
-    var dateStr = payload.date; // "yyyy-MM-dd"
+    var dateStr = normalizeDateStr(payload.date); // 확실하게 yyyy-MM-dd 표준형으로 정리
     var title = payload.title;
     var desc = payload.description;
     var score = Number(payload.score || 15);
     var method = payload.method || "사진";
     
-    // 동일한 날짜에 이미 등록된 이장 돌발 퀘스트가 있는지 검사하여 덮어쓰기/수정 지원
+    // 동일한 날짜에 이미 등록된 이장 돌발 퀘스트가 있는지 검사하여 덮어쓰기/수정 지원 (날짜 정합성 매핑)
     var data = sheet.getDataRange().getDisplayValues();
     var foundRowIdx = -1;
     for (var i = 1; i < data.length; i++) {
-      if (data[i][2] === "이장" && data[i][1] === dateStr) {
+      var sheetDateStr = normalizeDateStr(data[i][1]);
+      if (data[i][2] === "이장" && sheetDateStr === dateStr) {
         foundRowIdx = i + 1;
         break;
       }
     }
     
     if (foundRowIdx > -1) {
-      // 덮어쓰기 수정
+      // 덮어쓰기 수정 (날짜도 표준 포맷인 dateStr로 예쁘게 치환)
+      sheet.getRange(foundRowIdx, 2).setValue(dateStr);
       sheet.getRange(foundRowIdx, 4).setValue(title);
       sheet.getRange(foundRowIdx, 5).setValue(desc);
       sheet.getRange(foundRowIdx, 8).setValue("대기");
@@ -9103,7 +9149,7 @@ function saveScheduledQuest(payload) {
 }
 
 /**
- * 📅 [매일 스케줄러] 당일 돌발 퀘스트 자동 활성화 및 아침 선포 알림 발송 (v65.0)
+ * 📅 [매일 스케줄러] 당일 돌발 퀘스트 자동 활성화 및 아침 선포 알림 발송 (v66.1)
  * 매일 아침(예: 06:00 ~ 08:00 사이) 트리거로 자동 동작하도록 설정합니다.
  * 당일 시행일인 '대기' 상태의 이장 퀘스트를 찾아 '진행'으로 전환하고 전체 알림 쪽지를 발송합니다.
  */
@@ -9118,7 +9164,8 @@ function processScheduledQuestsDaily() {
     var activatedCount = 0;
     
     for (var i = 1; i < data.length; i++) {
-      var dateStr = data[i][1]; // B열: 시행일 (yyyy-MM-dd)
+      var rawDate = data[i][1];
+      var dateStr = normalizeDateStr(rawDate); // 날짜 포맷 강제 보정
       var type = data[i][2];    // C열: 유형 ("이장")
       var title = data[i][3];   // D열: 퀘스트명
       var desc = data[i][4];    // E열: 설명
@@ -9128,10 +9175,12 @@ function processScheduledQuestsDaily() {
       
       if (type === "이장" && dateStr === todayStr && status === "대기") {
         var rowIdx = i + 1;
-        // 1. 상태를 '진행'으로 변경하여 당일 퀘스트로 공식 표출
+        // 1. 날짜 데이터가 비표준형인 경우 표준형으로 일괄 등기 보정
+        sheet.getRange(rowIdx, 2).setValue(todayStr);
+        // 2. 상태를 '진행'으로 변경하여 당일 퀘스트로 공식 표출
         sheet.getRange(rowIdx, 8).setValue("진행");
         
-        // 2. 당일 아침 활성화 알림(쪽지)을 회원 전체에게 1회 공식 선포!
+        // 3. 당일 아침 활성화 알림(쪽지)을 회원 전체에게 1회 공식 선포!
         var globalTitle = "📅 [오늘의 돌발 퀘스트] " + title + " ⚡";
         var globalContent = "📢 [웰니스 코치의 돌발 퀘스트 오늘 진행 시작!] 📢\n\n" +
                             "오늘의 돌발 퀘스트가 공식적으로 활성화되었습니다! 오늘의 웰니스 수호에 도전해 보세요!\n\n" +
@@ -11077,7 +11126,7 @@ function getMonthlyRankingNoticePreview() {
 }
 
 /**
- * 📬 [v66.0] 오늘자 돌발 퀘스트 시상식/공지 쪽지 내용 실시간 생성 및 미리보기 함수
+ * 📬 [v66.1] 오늘자 돌발 퀘스트 시상식/공지 쪽지 내용 실시간 생성 및 미리보기 함수
  * 수동 예약이 없을 시 실시간 자동 알고리즘 계산기로 가상 미리보기를 지원하여 무중력 상태를 유지합니다.
  */
 function getDailyQuestNoticePreview() {
@@ -11096,7 +11145,8 @@ function getDailyQuestNoticePreview() {
     
     for (var i = 1; i < data.length; i++) {
       var type = String(data[i][2] || "").trim();
-      var dateStr = String(data[i][1] || "").trim();
+      var rawDate = data[i][1];
+      var dateStr = normalizeDateStr(rawDate); // 날짜 정합성 표준화
       if (type === "이장" && dateStr === todayStr) {
         var title = String(data[i][3] || "").trim();
         var desc = String(data[i][4] || "").trim();
@@ -11151,7 +11201,7 @@ function getDailyQuestNoticePreview() {
 }
 
 /**
- * 📬 [v66.0] 매일 새벽 0시 1분 실행되는 오늘자 돌발 퀘스트 자동 선포 및 우편 발송 트리거
+ * 📬 [v66.1] 매일 새벽 0시 1분 실행되는 오늘자 돌발 퀘스트 자동 선포 및 우편 발송 트리거
  * 비어있는 날짜는 자정에 즉시 실시간 계산하여 시트에 영구 적재(Persistent) 후 전체 쪽지를 선포합니다.
  */
 function autoSendDailyQuestNotice() {
@@ -11173,10 +11223,12 @@ function autoSendDailyQuestNotice() {
     
     // 2. 수동과 자동 분기 처리하여 시트 등기/진행 상태 기록
     if (isManual) {
-      // 오늘자 수동 예약을 찾아 '진행' 상태로 변경
+      // 오늘자 수동 예약을 찾아 '진행' 상태로 변경 및 표준화 저장
       var data = sheet.getDataRange().getDisplayValues();
       for (var i = 1; i < data.length; i++) {
-        if (data[i][2] === "이장" && data[i][1] === todayStr) {
+        var sheetDateStr = normalizeDateStr(data[i][1]);
+        if (data[i][2] === "이장" && sheetDateStr === todayStr) {
+          sheet.getRange(i + 1, 2).setValue(todayStr); // 표준 yyyy-MM-dd 포맷 보정 저장
           sheet.getRange(i + 1, 8).setValue("진행"); // H열: 상태를 진행으로 세팅
           Logger.log("✅ 오늘 자 수동 예약 돌발 퀘스트를 '진행'으로 공식 활성화 완료!");
           break;
