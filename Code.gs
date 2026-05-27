@@ -632,11 +632,9 @@ function getUserDashboardData(payload) {
       // 🏆 체성분 명품 유지 보너스 판정 엔진 (±0.5kg 정교화)
       if (targetWeight && targetWeight > 0) {
         if (scoreType === "monthly") {
-          // 월초 첫 주 기록이 목표체중 범위 내(±0.5kg)였는지 대조
+          // 월초 첫 주 기록이 목표체중 범위 내(±0.5kg)에 들어와 있으면 즉시 한 달 내내 1,000점 확정 지급!
           var firstWithinTarget = (Math.abs(fW - targetWeight) <= 0.5);
-          // 최신 기록이 목표체중 상한선(목표체중 + 0.5kg) 이하인지 대조
-          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
-          if (firstWithinTarget && currentLowerOrEqualTarget) {
+          if (firstWithinTarget) {
             score += 1000;
           }
         } else if (scoreType === "lifetime") {
@@ -1018,11 +1016,9 @@ function submitInBodyRecord(payload) {
       // 🏆 체성분 명품 유지 보너스 판정 엔진 (±0.5kg 정교화)
       if (targetWeight && targetWeight > 0) {
         if (scoreType === "monthly") {
-          // 월초 첫 주 기록이 목표체중 범위 내(±0.5kg)였는지 대조
+          // 월초 첫 주 기록이 목표체중 범위 내(±0.5kg)에 들어와 있으면 즉시 한 달 내내 1,000점 확정 지급!
           var firstWithinTarget = (Math.abs(fW - targetWeight) <= 0.5);
-          // 최신 기록이 목표체중 상한선(목표체중 + 0.5kg) 이하인지 대조
-          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
-          if (firstWithinTarget && currentLowerOrEqualTarget) {
+          if (firstWithinTarget) {
             score += 1000;
           }
         } else if (scoreType === "lifetime") {
@@ -4946,11 +4942,9 @@ function updateInBodyRecord(payload) {
       // 🏆 체성분 명품 유지 보너스 판정 엔진 (±0.5kg 정교화)
       if (targetWeight && targetWeight > 0) {
         if (scoreType === "monthly") {
-          // 월초 첫 주 기록이 목표체중 범위 내(±0.5kg)였는지 대조
+          // 월초 첫 주 기록이 목표체중 범위 내(±0.5kg)에 들어와 있으면 즉시 한 달 내내 1,000점 확정 지급!
           var firstWithinTarget = (Math.abs(fW - targetWeight) <= 0.5);
-          // 최신 기록이 목표체중 상한선(목표체중 + 0.5kg) 이하인지 대조
-          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
-          if (firstWithinTarget && currentLowerOrEqualTarget) {
+          if (firstWithinTarget) {
             score += 1000;
           }
         } else if (scoreType === "lifetime") {
@@ -9538,11 +9532,9 @@ function getMyInbodyHistory(phone) {
       // 🏆 체성분 명품 유지 보너스 판정 엔진 (±0.5kg 정교화)
       if (targetWeight && targetWeight > 0) {
         if (scoreType === "monthly") {
-          // 월초 첫 주 기록이 목표체중 범위 내(±0.5kg)였는지 대조
+          // 월초 첫 주 기록이 목표체중 범위 내(±0.5kg)에 들어와 있으면 즉시 한 달 내내 1,000점 확정 지급!
           var firstWithinTarget = (Math.abs(fW - targetWeight) <= 0.5);
-          // 최신 기록이 목표체중 상한선(목표체중 + 0.5kg) 이하인지 대조
-          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
-          if (firstWithinTarget && currentLowerOrEqualTarget) {
+          if (firstWithinTarget) {
             score += 1000;
           }
         } else if (scoreType === "lifetime") {
@@ -10761,11 +10753,9 @@ function getHallOfFameData(payload) {
       // 🏆 체성분 명품 유지 보너스 판정 엔진 (±0.5kg 정교화)
       if (targetWeight && targetWeight > 0) {
         if (scoreType === "monthly") {
-          // 월초 첫 주 기록이 목표체중 범위 내(±0.5kg)였는지 대조
+          // 월초 첫 주 기록이 목표체중 범위 내(±0.5kg)에 들어와 있으면 즉시 한 달 내내 1,000점 확정 지급!
           var firstWithinTarget = (Math.abs(fW - targetWeight) <= 0.5);
-          // 최신 기록이 목표체중 상한선(목표체중 + 0.5kg) 이하인지 대조
-          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
-          if (firstWithinTarget && currentLowerOrEqualTarget) {
+          if (firstWithinTarget) {
             score += 1000;
           }
         } else if (scoreType === "lifetime") {
@@ -11732,9 +11722,9 @@ function archiveWeeklyRankingToSheet(period) {
       // 🏆 체성분 명품 유지 보너스 판정 엔진 (±0.5kg 정교화)
       if (targetWeight && targetWeight > 0) {
         if (scoreType === "monthly") {
+          // 월초 첫 주 기록이 목표체중 범위 내(±0.5kg)에 들어와 있으면 즉시 한 달 내내 1,000점 확정 지급!
           var firstWithinTarget = (Math.abs(fW - targetWeight) <= 0.5);
-          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
-          if (firstWithinTarget && currentLowerOrEqualTarget) {
+          if (firstWithinTarget) {
             score += 1000;
           }
         } else if (scoreType === "lifetime") {
@@ -11970,9 +11960,9 @@ function archiveMonthlyRankingToSheet(period) {
       // 🏆 체성분 명품 유지 보너스 판정 엔진 (±0.5kg 정교화)
       if (targetWeight && targetWeight > 0) {
         if (scoreType === "monthly") {
+          // 월초 첫 주 기록이 목표체중 범위 내(±0.5kg)에 들어와 있으면 즉시 한 달 내내 1,000점 확정 지급!
           var firstWithinTarget = (Math.abs(fW - targetWeight) <= 0.5);
-          var currentLowerOrEqualTarget = (cW <= targetWeight + 0.5);
-          if (firstWithinTarget && currentLowerOrEqualTarget) {
+          if (firstWithinTarget) {
             score += 1000;
           }
         } else if (scoreType === "lifetime") {
