@@ -407,6 +407,8 @@ function getUserDashboardData(payload) {
     var currentMonth4thWed = get4thWednesday(now.getFullYear(), now.getMonth());
     currentMonth4thWed.setHours(0, 0, 0, 0);
     
+    var startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    
     var startOfSeason;
     if (now >= currentMonth4thWed) {
       startOfSeason = currentMonth4thWed;
@@ -426,8 +428,8 @@ function getUserDashboardData(payload) {
           var rowTotal = Number(data[j][9] || 0); // J열(10번째): 총점
           activityLifetime += rowTotal;
           
-          // 월간(시즌) 합산
-          if (recDate >= startOfSeason) {
+          // 월간(시즌) 합산: 1일부터 말일까지로 행동 스탯 누적 교정
+          if (recDate >= startOfMonth) {
             activitySeason += rowTotal;
             stats.monthly.perf += (Number(data[j][5]) || 0);
             stats.monthly.def += (Number(data[j][6]) || 0);
