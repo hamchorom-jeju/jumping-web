@@ -1135,6 +1135,10 @@ const Village = {
         const oldWrap = document.getElementById('village-weather-wrapper');
         if (oldWrap) oldWrap.remove();
         
+        if (localStorage.getItem('village_weather_disabled') === 'true') {
+            return;
+        }
+        
         // 바람 세기 정의: 5.0 m/s 이상이면 강풍(windy) 비주얼 모드 발동!
         const isWindy = windSpeed >= 5.0;
         

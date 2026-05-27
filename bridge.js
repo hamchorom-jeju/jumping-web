@@ -514,6 +514,10 @@ window.renderSharedWeatherParticles = function(weather, windSpeed = 0) {
   const oldWrap = document.getElementById('village-weather-wrapper');
   if (oldWrap) oldWrap.remove();
   
+  if (localStorage.getItem('village_weather_disabled') === 'true') {
+    return;
+  }
+  
   const isWindy = windSpeed >= 5.0;
   
   const wrapper = document.createElement('div');
