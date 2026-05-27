@@ -2316,15 +2316,15 @@
       <div id="salesHistorySummary" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 15px 0; background: #f8fafc; padding: 15px; border-radius: 16px; border: 1px solid #e2e8f0;">
         <div style="text-align: center;">
           <div style="font-size: 0.75rem; color: #718096; margin-bottom: 4px;">📈 총 수입</div>
-          <div id="totalSalesIncome" style="font-weight: 800; font-size: 0.95rem; color: #2f855a;">0원</div>
+          <div id="totalSalesIncome" style="font-weight: 800; font-size: 0.95rem; color: #3182ce;">0원</div>
         </div>
         <div style="text-align: center; border-left: 1px solid #cbd5e0; border-right: 1px solid #cbd5e0;">
           <div style="font-size: 0.75rem; color: #718096; margin-bottom: 4px;">💸 총 지출</div>
-          <div id="totalSalesExpense" style="font-weight: 800; font-size: 0.95rem; color: #c53030;">0원</div>
+          <div id="totalSalesExpense" style="font-weight: 800; font-size: 0.95rem; color: #e53e3e;">0원</div>
         </div>
         <div style="text-align: center;">
           <div style="font-size: 0.75rem; color: #718096; margin-bottom: 4px;">👑 순수익</div>
-          <div id="totalSalesNet" style="font-weight: 800; font-size: 0.95rem; color: #4c51bf;">0원</div>
+          <div id="totalSalesNet" style="font-weight: 800; font-size: 0.95rem; color: #38a169;">0원</div>
         </div>
       </div>
 
@@ -2342,9 +2342,9 @@
       <div class="modal-header" id="salesDetailTitle" style="border-bottom: 2px solid #edf2f7; padding-bottom: 15px; font-weight: 800; font-size: 1.25rem;">📅 손익 상세 내역</div>
       
       <div id="salesDetailSummaryCard" style="display: flex; justify-content: space-around; background: #ebf8ff; border: 1px solid #bee3f8; padding: 12px; border-radius: 14px; margin: 15px 0;">
-        <span style="font-size: 0.85rem; font-weight: bold; color: #2b6cb0;">수입: <span id="detailIncomeSum" style="color: #2f855a;">0원</span></span>
-        <span style="font-size: 0.85rem; font-weight: bold; color: #2b6cb0;">지출: <span id="detailExpenseSum" style="color: #c53030;">0원</span></span>
-        <span style="font-size: 0.85rem; font-weight: bold; color: #2b6cb0;">순익: <span id="detailNetSum" style="color: #4c51bf;">0원</span></span>
+        <span style="font-size: 0.85rem; font-weight: bold; color: #2b6cb0;">수입: <span id="detailIncomeSum" style="color: #3182ce;">0원</span></span>
+        <span style="font-size: 0.85rem; font-weight: bold; color: #2b6cb0;">지출: <span id="detailExpenseSum" style="color: #e53e3e;">0원</span></span>
+        <span style="font-size: 0.85rem; font-weight: bold; color: #2b6cb0;">순익: <span id="detailNetSum" style="color: #38a169;">0원</span></span>
       </div>
 
       <div id="salesDetailList" style="max-height: 45vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px;">
@@ -3573,16 +3573,16 @@
           totalIncome += log.incomeTotal;
           totalExpense += log.expenseTotal;
           var netProfit = log.incomeTotal - log.expenseTotal;
-          var netColor = netProfit >= 0 ? '#4c51bf' : '#e53e3e';
+          var netColor = netProfit >= 0 ? '#38a169' : '#e53e3e';
           var netPrefix = netProfit >= 0 ? '+' : '';
 
           html += '<div onclick="openSalesDetailModal(\'' + log.date + '\')" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:15px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition: transform 0.2s; gap: 10px;">' +
             '<div style="min-width: 0; flex: 1;">' +
             '<div style="font-weight:800; color:#1a202c; font-size:1.05rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">📅 ' + log.date + '</div>' +
             '<div style="font-size:0.78rem; color:#718096; margin-top:4px; display:flex; gap:6px; align-items:center; white-space:nowrap;">' +
-            '<span>수입: <strong style="color:#2f855a;">' + Number(log.incomeTotal).toLocaleString() + '원</strong></span>' +
+            '<span>수입: <strong style="color:#3182ce;">' + Number(log.incomeTotal).toLocaleString() + '원</strong></span>' +
             '<span style="color:#cbd5e0;">|</span>' +
-            '<span>지출: <strong style="color:#c53030;">' + Number(log.expenseTotal).toLocaleString() + '원</strong></span>' +
+            '<span>지출: <strong style="color:#e53e3e;">' + Number(log.expenseTotal).toLocaleString() + '원</strong></span>' +
             '</div>' +
             '</div>' +
             '<div style="text-align:right; display:flex; align-items:center; gap:8px; flex-shrink: 0; white-space:nowrap;">' +
@@ -3620,7 +3620,7 @@
           totalIncome += item.income;
           totalExpense += item.expense;
           var netProfit = item.income - item.expense;
-          var netColor = netProfit >= 0 ? '#4c51bf' : '#e53e3e';
+          var netColor = netProfit >= 0 ? '#38a169' : '#e53e3e';
           var netPrefix = netProfit >= 0 ? '+' : '';
           
           // 월 클릭 시 시작일/종료일 기간 조회로 스마트 이동 연동!
@@ -3630,9 +3630,9 @@
             '<div style="min-width: 0; flex: 1;">' +
             '<div style="font-weight:800; color:#5b21b6; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">🗓️ ' + item.month.substring(0,4) + '년 ' + Number(item.month.substring(5,7)) + '월 합계</div>' +
             '<div style="font-size:0.78rem; color:#718096; margin-top:4px; display:flex; gap:6px; align-items:center; white-space:nowrap;">' +
-            '<span>수입: <strong style="color:#2f855a;">' + Number(item.income).toLocaleString() + '원</strong></span>' +
+            '<span>수입: <strong style="color:#3182ce;">' + Number(item.income).toLocaleString() + '원</strong></span>' +
             '<span style="color:#cbd5e0;">|</span>' +
-            '<span>지출: <strong style="color:#c53030;">' + Number(item.expense).toLocaleString() + '원</strong></span>' +
+            '<span>지출: <strong style="color:#e53e3e;">' + Number(item.expense).toLocaleString() + '원</strong></span>' +
             '</div>' +
             '</div>' +
             '<div style="text-align:right; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; flex-shrink: 0; min-width: 100px; white-space:nowrap;">' +
@@ -3662,16 +3662,16 @@
             totalIncome += log.incomeTotal;
             totalExpense += log.expenseTotal;
             var netProfit = log.incomeTotal - log.expenseTotal;
-            var netColor = netProfit >= 0 ? '#4c51bf' : '#e53e3e';
+            var netColor = netProfit >= 0 ? '#38a169' : '#e53e3e';
             var netPrefix = netProfit >= 0 ? '+' : '';
 
             html += '<div onclick="openSalesDetailModal(\'' + log.date + '\')" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:15px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition: transform 0.2s; gap: 10px;">' +
               '<div style="min-width: 0; flex: 1;">' +
               '<div style="font-weight:800; color:#1a202c; font-size:1.05rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">📅 ' + log.date + '</div>' +
               '<div style="font-size:0.78rem; color:#718096; margin-top:4px; display:flex; gap:6px; align-items:center; white-space:nowrap;">' +
-              '<span>수입: <strong style="color:#2f855a;">' + Number(log.incomeTotal).toLocaleString() + '원</strong></span>' +
+              '<span>수입: <strong style="color:#3182ce;">' + Number(log.incomeTotal).toLocaleString() + '원</strong></span>' +
               '<span style="color:#cbd5e0;">|</span>' +
-              '<span>지출: <strong style="color:#c53030;">' + Number(log.expenseTotal).toLocaleString() + '원</strong></span>' +
+              '<span>지출: <strong style="color:#e53e3e;">' + Number(log.expenseTotal).toLocaleString() + '원</strong></span>' +
               '</div>' +
               '</div>' +
               '<div style="text-align:right; display:flex; align-items:center; gap:8px; flex-shrink: 0; white-space:nowrap;">' +
@@ -3695,7 +3695,7 @@
       document.getElementById('totalSalesIncome').innerText = Number(totalIncome).toLocaleString() + '원';
       document.getElementById('totalSalesExpense').innerText = Number(totalExpense).toLocaleString() + '원';
       document.getElementById('totalSalesNet').innerText = (totalNet >= 0 ? '+' : '') + Number(totalNet).toLocaleString() + '원';
-      document.getElementById('totalSalesNet').style.color = totalNet >= 0 ? '#4c51bf' : '#e53e3e';
+      document.getElementById('totalSalesNet').style.color = totalNet >= 0 ? '#38a169' : '#e53e3e';
       
       listContainer.innerHTML = html;
     }
@@ -3765,13 +3765,13 @@
               if (isExpense) {
                 dayExpense += amountNum;
                 sign = '지출 ➖';
-                signColor = '#c53030';
+                signColor = '#e53e3e';
                 signBg = '#fff5f5';
               } else {
                 dayIncome += amountNum;
                 sign = '수입 ➕';
-                signColor = '#2f855a';
-                signBg = '#f0fff4';
+                signColor = '#3182ce';
+                signBg = '#ebf8ff';
               }
 
               detailHtml += '<div style="background:' + signBg + '; border:1px solid rgba(0,0,0,0.05); border-radius:12px; padding:15px; display:flex; justify-content:space-between; align-items:center; gap:10px;">' +
@@ -3807,7 +3807,7 @@
             document.getElementById('detailIncomeSum').innerText = Number(dayIncome).toLocaleString() + '원';
             document.getElementById('detailExpenseSum').innerText = Number(dayExpense).toLocaleString() + '원';
             document.getElementById('detailNetSum').innerText = (dayNet >= 0 ? '+' : '') + Number(dayNet).toLocaleString() + '원';
-            document.getElementById('detailNetSum').style.color = dayNet >= 0 ? '#4c51bf' : '#e53e3e';
+            document.getElementById('detailNetSum').style.color = dayNet >= 0 ? '#38a169' : '#e53e3e';
 
             document.getElementById('salesDetailList').innerHTML = detailHtml;
           })
