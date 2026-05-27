@@ -1529,7 +1529,7 @@ const Village = {
             }
         }
         
-        const weather = newVal ? 'sun' : (settings.weather || 'sun');
+        const weather = newVal ? 'sun' : (settings.resolvedWeather || settings.weather || 'sun');
         const windSpeed = newVal ? 0 : (parseFloat(settings.realJejuWind) || 0);
         this.renderWeatherParticles(weather, windSpeed);
     }
