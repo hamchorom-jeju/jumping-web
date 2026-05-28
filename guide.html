@@ -659,9 +659,10 @@
     .story-slider-container {
       position: relative;
       width: 100%;
-      max-width: 440px;
+      max-width: 420px;
+      height: 720px; /* Fallback for older browsers/webviews */
+      max-height: 80vh; /* Constrain height to 80% of screen height to avoid vertical overflow */
       margin: 0 auto;
-      aspect-ratio: 9 / 16;
       background: #0d091e;
       border: 6px solid #1a153b;
       border-radius: 32px;
@@ -670,6 +671,13 @@
       display: flex;
       flex-direction: column;
       transition: all 0.3s ease-in-out;
+    }
+
+    @supports (aspect-ratio: 9 / 16) {
+      .story-slider-container {
+        aspect-ratio: 9 / 16;
+        height: auto;
+      }
     }
 
     /* [NEW] Mobile Landscape (모바일 가로보기) 대응 전용 최적화 */
@@ -2795,12 +2803,13 @@
     // ==========================================================================
     // [NEW] Premium Instagram Story Slider Logic (Health Stat Card News)
     // ==========================================================================
+    // ==========================================================================
+    // [NEW] Premium Instagram Story Slider Logic (Health Stat Card News)
+    // ==========================================================================
     let storyIndex = 0;
     let currentTheme = 'health';
     let storyPages = [];
     let totalStories = 0;
-    const storyProgressContainer = document.getElementById('story-progress-container');
-    const playPauseBtn = document.getElementById('story-play-pause-btn');
     
     let storyTimer = null;
     let storyProgressInterval = null;
@@ -2810,7 +2819,6 @@
 
     // Filter pages and buttons by active theme
     function filterStoryPages() {
-      // Find all story pages in the wrapper
       const allPages = document.querySelectorAll('#story-pages-wrapper .story-page');
       storyPages = [];
       
@@ -2833,22 +2841,23 @@
     function switchStoryTheme(theme) {
       currentTheme = theme;
       
-      // Update active button state styling
       const themes = ['health', 'practice', 'recovery'];
       themes.forEach(t => {
         const btn = document.getElementById(`btn-theme-${t}`);
-        if (t === theme) {
-          btn.style.background = t === 'health' ? 'linear-gradient(135deg, #ff4757, #ff6b81)' :
-                                 t === 'practice' ? 'linear-gradient(135deg, #2ed573, #7bed9f)' :
-                                 'linear-gradient(135deg, #1e90ff, #70a1ff)';
-          btn.style.color = '#fff';
-          btn.style.border = 'none';
-          btn.style.boxShadow = `0 4px 15px rgba(255, 255, 255, 0.15)`;
-        } else {
-          btn.style.background = 'rgba(255, 255, 255, 0.05)';
-          btn.style.color = '#a4b0be';
-          btn.style.border = '1px solid rgba(255, 255, 255, 0.1)';
-          btn.style.boxShadow = 'none';
+        if (btn) {
+          if (t === theme) {
+            btn.style.background = t === 'health' ? 'linear-gradient(135deg, #ff4757, #ff6b81)' :
+                                   t === 'practice' ? 'linear-gradient(135deg, #2ed573, #7bed9f)' :
+                                   'linear-gradient(135deg, #1e90ff, #70a1ff)';
+            btn.style.color = '#fff';
+            btn.style.border = 'none';
+            btn.style.boxShadow = `0 4px 15px rgba(255, 255, 255, 0.15)`;
+          } else {
+            btn.style.background = 'rgba(255, 255, 255, 0.05)';
+            btn.style.color = '#a4b0be';
+            btn.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+            btn.style.boxShadow = 'none';
+          }
         }
       });
 
@@ -2867,9 +2876,10 @@
     function toggleStoryViewerVisibility() {
       const slider = document.getElementById('story-slider');
       const toggleBtn = document.getElementById('story-global-toggle-btn');
+      if (!slider || !toggleBtn) return;
       
-      if (slider.style.maxHeight === '0px') {
-        slider.style.maxHeight = '800px';
+      if (slider.style.maxHeight === '0px' || getComputedStyle(slider).maxHeight === '0px') {
+        slider.style.maxHeight = '1000px';
         slider.style.opacity = '1';
         slider.style.marginTop = '0px';
         toggleBtn.innerText = '✨ 카드뉴스 뷰어 숨기기';
@@ -2892,6 +2902,9 @@
 
     // Initialize Story Progress Bars
     function initStoryProgress() {
+      const storyProgressContainer = document.getElementById('story-progress-container');
+      if (!storyProgressContainer) return;
+      
       storyProgressContainer.innerHTML = '';
       for (let i = 0; i < totalStories; i++) {
         const step = document.createElement('div');
@@ -2931,12 +2944,14 @@
       steps.forEach((step, i) => {
         step.className = 'story-progress-step';
         const fill = step.querySelector('.story-progress-fill');
-        fill.style.width = '0%';
-        if (i < storyIndex) {
-          step.classList.add('viewed');
-          fill.style.width = '100%';
-        } else if (i === storyIndex) {
-          step.classList.add('active');
+        if (fill) {
+          fill.style.width = '0%';
+          if (i < storyIndex) {
+            step.classList.add('viewed');
+            fill.style.width = '100%';
+          } else if (i === storyIndex) {
+            step.classList.add('active');
+          }
         }
       });
 
@@ -2955,7 +2970,8 @@
 
       if (isStoryPaused || totalStories === 0) return;
 
-      const activeStep = document.querySelectorAll('.story-progress-step')[storyIndex];
+      const steps = document.querySelectorAll('.story-progress-step');
+      const activeStep = steps[storyIndex];
       const activeFill = activeStep ? activeStep.querySelector('.story-progress-fill') : null;
 
       const intervalMs = 50;
@@ -2979,14 +2995,17 @@
       if (event) event.stopPropagation();
       isStoryPaused = !isStoryPaused;
       
+      const playPauseBtn = document.getElementById('story-play-pause-btn');
+      
       if (isStoryPaused) {
-        playPauseBtn.innerText = '▶';
+        if (playPauseBtn) playPauseBtn.innerText = '▶';
         clearInterval(storyProgressInterval);
         clearTimeout(storyTimer);
       } else {
-        playPauseBtn.innerText = '⏸';
+        if (playPauseBtn) playPauseBtn.innerText = '⏸';
         // Resume from current progress percent
-        const activeStep = document.querySelectorAll('.story-progress-step')[storyIndex];
+        const steps = document.querySelectorAll('.story-progress-step');
+        const activeStep = steps[storyIndex];
         const activeFill = activeStep ? activeStep.querySelector('.story-progress-fill') : null;
         const remainingDuration = storyDuration * (1 - storyProgressPercent / 100);
 
@@ -3009,33 +3028,13 @@
     // Touch Swipe Support
     let touchStartX = 0;
     let touchEndX = 0;
-    const storySlider = document.getElementById('story-slider');
-
-    storySlider.addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].screenX;
-      // Pause on touch hold
-      if (!isStoryPaused) {
-        toggleStoryAutoPlay();
-      }
-    }, { passive: true });
-
-    storySlider.addEventListener('touchend', (e) => {
-      touchEndX = e.changedTouches[0].screenX;
-      // Resume on release
-      if (isStoryPaused) {
-        toggleStoryAutoPlay();
-      }
-      handleSwipe();
-    }, { passive: true });
 
     function handleSwipe() {
       const swipeDistance = touchEndX - touchStartX;
       if (swipeDistance < -50) {
-        // Swipe Left -> Next
-        moveStory(1);
+        moveStory(1); // Swipe Left -> Next
       } else if (swipeDistance > 50) {
-        // Swipe Right -> Prev
-        moveStory(-1);
+        moveStory(-1); // Swipe Right -> Prev
       }
     }
 
@@ -3045,13 +3044,9 @@
     let currentZoomLevel = 1.0;
     
     function adjustGlobalFontSize(change) {
-      // 200% (2.0) 한계를 350% (3.5)로 대폭 상향하여 시원시원한 초거대 돋보기 줌 지원
       currentZoomLevel = Math.max(0.7, Math.min(3.5, currentZoomLevel + change));
-      
-      // Update the base-zoom CSS custom property on the document root
       document.documentElement.style.setProperty('--base-zoom', `${currentZoomLevel}rem`);
       
-      // Update indicator text
       const zoomIndicator = document.getElementById('zoom-indicator-val');
       if (zoomIndicator) {
         zoomIndicator.innerText = `${Math.round(currentZoomLevel * 100)}%`;
@@ -3060,7 +3055,25 @@
 
     // Initialize on load
     document.addEventListener('DOMContentLoaded', () => {
-      switchStoryTheme('health');
+      // Safely bind Swipe Listeners
+      const storySlider = document.getElementById('story-slider');
+      if (storySlider) {
+        storySlider.addEventListener('touchstart', (e) => {
+          touchStartX = e.changedTouches[0].screenX;
+          if (!isStoryPaused) {
+            toggleStoryAutoPlay();
+          }
+        }, { passive: true });
+
+        storySlider.addEventListener('touchend', (e) => {
+          touchEndX = e.changedTouches[0].screenX;
+          if (isStoryPaused) {
+            toggleStoryAutoPlay();
+          }
+          handleSwipe();
+        }, { passive: true });
+      }
+
     });
   </script>
 </body>
