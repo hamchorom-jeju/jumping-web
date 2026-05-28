@@ -500,6 +500,291 @@
         padding: 25px;
       }
     }
+
+    /* ==========================================================================
+       [NEW] Premium Instagram Story Style Card News Viewer (Health Stat Focus)
+       ========================================================================== */
+    .story-viewer-section {
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px solid rgba(123, 97, 255, 0.2);
+      border-radius: 28px;
+      padding: 30px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+    }
+
+    .story-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .story-header-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .story-header-title span {
+      background: linear-gradient(90deg, #ff4757, #ff6b81);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .story-badge-highlight {
+      background: rgba(255, 71, 87, 0.15);
+      border: 1px solid rgba(255, 71, 87, 0.3);
+      color: #ff4757;
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      animation: pulse-border 2s infinite;
+    }
+
+    @keyframes pulse-border {
+      0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+    }
+
+    /* Story Card Container */
+    .story-slider-container {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      margin: 0 auto;
+      aspect-ratio: 9 / 16;
+      background: #0d091e;
+      border: 6px solid #1a153b;
+      border-radius: 32px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Progress Indicators (Instagram Style) */
+    .story-progress-bar {
+      display: flex;
+      gap: 5px;
+      padding: 15px 15px 10px 15px;
+      z-index: 10;
+    }
+
+    .story-progress-step {
+      flex: 1;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .story-progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #ff4757, #7b61ff);
+      transition: width 0.1s linear;
+    }
+
+    .story-progress-step.viewed .story-progress-fill {
+      width: 100%;
+      background: #7b61ff;
+    }
+
+    .story-progress-step.active .story-progress-fill {
+      /* Dynamic width updated via JS timer */
+    }
+
+    /* Story Pages */
+    .story-pages-wrapper {
+      position: relative;
+      flex: 1;
+      width: 100%;
+    }
+
+    .story-page {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+      transform: scale(0.95);
+      background-size: cover;
+      background-position: center;
+      z-index: 1;
+    }
+
+    .story-page.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1);
+      z-index: 2;
+    }
+
+    /* Glass Panels Inside Story */
+    .story-glass-card {
+      background: rgba(15, 10, 35, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 24px;
+      margin-top: auto;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    }
+
+    .story-page-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.3;
+      margin-bottom: 12px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    .story-page-title span {
+      color: #ff4757;
+    }
+
+    .story-page-desc {
+      font-size: 0.95rem;
+      color: #e5e9f0;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    /* Value Grid */
+    .story-val-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .story-val-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+    }
+
+    .story-val-row span.label {
+      color: #a4b0be;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .story-val-row span.val {
+      font-weight: 800;
+      color: #ff4757;
+      background: rgba(255, 71, 87, 0.1);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .story-page-badge {
+      align-self: flex-start;
+      background: linear-gradient(135deg, #ff4757, #7b61ff);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 6px 14px;
+      border-radius: 50px;
+      box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+      margin-bottom: 20px;
+    }
+
+    /* Navigation Areas (Invisible Touch Zones) */
+    .story-nav-btn {
+      position: absolute;
+      top: 0;
+      width: 25%;
+      height: 100%;
+      cursor: pointer;
+      z-index: 5;
+    }
+
+    .story-nav-prev {
+      left: 0;
+    }
+
+    .story-nav-next {
+      right: 0;
+    }
+
+    /* Swipe Guide overlay */
+    .story-swipe-guide {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+      z-index: 10;
+      animation: pulse-text 2s infinite;
+    }
+
+    @keyframes pulse-text {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.8; }
+    }
+
+    /* Large Play/Pause Toggle button on top right of story */
+    .story-control-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      cursor: pointer;
+      z-index: 12;
+      transition: background 0.2s;
+    }
+
+    .story-control-btn:hover {
+      background: rgba(0, 0, 0, 0.8);
+    }
   </style>
 </head>
 <body>
@@ -540,6 +825,143 @@
     <!-- 메인 콘텐츠 영역 -->
     <main class="content-area">
       
+      <!-- [NEW] 1초 요약 카드뉴스 뷰어 (Health Stat Focus) -->
+      <section class="story-viewer-section">
+        <div class="story-header">
+          <div class="story-header-title">
+            <span>⚡ 체력 스탯 (Health EXP) 1초 요약 카드뉴스</span>
+          </div>
+          <div class="story-badge-highlight">💡 화면 터치로 슬라이드 넘김</div>
+        </div>
+
+        <div class="story-slider-container" id="story-slider">
+          <!-- Progress bars -->
+          <div class="story-progress-bar" id="story-progress-container">
+            <!-- Dynamic progress bars will be inserted here by JS -->
+          </div>
+
+          <!-- Play/Pause Controls -->
+          <button class="story-control-btn" id="story-play-pause-btn" onclick="toggleStoryAutoPlay(event)">⏸</button>
+
+          <!-- Interactive Area Touch Zones -->
+          <div class="story-nav-btn story-nav-prev" onclick="moveStory(-1)"></div>
+          <div class="story-nav-btn story-nav-next" onclick="moveStory(1)"></div>
+
+          <!-- Pages Wrapper -->
+          <div class="story-pages-wrapper">
+            <!-- Slide 1: Welcome -->
+            <div class="story-page active" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600&auto=format&fit=crop');">
+              <span class="story-page-badge">Health EXP</span>
+              <div class="story-glass-card">
+                <h3 class="story-page-title">⚡ <span>체력 스탯</span> 공식이<br>왜 그렇게 중요할까요?</h3>
+                <p class="story-page-desc">
+                  체력 스탯은 인바디 체성분의 건강한 개선과 다회 출석 임계 돌파 마일스톤에 따라 <strong>엄격하고 풍성하게 지급</strong>되는 지니월드의 핵심 경험치 지표입니다.
+                </p>
+                <div class="story-val-grid">
+                  <div class="story-val-row">
+                    <span class="label">🎯 과학적인 항상성 다이어트 실현</span>
+                    <span class="val">100% 자동 정산</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide 2: InBody Score -->
+            <div class="story-page" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=600&auto=format&fit=crop');">
+              <span class="story-page-badge">InBody</span>
+              <div class="story-glass-card">
+                <h3 class="story-page-title">📊 <span>인바디 체성분 개선</span><br>체중 감량 & 근육 증량</h3>
+                <p class="story-page-desc">
+                  주 1회 인바디를 촬영하면 <strong>지니 AI 인바디 스캐너</strong>가 판독한 수치를 바탕으로 점수가 자동 정산됩니다.
+                </p>
+                <div class="story-val-grid">
+                  <div class="story-val-row">
+                    <span class="label">⚖️ 체중 감량 (100g 당)</span>
+                    <span class="val">+50 EXP</span>
+                  </div>
+                  <div class="story-val-row">
+                    <span class="label">💪 근육 증량 (100g 당)</span>
+                    <span class="val">+200 EXP</span>
+                  </div>
+                  <div class="story-val-row">
+                    <span class="label">🔥 체지방률 감소 (1% 당)</span>
+                    <span class="val">+100 EXP</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide 3: Keep Weight Bonus -->
+            <div class="story-page" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=600&auto=format&fit=crop');">
+              <span class="story-page-badge">Maintenance</span>
+              <div class="story-glass-card">
+                <h3 class="story-page-title">👑 달성하면 끝이 아니다!<br><span>명품 체중 유지 보너스</span></h3>
+                <p class="story-page-desc">
+                  가입 시 설정한 <strong>목표 체중에 도달</strong>하면 더 이상 억지로 감량하지 않아도, 매달 체중을 잘 유지하는 것만으로 보너스가 펑펑 쏟아집니다.
+                </p>
+                <div class="story-val-grid">
+                  <div class="story-val-row">
+                    <span class="label">🏆 목표 체중 달성 후 유지 보너스</span>
+                    <span class="val">매월 +1,000 EXP</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide 4: Attendance Milestone -->
+            <div class="story-page" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?q=80&w=600&auto=format&fit=crop');">
+              <span class="story-page-badge">Milestone</span>
+              <div class="story-glass-card">
+                <h3 class="story-page-title">📅 주 3회 이상 출석!<br><span>다회 출석 마일스톤</span></h3>
+                <p class="story-page-desc">
+                  주간 출석 일수가 쌓일 때마다 백엔드 엔진이 자동으로 점수를 대폭 가산해 줍니다.
+                </p>
+                <div class="story-val-grid">
+                  <div class="story-val-row">
+                    <span class="label">🏃 주간 3회 출석 달성</span>
+                    <span class="val">+100 EXP</span>
+                  </div>
+                  <div class="story-val-row">
+                    <span class="label">⭐ 주간 4회 / 5회 (누적)</span>
+                    <span class="val">+200 / +300 EXP</span>
+                  </div>
+                  <div class="story-val-row">
+                    <span class="label">👑 주간 6회 출석 (누적 최고)</span>
+                    <span class="val">+500 EXP</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide 5: Debuff Alert -->
+            <div class="story-page" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1594470115504-239ab798aee8?q=80&w=600&auto=format&fit=crop');">
+              <span class="story-page-badge">Alert</span>
+              <div class="story-glass-card">
+                <h3 class="story-page-title">🚨 3일 이상 안 나오면?<br><span>연속 결석 디버프 & 부활</span></h3>
+                <p class="story-page-desc">
+                  결석 3일째부터 매일 <strong>-100 EXP 방전 경고</strong>가 발송되지만, 다시 클럽에 나와 출석체크를 하면 감점된 점수가 <strong>100% 즉시 원복 부활</strong>합니다!
+                </p>
+                <div class="story-val-grid">
+                  <div class="story-val-row">
+                    <span class="label">⚠️ 결석 3일째부터 (매일)</span>
+                    <span class="val" style="color: #ff4757; background: rgba(255, 71, 87, 0.15);">-100 EXP</span>
+                  </div>
+                  <div class="story-val-row">
+                    <span class="label">🛡️ 클럽 재방문 체크인</span>
+                    <span class="val" style="color: #2ed573; background: rgba(46, 213, 115, 0.15);">100% 부활 원복</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Swipe Guide -->
+          <div class="story-swipe-guide">
+            <span>◀ 터치하여 이동 ▶</span>
+          </div>
+        </div>
+      </section>
+
       <!-- 1부. 웰니스 연대기: 지니월드의 탄생과 진화 -->
       <section id="part1" class="card">
         <h2 class="card-title">
@@ -2107,6 +2529,173 @@
       clearRealKey();
     }
 
+    // ==========================================================================
+    // [NEW] Premium Instagram Story Slider Logic (Health Stat Card News)
+    // ==========================================================================
+    let storyIndex = 0;
+    const storyPages = document.querySelectorAll('.story-page');
+    const totalStories = storyPages.length;
+    const storyProgressContainer = document.getElementById('story-progress-container');
+    const playPauseBtn = document.getElementById('story-play-pause-btn');
+    
+    let storyTimer = null;
+    let storyProgressInterval = null;
+    let storyDuration = 5000; // 5 seconds per story
+    let storyProgressPercent = 0;
+    let isStoryPaused = false;
+
+    // Initialize Story Progress Bars
+    function initStoryProgress() {
+      storyProgressContainer.innerHTML = '';
+      for (let i = 0; i < totalStories; i++) {
+        const step = document.createElement('div');
+        step.className = 'story-progress-step';
+        if (i < storyIndex) {
+          step.classList.add('viewed');
+        }
+        const fill = document.createElement('div');
+        fill.className = 'story-progress-fill';
+        step.appendChild(fill);
+        storyProgressContainer.appendChild(step);
+      }
+    }
+
+    // Update story state & display
+    function showStory(index) {
+      if (index >= totalStories) {
+        storyIndex = 0; // Loop back
+      } else if (index < 0) {
+        storyIndex = totalStories - 1;
+      } else {
+        storyIndex = index;
+      }
+
+      storyPages.forEach((page, i) => {
+        if (i === storyIndex) {
+          page.classList.add('active');
+        } else {
+          page.classList.remove('active');
+        }
+      });
+
+      // Update progress bar viewed states
+      const steps = document.querySelectorAll('.story-progress-step');
+      steps.forEach((step, i) => {
+        step.className = 'story-progress-step';
+        const fill = step.querySelector('.story-progress-fill');
+        fill.style.width = '0%';
+        if (i < storyIndex) {
+          step.classList.add('viewed');
+          fill.style.width = '100%';
+        } else if (i === storyIndex) {
+          step.classList.add('active');
+        }
+      });
+
+      resetStoryTimers();
+    }
+
+    function moveStory(dir) {
+      showStory(storyIndex + dir);
+    }
+
+    // Timer control functions
+    function resetStoryTimers() {
+      clearInterval(storyProgressInterval);
+      clearTimeout(storyTimer);
+      storyProgressPercent = 0;
+
+      if (isStoryPaused) return;
+
+      const activeStep = document.querySelectorAll('.story-progress-step')[storyIndex];
+      const activeFill = activeStep ? activeStep.querySelector('.story-progress-fill') : null;
+
+      const intervalMs = 50;
+      const stepIncrement = (intervalMs / storyDuration) * 100;
+
+      storyProgressInterval = setInterval(() => {
+        if (!isStoryPaused) {
+          storyProgressPercent += stepIncrement;
+          if (activeFill) {
+            activeFill.style.width = Math.min(storyProgressPercent, 100) + '%';
+          }
+        }
+      }, intervalMs);
+
+      storyTimer = setTimeout(() => {
+        moveStory(1);
+      }, storyDuration);
+    }
+
+    function toggleStoryAutoPlay(event) {
+      if (event) event.stopPropagation();
+      isStoryPaused = !isStoryPaused;
+      
+      if (isStoryPaused) {
+        playPauseBtn.innerText = '▶';
+        clearInterval(storyProgressInterval);
+        clearTimeout(storyTimer);
+      } else {
+        playPauseBtn.innerText = '⏸';
+        // Resume from current progress percent
+        const activeStep = document.querySelectorAll('.story-progress-step')[storyIndex];
+        const activeFill = activeStep ? activeStep.querySelector('.story-progress-fill') : null;
+        const remainingDuration = storyDuration * (1 - storyProgressPercent / 100);
+
+        const intervalMs = 50;
+        const stepIncrement = (intervalMs / storyDuration) * 100;
+
+        storyProgressInterval = setInterval(() => {
+          storyProgressPercent += stepIncrement;
+          if (activeFill) {
+            activeFill.style.width = Math.min(storyProgressPercent, 100) + '%';
+          }
+        }, intervalMs);
+
+        storyTimer = setTimeout(() => {
+          moveStory(1);
+        }, remainingDuration);
+      }
+    }
+
+    // Touch Swipe Support
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const storySlider = document.getElementById('story-slider');
+
+    storySlider.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      // Pause on touch hold
+      if (!isStoryPaused) {
+        toggleStoryAutoPlay();
+      }
+    }, { passive: true });
+
+    storySlider.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      // Resume on release
+      if (isStoryPaused) {
+        toggleStoryAutoPlay();
+      }
+      handleSwipe();
+    }, { passive: true });
+
+    function handleSwipe() {
+      const swipeDistance = touchEndX - touchStartX;
+      if (swipeDistance < -50) {
+        // Swipe Left -> Next
+        moveStory(1);
+      } else if (swipeDistance > 50) {
+        // Swipe Right -> Prev
+        moveStory(-1);
+      }
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => {
+      initStoryProgress();
+      showStory(0);
+    });
   </script>
 </body>
 </html>
