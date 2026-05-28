@@ -669,7 +669,40 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      transition: all 0.3s ease-in-out;
     }
+
+    /* [NEW] Mobile Landscape (모바일 가로보기) 대응 전용 최적화 */
+    @media (max-height: 580px) and (orientation: landscape) {
+      .story-slider-container {
+        max-width: 280px; /* 가로모드 시 높이가 좁아지므로 너비를 슬림하게 줄여 한화면에 다 보이게 조율 */
+        border-width: 4px;
+        border-radius: 20px;
+      }
+      .story-glass-card {
+        padding: 12px !important;
+        border-radius: 12px !important;
+      }
+      .story-page-title {
+        font-size: 1rem !important;
+        margin-bottom: 6px !important;
+      }
+      .story-page-desc {
+        font-size: 0.78rem !important;
+        margin-bottom: 10px !important;
+        line-height: 1.4 !important;
+      }
+      .story-val-row {
+        padding: 6px 10px !important;
+        font-size: 0.75rem !important;
+      }
+      .story-page-badge {
+        padding: 4px 10px !important;
+        font-size: 0.7rem !important;
+        margin-bottom: 10px !important;
+      }
+    }
+
 
     /* Progress Indicators (Instagram Style) */
     .story-progress-bar {
