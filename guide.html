@@ -2988,7 +2988,8 @@
     let currentZoomLevel = 1.0;
     
     function adjustGlobalFontSize(change) {
-      currentZoomLevel = Math.max(0.7, Math.min(2.0, currentZoomLevel + change));
+      // 200% (2.0) 한계를 350% (3.5)로 대폭 상향하여 시원시원한 초거대 돋보기 줌 지원
+      currentZoomLevel = Math.max(0.7, Math.min(3.5, currentZoomLevel + change));
       
       // Update the base-zoom CSS custom property on the document root
       document.documentElement.style.setProperty('--base-zoom', `${currentZoomLevel}rem`);
