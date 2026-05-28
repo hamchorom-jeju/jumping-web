@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📘 지니월드 공식 백서 & 가이드북</title>
+  <!-- Google Fonts 적용 (Outfit & Inter) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Premium Modern Dark & Glassmorphism Design System */
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f0c20 0%, #15102a 50%, #060210 100%);
+      --glass-bg: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-hover: rgba(255, 255, 255, 0.06);
+      
+      --accent-health: #ff4757;
+      --accent-health-rgb: 255, 71, 87;
+      --accent-practice: #2ed573;
+      --accent-practice-rgb: 46, 213, 115;
+      --accent-recovery: #1e90ff;
+      --accent-recovery-rgb: 30, 144, 255;
+      
+      --text-main: #f1f2f6;
+      --text-muted: #a4b0be;
+      --glow-purple: rgba(123, 97, 255, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* Decorative Glow Orbs */
+    .glow-orb {
+      position: fixed;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(123, 97, 255, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+      top: -100px;
+      right: -100px;
+      z-index: -1;
+      pointer-events: none;
+      filter: blur(40px);
+    }
+    .glow-orb-2 {
+      position: fixed;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(30, 144, 255, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+      bottom: -150px;
+      left: -150px;
+      z-index: -1;
+      pointer-events: none;
+      filter: blur(50px);
+    }
+
+    /* Layout Structure */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 40px;
+    }
+
+    /* Header & Hero Section */
+    .hero-section {
+      grid-column: 1 / -1;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 50px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      margin-bottom: 20px;
+    }
+
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-health), var(--accent-practice), var(--accent-recovery));
+    }
+
+    .book-tag {
+      font-family: 'Outfit', sans-serif;
+      text-transform: uppercase;
+      font-weight: 800;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #ff4757, #7b61ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 0.95rem;
+      margin-bottom: 15px;
+      display: inline-block;
+    }
+
+    .hero-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 20px;
+      color: #fff;
+      line-height: 1.3;
+    }
+
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 800px;
+      margin: 0 auto 30px auto;
+    }
+
+    .quote-box {
+      background: rgba(255, 255, 255, 0.02);
+      border-left: 4px solid #7b61ff;
+      padding: 18px 24px;
+      border-radius: 0 16px 16px 0;
+      max-width: 900px;
+      margin: 0 auto;
+      text-align: left;
+      font-style: italic;
+      color: #dcdde1;
+      font-size: 0.95rem;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      position: sticky;
+      top: 40px;
+      height: calc(100vh - 80px);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .nav-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 24px;
+    }
+
+    .nav-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 8px;
+    }
+
+    .nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-item a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 10px;
+    }
+
+    .nav-item a:hover, .nav-item.active a {
+      color: #fff;
+      background: var(--glass-hover);
+      transform: translateX(4px);
+    }
+
+    .nav-item.active a {
+      border-left: 3px solid #7b61ff;
+      background: rgba(123, 97, 255, 0.1);
+    }
+
+    /* Main Content Area */
+    .content-area {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+
+    .card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      transition: border 0.3s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+    }
+
+    .card-title span {
+      background: linear-gradient(135deg, #7b61ff, #1e90ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .section-h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 30px;
+      margin-bottom: 15px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    p {
+      margin-bottom: 18px;
+      color: #ced6e0;
+      font-size: 0.98rem;
+    }
+
+    /* Timeline Styling */
+    .timeline {
+      position: relative;
+      margin: 30px 0;
+      padding-left: 24px;
+      border-left: 2px dashed rgba(255, 255, 255, 0.15);
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 30px;
+    }
+
+    .timeline-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .timeline-badge {
+      position: absolute;
+      left: -33px;
+      top: 4px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #7b61ff;
+      border: 3px solid #0f0c20;
+      box-shadow: 0 0 10px #7b61ff;
+    }
+
+    .timeline-title {
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    /* Table Mapping */
+    .mapping-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 25px 0;
+      font-size: 0.92rem;
+    }
+
+    .mapping-table th, .mapping-table td {
+      padding: 14px 18px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .mapping-table th {
+      background: rgba(255, 255, 255, 0.02);
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .mapping-table tr:hover {
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    /* Stat Box Cards */
+    .stat-container {
+      margin-top: 25px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .stat-box {
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 24px;
+      position: relative;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.005) 100%);
+    }
+
+    .stat-box.health {
+      border-left: 4px solid var(--accent-health);
+    }
+    .stat-box.practice {
+      border-left: 4px solid var(--accent-practice);
+    }
+    .stat-box.recovery {
+      border-left: 4px solid var(--accent-recovery);
+    }
+
+    .stat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .stat-box.health .stat-badge {
+      background: rgba(var(--accent-health-rgb), 0.1);
+      color: var(--accent-health);
+    }
+    .stat-box.practice .stat-badge {
+      background: rgba(var(--accent-practice-rgb), 0.1);
+      color: var(--accent-practice);
+    }
+    .stat-box.recovery .stat-badge {
+      background: rgba(var(--accent-recovery-rgb), 0.1);
+      color: var(--accent-recovery);
+    }
+
+    .stat-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .stat-rule {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 15px;
+    }
+
+    .sub-section {
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+
+    .sub-section-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #fff;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sub-list {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.9rem;
+      padding-left: 4px;
+    }
+
+    .sub-list li {
+      display: flex;
+      justify-content: space-between;
+      color: #ced6e0;
+    }
+
+    .sub-list li span.val {
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* Highlights & Badges */
+    .pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: #fff;
+      font-family: monospace;
+    }
+
+    /* Print styling */
+    @media print {
+      body {
+        background: #fff !important;
+        color: #000 !important;
+      }
+      .container {
+        display: block;
+        padding: 0;
+      }
+      .sidebar, .glow-orb, .glow-orb-2 {
+        display: none !important;
+      }
+      .card, .hero-section {
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+        padding: 20px 0 !important;
+      }
+      .hero-title, .card-title, .section-h3, .sub-section-title, .stat-name {
+        color: #000 !important;
+      }
+      p, .sub-list li {
+        color: #333 !important;
+      }
+      .sub-list li span.val {
+        color: #000 !important;
+      }
+      .mapping-table th {
+        background: #eee !important;
+        color: #000 !important;
+      }
+      .mapping-table td, .mapping-table th {
+        border-bottom: 1px solid #ccc !important;
+      }
+      .quote-box {
+        border-left: 4px solid #000 !important;
+        background: #f9f9f9 !important;
+        color: #333 !important;
+      }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 900px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        position: static;
+        height: auto;
+      }
+      .hero-section {
+        padding: 30px 20px;
+      }
+      .hero-title {
+        font-size: 2rem;
+      }
+      .card {
+        padding: 25px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glow-orb"></div>
+  <div class="glow-orb-2"></div>
+
+  <div class="container">
+    <!-- 웰컴 헤더 히어로 -->
+    <header class="hero-section">
+      <div class="book-tag">Official Documentation</div>
+      <h1 class="hero-title">📘 지니월드 공식 백서 & 가이드북</h1>
+      <p class="hero-subtitle">
+        평생 다이어트의 유일한 해법, 항상성(Homeostasis)과 지니월드(GenieWorld) 마스터 매뉴얼
+      </p>
+      <div class="quote-box">
+        "지니월드는 아날로그 도장 출석부에서 출발했지만 AI와 코딩을 배우기 시작하며 앱시트의 시트 동기화 유실 오류를 극복하고, 전면 독립 웹앱 체제로 진화한 온·오프라인 건강 연맹 플랫폼입니다."
+        <br><br>
+        <span style="font-size: 0.85rem; font-weight: 500; color: #a4b0be;">- 이 백서는 노형점핑클럽 회원용 웰니스 앱, 출석 키오스크, 신규 회원 등록 PWA, 그리고 실무용 '점핑 관리자 앱(어드민)'과 가상 월드용 '지니월드 관리자(생텀)'의 모든 페이지와 비즈니스 정밀 사양을 한 글자도 누락 없이 집대성한 공식 통합 가이드북입니다.</span>
+      </div>
+    </header>
+
+    <!-- 사이드바 네비게이션 -->
+    <aside class="sidebar">
+      <nav class="nav-card">
+        <div class="nav-title">목차</div>
+        <ul class="nav-list">
+          <li class="nav-item active"><a href="#part1">1부. 웰니스 연대기</a></li>
+          <li class="nav-item"><a href="#part2">2부. 3대 핵심 스탯 공식</a></li>
+          <li class="nav-item"><a href="#part3">3부. 사용자 앱 세부 사양</a></li>
+          <li class="nav-item"><a href="#part4">4부. 출석 키오스크 사양</a></li>
+          <li class="nav-item"><a href="#part5">5부. 신규 등록 시스템 사양</a></li>
+          <li class="nav-item"><a href="#part6">6부. 관리자 앱 세부 사양</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- 메인 콘텐츠 영역 -->
+    <main class="content-area">
+      
+      <!-- 1부. 웰니스 연대기: 지니월드의 탄생과 진화 -->
+      <section id="part1" class="card">
+        <h2 class="card-title">
+          <span>1부. 웰니스 연대기: 지니월드의 탄생과 진화</span>
+        </h2>
+        
+        <h3 class="section-h3">1. 항상성(Homeostasis) 다이어트의 과학적 본질</h3>
+        <p>
+          다이어트의 최종 도착지는 체중의 숫자를 깎는 것이 아닙니다. 우리 몸의 내밀한 과학인 <strong>'항상성(Homeostasis)'</strong>을 품위 있게 설득하여 영원히 무너지지 않는 건강한 루틴을 구축하는 것입니다.
+        </p>
+        <p>
+          평생 맛없는 닭가슴살만 먹거나 강박적인 굶기를 지속할 수는 없습니다. 지니월드가 제시하는 유일한 정답은 <strong>"즐거운 일상 루틴을 체득하여, 우리 몸이 스스로 인지하는 항상성의 기준점 자체를 더 가볍고 활기찬 상태로 이동시키는 것"</strong>입니다.
+        </p>
+
+        <h3 class="section-h3">2. 종이 출석부에서 '전면 독자 웹앱'으로의 대전환 연대기</h3>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-badge"></div>
+            <div class="timeline-title">1단계: 아날로그 수기 장부 시절</div>
+            <p>매달 종이 출석부를 펼쳐놓고 회원이 방문할 때마다 출석 도장을 찍어주던 철저한 수기 방식이었습니다.</p>
+          </div>
+          
+          <div class="timeline-item">
+            <div class="timeline-badge"></div>
+            <div class="timeline-title">2단계: 앱시트(AppSheet)의 도전과 좌절</div>
+            <p>관리를 디지털화하기 위해 앱시트를 도입하여 정교한 봇 설정과 액션 버튼을 깎아 올렸으나, 네트워크 지연 시 기기 내부 저장소에만 데이터를 가두고 구글 시트 데이터베이스로 내보내지 않아 출석 정보가 증발하는 치명적인 고질병을 겪으며 개발의 큰 골머리를 앓았습니다.</p>
+          </div>
+          
+          <div class="timeline-item">
+            <div class="timeline-badge"></div>
+            <div class="timeline-title">3단계: GAS 웹앱 이중 하이브리드 구조</div>
+            <p>부하를 극복하고자 출석 키오스크와 테라피 예약 부분만 먼저 구글 웹앱으로 분리하여 앱시트와 하이브리드로 사용해 과도기를 건넜습니다.</p>
+          </div>
+          
+          <div class="timeline-item">
+            <div class="timeline-badge"></div>
+            <div class="timeline-title">4단계: 전면 독자 웹앱 대전환 (jumping-web)</div>
+            <p>마침내 앱시트를 전면 폐기하고, 식단 AI 분석, 인바디 AI OCR 스캐너, 스마트 매출 장부, 자동 문자 에디터, 게시판 작성 에디터를 완벽히 이식한 Vercel 기반의 통합 헬스 플랫폼을 완성했습니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2부. 지니월드 3대 핵심 스탯의 정밀 채점 공식 -->
+      <section id="part2" class="card">
+        <h2 class="card-title">
+          <span>2부. 지니월드 3대 핵심 스탯의 정밀 채점 공식</span>
+        </h2>
+        <p>
+          지니월드의 모든 활동 점수는 구글 스프레드시트의 필드 구조와 완벽히 동기화되어 있으며, 3대 웰니스 경험치(EXP)로 엄격히 구분 적립됩니다.
+        </p>
+
+        <h3 class="section-h3">🎯 3대 웰니스 스탯 안내</h3>
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); border-radius: 16px; padding: 25px; margin-bottom: 30px;">
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 15px; font-size: 1.05rem;">
+            <li style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.3rem;">⚡</span> 
+              <strong>체력 (Health EXP)</strong> 
+              <span style="color: var(--text-muted); font-size: 0.95rem;">= 인바디 체성분 점수 + 다회 출석 보너스</span>
+            </li>
+            <li style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.3rem;">🎯</span> 
+              <strong>실천력 (Practice EXP)</strong> 
+              <span style="color: var(--text-muted); font-size: 0.95rem;">= 방문 출석 + 운동 시간 + 수분·식단 인증 + 돌발퀘스트</span>
+            </li>
+            <li style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.3rem;">❤️</span> 
+              <strong>회복력 (Recovery EXP)</strong> 
+              <span style="color: var(--text-muted); font-size: 0.95rem;">= 미라클 루틴 9대 습관 + 미라클 플러스 인증 + 체온 테라피</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 3대 스탯 컨테이너 -->
+        <div class="stat-container">
+          
+          <!-- 1. 체력 스탯 -->
+          <div class="stat-box health">
+            <div class="stat-badge">⚡ Health</div>
+            <div class="stat-name">1. 체력 스탯 (Health EXP)</div>
+            <div class="stat-rule">기본 룰: 체성분의 긍정적 변화와 신체 활력의 임계 돌파 마일스톤을 기준으로만 엄격히 지급됩니다.</div>
+            
+            <div class="sub-section">
+              <div class="sub-section-title">(1) 인바디 체성분 개선 및 유지 점수</div>
+              <p style="font-size: 0.88rem; margin-bottom: 10px;">주 1회 필수로 인바디를 측정하여 지니 AI 인바디 스캐너가 판독한 체성분 정보를 감량 계산식에 의거해 점수를 부여합니다. 또한, 가입 시 설정한 목표 체중을 기준으로 감량 후 매월 체중 유지에 성공할 때 보너스를 지급합니다.</p>
+              <ul class="sub-list">
+                <li><span>체중 감량 (100g 당)</span><span class="val">+50 EXP</span></li>
+                <li><span>근육 증량 (100g 당)</span><span class="val">+200 EXP</span></li>
+                <li><span>체지방률 감소 (1% 당)</span><span class="val">+100 EXP</span></li>
+                <li><span>체성분 명품 유지 보너스 (목표 체중 달성 후 유지 성공 시 매월)</span><span class="val">+1,000 EXP</span></li>
+              </ul>
+            </div>
+
+            <div class="sub-section">
+              <div class="sub-section-title">(2) 주간 다회 출석 체력 보너스 마일스톤</div>
+              <p style="font-size: 0.88rem; margin-bottom: 10px;">한 주간의 출석 일수가 쌓일 때 백엔드 엔진이 자동으로 대폭 적립합니다. 매주 3회 이상 운동은 체력을 키워줄 수 있으므로 체력 점수에 다회 출석 보너스를 지급합니다.</p>
+              <ul class="sub-list">
+                <li><span>주간 3회 출석 달성</span><span class="val">+100 EXP</span></li>
+                <li><span>주간 4회 출석 달성 (누적)</span><span class="val">+200 EXP (+100 추가)</span></li>
+                <li><span>주간 5회 출석 달성 (누적)</span><span class="val">+300 EXP (+100 추가)</span></li>
+                <li><span>주간 6회 출석 달성 (누적)</span><span class="val">+500 EXP (+200 추가)</span></li>
+              </ul>
+            </div>
+
+            <div class="sub-section">
+              <div class="sub-section-title">(3) 연속 결석 감점 디버프</div>
+              <p style="font-size: 0.88rem; margin-bottom: 0;">결석이 3일째 되는 순간부터 매일 -100 EXP씩 감점 방전 경고가 발송되며, 다시 클럽에 방문해 출석하는 즉시 모든 감점 점수가 100% 원복 부활합니다.</p>
+            </div>
+          </div>
+
+          <!-- 2. 실천력 스탯 -->
+          <div class="stat-box practice">
+            <div class="stat-badge">🎯 Practice</div>
+            <div class="stat-name">2. 실천력 스탯 (Practice EXP)</div>
+            <div class="stat-rule">기본 룰: 일상 웰니스 행동 실천과 커뮤니티 기여, 돌발 퀘스트 적극적 달성률에 따라 가변 지급됩니다.</div>
+            
+            <div class="sub-section">
+              <div class="sub-section-title">(1) 클럽 체크인 (방문 출석) 및 운동 강도</div>
+              <p style="font-size: 0.88rem; margin-bottom: 10px;">노형점핑클럽 실물 키오스크에 로그인하여 출석한 즉시 체크인 점수가 적립됩니다. 점핑 운동을 완료하고 인증을 올릴 경우 운동 시간/강도 보너스를 지급합니다.</p>
+              <ul class="sub-list">
+                <li><span>기본 체크인 출석 (1일 1회)</span><span class="val">+100 EXP</span></li>
+                <li><span>점핑 운동 완료 인증 (40분/50분 코스)</span><span class="val">+50 EXP</span></li>
+              </ul>
+            </div>
+
+            <div class="sub-section">
+              <div class="sub-section-title">(2) 수분 섭취 및 식단 기록 실천</div>
+              <p style="font-size: 0.88rem; margin-bottom: 10px;">지니월드 AI 영양사 엔진을 통해 하루 수분 섭취량 슬라이더 조절 및 식단 정보를 사진과 함께 안전하게 인증할 때 지급됩니다.</p>
+              <ul class="sub-list">
+                <li><span>수분 목표 달성 인증 (슬라이더 조절)</span><span class="val">+20 EXP</span></li>
+                <li><span>식단 사진 업로드 인증 (매 끼니당)</span><span class="val">+30 EXP</span></li>
+              </ul>
+            </div>
+
+            <div class="sub-section">
+              <div class="sub-section-title">(3) 실시간 돌발 퀘스트 달성 보너스</div>
+              <p style="font-size: 0.88rem; margin-bottom: 0;">운영자 생텀에서 불시에 발행하는 '돌발 퀘스트'를 당일에 인증 완료한 경우, 난이도에 관계없이 높은 보너스 점수가 가산됩니다. <span class="pill">+50 EXP</span></p>
+            </div>
+          </div>
+
+          <!-- 3. 회복력 스탯 -->
+          <div class="stat-box recovery">
+            <div class="stat-badge">❤️ Recovery</div>
+            <div class="stat-name">3. 회복력 스탯 (Recovery EXP)</div>
+            <div class="stat-rule">기본 룰: 우리 몸의 부교감 신경을 활성화하고 세포의 활력과 심리적 안정, 치유 루틴에 귀 기울인 모든 시간에 비례해 지급됩니다.</div>
+            
+            <div class="sub-section">
+              <div class="sub-section-title">(1) 미라클 루틴 9대 웰니스 습관 정착</div>
+              <p style="font-size: 0.88rem; margin-bottom: 10px;">아침 미지근한 물 한 잔, 가벼운 스트레칭, 정돈된 명상, 일찍 잠들기 등 우리 삶을 묵묵히 지탱해 주는 9가지 루틴을 실천 등록할 때마다 정밀 지급됩니다.</p>
+              <ul class="sub-list">
+                <li><span>9대 습관 개별 항목 달성 완료 (개당)</span><span class="val">+10 EXP</span></li>
+                <li><span>하루 9대 습관 퍼펙트 클리어 보너스</span><span class="val">+50 EXP</span></li>
+              </ul>
+            </div>
+
+            <div class="sub-section">
+              <div class="sub-section-title">(2) 체온 테라피 반신욕 및 힐링 치유</div>
+              <p style="font-size: 0.88rem; margin-bottom: 10px;">클럽 내 체온 테라피(원적외선 반신욕) 룸을 예약하고 실제 입실하여 면역 온도를 높이는 힐링 치료 시간을 보냈을 때 풍성하게 가산됩니다.</p>
+              <ul class="sub-list">
+                <li><span>테라피 예약 및 입실 정상 수료</span><span class="val">+100 EXP</span></li>
+                <li><span>미라클 플러스 치유 인증</span><span class="val">+50 EXP</span></li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 3부. 지니월드(GenieWorld) 사용자 앱 세부 사양서 -->
+      <section id="part3" class="card">
+        <h2 class="card-title">
+          <span>3부. 지니월드(GenieWorld) 사용자 앱 세부 사양서</span>
+        </h2>
+        <p>
+          지니월드 사용자용 웹앱은 100% 모바일 뷰포트에 최적화된 웹앱(PWA) 형태로 서비스되며, 고유의 감성 기후 제어 및 정밀 스탯 게이미피케이션이 실시간 연동되어 있습니다.
+        </p>
+
+        <!-- 🔑 3부 1장. 로그인 화면 -->
+        <h3 class="section-h3" id="app-login">🔑 3부 1장. 로그인 화면</h3>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">
+          실제 지니월드 로그인 시스템(<span class="pill">login.html</span>)의 실제 컴포넌트 구조를 기반으로 설계된 안내 매뉴얼입니다.
+        </p>
+
+        <!-- 실제 로그인 UI 모형 통합 및 번호 핀포인트 -->
+        <div style="background: rgba(15, 12, 32, 0.6); border: 1px solid var(--glass-border); border-radius: 24px; padding: 25px; margin-bottom: 25px;">
+          
+          <div style="max-width: 320px; margin: 0 auto; background: radial-gradient(circle at center, #1e252b 0%, #0f1316 100%); border: 3px solid #b8860b; border-radius: 28px; padding: 25px 16px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.6); position: relative; font-family: 'Pretendard', sans-serif;">
+            
+            <div style="font-size: 3rem; text-shadow: 0 0 20px rgba(212, 175, 55, 0.3); margin-bottom: 5px;">🌌</div>
+            <h1 style="font-size: 1.8rem; font-weight: 900; letter-spacing: 2px; margin: 0; background: linear-gradient(135deg, #fff 30%, #d4af37 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">GENIE WORLD</h1>
+            <div style="font-size: 0.65rem; font-weight: 800; color: #f39c12; letter-spacing: 3px; margin: 3px 0 15px 0;">WELLNESS UNIVERSE</div>
+
+            <!-- 가상 로그인 컨테이너 -->
+            <div style="background: rgba(30, 30, 30, 0.88); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 15px; position: relative;">
+              
+              <!-- 1번 핀포인트 -->
+              <div style="position: absolute; top: -12px; left: -12px; width: 28px; height: 28px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.85rem; box-shadow: 0 0 10px #7b61ff; z-index: 10;">1</div>
+
+              <h2 style="font-size: 1.1rem; font-weight: 800; color: #fff; margin: 0 0 5px 0;">회원 본인 확인</h2>
+              <p style="font-size: 0.72rem; color: #aaa; margin-bottom: 12px; line-height: 1.4;">전화번호 뒷 4자리를 아래 숫자 패드에서 탭하여 로그인해 주세요.</p>
+
+              <!-- 번호 입력창 -->
+              <div style="margin-bottom: 12px; position: relative;">
+                <!-- 2번 핀포인트 -->
+                <div style="position: absolute; top: -10px; right: -10px; width: 28px; height: 28px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.85rem; box-shadow: 0 0 10px #7b61ff; z-index: 10;">2</div>
+                
+                <div id="real-pin-display" style="background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; font-size: 1.5rem; letter-spacing: 5px; font-weight: 900; color: #fff; height: 45px; display: flex; align-items: center; justify-content: center;">
+                  ••••
+                </div>
+              </div>
+
+              <!-- 키패드 그리드 -->
+              <div style="position: relative;">
+                <!-- 3번 핀포인트 -->
+                <div style="position: absolute; bottom: -10px; right: -10px; width: 28px; height: 28px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.85rem; box-shadow: 0 0 10px #7b61ff; z-index: 10;">3</div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                  <button onclick="pressRealKey('1')" style="background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 10px 0; font-size: 1.1rem; font-weight: bold; cursor: pointer;">1</button>
+                  <button onclick="pressRealKey('2')" style="background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 10px 0; font-size: 1.1rem; font-weight: bold; cursor: pointer;">2</button>
+                  <button onclick="pressRealKey('3')" style="background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 10px 0; font-size: 1.1rem; font-weight: bold; cursor: pointer;">3</button>
+                  <button onclick="pressRealKey('4')" style="background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 10px 0; font-size: 1.1rem; font-weight: bold; cursor: pointer;">4</button>
+                  <button onclick="pressRealKey('5')" style="background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 10px 0; font-size: 1.1rem; font-weight: bold; cursor: pointer;">5</button>
+                  <button onclick="pressRealKey('6')" style="background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 10px 0; font-size: 1.1rem; font-weight: bold; cursor: pointer;">6</button>
+                  <button onclick="pressRealKey('7')" style="background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 10px 0; font-size: 1.1rem; font-weight: bold; cursor: pointer;">7</button>
+                  <button onclick="pressRealKey('8')" style="background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 10px 0; font-size: 1.1rem; font-weight: bold; cursor: pointer;">8</button>
+                  <button onclick="pressRealKey('9')" style="background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 10px 0; font-size: 1.1rem; font-weight: bold; cursor: pointer;">9</button>
+                  <button onclick="clearRealKey()" style="background: rgba(255, 82, 82, 0.05); color: #ff5252; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 10px 0; font-size: 0.8rem; font-weight: bold; cursor: pointer;">지움</button>
+                  <button onclick="pressRealKey('0')" style="background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 10px 0; font-size: 1.1rem; font-weight: bold; cursor: pointer;">0</button>
+                  <button onclick="submitRealLogin()" style="background: #d4af37; color: #fff; border: 1px solid #d4af37; border-radius: 10px; padding: 10px 0; font-size: 0.8rem; font-weight: bold; cursor: pointer;">확인</button>
+                </div>
+              </div>
+
+              <!-- 매칭 회원 선택창 가상 쇼케이스 -->
+              <div id="real-member-match-area" style="margin-top: 12px; display: none; position: relative;">
+                <!-- 4번 핀포인트 -->
+                <div style="position: absolute; bottom: 10px; left: -10px; width: 28px; height: 28px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.85rem; box-shadow: 0 0 10px #7b61ff; z-index: 10;">4</div>
+                
+                <div style="background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 10px; cursor: pointer;" onclick="completeRealLogin()">
+                  <div style="font-size: 0.72rem; color: #d4af37; font-weight: bold;">노형점핑 지점 주민 확인</div>
+                  <div style="font-size: 0.95rem; font-weight: bold; color: #fff; margin-top: 2px;">👤 김웰니스 회원님 (로그인)</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- 로그인 핀포인트 구조 설명 -->
+        <div class="sub-section" style="margin-bottom: 35px;">
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 16px;">
+            <li>
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">1</span> 본인 확인 팝업창</strong>
+              <p style="font-size: 0.88rem; margin: 4px 0 0 0; color: var(--text-muted);">
+                노형점핑 실물 지점에 신규 회원 등록 서명 완료 시 **"가입과 동시에 지니월드 이용 권한이 부여"**되는 약관 통합 자동화에 의거, 별도의 회원가입 없이 바로 로그인할 수 있는 게이트웨이 창입니다.
+              </p>
+            </li>
+            <li style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">2</span> 4자리 비밀번호/전화번호 번호 표시부</strong>
+              <p style="font-size: 0.88rem; margin: 4px 0 0 0; color: var(--text-muted);">
+                전화번호 뒷 4자리를 안전하게 입력받는 공용 패널 인터페이스입니다. 입력하는 동안 둥근 마크로 보안 상태를 아름답게 유지합니다.
+              </p>
+            </li>
+            <li style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">3</span> 체크인용 가상 숫자 키패드</strong>
+              <p style="font-size: 0.88rem; margin: 4px 0 0 0; color: var(--text-muted);">
+                오타 없이 부드럽게 탭하여 입력할 수 있도록 큼직하게 깎아 올린 모바일용 통합 숫자패드입니다. 뒷자리를 탭한 뒤 오른쪽 하단의 [확인] 버튼을 터치하면 실시간 회원 동기화 처리가 가동됩니다.
+              </p>
+            </li>
+            <li style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">4</span> 동일 번호 매칭 회원 자동 노출</strong>
+              <p style="font-size: 0.88rem; margin: 4px 0 0 0; color: var(--text-muted);">
+                동일한 뒷번호 4자리를 가진 회원이 여러 명 존재할 경우, 이름과 소속 지점명이 담긴 주민 확인 선택 카드가 하단에 자동으로 생성되어, 본인의 이름을 탭하면 광장으로 매끄럽고 신속하게 진입할 수 있도록 돕습니다.
+              </p>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 🏛️ 3부 2장. 광장 (마을 메인화면) -->
+        <h3 class="section-h3" id="app-plaza">🏛️ 3부 2장. 광장 (마을 메인화면)</h3>
+        <p style="font-size: 0.98rem; color: #ced6e0; margin-bottom: 25px;">
+          실제 지니월드 광장(마을 메인화면)의 대시보드 화면입니다. 화면의 번호 핀포인트를 클릭하면 아래 매칭되는 상세 설명으로 부드럽게 연계됩니다.
+        </p>
+
+        <!-- 실제 캡처 화면 핀포인트 안내 뷰어 -->
+        <div class="plaza-viewer-container" style="background: rgba(15, 12, 32, 0.4); border: 1px solid var(--glass-border); border-radius: 24px; padding: 30px; margin-bottom: 30px; display: flex; justify-content: center; align-items: center;">
+          <style>
+            .pin-badge {
+              transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.25s, box-shadow 0.25s;
+            }
+            .pin-badge:hover {
+              transform: translate(-50%, -50%) scale(1.3) !important;
+              background: #ff4757 !important;
+              box-shadow: 0 0 15px #ff4757 !important;
+            }
+          </style>
+          <div class="phone-mockup" style="position: relative; max-width: 360px; width: 100%; border: 4px solid #33295c; border-radius: 36px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.8); background: #0b071a;">
+            
+            <!-- 실제 캡처 이미지 탑재 -->
+            <img src="media__1779884778943.png" alt="지니월드 광장 대시보드" style="width: 100%; height: auto; display: block; filter: brightness(0.95); pointer-events: none;">
+
+            <!-- 핀포인트 1: 글로벌 헤더 & 아웃 안전핀 -->
+            <a href="#pin-1" class="pin-badge" style="position: absolute; top: 6%; left: 83.5%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">1</a>
+
+            <!-- 핀포인트 2: 실시간 기후동기화 바 (제주씽크) -->
+            <a href="#pin-2" class="pin-badge" style="position: absolute; top: 14%; left: 47%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">2</a>
+
+            <!-- 핀포인트 3: 크로스 롤링 마을공지 -->
+            <a href="#pin-3" class="pin-badge" style="position: absolute; top: 22.5%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">3</a>
+
+            <!-- 핀포인트 4: 프리미엄 아코디언 돌발퀘스트 -->
+            <a href="#pin-4" class="pin-badge" style="position: absolute; top: 29.5%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">4</a>
+
+            <!-- 핀포인트 5: 실시간 연동 랭킹 배너 -->
+            <a href="#pin-5" class="pin-badge" style="position: absolute; top: 36.5%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">5</a>
+
+            <!-- 핀포인트 6: 캐릭터 아바타 및 등급 게이지 (상태창) -->
+            <a href="#pin-6" class="pin-badge" style="position: absolute; top: 57%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">6</a>
+
+            <!-- 핀포인트 7: 나의 활동일지 바로가기 -->
+            <a href="#pin-7" class="pin-badge" style="position: absolute; top: 77.5%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">7</a>
+
+            <!-- 핀포인트 8: 지니마을 우편함 (쪽지함) 플로팅 위젯 -->
+            <a href="#pin-8" class="pin-badge" style="position: absolute; top: 84.5%; left: 15.5%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">8</a>
+
+            <!-- 핀포인트 9: BGM 재생 플로팅 위젯 -->
+            <a href="#pin-9" class="pin-badge" style="position: absolute; top: 79.5%; left: 84.5%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">9</a>
+
+            <!-- 핀포인트 10: 공통 탭 네비게이션바 (하단 고정) -->
+            <a href="#pin-10" class="pin-badge" style="position: absolute; top: 94.5%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">10</a>
+
+          </div>
+        </div>
+
+        <!-- 광장 핀포인트 구조 설명 -->
+        <div class="sub-section" style="margin-bottom: 35px;">
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 16px;">
+            <li id="pin-1">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">1</span> 글로벌 헤더 & 아웃 안전핀</strong>
+              <p style="font-size: 0.88rem; margin: 4px 0 0 0; color: var(--text-muted);">
+                현재 속한 가상 월드(노형 빌리지)의 이름이 표기되며, 우측 상단에는 안전하게 계정을 분리할 수 있는 [로그아웃] 버튼이 상시 고정 배치됩니다.
+              </p>
+            </li>
+            <li id="pin-2" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">2</span> 실시간 기후동기화 바 (제주씽크)</strong>
+              <p style="font-size: 0.88rem; margin: 4px 0 0 0; color: var(--text-muted);">
+                제주시 노형동의 온도와 날씨를 실시간 스캔하여 광장 전반에 흩날림 효과를 줍니다. <strong>[👁️ 끄기]</strong> 버튼 클릭 시 모바일 리소스 부하를 방지하기 위해 기후 파티클 그래픽이 영구적으로 걷히며, 타 페이지로의 전환 시에도 설정이 일괄 고정 유지됩니다.
+              </p>
+            </li>
+            <li id="pin-3" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">3</span> 크로스 롤링 마을공지</strong>
+              <p style="font-size: 0.88rem; margin: 4px 0 0 0; color: var(--text-muted);">
+                운영자가 공지한 마을의 주요 미팅 및 지침이 한 줄 배너 형식으로 롤링됩니다. [전체보기]를 클릭하면 예전 공지사항들이 아름다운 아코디언 아카이브 형태로 나열되는 빌리지 스크롤 창으로 진입합니다.
+              </p>
+            </li>
+            <li id="pin-4" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">4</span> 프리미엄 아코디언 돌발퀘스트</strong>
+              <p style="font-size: 0.88rem; margin: 4px 0 0 0; color: var(--text-muted);">
+                돌발 퀘스트 활성화 시 생동감 있게 붉게 번쩍이는(Rose 테마) 전용 배너가 생성됩니다. 터치 시 서랍 열리듯 아래로 슥 펼쳐지며 디테일한 미션 가이드라인과 획득 점수, [인증하러 가기] 단추가 함께 연출되어 회원들에게 극대화된 미션 동참 기회를 제공합니다.
+              </p>
+            </li>
+            <li style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">5</span> 실시간 연동 랭킹 배너</strong>
+              <p style="font-size: 0.88rem; margin: 4px 0 0 0; color: var(--text-muted);">
+                주간, 월간, 토탈 및 출석왕 순위가 차례대로 롤링되며 건강한 경쟁을 극대화합니다. 주간 공식 발표일(목요일)과 월초(매월 1일)에는 0점으로 초기화되는 실시간 대신 지난 기간 최종으로 확정된 명예의 전당 아카이브 데이터로 자동 교체 고정됩니다.
+              </p>
+            </li>
+            <li id="pin-6" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">6</span> 캐릭터 아바타 및 등급 게이지 (모험가 상태창)</strong>
+              <p style="font-size: 0.88rem; margin: 4px 0 10px 0; color: var(--text-muted);">
+                나의 현재 레벨(씨앗 🌱 ➡️ 전설 🌟)에 맞는 클래스 아이콘 배너와 다음 등급으로 레벨업하기 위한 경험치(EXP) 게이지 바가 모험가 상태창으로 제공됩니다.
+              </p>
+
+              <!-- 등급 7단계 설명 -->
+              <div style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 12px; margin-bottom: 15px; margin-top: 8px;">
+                <strong style="color: #fff; font-size: 0.92rem; display: block; margin-bottom: 8px;">🏆 모험가 성장 칭호 7단계</strong>
+                <ul style="list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; font-size: 0.8rem; color: var(--text-muted); padding-left: 0;">
+                  <li>🌱 1단계. 씨앗</li>
+                  <li>🌿 2단계. 새싹</li>
+                  <li>🌳 3단계. 나무</li>
+                  <li>🌸 4단계. 꽃</li>
+                  <li>🧚 5단계. 요정</li>
+                  <li>👑 6단계. 수호신</li>
+                  <li>🌟 7단계. 전설</li>
+                </ul>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 8px; margin-bottom: 0; line-height: 1.4;">
+                  ※ 등급에 맞는 세련된 7대 웰니스 배너가 획득 경험치(EXP) 달성률 게이지 바와 함께 역동적으로 상태창에 렌더링됩니다.
+                </p>
+              </div>
+
+              <!-- 상태창 좌우 그리드 레이아웃 구조 -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 8px; margin-bottom: 12px;">
+                <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 12px;">
+                  <strong style="color: #fff; font-size: 0.9rem; display: block; margin-bottom: 6px;">[좌측 카드 - 개인 토탈 영역]</strong>
+                  <span style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; display: block;">
+                    - 현재 레벨 배너 이미지 렌더링<br>
+                    - 회원 이름 및 레벨 칭호 노출<br>
+                    - 토탈 웰니스 누적 점수 표시<br>
+                    - 다음 단계 레벨업 도달 게이지 제공<br>
+                    - 명예의 전당(전체 랭킹) 바로가기 링크
+                  </span>
+                </div>
+                <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 12px;">
+                  <strong style="color: #fff; font-size: 0.9rem; display: block; margin-bottom: 6px;">[우측 카드 - 주간/월간 스탯 현황]</strong>
+                  <span style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; display: block;">
+                    - 주간 및 월간 점수를 스위치 토글 형식으로 조회<br>
+                    - 3대 핵심 스탯(체력 ⚡, 실천력 🎯, 회복력 ❤️)의 목표 대비 달성량 및 현재 획득 점수 게이지바 제공<br>
+                    - 해당 기간 동안의 3대 스탯 종합 점수 렌더링
+                  </span>
+                </div>
+              </div>
+            </li>
+            <li id="pin-7" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">7</span> 나의 활동일지 바로가기</strong>
+              <p style="font-size: 0.88rem; margin: 4px 0 10px 0; color: var(--text-muted);">
+                상태창 바로 밑에 단독 배치되는 고급 버튼 플레이트입니다. 탭 시 오늘 완료한 모험 기록과 날짜별 7일간의 점수 획득 히스토리 아코디언이 담긴 바텀 모달창을 즉시 띄워 줍니다.
+              </p>
+              
+              <div style="background: rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 10px; font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
+                • <strong>오늘의 모험</strong>: 오늘 하루 동안 행동하고 획득한 각 스탯 정보와 총 획득 점수가 한 줄씩 친절하게 일람으로 정밀 나열됩니다.<br>
+                • <strong>일별 히스토리</strong>: 지난 일주일 동안 날짜별로 획득한 하루의 총점과 그날 달성한 성취 수준 기준(예: 완료, 전설적인 업적 등)을 일목요연하게 요약 정리해 줍니다.
+              </div>
+            </li>
+            <li id="pin-8" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">8</span> 지니마을 우편함 (쪽지함) 플로팅 위젯</strong>
+              <p style="font-size: 0.88rem; margin: 4px 0 0 0; color: var(--text-muted);">
+                화면 좌측 하단 영역에 상시 둥둥 떠다니는 플로팅 버블 아이콘 위젯입니다. 최초 가입 환영 쪽지, 영양학 글리코겐 경고, 이장이 발송한 전체 쪽지, 명예의 전당 당첨 축하 메시지, 디버프/보너스 알림이 실시간으로 도달하며, <strong>안 읽은 새 쪽지가 있을 경우 빨간색 마크가 깜빡여</strong> 즉각적인 확인을 유도합니다.
+                <br>
+                <em>※ 서버의 불필요한 누적 데이터 부하를 방지하기 위해 <strong>안 읽은 쪽지는 3일, 읽은 쪽지는 1일 보관 후 완벽히 자동 영구 소멸</strong>하는 친환경 자동 관리 시스템이 연동되어 있습니다.</em>
+              </p>
+            </li>
+            <li id="pin-9" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">9</span> BGM 재생 플로팅 위젯</strong>
+              <p style="font-size: 0.88rem; margin: 4px 0 0 0; color: var(--text-muted);">
+                화면 우측 하단 영역에 둥둥 떠다니는 음표 모양의 스마트 재생기 위젯입니다. 관리자 생텀에서 BGM 플레이리스트가 활성화되면 음표 이모지가 생동감 있게 둥둥 떠다니며, 이를 터치하면 <strong>빨간색(음악 켜짐) ↔ 회색(음악 꺼짐)</strong>으로 가볍게 토글되어, 회원 본인의 선호에 맞춰 배경 브라우저 사운드를 재생/정지할 수 있습니다.
+              </p>
+            </li>
+            <li id="pin-10" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">10</span> 공통 탭 네비게이션바 (하단 고정)</strong>
+              <p style="font-size: 0.88rem; margin: 4px 0 0 0; color: var(--text-muted);">
+                가장 하단에 고정 정렬되어 번잡한 뒤로 가기 연타 없이 언제든 즉시 <strong>광장(메인) / 아카이브(나의 일지) / 오아시스(소통 게시판) / 지식창고(웰니스 꿀팁) / 테라피(예약)</strong> 등 지니월드의 모든 독립 페이지를 유연하고 빠르게 왕복할 수 있도록 돕는 메인 이동 장치입니다.
+              </p>
+             </li>
+          </ul>
+        </div>
+        <!-- 🥑 3부 3장. 아카이브 (Miracle 기록소) -->
+        <h3 class="section-h3" id="app-archive" style="margin-top: 50px;">🥑 3부 3장. 아카이브 (Miracle 기록소)</h3>
+        <p style="font-size: 0.98rem; color: #ced6e0; margin-bottom: 25px;">
+          아카이브(Miracle 기록소)는 지니월드의 핵심 웰니스 기록 및 항상성 관리를 위한 통합 컨트롤 타워입니다. 회원들의 식단, 수분, 운동, 돌발 퀘스트 및 미라클 루틴과 체성분 인바디 기록을 실시간 AI 스캐너를 통해 안전하게 계측하고 점수화합니다.
+        </p>
+
+        <!-- 아카이브 핀포인트 뷰어 -->
+        <div class="archive-viewer-container" style="background: rgba(15, 12, 32, 0.4); border: 1px solid var(--glass-border); border-radius: 24px; padding: 30px; margin-bottom: 30px; display: flex; justify-content: center; align-items: center;">
+          <div class="phone-mockup" style="position: relative; max-width: 360px; width: 100%; border: 4px solid #33295c; border-radius: 36px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.8); background: #0b071a;">
+            
+            <!-- 아카이브 고해상도 스크롤 병합 PNG 탑재 -->
+            <img src="media__1779937615797.png" alt="지니월드 아카이브 대시보드" style="width: 100%; height: auto; display: block; filter: brightness(0.97); pointer-events: none;">
+
+            <!-- 핀포인트 1: 상단 배너 모험가의 기록소 & 로그아웃 문닫음 이모지 -->
+            <a href="#arc-pin-1" class="pin-badge" style="position: absolute; top: 3.5%; left: 91%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">1</a>
+
+            <!-- 핀포인트 2: 모험가 접속 상태 배너 -->
+            <a href="#arc-pin-2" class="pin-badge" style="position: absolute; top: 7.3%; left: 28%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">2</a>
+
+            <!-- 핀포인트 3: 오늘의 식단 인증 AI 항상성 분석 -->
+            <a href="#arc-pin-3" class="pin-badge" style="position: absolute; top: 17.5%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">3</a>
+
+            <!-- 핀포인트 4: 퀘스트 인증 (수분/오운완/돌발) -->
+            <a href="#arc-pin-4" class="pin-badge" style="position: absolute; top: 32.5%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">4</a>
+
+            <!-- 핀포인트 5: 9대 미라클 루틴 체크 및 인증 -->
+            <a href="#arc-pin-5" class="pin-badge" style="position: absolute; top: 55.0%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">5</a>
+
+            <!-- 핀포인트 6: 미라클 플러스 일상 소통 -->
+            <a href="#arc-pin-6" class="pin-badge" style="position: absolute; top: 78.0%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">6</a>
+
+            <!-- 핀포인트 7: 지니 AI 인바디 스캐너 & 기록보기 -->
+            <a href="#arc-pin-7" class="pin-badge" style="position: absolute; top: 88.5%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">7</a>
+
+          </div>
+        </div>
+
+        <!-- 아카이브 상세 사양 설명 목록 -->
+        <div class="sub-section" style="margin-bottom: 35px;">
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 20px;">
+            
+            <!-- [1] 상단 배너 -->
+            <li id="arc-pin-1" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">1</span> 상단 배너 - 모험가의 기록소 & 로그아웃</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 0 0; color: var(--text-muted); line-height: 1.6;">
+                현재 사용자가 아카이브 기록 룸에 있음을 알리는 공식 <strong>'모험가의 기록소'</strong> 명판이 상단에 배치됩니다.
+                우측의 🚪 (로그아웃/문닫음) 아이콘 버튼을 터치하여 안전하게 세션을 만료하고 로그인 첫 화면으로 복귀할 수 있습니다.
+              </p>
+            </li>
+
+            <!-- [2] 상태 배너 -->
+            <li id="arc-pin-2" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">2</span> 상태 배너 - 사용자 접속 실명 & 레벨 표시</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 0 0; color: var(--text-muted); line-height: 1.6;">
+                가상 마을 노형 빌리지에 실시간 접속한 모험가의 정보인 <span style="color:#2ed573; font-weight:600;">홍길동(0124)님 접속중!</span> 표시가 활성화됩니다.
+                오른쪽에는 현재 획득한 누적 경험치량에 따라 연동되는 성장 단계의 <strong>칭호 레벨(예: 새싹 🌿, 씨앗 🌱 등)</strong>이 이모지와 함께 렌더링되어 품격을 한 단계 높여줍니다.
+              </p>
+            </li>
+
+            <!-- [3] 오늘의 식단 인증 AI 분석 -->
+            <li id="arc-pin-3" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong style="font-size: 1.05rem; display: block; margin-bottom: 10px;">
+                <span style="background: #ff4757; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">3</span> 
+                오늘의 식단 인증 AI 항상성 분석 🥗 (Gemini 2.5)
+              </strong>
+              
+              <div style="background: rgba(255,71,87,0.05); border: 1px solid rgba(255,71,87,0.15); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                <strong style="color: var(--accent-health); font-size: 0.9rem; display: block; margin-bottom: 6px;">💡 항상성 다이어트 과학의 원칙</strong>
+                <span style="font-size: 0.85rem; color: #ced6e0; line-height: 1.5; display: block;">
+                  극단적인 굶기나 강박 대신, <strong>[아침 가볍게 / 점심 행복하게 많이 / 저녁 가볍게]</strong> 먹는 루틴을 성실히 보존하면 몸의 자율적 <strong>항상성 메커니즘</strong>에 의해 인위적인 식단 없이도 체중 기준선이 안전하게 가벼운 상태로 정착됩니다.
+                </span>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr; gap: 12px; font-size: 0.85rem; color: var(--text-muted);">
+                <!-- 아침 -->
+                <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border-left: 3px solid #ff9f43;">
+                  <strong style="color: #fff; display: block; margin-bottom: 4px;">🌅 아침 식단 & 모닝티 유기적 연동</strong>
+                  <span> 아침을 굶거나 가볍게 마시는 것도 건강한 항상성 원칙에 위배되지 않습니다. 식단 사진으로 <strong>물이나 차 사진을 인증</strong>하면 즉시 아침 최고점을 지급합니다.</span>
+                  <span style="display: block; margin-top: 6px; color: #54a0ff; font-weight: 600;">➔ [혜택] 9대 습관 루틴 중 '모닝티 ☕'가 자동으로 100% 동시 완료 처리되어, 아침 식사 점수와 모닝티 루틴 완료 및 인증 보상 점수를 한꺼번에 더블 획득합니다!</span>
+                  <span style="display: block; margin-top: 4px;">※ 아침을 가벼운 일반식으로 먹는 경우 무겁지 않으면 기본 고득점이 주어지나, 지나치게 무거운 헤비 음식이 포착되면 점수가 자동 감점 부여됩니다.</span>
+                </div>
+
+                <!-- 점심 -->
+                <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border-left: 3px solid #2ed573;">
+                  <strong style="color: #fff; display: block; margin-bottom: 4px;">☀️ 점심 식단 - 행복한 자유식</strong>
+                  <span>점심은 맘껏 즐겁고 맛있게 먹어도 항상성 엔진이 이를 기분 좋게 칭찬하는 원리에 따라, <strong>어떤 음식을 촬영하여 업로드해도 AI가 적극 칭찬하고 무조건적인 최고점</strong>을 지급합니다.</span>
+                </div>
+
+                <!-- 저녁 -->
+                <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border-left: 3px solid #1e90ff;">
+                  <strong style="color: #fff; display: block; margin-bottom: 4px;">🌙 저녁 식단 - 간헐적 단식 & 쉐이크</strong>
+                  <span>단식(물/차 사진 인증)을 선택하는 경우 간헐적 단식 최고점이 지급되며, <strong>9대 습관 루틴인 '나이트컷 🚫'이 자동으로 100% 동시 완수</strong>되어 번거로운 이중 인증을 한 번에 해소해 줍니다.</span>
+                  <span style="display: block; margin-top: 4px;">가벼운 쉐이크나 일반 식사의 경우, 성실 실천 기본 점수를 지급합니다.</span>
+                </div>
+
+                <!-- 글리코겐 방패 -->
+                <div style="background: rgba(255, 71, 87, 0.08); padding: 15px; border-radius: 12px; border: 1px dashed rgba(255, 71, 87, 0.3); margin-top: 10px;">
+                  <strong style="color: var(--accent-health); display: block; margin-bottom: 6px; font-size: 0.9rem;">🛡️ 폭식/치팅 발생 시: 72시간 글리코겐 방패 퀘스트 자동 활성</strong>
+                  <span style="line-height: 1.5; display: block; color: #ced6e0;">
+                    폭식이나 기름진 고칼로리 사진이 AI 스캐너에 검출될 시, AI는 솔직하게 음식을 업로드한 회원의 용기를 칭찬하고 소량의 점수를 주면서 체지방 방어 시스템인 <strong>'72시간 글리코겐 방패 퀘스트'</strong>를 즉시 발동합니다.
+                  </span>
+                  <div style="margin-top: 8px; color: var(--text-muted); font-size: 0.8rem; line-height: 1.4;">
+                    • <strong>과학적 근거</strong>: 과식한 영양소는 혈액 속에 떠다니다가 바로 체지방이 되지 않고, 딱 <strong>3일(72시간) 동안 글리코겐 형태로 근육에 임시 정박</strong>합니다. 이 골든타임 내에 태워 없애면 체지방이 되지 않는 생리학적 팩트에 입각했습니다.<br>
+                    • <strong>달성 보너스</strong>: 3일간 클럽에 연속 출석하여 운동을 완수하면 <strong>방패 성공 보너스 스탯</strong>이 지급되며, 진행도에 따라 개인 아카이브 화면에 물리 방패 조각이 하나씩 완성되는 게이지가 표기됩니다.<br>
+                    • <strong>시각적 연출</strong>: 발동 즉시 회원 본인에게 정밀한 식단 대처 전략이 적힌 **개인 쪽지**가 자동 송신되며, 마을 메인 **광장 상단 영역에 72시간 타이머 배너**가 카운트다운 형태로 계속 떠있어 긴장감을 불어넣습니다.
+                  </div>
+                </div>
+
+                <!-- 어뷰징 방지 -->
+                <div style="background: rgba(0, 0, 0, 0.2); padding: 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05); margin-top: 5px;">
+                  <span style="color: #ff9f43; font-weight: 600;">🔒 어뷰징 실시간 가드 (정밀 대조 엔진)</span><br>
+                  어제 먹었던 식단 사진을 오늘 재활용하는 꼼수를 완벽히 차단하기 위해, 사진 파일 내부의 <strong>타임스탬프 메타데이터를 정밀 역대조</strong>합니다. 오늘 촬영된 사진이 아닐 경우 AI가 "오늘 촬영한 사진만 스캔이 가능합니다"라며 폼 제출을 즉각 잠금 처리합니다.
+                </div>
+
+              </div>
+            </li>
+
+            <!-- [4] 퀘스트 인증 -->
+            <li id="arc-pin-4" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">4</span> 퀘스트 인증 (수분 섭취 / 오운완 / 돌발 퀘스트)</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 10px 0; color: var(--text-muted); line-height: 1.6;">
+                매일 성장에 즉각적인 화력을 더해주는 행동 지표를 미션 형식으로 수행하는 구간입니다.
+              </p>
+              
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 10px;">
+                <div style="background: rgba(30, 144, 255, 0.05); border: 1px solid rgba(30, 144, 255, 0.15); padding: 15px; border-radius: 12px;">
+                  <strong style="color: #1e90ff; font-size: 0.92rem; display: block; margin-bottom: 6px;">💧 수분 섭취 인증 (메가 부스트: 최대 35 EXP)</strong>
+                  <span style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; display: block;">
+                    수분 퀘스트 탭 시 <strong>최대 2L 용량의 슬라이더 조절바 게이지</strong>가 노출됩니다. 자신이 실제 마신 만큼 슬라이더 바를 조정한 후 [인증하러 가기]를 통해 물컵/텀블러 인증샷을 업로드하면 <strong>게이지 스탯(최대 20점) + 사진 인증(15점) = 일일 총 35점</strong>의 막강한 리워드를 수확합니다.
+                  </span>
+                </div>
+
+                <div style="background: rgba(255, 71, 87, 0.05); border: 1px solid rgba(255, 71, 87, 0.15); padding: 15px; border-radius: 12px;">
+                  <strong style="color: #ff4757; font-size: 0.92rem; display: block; margin-bottom: 6px;">🏃 오운완 / 오테완 인증</strong>
+                  <span style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; display: block;">
+                    클럽에서 점핑 완료 후, 또는 반신욕 테라피를 즐기며 뜨겁게 흘린 땀방울을 인증하는 코너입니다. 개인 사정으로 클럽 방문을 달성하지 못한 날에는 <strong>홈트레이닝(홈트)이나 야외 운동(조깅, 하이킹 등)을 인증하더라도 정상 승인</strong>되어 루틴 유지를 탄탄하게 보좌합니다.
+                  </span>
+                </div>
+              </div>
+
+              <!-- 돌발 퀘스트 박스 -->
+              <div style="background: rgba(255, 234, 167, 0.05); border: 1px solid rgba(255, 234, 167, 0.2); padding: 15px; border-radius: 12px; margin-top: 15px;">
+                <strong style="color: #fdcb6e; font-size: 0.92rem; display: block; margin-bottom: 6px;">⚡ 돌발 퀘스트 (지니월드 Sanctum 연동형 일일 퀘스트)</strong>
+                <span style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; display: block;">
+                  • <strong>실시간 공출 및 알림</strong>: 지니월드 관리자 생텀에서 돌발 퀘스트를 예고 등록하면, 마을 광장의 <strong>'마을공지바'에 롤링 교차 공지</strong>되며, [바로가기] 버튼을 통해 단번에 진입 가능합니다. 동시에 전체 모험가 주민들에게 **개인 쪽지 공지**가 울립니다.<br>
+                  • <strong>이중 구조 인증</strong>: 미션 형태에 따라 <strong>'사진 인증형(아카이브)'</strong>과 <strong>'글쓰기 인증형(오아시스 소통게시판)'</strong>으로 유기적으로 갈라져 설계되었습니다. 퀘스트 발령 당일에는 작성 폼에 <strong>그날의 돌발 미션 제목이 자동으로 로드</strong>되어 띄워집니다.<br>
+                  • <strong>어뷰징 잠금</strong>: 돌발 퀘스트가 활성화되지 않은 평시에는 돌발 퀘스트 입력 란이 **원칙적으로 굳게 잠금(Lock) 처리**되어 오등록을 원천 방어합니다.
+                </span>
+              </div>
+            </li>
+
+            <!-- [5] 9대 미라클 루틴 -->
+            <li id="arc-pin-5" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">5</span> 9대 미라클 루틴 🌿 (체크 & 미라클 습관 인증)</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 10px 0; color: var(--text-muted); line-height: 1.6;">
+                단순히 기계적인 운동뿐만 아니라 신체와 정신의 완벽한 조화를 꾀하고, 자발적 건강 습관 체득을 유도하기 위해 디자인된 매일의 9대 핵심 약속입니다.
+              </p>
+
+              <div style="background: rgba(46, 213, 115, 0.05); border: 1px solid rgba(46, 213, 115, 0.15); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                <strong style="color: var(--accent-practice); font-size: 0.9rem; display: block; margin-bottom: 6px;">🌱 9대 미라클 루틴의 핵심 카테고리 구성</strong>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; font-size: 0.8rem; color: #ced6e0;">
+                  <div>
+                    <strong style="color: #fff;">✅ 1. 단순 체크형 (4개) - 양심 체크</strong><br>
+                    - 모닝 스트레칭, 베지퍼스트, 슬로우치잉, 굿슬립<br>
+                    <span style="color:#a4b0be;">(자발적으로 양심껏 실천 후 체크만 해도 즉각 완료 점수가 부여되는 웰니스 서약 방식)</span>
+                  </div>
+                  <div>
+                    <strong style="color: #fff;">📸 2. 복합 인증형 (4개) - 1차 완료 연동</strong><br>
+                    - 모닝티 ☕, 스테어마법 🪜, 7,000보 걷기 👟, 셀프 칭찬 📝(글)<br>
+                    <span style="color:#a4b0be;">(체크 시 <strong>'1차 완료'</strong> 상태로 전환되며, 언제든 [인증하기]를 눌러 사진이나 소감을 추가 등록하면 최종 완료 <strong>불꽃(🔥) 마크</strong>가 새겨지며 보너스 가산점이 지급됩니다.)</span>
+                  </div>
+                  <div>
+                    <strong style="color: #fff;">🚫 3. 식단 연동형 (1개) - 완전 자동</strong><br>
+                    - 나이트컷 🚫 (저녁 8시 이후 간헐적 단식)<br>
+                    <span style="color:#a4b0be;">(식단 스캐너에서 저녁 물/차 단식 인증을 마치는 순간 <strong>자동으로 100% 자동 체크 클리어</strong> 처리됩니다.)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="background: rgba(0, 0, 0, 0.2); padding: 12px; border-radius: 8px; font-size: 0.8rem; border-left: 3px solid #ff4757; color: var(--text-muted);">
+                ※ 어뷰징 및 점수 중복 중첩을 확실하게 방지하기 위하여, 최종 완료 및 체크 완료된 습관 카드는 <strong>버튼과 체크 폼이 즉각 비활성화(Disabled) 처리</strong>되어 중복 체크가 완벽히 통제됩니다.
+              </div>
+            </li>
+
+            <!-- [6] 미라클 플러스 -->
+            <li id="arc-pin-6" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">6</span> 미라클 플러스✨ (100% 사진 인증형 감성 소통)</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 0 0; color: var(--text-muted); line-height: 1.6;">
+                9대 신체 의무 습관을 넘어 정서적인 확장과 회복력을 촉진하기 위한 커뮤니티 전용 플러스 웰니스 덱입니다.
+                단순 텍스트 체크 기능은 존재하지 않으며, 오직 <strong>100% 사진 인증</strong>을 올렸을 때만 승인 및 점수가 지급되는 방식입니다.
+                <br><br>
+                • <strong>4대 성취 테마</strong>: <strong>새벽기상, 독서인증, 환경사랑, 기타 성취</strong><br>
+                • <strong>핵심 가치</strong>: 특히 '기타 성취' 탭은 회원이 자랑하고 싶은 소소하고 건강한 일상 사진을 유연하게 공유할 수 있는 열린 놀이터로 설계되어, 지니월드 내부 <strong>오아시스 타임라인 커뮤니티 활성화의 최고 핵심 동력</strong>으로 활약합니다.
+              </p>
+            </li>
+
+            <!-- [7] AI 인바디 스캐너 -->
+            <li id="arc-pin-7" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong style="font-size: 1.05rem; display: block; margin-bottom: 10px;">
+                <span style="background: #2ed573; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">7</span> 
+                지니 AI 인바디 스캐너 📊 (명품 유지 판정 & 정밀 정산)
+              </strong>
+              
+              <p style="font-size: 0.88rem; margin: 0 0 12px 0; color: var(--text-muted); line-height: 1.6;">
+                과거 회원이 클럽 기기로 인바디 측정 후 번거롭게 코치에게 전송하고 코치가 일일이 구글 시트에 타이핑하여 수동 정산하던 열악한 정산 프로세스를 완전히 종식하고, **회원이 모바일 앱을 통해 사진을 찍어 즉시 스캔 등록하는 AI 무결성 자동화**로 진화했습니다.
+              </p>
+
+              <!-- 스캔 프로세스 & OCR -->
+              <div style="background: rgba(0, 0, 0, 0.25); padding: 15px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 15px; font-size: 0.82rem; line-height: 1.5; color: var(--text-muted);">
+                <strong style="color: #fff; display: block; margin-bottom: 4px;">🔍 지니 AI 스캔 OCR 판독 엔진</strong>
+                1. 인바디 기기에서 체성분을 정교하게 측정한 후, <strong>인바디 메인 대시보드 화면을 캡처</strong>하거나 결과 용지를 휴대폰 카메라로 선명하게 촬영합니다.<br>
+                2. 아카이브 화면에서 <strong>[지니 AI 스캔]</strong> 버튼을 터치하여 이미지를 로드하면, AI OCR 엔진이 작동해 <strong>체중, 골격근량, 체지방률, 측정일</strong> 데이터를 오차 없이 완전히 자동 추출합니다.<br>
+                3. 추출된 데이터를 육안으로 확인한 뒤 [등록]을 완료합니다. <strong>공정성과 엄격성 확보를 위해 수동 수정을 차단하며, 오직 AI 판독 정보 그대로만 등록</strong>됩니다.<br>
+                <span style="color:#ff9f43;">※ 화면 빛 번짐, 가림 현상 등으로 AI 스캔 오류 발생 시 "그대로 등록하지 마시고 코치에게 인바디 사진을 전달해 직접 처리를 요청해달라"는 친절한 어시스트 안내가 탑재되어 있습니다.</span>
+              </div>
+
+              <!-- 명품 유지 보너스 판정 엔진 -->
+              <div style="background: rgba(46, 213, 115, 0.08); border: 1px solid rgba(46, 213, 115, 0.2); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                <strong style="color: var(--accent-practice); font-size: 0.9rem; display: block; margin-bottom: 6px;">🏆 항상성 지킴이: 체성분 명품 유지 보너스 판정 엔진</strong>
+                <span style="font-size: 0.85rem; color: #ced6e0; line-height: 1.5; display: block;">
+                  가입 시 수립한 자신의 최종 목표 체중에 도달하고 나면, 건강을 위협하는 극단적 굶기나 오버 트레이닝을 멈추고 안전하게 항상성을 보존하도록 돕는 명품 지표 엔진입니다.
+                  몸무게 상한선인 <strong>[목표 체중 + 0.5kg] 이하로 안전하게 골든존을 유지</strong>하여 측정물을 제출하면, 매달 <strong>+1,000 EXP의 대형 명품 유지 보너스 경험치</strong>를 상으로 지급합니다.
+                </span>
+              </div>
+
+              <!-- 주간/월간/토탈 채점 공식 요약 표 -->
+              <table class="mapping-table" style="font-size: 0.8rem; margin: 15px 0;">
+                <thead>
+                  <tr>
+                    <th>구분</th>
+                    <th>스탯 보상 기준</th>
+                    <th>정밀 채점 메커니즘</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>주간 점수</strong></td>
+                    <td>개선량에 비례해 EXP 지급 (없을 시 0점)</td>
+                    <td>해당 주간 직전 월~수요일 동안 업로드된 회원의 인바디 수치를 실시간 베이스라인 삼아 개선량을 정밀 산정합니다.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>월간 점수</strong></td>
+                    <td>월간 목표 및 개선 추이 판정</td>
+                    <td>매월 첫째 수요일이 포함된 주의 월~수 인바디를 최초 기준 삼아, 마지막 주 월~수의 측정 인바디가 정상 등록된 경우에만 지급합니다.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>토탈 점수</strong></td>
+                    <td>최초 가입 데이터 영구 대조</td>
+                    <td>회원이 지니월드에 가입하여 시스템에 최초로 등록했던 첫 번째 인바디 기록을 영구적인 기준 삼아 개선율을 채점합니다.</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- 기록보기 및 관리자 권한 -->
+              <div style="background: rgba(30, 144, 255, 0.05); padding: 12px; border-radius: 10px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; border-left: 3px solid #1e90ff;">
+                • <strong>마이 인바디 기록보기</strong>: [기록보기] 버튼을 터치하여 자신이 스캔해 올린 과거 모든 체성분의 원본 사진과 그에 매칭되어 기록된 주간/월간/토탈 점수의 상세 변동 내역을 히스토리 형식으로 편안하게 둘러볼 수 있습니다.<br>
+                • <strong>실시간 백엔드 리컴퓨팅</strong>: 정산 주기 내에 더 높은 성취를 낸 fresh한 인바디가 재등록될 경우 기간 점수가 동적으로 보정되므로, <strong>주간 및 월간 마감 정산 진행 시 체성분 스탯 뱅크 점수가 백엔드에서 전면 실시간 재계산(리컴퓨팅)</strong>되어 회원들에게 투명하고 완벽한 보상을 공장식으로 처리합니다.<br>
+                • <strong>관리자 통제실 (생텀 및 어드민)</strong>: 운영자는 백오피스의 <strong>'어드민/지니월드/인바디조회 및 수정'</strong> 공간에 진입하여 등록된 데이터에 대한 조회, 실시간 수정, 부정한 캡처본에 대한 삭제 검수를 엄격히 실행할 수 있어 플랫폼의 무결성을 완벽히 수호합니다.
+              </div>
+
+            </li>
+          </ul>
+        </div>
+
+        <!-- 🕊️ 3부 4장. 오아시스 (Miracle 소통 광장) -->
+        <h3 class="section-h3" id="app-oasis" style="margin-top: 50px;">🕊️ 3부 4장. 오아시스 (Miracle 소통 광장)</h3>
+        <p style="font-size: 0.98rem; color: #ced6e0; margin-bottom: 25px;">
+          오아시스(Miracle 소통 광장)는 회원들이 건강한 성취를 공유하고 칭찬과 힐링 글귀를 건네는 따뜻한 소셜 웰니스 공간입니다. 셀프 칭찬 롤링, 공감 꺾쇠 탐색기, 포스트잇 낙서장, 그리고 12장 단위의 폴라로이드 자랑 갤러리가 유기적으로 연동되어 있습니다.
+        </p>
+
+        <!-- 오아시스 핀포인트 뷰어 -->
+        <div class="oasis-viewer-container" style="background: rgba(15, 12, 32, 0.4); border: 1px solid var(--glass-border); border-radius: 24px; padding: 30px; margin-bottom: 30px; display: flex; justify-content: center; align-items: center;">
+          <div class="phone-mockup" style="position: relative; max-width: 360px; width: 100%; border: 4px solid #33295c; border-radius: 36px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.8); background: #0b071a;">
+            
+            <!-- 오아시스 고해상도 스크롤 병합 PNG 탑재 -->
+            <img src="media__1779960150399.png" alt="지니월드 오아시스 대시보드" style="width: 100%; height: auto; display: block; filter: brightness(0.97); pointer-events: none;">
+
+            <!-- 핀포인트 1: 상단 배너 모험가의 오아시스 & 로그아웃 문닫음 이모지 -->
+            <a href="#oas-pin-1" class="pin-badge" style="position: absolute; top: 3.5%; left: 91%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">1</a>
+
+            <!-- 핀포인트 2: 모험가 접속 상태 배너 -->
+            <a href="#oas-pin-2" class="pin-badge" style="position: absolute; top: 7.3%; left: 28%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">2</a>
+
+            <!-- 핀포인트 3: 나를 사랑하기 (셀프 칭찬 코너) -->
+            <a href="#oas-pin-3" class="pin-badge" style="position: absolute; top: 12.0%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">3</a>
+
+            <!-- 핀포인트 4: 마음 채우기 (힐링 명언 & 공감) -->
+            <a href="#oas-pin-4" class="pin-badge" style="position: absolute; top: 23.5%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">4</a>
+
+            <!-- 핀포인트 5: 한껏 자유롭기 (낙서 칠판 & 돌발게시판) -->
+            <a href="#oas-pin-5" class="pin-badge" style="position: absolute; top: 48.0%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">5</a>
+
+            <!-- 핀포인트 6: 자랑하기 (폴라로이드 갤러리) -->
+            <a href="#oas-pin-6" class="pin-badge" style="position: absolute; top: 72.0%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">6</a>
+
+          </div>
+        </div>
+
+        <!-- 오아시스 상세 사양 설명 목록 -->
+        <div class="sub-section" style="margin-bottom: 35px;">
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 20px;">
+            
+            <!-- [1] 상단 배너 -->
+            <li id="oas-pin-1" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">1</span> 상단 배너 - 모험가의 오아시스 & 로그아웃</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 0 0; color: var(--text-muted); line-height: 1.6;">
+                현재 소통 룸에 머물고 있음을 알리는 <strong>'모험가의 오아시스'</strong> 글로벌 헤더 명판과 우측 상단의 🚪 (로그아웃/문닫음) 버튼이 유기적으로 조합되어 상시 고정 렌더링됩니다.
+              </p>
+            </li>
+
+            <!-- [2] 상태 배너 -->
+            <li id="oas-pin-2" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">2</span> 상태 배너 - 사용자 접속 실명 & 레벨 표시</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 0 0; color: var(--text-muted); line-height: 1.6;">
+                실제 동기화된 접속 정보인 <span style="color:#2ed573; font-weight:600;">홍길동(0000)님 접속중</span> 상태를 나타내며, 우측에는 회원의 성장 단계 칭호(예: 새싹 🌿 등)와 이모지가 동적으로 제공됩니다.
+              </p>
+            </li>
+
+            <!-- [3] 나를 사랑하기 (셀프 칭찬 코너) -->
+            <li id="oas-pin-3" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">3</span> 나를 사랑하기 🌸 (셀프 칭찬 코너)</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 10px 0; color: var(--text-muted); line-height: 1.6;">
+                정신적인 회복력과 마인드 웰니스를 정착하기 위한 칭찬 연대감 존입니다.
+              </p>
+              <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; font-size: 0.82rem; line-height: 1.5; color: var(--text-muted);">
+                • <strong>당일 한정 실시간 롤링</strong>: 어뷰징 및 오래된 도배를 차단하기 위해, 오직 <strong>당일(오늘) 등록된 회원들의 눈부신 셀프 칭찬 글만 선별</strong>하여 배너 상에 은은하게 롤링 렌더링해 줍니다.<br>
+                • <strong>인증하러 가기 & 작성 에디터</strong>: [📝 기록] 버튼을 터치하면 '나를 사랑하기 기록' 작성 팝업창이 등장합니다.<br>
+                • <strong>편리한 4대 감성 태그 템플릿</strong>: 글쓰기 고민을 대폭 덜어주기 위해 작성창 내에 <span class="pill" style="background:rgba(255,71,87,0.1); color:#ff4757; border:none;">#출석완료</span>, <span class="pill" style="background:rgba(46,213,115,0.1); color:#2ed573; border:none;">#야식차단</span>, <span class="pill" style="background:rgba(30,144,255,0.1); color:#1e90ff; border:none;">#수분충전</span>, <span class="pill" style="background:rgba(255,159,67,0.1); color:#ff9f43; border:none;">#기특한나</span>의 4대 템플릿 태그 버튼이 배치되어 있습니다. <strong>원하는 태그를 가볍게 누르면 관련 웰니스 감성 칭찬 글귀가 자동으로 인풋 창에 기입</strong>되어 누구든 순식간에 품격 있는 칭찬 작성을 마치도록 보좌합니다.<br>
+                • <strong>자유 작성 및 히스토리 조회</strong>: 태그를 쓰지 않고 백지 상태에서 완전히 자유롭게 오늘 하루의 감사 소감을 기술할 수도 있으며, [나를 사랑하기] 메인 헤더 단추 자체를 터치하면 **지난날 내가 등록했던 셀프 칭찬 히스토리첩**을 정렬해 펼쳐 읽을 수 있어 자존감을 보존합니다.
+              </div>
+            </li>
+
+            <!-- [4] 마음 채우기 -->
+            <li id="oas-pin-4" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">4</span> 마음 채우기 📖 (치유와 위안의 좋은 글귀)</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 10px 0; color: var(--text-muted); line-height: 1.6;">
+                코치나 주민들이 등재한 위안과 힐링의 영양학적·인문학적 고급 글귀들을 감상하는 슬라이드형 덱입니다.
+              </p>
+              <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; font-size: 0.82rem; line-height: 1.5; color: var(--text-muted);">
+                • <strong>쌍방향 슬라이드 꺾쇠 탐색기</strong>: 화면 상에 노출된 <strong>좌측(＜) 및 우측(＞) 꺾쇠 화살표</strong>를 누르면 <strong>최근에 등재된 고품격 힐링 포스트 5개</strong>를 마치 카드를 스와이프하듯 부드럽게 앞뒤로 넘기며 고유의 웰니스 감성에 스며들 수 있습니다.<br>
+                • <strong>스며들기(하트 공감) 시스템</strong>: 마음에 뜨거운 와닿음이 있다면 하단의 <strong>[♡ 마음에 스며들기 (공감수)]</strong> 하트 버튼을 탭하여 감정적 동조와 감사함을 적극적으로 표시할 수 있습니다.<br>
+                • <strong>작성 및 전체 히스토리</strong>: 우측 상단의 [📝 기록] 버튼을 터치하여 주민들에게 전파하고 싶은 나만의 인생 명언을 손쉽게 작성 배포할 수 있으며, [더보기]를 클릭할 경우 축적된 예전의 명언 보관소를 가볍게 읽어낼 수 있습니다.
+              </div>
+            </li>
+
+            <!-- [5] 한껏 자유롭기 (낙서 칠판 & 돌발게시판) -->
+            <li id="oas-pin-5" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">5</span> 한껏 자유롭기 ✏️ (낙서 칠판 & 돌발게시판 변신)</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 10px 0; color: var(--text-muted); line-height: 1.6;">
+                특별한 형식이나 규격 없이 주민들과 즉각적인 낙서형 낙서로 대화하는 칠판 스페이스입니다.
+              </p>
+              <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; font-size: 0.82rem; line-height: 1.5; color: var(--text-muted);">
+                • <strong>포스트잇 감성 렌더링</strong>: 형식에 얽매이지 않고 가볍게 한마디 적어 제출하면, 마치 초록색 실물 칠판 분필판 위에 **노란색 포스트잇(메모지)이 예쁘게 찰딱 달라붙는 아날로그 레이아웃**으로 스킨이 구현되어 동료들의 글을 한눈에 구경하기에 최적입니다.<br>
+                • <strong>칠판 장 왕복 브라우징</strong>: 과거에 붙여졌던 예전 칠판첩 내용들을 읽어내기 위해, 하단 꺾쇠 페이지 카운터를 통해 이전 칠판 세트들을 부드럽게 리로딩할 수 있습니다.<br>
+                <div style="background: rgba(255,159,67,0.08); border: 1px solid rgba(255,159,67,0.25); padding: 12px; border-radius: 8px; margin-top: 10px;">
+                  <strong style="color: #ff9f43; display: block; margin-bottom: 4px;">⚡ [중요] 글쓰기 돌발 퀘스트 연동 ➡️ 돌발게시판 변신!</strong>
+                  생텀 관리자 앱에서 **'글쓰기 인증형 돌발 퀘스트'**를 가동 및 선포한 날에는, 기존의 '한껏 자유롭기' 게시판 플레이트 영역이 붉고 뜨거운 **'돌발게시판'**으로 비주얼 테마가 즉각 변신 처리됩니다!<br>
+                  퀘스트 발령일 날 당일에 해당 칠판을 통해 글쓰기를 성실하게 마친 회원들에게는 <strong>즉시 돌발 퀘스트 인증 스탯 보상 점수</strong>가 전면 배정 및 가산 지급됩니다.
+                </div>
+              </div>
+            </li>
+
+            <!-- [6] 자랑하기 (폴라로이드 갤러리) -->
+            <li id="oas-pin-6" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">6</span> 자랑하기 📸 (모험가들의 활력 자랑판 - 폴라로이드 갤러리)</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 10px 0; color: var(--text-muted); line-height: 1.6;">
+                지니월드의 모든 주민들이 업로드 및 제출한 수많은 사진 인증 정보가 대통합되어 뽐내어지는 감동 갤러리판입니다.
+              </p>
+              <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; font-size: 0.82rem; line-height: 1.5; color: var(--text-muted);">
+                • <strong>빈티지 12구 폴라로이드 레이아웃</strong>: 한 페이지당 깔끔하고 빈티지하게 디자인된 **12장의 폴라로이드 사각 프레임 사진 규격**으로 고착 렌더링되며, 사진 덱 위에는 작성자의 닉네임 정보, 달성한 인증 카테고리(예: 식단, 7,000보, 수분 등), 그리고 획득한 경험치(+EXP)가 아름다운 투명 뱃지로 동적 오버레이됩니다.<br>
+                • <strong>항상성 AI 코멘트 연동</strong>: 아카이브 식단 스캐너를 통해 판독받은 **식단 이미지들에는 Gemini가 부여했던 재치 있는 식단 평가 피드백 멘트가 갤러리 포스트에 자동으로 함께 노출**되어 읽는 즐거움을 더합니다.<br>
+                • <strong>자동 한 줄 워터마크(도장) 처리</strong>: 갤러리에 포스팅되는 모든 인증 사진 파일들의 우측 하단에는 **실제 인증을 달성하여 기록된 올린 날짜**와 노형점핑클럽 소속을 명확히 알리는 **"노형점핑" 공식 텍스트 워터마크 도장**이 브라우저 그래픽 상에 자동으로 합성되어 영구 적재되므로 투명성과 소속감을 극대화합니다.<br>
+                • <strong>소감 남기기 & 팝업 크게 보기</strong>: 특정 이미지를 터치하는 순간, 선명하고 커다란 고화질 팝업 모달 뷰어가 실행됩니다. 이곳에서 동료 주민들이 터치 한 번으로 **[멋져요 👍, 최고예요 🌟, 화이팅 🔥]**과 같은 직관적인 웰니스 감탄 격려 버튼을 눌러 정서적으로 풍요롭게 교류할 수 있습니다.<br>
+                • <strong>히스토리 탐색 페이지네이션</strong>: 하단에 생성된 현대적인 페이지 버튼 번호판을 터치하여, 수개월 전 아카이브를 통해 쌓여 올라갔던 주민들의 눈부신 땀방울 사진첩을 무제한으로 회람 및 탐색할 수 있습니다.
+              </div>
+            </li>
+
+          </ul>
+        </div>
+
+        <!-- 📚 3부 5장. 지식창고 (웰니스 지식창고) -->
+        <h3 class="section-h3" id="app-wisdom" style="margin-top: 50px;">📚 3부 5장. 지식창고 (웰니스 지식창고)</h3>
+        <p style="font-size: 0.98rem; color: #ced6e0; margin-bottom: 25px;">
+          지식창고(웰니스 지식창고)는 건강상식, 건강식단, 근력운동 소개 등 회원의 지속가능한 항상성 다이어트를 돕기 위한 고품격 전문 지식 매거진 공간입니다. 관리자가 생텀에서 직접 또는 AI 집필 기능을 통해 집필한 여러 콘텐츠가 세련된 카드 뉴스 및 전면 원문 레이아웃으로 제공됩니다.
+        </p>
+
+        <!-- 지식창고 핀포인트 뷰어 -->
+        <div class="wisdom-viewer-container" style="background: rgba(15, 12, 32, 0.4); border: 1px solid var(--glass-border); border-radius: 24px; padding: 30px; margin-bottom: 30px; display: flex; justify-content: center; align-items: center;">
+          <div class="phone-mockup" style="position: relative; max-width: 360px; width: 100%; border: 4px solid #33295c; border-radius: 36px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.8); background: #0b071a;">
+            
+            <!-- 지식창고 고해상도 스크롤 병합 PNG 탑재 -->
+            <img src="media__1779960770270.png" alt="지니월드 지식창고 대시보드" style="width: 100%; height: auto; display: block; filter: brightness(0.97); pointer-events: none;">
+
+            <!-- 핀포인트 1: 상단 배너 웰니스 지식창고 & 로그아웃 이모지 -->
+            <a href="#wis-pin-1" class="pin-badge" style="position: absolute; top: 3.5%; left: 91%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">1</a>
+
+            <!-- 핀포인트 2: 모험가 접속 상태 배너 -->
+            <a href="#wis-pin-2" class="pin-badge" style="position: absolute; top: 7.3%; left: 28%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">2</a>
+
+            <!-- 핀포인트 3: 1섹션 메인 잡지식 카드 -->
+            <a href="#wis-pin-3" class="pin-badge" style="position: absolute; top: 25.0%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">3</a>
+
+            <!-- 핀포인트 4: 2섹션 & 3섹션 좌우 배치 잡지식 카드 -->
+            <a href="#wis-pin-4" class="pin-badge" style="position: absolute; top: 48.0%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">4</a>
+
+            <!-- 핀포인트 5: 4섹션 하단 잡지식 카드 -->
+            <a href="#wis-pin-5" class="pin-badge" style="position: absolute; top: 67.5%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">5</a>
+
+            <!-- 핀포인트 6: 지난 웰니스 상식 모아보기 버튼 -->
+            <a href="#wis-pin-6" class="pin-badge" style="position: absolute; top: 83.5%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">6</a>
+
+          </div>
+        </div>
+
+        <!-- 지식창고 상세 사양 설명 목록 -->
+        <div class="sub-section" style="margin-bottom: 35px;">
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 20px;">
+            
+            <!-- [1] 상단 배너 -->
+            <li id="wis-pin-1" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">1</span> 상단 배너 - 웰니스 지식창고 & 로그아웃</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 0 0; color: var(--text-muted); line-height: 1.6;">
+                고급 서고의 분위기를 풍기는 <strong>'웰니스 지식창고'</strong>의 헤더 명판과 우측 상단의 🚪 (로그아웃/문닫음) 버튼이 조합되어 상시 고정 렌더링됩니다.
+              </p>
+            </li>
+
+            <!-- [2] 상태 배너 -->
+            <li id="wis-pin-2" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">2</span> 상태 배너 - 사용자 접속 정보 & 레벨 표시</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 0 0; color: var(--text-muted); line-height: 1.6;">
+                현재 지식창고를 방문한 모험가의 접속 상태 배너인 <span style="color:#2ed573; font-weight:600;">홍길동(0000)님 접속중</span> 표시가 활성화됩니다. 우측에는 현재 획득한 누적 경험치량에 연동되는 성장 레벨 칭호(새싹 🌿)와 이모지가 동적으로 렌더링됩니다.
+              </p>
+            </li>
+
+            <!-- [3] 1섹션 메인 잡지식 카드 -->
+            <li id="wis-pin-3" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">3</span> 1섹션 메인 잡지식 카드 (예: 과식 후 대사를 지배하라 - 72시간 골든타임)</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 0 0; color: var(--text-muted); line-height: 1.6;">
+                지식창고 대시보드의 최상단 영역에 가장 크게 단독 노출되어 회원의 이목을 집중시키는 메인 매거진 카드입니다. 타이틀 제목과 본문의 도입 핵심 내용 요지가 큼직하게 미리보기 형식으로 제공됩니다.
+              </p>
+            </li>
+
+            <!-- [4] 2섹션 & 3섹션 좌우 배치 잡지식 카드 -->
+            <li id="wis-pin-4" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">4</span> 2섹션 & 3섹션 좌우 배치 잡지식 카드 (예: 스마트 식단 관리 / 글리코겐 방패 퀘스트)</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 0 0; color: var(--text-muted); line-height: 1.6;">
+                중간 영역에 나란히 좌우 2열 그리드 레이아웃으로 배치되는 잡지식 카드들입니다. 두 개의 독립적인 건강 정보 주제가 시각적 밀도 높고 선명하게 조율되어 조밀한 정돈감을 선사합니다.
+              </p>
+            </li>
+
+            <!-- [5] 4섹션 하단 잡지식 카드 -->
+            <li id="wis-pin-5" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">5</span> 4섹션 하단 잡지식 카드 (예: 항상성 다이어트 원리) & 5섹션 자동 숨김 규칙</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 10px 0; color: var(--text-muted); line-height: 1.6;">
+                대시보드 하단 영역에 가로형 단독 컴포넌트로 기품 있게 배치되어 여유로운 레이아웃을 형성하는 네 번째 섹션의 잡지식 카드입니다.
+              </p>
+              <div style="background: rgba(255,159,67,0.08); border: 1px solid rgba(255,159,67,0.25); padding: 15px; border-radius: 12px; font-size: 0.82rem; line-height: 1.5; color: var(--text-muted);">
+                <strong>🔒 [섹션 노출 핵심 룰] 총 5대 섹션 설계 및 작성 기준 블라인드</strong><br>
+                지식창고는 건강상식, 건강식단 소개, 근력운동 소개 등 총 5개의 웰니스 섹션(카테고리)으로 기획 설계되어 있습니다.
+                그러나 관리자가 내용을 채워 등록하지 않은 **비어 있는 빈 섹션은 화면상에서 아예 렌더링되지 않고 투명하게 블라인드(숨김) 처리**되어 지식창고의 신뢰도를 보존합니다.<br>
+                본 가이드 캡처 화면에서도 <strong>5번째 섹션의 글이 아직 비어 있어 기록되지 않았기 때문에, 총 4개의 카드(섹션 1~4)만 노출</strong>되고 있는 것입니다.
+              </div>
+            </li>
+
+            <!-- [6] 지난 웰니스 상식 모아보기 -->
+            <li id="wis-pin-6" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">6</span> 지난 웰니스 상식 모아보기 ＞</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 10px 0; color: var(--text-muted); line-height: 1.6;">
+                대시보드 하단에 고착 기조 배치된 검은색 글래스모피즘 가로 버튼인 <strong>[🌿 지난 웰니스 상식 모아보기 ＞]</strong> 플레이트입니다.
+              </p>
+              <div style="background: rgba(30, 144, 255, 0.05); border: 1px solid rgba(30, 144, 255, 0.15); padding: 15px; border-radius: 12px; font-size: 0.82rem; line-height: 1.5; color: var(--text-muted);">
+                • <strong>지난 지식창고 글 모아보기</strong>: 해당 버튼을 터치하는 즉시, 과거에 등재되었던 모든 전문 웰니스 건강 지식 포스트의 제목첩 리스트 아카이브가 한목에 조회되어 언제든 무상으로 정주행하며 공부할 수 있도록 복습로를 열어 줍니다.<br><br>
+                <strong>📱 [잡지식 카드 터치 시 작동 사양] 원문 전면 조회 & 공감 소통</strong><br>
+                • <strong>자세히 읽기</strong>: 지식창고 상의 카드를 가볍게 탭 터치하거나 각 카드 하단의 **[자세히 읽기 ➔]**를 클릭하면 원문 보기 팝업 모달이 가동되며, 선명한 본문 고화질 사진 및 생략 없는 완전한 기사 전문이 시각적으로 기품 있게 펼쳐집니다.<br>
+                • <strong>공감하기/깊은 깨달음</strong>: 본문을 끝까지 깊게 읽어내린 회원들은 하단의 **[공감하기 / 깊은 깨달음 (하트)]** 공감 단추를 눌러 지적 공감대와 깨우침을 확실히 표명할 수 있습니다.<br>
+                • <strong>칭찬 및 소망 코멘트</strong>: 더불어 코치진을 격려하는 간단한 칭찬 메시지와 읽은 내용을 바탕으로 세운 본인의 건강 소망 한마디를 댓글 형태로 기술하여 마을 주민 간의 건강한 소통을 증대할 수 있는 한 줄 코멘트 란이 탑재되어 있습니다.
+              </div>
+            </li>
+
+          </ul>
+        </div>
+
+        <!-- 🌿 3부 6장. 테라피 예약 -->
+        <h3 class="section-h3" id="app-therapy" style="margin-top: 50px;">🌿 3부 6장. 테라피 예약</h3>
+        <p style="font-size: 0.98rem; color: #ced6e0; margin-bottom: 25px;">
+          테라피 예약 시스템은 회원들이 원적외선 체온 테라피를 모바일로 실시간 예약하고 조회하는 편리한 원스톱 세션 예약 엔진입니다. 이미 로그인 상태가 유지되는 앱 특성에 맞추어 고속 세션 예약 및 중복 방지 예약 카운터가 통합되어 있습니다.
+        </p>
+
+        <!-- 테라피 핀포인트 뷰어 -->
+        <div class="therapy-viewer-container" style="background: rgba(15, 12, 32, 0.4); border: 1px solid var(--glass-border); border-radius: 24px; padding: 30px; margin-bottom: 30px; display: flex; justify-content: center; align-items: center;">
+          <div class="phone-mockup" style="position: relative; max-width: 360px; width: 100%; border: 4px solid #33295c; border-radius: 36px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.8); background: #0b071a;">
+            
+            <!-- 테라피 고해상도 스크롤 병합 PNG 탑재 -->
+            <img src="media__1779961470197.png" alt="지니월드 테라피 대시보드" style="width: 100%; height: auto; display: block; filter: brightness(0.97); pointer-events: none;">
+
+            <!-- 핀포인트 1: 상단 배너 테라피 예약 & 로그아웃 이모지 -->
+            <a href="#the-pin-1" class="pin-badge" style="position: absolute; top: 3.5%; left: 91%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">1</a>
+
+            <!-- 핀포인트 2: 모험가 접속 상태 배너 -->
+            <a href="#the-pin-2" class="pin-badge" style="position: absolute; top: 7.3%; left: 28%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">2</a>
+
+            <!-- 핀포인트 3: 고정 및 유동 롤링 공지 배너 -->
+            <a href="#the-pin-3" class="pin-badge" style="position: absolute; top: 13.5%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">3</a>
+
+            <!-- 핀포인트 4: 테라피 예약 및 예약 조회 2구 패널 -->
+            <a href="#the-pin-4" class="pin-badge" style="position: absolute; top: 24.5%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">4</a>
+
+            <!-- 핀포인트 5: 최근 주간 예약 현황 대시보드 -->
+            <a href="#the-pin-5" class="pin-badge" style="position: absolute; top: 48.0%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; background: #7b61ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; box-shadow: 0 0 12px #7b61ff; border: 2px solid #fff; text-decoration: none; z-index: 20;">5</a>
+
+          </div>
+        </div>
+
+        <!-- 테라피 상세 사양 설명 목록 -->
+        <div class="sub-section" style="margin-bottom: 35px;">
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 20px;">
+            
+            <!-- [1] 상단 배너 -->
+            <li id="the-pin-1" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">1</span> 상단 배너 - 테라피 예약 & 로그아웃</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 0 0; color: var(--text-muted); line-height: 1.6;">
+                현재 테라피 예약 관리 룸에 있음을 알리는 공식 <strong>'테라피 예약'</strong> 글로벌 서브 타이틀 명판과 우측 상단의 🚪 (로그아웃/문닫음) 버튼이 조합되어 상시 고정 렌더링됩니다.
+              </p>
+            </li>
+
+            <!-- [2] 상태 배너 -->
+            <li id="the-pin-2" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">2</span> 상태 배너 - 사용자 접속 정보 & 레벨 표시</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 0 0; color: var(--text-muted); line-height: 1.6;">
+                현재 접속해 있는 모험가 회원 정보인 <span style="color:#2ed573; font-weight:600;">홍길동(0000)님 접속중</span> 표시가 활성화되며, 우측에 연동되는 회원의 성장 단계 칭호(예: 새싹 🌿)와 레벨 이모지가 유연하게 표출되어 성취감을 이어갑니다.
+              </p>
+            </li>
+
+            <!-- [3] 롤링 공지 배너 (공지사항) -->
+            <li id="the-pin-3" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">3</span> 롤링 공지 배너 (공지사항)</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 0 0; color: var(--text-muted); line-height: 1.6;">
+                테라피 이용 시 주민들이 꼭 인지하고 지켜야 할 **테라피 관련 주요 공지사항(예: 개인 수건 지참 안내 등)이 상시 롤링 방식으로 배너 상에 노출**되는 중요한 소통 창구입니다.
+              </p>
+            </li>
+
+            <!-- [4] 테라피 예약 및 예약 조회 2구 패널 -->
+            <li id="the-pin-4" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">4</span> 테라피 예약 & 예약 조회 (고속 바인딩 시스템)</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 10px 0; color: var(--text-muted); line-height: 1.6;">
+                테라피 예약을 신규 발령하거나 본인의 기존 예약을 실시간 확인 및 취소 조작하는 메인 트리거 카드 버튼입니다.
+              </p>
+              <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; font-size: 0.82rem; line-height: 1.5; color: var(--text-muted);">
+                <strong style="color: #2ed573; display: block; margin-bottom: 4px;">⚡ [특장점] 로그인 세션 고속 자동 바인딩</strong>
+                테라피 예약 시스템은 지니월드 통합 앱 환경 내부로 무결성 연동되어 제공됩니다. 즉, 회원이 이미 본인 인증(로그인)을 성공적으로 마친 세션 상태가 완전히 유지된 채 바인딩되므로 <strong>예약을 터치할 때 매번 자신의 전화번호를 다시 누르는 중복 조회 프로세스가 원천 생략</strong>됩니다!<br><br>
+                • <strong>테라피 예약 단계 (5초 패스트패스)</strong>: [테라피 예약] 버튼을 터치하는 즉시, 회원의 회원권 상태를 즉시 무결 확인한 뒤 곧바로 **[날짜 선택 ➡️ 예약 시간 선택 ➡️ 테라피 룸 선택 ➡️ 최종 내역 컨펌(확인)]** 4단계 선택 폼으로 넘어가 터치 몇 번으로 5초 만에 신속하게 예약을 매끄럽게 마칠 수 있습니다.<br>
+                • <strong>예약 조회 & 지인 조회 유연성</strong>: [예약 조회]를 터치할 경우에도 마찬가지로 <strong>기본적으로 본인의 회원 전화번호가 인풋 창에 자동 입력된 상태로 대기</strong>하여 버튼 터치 즉시 본인의 지난 히스토리를 불러옵니다. 만약 본인이 아닌 타 주민 동료의 예약을 긴급하게 대리 확인해 주어야 할 때에는 입력되어 있는 번호를 자유롭게 지우고 타 번호로 변경 입력하여 조회하는 것도 가능하여 유연성을 높였습니다.
+              </div>
+            </li>
+
+            <!-- [5] 최근 주간 예약 현황 대시보드 -->
+            <li id="the-pin-5" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong><span style="background: #7b61ff; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 6px;">5</span> 최근 주간 예약 현황 대시보드 (선제적 중복 방지)</strong>
+              <p style="font-size: 0.88rem; margin: 6px 0 10px 0; color: var(--text-muted); line-height: 1.6;">
+                현재 조회 시점을 기준으로 **향후 일주일(7일간) 동안 예약되어 있는 클럽 내의 실시간 예약 상황**을 칠판 보드 형식으로 하단에 상시 정돈하여 미리 보여주는 유용한 사전 대시보드입니다.
+              </p>
+              <div style="background: rgba(30, 144, 255, 0.05); border: 1px solid rgba(30, 144, 255, 0.15); padding: 15px; border-radius: 12px; font-size: 0.82rem; line-height: 1.5; color: var(--text-muted);">
+                • <strong>선제적 탐색 지원</strong>: 회원이 가까운 미래(일주일 내)에 테라피 예약 상황을 확인하려 할 때, 번거롭게 매번 [예약 조회] 창에 진입해 번호를 치지 않아도, 대시보드 상에서 직관적으로 주간 일정을 한눈에 파악할 수 있어 편의를 더했습니다.<br>
+                • <strong>중복 & 혼잡도 방지</strong>: 실시간 주간 클럽 테라피 현황을 투명하게 미리 봄으로써, 특정 시간대에 예약이 몰리는 혼잡 현상이나 중복 대기 불편함을 사전에 완벽하게 방지하여 플랫폼 신뢰도를 한 층 높입니다.
+              </div>
+            </li>
+
+          </ul>
+        </div>
+      </section>
+
+      <!-- 4부. 출석 키오스크 시스템 세부 사양서 -->
+      <section id="part4" class="card">
+        <h2 class="card-title">
+          <span>4부. 출석 키오스크 시스템 세부 사양서</span>
+        </h2>
+        <p style="font-size: 0.98rem; color: #ced6e0; margin-bottom: 25px;">
+          출석 키오스크는 노형점핑클럽 입구에 배치된 전용 태블릿/디바이스 화면으로, 회원들이 등원 시 자신의 뒷번호 4자리를 입력하여 출석을 쉽고 빠르게 완료하고, 본인의 회원권 상태와 잔여 횟수를 인지할 수 있는 시스템입니다.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 280px; gap: 30px; align-items: start;">
+          <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.7; display: flex; flex-direction: column; gap: 20px;">
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong style="color: #fff; font-size: 1rem; display: block; margin-bottom: 8px;">📱 출석 숫자 입력 화면 및 노형점핑 가로 배너</strong>
+              <p style="font-size: 0.88rem; margin: 0; line-height: 1.6;">
+                • <strong>노형점핑 가로 로고 배너</strong>: 상단에 품격 있는 노형점핑&체온테라피 가로형 브랜드 로고 배너가 고정 노출됩니다.<br>
+                • <strong>"휴대폰 번호 뒷자리 4자리를 눌러주세요"</strong>: 직관적인 안내 멘트 아래에 터치가 큼직한 원형 숫자 패드(0~9)와 함께 [지우기], [확인] 버튼이 완비되어 누구나 오타 없이 손쉽게 입력할 수 있습니다. 뒷자리를 누르면 보안 마크가 깜빡이며 실시간 확인 대기를 활성화합니다.
+              </p>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong style="color: #fff; font-size: 1rem; display: block; margin-bottom: 8px;">👥 동일 번호 매칭 회원 자동 정렬 선택</strong>
+              <p style="font-size: 0.88rem; margin: 0; line-height: 1.6;">
+                • 4자리 번호를 누른 회원 중 동일 번호를 사용하는 회원이 2명 이상 존재할 경우, 즉각 <em>"동일한 회원님이 계십니다. 본인 이름을 선택해 주세요."</em> 알림 창과 함께 일련의 **회원 선택 목록 카드**들이 뜹니다. 본인의 이름을 탭 터치하여 신속하게 본인 인증 단계로 진입합니다.
+              </p>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong style="color: #fff; font-size: 1rem; display: block; margin-bottom: 8px;">🎯 본인 회원권 상태 상세 조회 & 출석 유형 선택</strong>
+              <p style="font-size: 0.88rem; margin: 0; line-height: 1.6;">
+                • <strong>투명한 회원권 정보 표출</strong>: 본인을 선택하면 현재 보유 중인 **회원권명, 잔여 횟수, 마감 예정일**이 화면상에 크고 선명하게 렌더링되어 이용 신뢰도를 제공합니다.<br>
+                • <strong>3대 출석 유형 분기 버튼</strong>: <strong>[🏃 점핑출석 / 🌿 테라피출석 / 🔄 복합출석]</strong>의 3개 대형 버튼이 노출되어, 오늘 수행할 운동 유형에 부합하는 출석을 직접 터치합니다.<br>
+                • <strong>🎟️ 보너스 출석 (보너스권 연동)</strong>: 만약 추천인 제도 등으로 획득한 별도의 보너스 이용권이 회원 계정에 존재할 경우, 화면상에 <strong>[🎟️ 보너스 출석]</strong> 버튼이 추가로 자동 표출되어 언제든 테라피나 추가 운동으로 차감 이용할 수 있도록 유연성을 극대화했습니다.
+              </p>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong style="color: #fff; font-size: 1rem; display: block; margin-bottom: 8px;">🎉 최종 출석 완료 컨펌</strong>
+              <p style="font-size: 0.88rem; margin: 0; line-height: 1.6;">
+                • 출석 유형을 선택하는 즉시 <em>"출석이 완료되었습니다!"</em> 축하 메시지와 함께, 차감 적용된 **잔여 횟수와 남은 기한**이 화면 중앙에 큼직한 뱃지 형태로 표기되어 직관적인 피드백을 마친 뒤 자동으로 대기 화면으로 순환 전환됩니다.
+              </p>
+            </div>
+          </div>
+
+          <!-- 키오스크 화면 캡처 탑재 -->
+          <div style="text-align: center;">
+            <div class="phone-mockup" style="border: 4px solid #33295c; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); background: #0b071a; width: 100%; max-width: 240px; margin: 0 auto;">
+              <img src="media__1779970346713.png" alt="출석 키오스크 화면" style="width: 100%; height: auto; display: block;">
+            </div>
+            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 8px;">📷 출석 키오스크 입력 화면</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5부. 신규 회원 등록 PWA 시스템 세부 사양서 -->
+      <section id="part5" class="card">
+        <h2 class="card-title">
+          <span>5부. 신규 회원 등록 PWA 시스템 세부 사양서</span>
+        </h2>
+        <p style="font-size: 0.98rem; color: #ced6e0; margin-bottom: 25px;">
+          신규 회원 등록 PWA 시스템은 상담 데스크 전용 태블릿을 활용해 신입 회원이 자신의 기본 인적 사항과 약정 서명을 직접 탭하여 등록하는 스마트 가입 엔진입니다.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 280px; gap: 30px; align-items: start;">
+          <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.7; display: flex; flex-direction: column; gap: 20px;">
+            
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong style="color: #fff; font-size: 1rem; display: block; margin-bottom: 8px;">👤 1. 신입 모험가 기본 정보 입력</strong>
+              <p style="font-size: 0.88rem; margin: 0; line-height: 1.6;">
+                • <strong>성함, 휴대폰 번호(실물 인증 연동), 생년월일, 거주 주소</strong>를 깔끔한 폼을 통해 기입합니다.
+              </p>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong style="color: #fff; font-size: 1rem; display: block; margin-bottom: 8px;">💳 2. 회원권 및 웰니스 관리 정보 세팅</strong>
+              <p style="font-size: 0.88rem; margin: 0; line-height: 1.6;">
+                • <strong>결제 및 행정 스펙</strong>: 등록 권종 카테고리, 결제 적용 시작일, 결제 수단을 정확히 선택합니다.<br>
+                • <strong>항상성 목표 및 병리 체크</strong>: 개인의 건강 운동 목표(감량/체력 증진 등), 목표 체중, 그리고 평소 복용 약물이나 근골격계 특이 사항(복용약/특이사항)을 기입하여 코치진과 실시간 공유합니다.<br>
+                • <strong>🌟 추천인 제도 보상 연동</strong>: 가입 시 추천인란에 기존 동료 회원의 이름을 검색해 지정하면, 가입 즉시 **해당 추천 대상 회원에게 보너스 이용권 1회가 자동으로 무결 적재 보상**됩니다. 이 보너스권은 회원이 출석할 때 키오스크에서 [보너스 출석] 버튼을 통해 테라피권 등으로 언제든 자유롭게 즉시 이식 차감 사용할 수 있습니다.
+              </p>
+            </div>
+
+            <!-- 목표 체중 유지 보너스 판정 엔진 보완에 대한 기획 안내 -->
+            <div style="background: rgba(46, 213, 115, 0.08); border: 1px dashed rgba(46, 213, 115, 0.3); padding: 20px; border-radius: 16px;">
+              <strong style="color: var(--accent-practice); font-size: 1rem; display: block; margin-bottom: 8px;">💡 [핵심 기획 설계] 목표 체중 유지 점수 보정 엔진</strong>
+              <p style="font-size: 0.85rem; margin: 0; line-height: 1.6; color: #ced6e0;">
+                과거 무지성으로 체중을 기입하던 단순 관리 형태를 타파하고, **지니월드 3대 스탯 중 체력(Health EXP)의 '명품 유지 보너스(월 1,000 EXP)' 판정과 유기적으로 연동 설계**되었습니다.
+                가입 시 입력된 '목표 체중' 데이터는 AI 인바디 판독 엔진과 실시간 결합 대조됩니다. 회원이 목표 체중에 최종 안착하게 되면, **더 이상 강박적인 무리한 추가 감량 없이 몸무게가 [목표 체중 + 0.5kg] 골든존 내에 안전하게 유지되기만 해도 매달 1,000 EXP 대형 보너스 점수가 자동 지급**되도록 설계되어 지속 가능한 건강 항상성을 철저하게 수호합니다.
+              </p>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong style="color: #fff; font-size: 1rem; display: block; margin-bottom: 8px;">✍️ 3. 이용 약정서 및 전자 서명</strong>
+              <p style="font-size: 0.88rem; margin: 0; line-height: 1.6;">
+                • 클럽 운영 약정 및 환불 약관서를 꼼꼼히 읽은 뒤, 하단 캔버스 패드에 직접 친필 전자 서명을 완료합니다. 서명 완료 시 이미지 메타데이터로 즉각 변신하여 구글 스프레드시트 해당 회원 행에 영구 저장 기록됩니다.<br>
+                • <strong>🌟 [PWA 회원가입 프리패스 자동화]</strong>: 신규 가입 약정서 서명 및 가입이 완료되는 즉시, **해당 회원의 정보가 지니월드 가상 주민 데이터베이스와 실시간 고속 매핑되어 지니월드 앱 이용 자격이 100% 자동으로 부여**됩니다! 즉, 주민들은 앱상에서 번잡한 추가 회원가입이나 인증 단계 없이 가입 당일 전화번호 뒷 4자리만 키패드에 탭하면 즉시 광장 채널을 즐길 수 있어 혁신적인 사용 편의성을 보장합니다.
+              </p>
+            </div>
+          </div>
+
+          <!-- 신규 가입 캡처 탑재 -->
+          <div style="text-align: center;">
+            <div class="phone-mockup" style="border: 4px solid #33295c; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); background: #0b071a; width: 100%; max-width: 240px; margin: 0 auto;">
+              <img src="media__1779970374972.jpg" alt="노형점핑 신규 가입 화면" style="width: 100%; height: auto; display: block;">
+            </div>
+            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 8px;">📷 노형점핑 신규 가입 화면</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6부. 지니월드 관리자 및 실무용 점핑 관리자 앱 세부 사양서 -->
+      <section id="part6" class="card">
+        <h2 class="card-title">
+          <span>6부. 관리자 앱 세부 사양서</span>
+        </h2>
+        <p style="font-size: 0.98rem; color: #ced6e0; margin-bottom: 30px;">
+          관리자 앱 세부 사양서는 가상 월드의 중심 환경을 컨트롤하는 <strong>'지니월드 관리자 (생텀 - Sanctum)'</strong>과 실무 운영 효율을 극대화하는 <strong>'점핑 관리자 (어드민 - Admin)'</strong>의 정밀한 통제 기능과 비즈니스 로직을 집대성하여 다룹니다.
+        </p>
+
+        <!-- 👑 4부 1장. 점핑 관리자 앱 (어드민 - Admin) -->
+        <h3 class="section-h3" id="app-admin" style="margin-top: 40px; color: #7b61ff;">👑 4부 1장. 점핑 관리자 앱 (어드민 - Admin)</h3>
+        <p style="font-size: 0.98rem; color: #ced6e0; margin-bottom: 25px;">
+          점핑 관리자 앱(어드민)은 오프라인 클럽 실무에 100% 최적화된 백오피스입니다. 출석 회원 모니터링, 수동 출석, 회원권 갱신(리뉴얼), 매출 정산, 업무일지 관리, 그리고 자동 문자 발송 엔진을 관리자가 한손으로 빠르게 조작할 수 있도록 설계된 컨트롤 센터입니다.
+        </p>
+
+        <!-- [1] 어드민 대시보드 메인 화면 -->
+        <div class="sub-section" style="background: rgba(15, 12, 32, 0.4); border: 1px solid var(--glass-border); padding: 30px; border-radius: 20px; margin-bottom: 30px;">
+          <h4 style="color: #fff; font-size: 1.1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+            <span style="background: #7b61ff; color: #fff; border-radius: 4px; padding: 2px 8px; font-size: 0.8rem; font-weight: bold;">메인</span>
+            (1) 관리자 대시보드 메인 화면 사양
+          </h4>
+          
+          <div style="display: grid; grid-template-columns: 1fr 280px; gap: 30px; align-items: start;">
+            <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.7;">
+              <p style="margin-bottom: 15px;">
+                어드민 화면 진입 시 노출되는 메인 홈 화면입니다. 당일 점핑클럽의 출석자 및 대기 상태, 예약 임박 상태를 투명하게 시각화합니다.
+              </p>
+              <ul style="list-style: none; display: flex; flex-direction: column; gap: 12px; padding-left: 0;">
+                <li>• <strong>💬 발송 대기 중 문자 안내</strong>: 발송문자함에 적재된 발송 대기 문자가 있을 경우 대시보드 상단에 보랏빛 띠로 <em>"📢 발송 대기 중인 문자가 XX건 있습니다. 바로 확인해보세요!"</em> 알림 팝업이 노출되며, 터치 시 즉시 [문자관리] 탭으로 순간 이동합니다.</li>
+                <li>• <strong>🚨 테라피 예약 임박 배너</strong>: 30분 이내에 예정된 원적외선 테라피 예약 건이 포착되면 대시보드 최상단 영역에 붉은색 그라데이션 경고 띠 배너(예: <em>🔥 예약 알람: 19:30 [1인실] 홍길동 님 [확인함]</em>)가 깜빡이며 실물 룸 정비 및 안내를 선제적으로 유도합니다.</li>
+                <li>• <strong>📊 전체 출석 통계 4구 패널</strong>: 당일 클럽의 실시간 가동 현황판입니다. <strong>[🏃 점핑 출석 / 🌿 테라피 인원 / 📊 전체 입실 / ✅ 귀가 완료]</strong> 인원수를 대형 폰트로 입체적 스캔하여 실시간 렌더링해 줍니다.</li>
+                <li>• <strong>🌿 당일 테라피 안내 배너</strong>: 금일 등록된 테라피 예약 건들을 시간 순서대로 꼼꼼히 줄 세워 띄워 줍니다. 예약 시간이 초과하여 정상 완료된 건은 불필요한 노이즈를 방지하기 위해 화면상에서 자연스럽게 영구 소멸(숨김) 처리됩니다.</li>
+                <li>• <strong>🏃 진행 중 회원 관리 및 정밀 퇴실 정산</strong>: 현재 실물 룸 내에서 운동 및 힐링 치료를 진행하고 있는 회원들의 실시간 목록입니다.
+                  <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; margin-top: 6px; font-size: 0.82rem; line-height: 1.5;">
+                    - <strong>[퇴실 처리] 버튼</strong>: 터치 시 귀가 완료 세션으로 즉각 이동합니다.<br>
+                    - <strong>점핑 회원</strong>: 실제 완료한 운동 타임수를 수기로 기록하고 참여 클래스를 조절하며, 초과 이용 시 [차감/추가] 버튼으로 회원권 횟수를 즉시 컨트롤합니다. 이때 기록된 최종 타임수에 의해 3대 스탯 중 실천력(Practice) 보상 점수가 유기적으로 역정산됩니다.<br>
+                    - <strong>테라피 회원</strong>: 테라피 참여 시간만 깔끔하게 기록되며, 예약이 완료된 테라피 건일 경우 자동으로 매칭된 예약 시간이 연동 활성화 상태로 세팅됩니다.<br>
+                    - <strong>복합 회원</strong>: 점핑 타임수와 참여 클래스, 테라피 시간을 한 모금에 모두 기록 가능하며, 지니월드 3대 스탯 보상 역시 테라피 스탯 점수까지 통합 가산하여 부여됩니다.
+                  </div>
+                </li>
+                <li>• <strong>✅ 오늘 귀가 완료 배너</strong>: 금일 퇴실 처리가 끝난 회원 총원수가 노출되며, [펼치기]를 통해 전체 상세 내역을 회람하고 필요시 각 항목을 클릭해 잘못된 퇴실 기록을 유연하게 수정할 수 있습니다.</li>
+              </ul>
+            </div>
+            
+            <!-- 대시보드 및 퇴실 처리 캡처 탑재 -->
+            <div style="text-align: center; display: flex; flex-direction: column; gap: 15px;">
+              <div>
+                <div class="phone-mockup" style="border: 4px solid #33295c; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); background: #0b071a; width: 100%; max-width: 200px; margin: 0 auto;">
+                  <img src="media__1779963411043.jpg" alt="어드민 대시보드 메인" style="width: 100%; height: auto; display: block;">
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 6px;">📷 관리자 대시보드 메인 화면</span>
+              </div>
+              <div>
+                <div class="phone-mockup" style="border: 4px solid #33295c; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); background: #0b071a; width: 100%; max-width: 200px; margin: 0 auto;">
+                  <img src="media__1779970051321.jpg" alt="퇴실 처리 팝업" style="width: 100%; height: auto; display: block;">
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 6px;">📷 퇴실 처리 화면</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 🔍 검색 버튼 (돋보기) & 회원연장 결제처리 -->
+          <div style="background: rgba(123, 97, 255, 0.05); border: 1px solid rgba(123, 97, 255, 0.15); padding: 20px; border-radius: 12px; margin-top: 25px;">
+            <strong style="color: #fff; font-size: 0.95rem; display: block; margin-bottom: 10px;">🔍 돋보기 검색 & 회원연장 결제처리 (리뉴얼) 사양</strong>
+            <p style="font-size: 0.85rem; color: #ced6e0; line-height: 1.6; margin-bottom: 15px;">
+              대시보드 우측 하단에 상시 부유하는 <strong>[🔍 돋보기 플로팅 버튼]</strong>은 신규 및 기존 회원 정산을 해결하는 핵심 툴킷입니다.
+            </p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 420px; gap: 20px; align-items: start;">
+              <div style="display: flex; flex-direction: column; gap: 15px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
+                <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+                  <strong style="color: #fff; display: block; margin-bottom: 4px;">🔎 회원이름 돋보기 검색 (수동 출석)</strong>
+                  - 깜빡 잊고 출석 키오스크에 체크인하지 않은 회원을 검색하여 **[수동 출석]**을 안전하게 강제 완료 처리합니다.<br>
+                  - 만료된 회원이 클럽에 내방하여 재가입할 시에도 돋보기 버튼으로 회원을 찾아 원클릭으로 결제 연장 폼을 로드합니다.<br>
+                  - 검색 시 현재 유지 중인 회원권 정보, 잔여 횟수, 마감 기한이 한눈에 파악됩니다.
+                </div>
+                <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+                  <strong style="color: #fff; display: block; margin-bottom: 4px;">💳 회원연장 결제처리 (리뉴얼)</strong>
+                  - 결제 조작 시 회원의 최근 완료/진행 중인 <strong>이전 회원권 히스토리 3개</strong>를 상세히 대조하여 연장형 결제인지, 재결제/추가결제인지를 엔진이 자율 판단합니다.<br>
+                  - <strong>[연장결제]</strong>일 경우 기존의 남은 횟수와 기간을 소멸시키지 않고 신규 기간 위에 안전하게 누적 병합(이월) 정산해주며, 단순 재결제 시에는 연장이 불가하도록 엄격히 구분합니다.<br>
+                  - 권종 및 시작일을 선택하는 즉시 결제 금액, 만료 예상일, 최종 합산 잔여 횟수가 <strong>실시간 자동 연산</strong>되어 화면에 노출되며, 최종 서명(Signature)을 태블릿으로 수령해 완료하면 **해당 회원의 상황별 등록 문자가 발송 대기 문자함에 100% 자동 적재**됩니다.
+                </div>
+              </div>
+              
+              <!-- 수동 검색 및 연장 결제 캡처 탑재 -->
+              <div style="display: flex; gap: 15px; justify-content: center;">
+                <div style="text-align: center;">
+                  <div class="phone-mockup" style="border: 4px solid #33295c; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); background: #0b071a; width: 180px;">
+                    <img src="media__1779970051314.jpg" alt="회원 이름 수동 검색" style="width: 100%; height: auto; display: block;">
+                  </div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 5px;">📷 회원 수동 검색</span>
+                </div>
+                <div style="text-align: center;">
+                  <div class="phone-mockup" style="border: 4px solid #33295c; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); background: #0b071a; width: 180px;">
+                    <img src="media__1779970051325.jpg" alt="회원 연장 결제 처리" style="width: 100%; height: auto; display: block;">
+                  </div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 5px;">📷 연장/결제 처리</span>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+
+        <!-- [2] 지니월드 관리사령부 포털 -->
+        <div class="sub-section" style="background: rgba(15, 12, 32, 0.4); border: 1px solid var(--glass-border); padding: 30px; border-radius: 20px; margin-bottom: 30px;">
+          <h4 style="color: #fff; font-size: 1.1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+            <span style="background: #ff4757; color: #fff; border-radius: 4px; padding: 2px 8px; font-size: 0.8rem; font-weight: bold;">포털 1</span>
+            (2) 지니월드 관리사령부 모달 사양
+          </h4>
+          
+          <div style="display: grid; grid-template-columns: 1fr 280px; gap: 30px; align-items: start;">
+            <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.7;">
+              <p style="margin-bottom: 15px;">
+                어드민 상단의 <strong>[🌌 지니월드]</strong> 탭을 탭하면 호출되는 관리 모달입니다. 가상 세계 제어의 심장부로 이동하거나, 회원들의 인바디 점수를 통제하고 인쇄용 성적표를 출력하는 강력한 기획 사양이 탑재되어 있습니다.
+              </p>
+              <ul style="list-style: none; display: flex; flex-direction: column; gap: 16px; padding-left: 0;">
+                <li>
+                  <strong style="color: #fff; display: block; margin-bottom: 4px;">🏰 지니월드 관리센터 (생텀 포털 이동)</strong>
+                  <p style="font-size: 0.85rem; margin-bottom: 4px;">
+                    모달 내의 보랏빛 <strong>[🏰 지니월드 관리센터]</strong> 버튼을 터치하는 즉시, 가상 월드의 중심 기상과 캘린더 마법을 제어할 수 있는 <strong>'지니월드 관리자 (생텀 - Sanctum)'</strong>의 전용 웹앱 화면으로 무결성 리다이렉트되어 신속하게 왕복 이동할 수 있습니다.
+                  </p>
+                  <span style="color: #fdcb6e; font-size: 0.82rem; font-weight: 600;">➔ 생텀의 상세 기획 사양은 본 백서 [4부 2장]에서 부록처럼 완벽히 독자 소개됩니다!</span>
+                </li>
+                <li>
+                  <strong style="color: #fff; display: block; margin-bottom: 4px;">📋 인바디 조회 및 수정 (어뷰징 보정 판정)</strong>
+                  <p style="font-size: 0.85rem; margin-bottom: 6px;">
+                    주민들이 모바일 PWA 앱 상에서 AI 인바디 스캐너로 올린 판독 데이터를 실시간 검수하고 보정하는 팝업 창입니다.
+                  </p>
+                  <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; font-size: 0.8rem; line-height: 1.5;">
+                    • <strong>최근 20개 자동 스크롤 로딩</strong>: 팝업 실행 즉시 가장 최근에 측정되어 등록된 20개의 데이터첩이 스크롤 화면으로 선명하게 펼쳐집니다.<br>
+                    • <strong>통합 검색 필터</strong>: 회원 이름 또는 전화번호 뒷자리, 측정 날짜 범위, 주차(Week) 필터 항목을 활용해 과거 수치까지 오차 없이 빠르게 추적합니다. [필터 조건 초기화] 버튼으로 모든 검색 결과를 초기화합니다.<br>
+                    • <strong>실시간 계산식 재정산 (리컴퓨팅)</strong>: 각 카드 항목에는 회원명, 측정일, 체중, 골격근량, 체지방률 데이터와 함께 백엔드 공식이 계산해 낸 <strong>[주간 / 월간 / 평생 스탯 점수]</strong>가 일렬 표시됩니다. 점수 항목은 임의 위조를 차단하기 위해 **수정이 불가능**하게 잠겨 있으나, 코치가 사진 대조 검수 후 체성분 수치를 고치고 [수정 완료] 버튼을 누르는 즉시 **백엔드 정산 알고리즘이 가동되어 점수를 100% 자동 재계산 및 갱신 정산** 처리합니다.
+                  </div>
+                </li>
+                <li>
+                  <strong style="color: #fff; display: block; margin-bottom: 4px;">📊 웰니스 랭킹 조회 및 인쇄 (A4 클럽 게시판 템플릿)</strong>
+                  <p style="font-size: 0.85rem; margin-bottom: 4px;">
+                    주민들의 자발적 경쟁과 동기부여를 위해 클럽 실물 벽면에 정기 부착할 수 있는 **A4 크기 출력용 랭킹 인쇄 콘솔**을 제공합니다.
+                  </p>
+                  <span style="font-size: 0.8rem; display: block; line-height: 1.4;">
+                    • <strong>주간 및 월간 랭킹(월간 출석왕 연동)</strong>을 선명하게 확인하고 즉각 프린트할 수 있는 최적화 CSS 템플릿이 자동 바인딩됩니다.<br>
+                    • 실시간 집계 중인 <strong>실시간 랭킹</strong>뿐만 아니라, 정산이 이미 종료되어 확정된 과거의 <strong>지난 랭킹 내역</strong>까지 모두 완벽하게 추적하여 깨짐 없이 A4 가로/세로 비율로 고해상도 인쇄할 수 있습니다.
+                  </span>
+                </li>
+              </ul>
+            </div>
+            
+            <!-- 사령부 모달 캡처 탑재 -->
+            <div style="text-align: center; display: flex; flex-direction: column; gap: 15px;">
+              <div>
+                <div class="phone-mockup" style="border: 4px solid #33295c; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); background: #0b071a; width: 100%; max-width: 200px; margin: 0 auto;">
+                  <img src="media__1779963411096.jpg" alt="지니월드 관리사령부" style="width: 100%; height: auto; display: block;">
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 6px;">📷 지니월드 관리사령부 모달</span>
+              </div>
+              <div>
+                <div class="phone-mockup" style="border: 4px solid #33295c; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); background: #0b071a; width: 100%; max-width: 200px; margin: 0 auto;">
+                  <img src="media__1779963411016.jpg" alt="인바디 조회 및 수정" style="width: 100%; height: auto; display: block;">
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 6px;">📷 인바디 조회 및 수정 팝업</span>
+              </div>
+              <div>
+                <div class="phone-mockup" style="border: 4px solid #33295c; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); background: #0b071a; width: 100%; max-width: 200px; margin: 0 auto;">
+                  <img src="media__1779963410993.jpg" alt="인쇄 콘솔" style="width: 100%; height: auto; display: block;">
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 6px;">📷 챌린지 성적 인쇄 콘솔</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- [3] 업무 및 매출 관리 포털 -->
+        <div class="sub-section" style="background: rgba(15, 12, 32, 0.4); border: 1px solid var(--glass-border); padding: 30px; border-radius: 20px; margin-bottom: 30px;">
+          <h4 style="color: #fff; font-size: 1.1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+            <span style="background: #2ed573; color: #fff; border-radius: 4px; padding: 2px 8px; font-size: 0.8rem; font-weight: bold;">포털 2</span>
+            (3) 업무 및 매출 관리 모달 사양
+          </h4>
+          
+          <div style="display: grid; grid-template-columns: 1fr 280px; gap: 30px; align-items: start;">
+            <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.7;">
+              <p style="margin-bottom: 15px;">
+                어드민 상단의 <strong>[📝 업무/매출]</strong> 탭 터치 시 가동되는 핵심 종합 장부 모달입니다. 매일의 경영 일지, 매출 통계, 1:1 개인 쪽지 발송 및 인공지능이 생성하는 실시간 자동 알림 문자함을 통괄합니다.
+              </p>
+              <ul style="list-style: none; display: flex; flex-direction: column; gap: 16px; padding-left: 0;">
+                <li>
+                  <strong style="color: #fff; display: block; margin-bottom: 4px;">✍️ 업무일지 관리 (실시간 출석 통계 연동 및 백업)</strong>
+                  <span style="font-size: 0.85rem; display: block; line-height: 1.5;">
+                    • <strong>업무일지 작성 및 수정</strong>: 당일 날짜와 작성자 코치를 지정하고 <strong>[점핑 프로그램 / 근력 프로그램 / 특이 사항 / 시설 고장·파손 / 출석 통계]</strong>의 5대 코어를 정밀 기술합니다. 과거 작성한 업무일지를 언제든 상세 조회할 수 있으며, <strong>[수정 완료]</strong> 버튼을 탑재하여 과거 데이터의 실시간 피드백 정정을 지원합니다.<br>
+                    • <strong>시간별 출석 통계 실시간 자동 업데이트</strong>: 작성 완료 시점의 시간대별 상세 출석 분절 통계가 시트 데이터베이스로 자동 업로드됩니다. 작성자가 일지를 미리 써 두었더라도, 매일 밤 백그라운드 자동 정산 트리거가 돌 때 **출석 통계 컬럼만 fresh하게 한 번 더 역조회하여 최종 수치로 완벽 보정**해 줍니다.<br>
+                    • <strong>휴무일 & 벙개 테라피 자동 제외 필터</strong>: 관리자가 지정한 정식 휴무일이나 돌발 이벤트일에는 시스템 부하 및 불필요한 공란 방지를 위해 **일일 업무일지를 자동으로 생성 및 작성하지 않도록 예외 처리** 필터가 작동합니다.
+                  </span>
+                </li>
+                <li>
+                  <strong style="color: #fff; display: block; margin-bottom: 4px;">💰 매출관리 (3색 스탯 비주얼 시인성 극대화)</strong>
+                  <span style="font-size: 0.85rem; display: block; line-height: 1.5;">
+                    • <strong>일일 수입/지출 즉각 등록 & 스마트 가이드</strong>: 일자 선택 후 수입/지출을 구분해 금액과 상세 비고 내용을 작성합니다. 특히 코치진의 카테고리 기입 실수를 막기 위해, 세부 항목을 클릭하는 즉시 **인풋창 아래에 해당 카테고리에 들어갈 수 있는 실제 예시(예: 비품 구입, 음료 매출 등)가 힌트문(Hint Text)으로 선명하게 노출**되어 혼선을 완벽 차단합니다.<br>
+                    • <strong>일/월/기간별 입체적 스캔 조회</strong>: 대시보드 상에 **일매출(기본 15일 기준선) 및 월매출(기본 12개월 기준선)**을 차트로 로딩합니다. 각 항목별로 수입은 <strong style="color:#54a0ff;">파란색 🔵</strong>, 지출은 <strong style="color:#ff6b6b;">빨간색 🔴</strong>, 최종 순이익은 <strong style="color:#2ed573;">초록색 🟢</strong>으로 명확히 표기하여 시각적 직관성을 최대치로 확보했습니다.<br>
+                    • <strong>실시간 시트 리정산</strong>: 상세 조회를 눌러 특정 항목을 변경하면, 즉시 구글 스프레드시트 원본 데이터가 조율 수정되며 대시보드 하단의 **합계 정산 총액도 지연 없이 실시간으로 리컴퓨팅(재계산)** 완료됩니다.
+                  </span>
+                </li>
+                <li>
+                  <strong style="color: #fff; display: block; margin-bottom: 4px;">💬 개인쪽지 관리 (AI 지니 작문비서 탑재)</strong>
+                  <span style="font-size: 0.85rem; display: block; line-height: 1.5;">
+                    • 지니월드 앱 내에서 회원 개별 또는 전체 주민에게 실시간 전송되는 알림 쪽지함 제어 센터입니다.<br>
+                    • 회원의 이름을 돋보기 검색하여 1:1 비밀 쪽지를 송신하거나, 전체 주민 대상의 공지를 원버튼으로 발송합니다.<br>
+                    • <strong>🧙 AI 지니 작문비서</strong>: 코치가 간단한 키워드나 요지만 입력창에 기입하고 AI 작문 지시를 터치하면, **인공지능 비서가 기품 있고 정중한 격려형 감성 쪽지 초안을 실시간 자동 작문**하여 채워 줍니다. 코치는 이 초안을 눈으로 확인하고 자유롭게 추가 수정한 뒤 최종 벌크 전송할 수 있어 실무 리소스를 대폭 경감합니다.
+                  </span>
+                </li>
+                <li>
+                  <strong style="color: #fff; display: block; margin-bottom: 4px;">✉️ 문자 관리 (AI 연동형 상황별 자동 적재 문자함)</strong>
+                  <p style="font-size: 0.85rem; margin-bottom: 6px;">
+                    코치가 일일이 수동 타이핑하여 회원들에게 문자를 보내던 열악한 방식을 종식하고, **매일 밤 백그라운드 AI 에디터 트리거가 작동하여 상황별 수신 대상과 문구를 100% 자동 생성해 문자 적재함에 배정해 두는 스마트 엔진**입니다.
+                  </p>
+                  <div style="background: rgba(0,0,0,0.25); border: 1px dashed rgba(46, 213, 115, 0.3); padding: 12px; border-radius: 8px; font-size: 0.78rem; line-height: 1.5;">
+                    1. <strong>🎉 등록 안내 문자</strong>: 회원의 결제(최초 가입, 재결제, 연장 결제, 추가 등록)가 완료되는 즉시, 각 결제 상황 조건에 정밀 부합하는 세련된 환영 및 확인 문자가 문자함에 자동으로 세팅됩니다. 코치는 클릭 한 번으로 연락처와 가이드 문구를 복사해 즉시 전송할 수 있습니다.<br>
+                    2. <strong>👾 미방문 / 결석 디버프 방지 문자 (실시간 업데이트 및 갱신)</strong>:
+                    - **3~6일 연속 결석 시**: 회원이 지니월드 앱에 오늘 하루 접속(로그인)했던 기록이 존재할 경우 불필요한 문자 요금 낭비를 막기 위해 **무상인 [앱 쪽지]로만 해당 디버프 경고를 발송**하고, 앱 접속 기록이 아예 없는 회원에게만 **[문자 + 앱 쪽지]를 동시에 생성**해 적재합니다.<br>
+                    - **7일 이상 장기 결석 시**: 기존에 송신했던 발송 이력, 남은 회원권 잔여 횟수 및 만료 기일을 AI가 종합 판독하여, **매일 갱신된 날짜 기준(예: 어제 대기 상태인 '7일차 안 나오셨군요' 문구를 다음 날 아침 정산 시 자동으로 '8일차' 문구로 완전 갱신 및 날짜 카운트 보정 업데이트)**으로 fresh하게 덮어써 적재해 줍니다. 중복 발송을 완벽 방어하고 시인성을 극대화합니다.<br>
+                    3. <strong>🍂 장기 미등록 회원 복귀 문자</strong>: 회원권 마감 후 오랫동안 클럽을 찾지 않는 옛 주민들을 향한 AI 감성 안부 문자를 미등록 기간에 맞추어 유동적으로 자동 생성합니다.<br>
+                    ※ 문자 적재함 상에서 내용을 코치가 원본에 맞춰 가볍게 수정한 뒤 [발송 완료] 버튼을 누르면, **수정된 최종 텍스트가 시트 원본에 안전하게 자동 기록**되며 발송 상태 완료 플래그가 고정 적재됩니다.
+                  </div>
+                </li>
+              </ul>
+            </div>
+            
+            <!-- 업무매출 모달 캡처 탑재 -->
+            <div style="text-align: center; display: flex; flex-direction: column; gap: 15px;">
+              <div>
+                <div class="phone-mockup" style="border: 4px solid #33295c; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); background: #0b071a; width: 100%; max-width: 200px; margin: 0 auto;">
+                  <img src="media__1779963411214.jpg" alt="업무 및 매출 관리" style="width: 100%; height: auto; display: block;">
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 6px;">📷 업무 및 매출 관리 모달</span>
+              </div>
+              <div>
+                <div class="phone-mockup" style="border: 4px solid #33295c; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); background: #0b071a; width: 100%; max-width: 200px; margin: 0 auto;">
+                  <img src="media__1779963450048.jpg" alt="일일 업무일지 작성" style="width: 100%; height: auto; display: block;">
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 6px;">📷 일일 업무일지 작성</span>
+              </div>
+              <div>
+                <div class="phone-mockup" style="border: 4px solid #33295c; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); background: #0b071a; width: 100%; max-width: 200px; margin: 0 auto;">
+                  <img src="media__1779963450072.jpg" alt="일일 매출/지출 등록" style="width: 100%; height: auto; display: block;">
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 6px;">📷 일일 매출/지출 등록</span>
+              </div>
+              <div>
+                <div class="phone-mockup" style="border: 4px solid #33295c; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); background: #0b071a; width: 100%; max-width: 200px; margin: 0 auto;">
+                  <img src="media__1779963450125.jpg" alt="지니클럽 전령 발송기" style="width: 100%; height: auto; display: block;">
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 6px;">📷 지니클럽 전령 발송기 (쪽지)</span>
+              </div>
+              <div>
+                <div class="phone-mockup" style="border: 4px solid #33295c; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); background: #0b071a; width: 100%; max-width: 200px; margin: 0 auto;">
+                  <img src="media__1779963450153.jpg" alt="문자 발송 관리" style="width: 100%; height: auto; display: block;">
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 6px;">📷 문자 발송 관리</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- [4] 테라피 예약 관리 시스템 -->
+        <div class="sub-section" style="background: rgba(15, 12, 32, 0.4); border: 1px solid var(--glass-border); padding: 30px; border-radius: 20px; margin-bottom: 40px;">
+          <h4 style="color: #fff; font-size: 1.1rem; margin-bottom: 15px;">🌿 (4) 테라피 실무 예약 관리 사양</h4>
+          
+          <div style="display: grid; grid-template-columns: 1fr 280px; gap: 30px; align-items: start;">
+            <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.7;">
+              <p style="margin-bottom: 15px;">
+                회원들의 원적외선 체온 테라피 실시간 예약 현황을 한판으로 통제하는 실무 패널입니다.
+              </p>
+              <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 12px; font-size: 0.85rem; line-height: 1.6; color: var(--text-muted);">
+                • <strong>7일 주간 스크롤 렌더링</strong>: 기본적으로 금일을 기준으로 향후 <strong>7일간의 주간 예약 명단</strong>이 일자 순으로 고정 로드됩니다. 다른 날짜의 현황 조율이 필요할 시 [기간별 검색]을 작동시켜 과거 및 먼 미래의 일정들을 정밀 조회할 수 있습니다. 예약을 터치하여 오조작이나 일정 정정을 신속히 완료합니다.<br><br>
+                • <strong>빈 일자 스마트 블라인드</strong>: 예약이 하나라도 등재되어 존재하는 일자만 명판 카드로 렌더링되며, <strong>예약이 아예 없이 텅 비어 있는 날짜 카드는 화면상에서 자동으로 보이지 않게 블라인드</strong> 처리되어 스크롤 낭비를 없애고 가독성을 보존합니다.<br><br>
+                • <strong>클럽 긴급 휴무 및 벙개 테라피 지정</strong>: 오프라인 클럽 정비나 긴급 폐쇄 상태 시, 해당 예약창을 굳게 잠그거나(Lock) 긴급 벙개 예약을 수동 등록하는 제어 패널이 완벽히 마련되어 있습니다.
+              </div>
+            </div>
+            
+            <!-- 테라피 캡처 탑재 -->
+            <div style="text-align: center;">
+              <div class="phone-mockup" style="border: 4px solid #33295c; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); background: #0b071a; width: 100%; max-width: 240px; margin: 0 auto;">
+                <img src="media__1779963450159.jpg" alt="테라피 예약 명단" style="width: 100%; height: auto; display: block;">
+              </div>
+              <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 8px;">📷 테라피 예약 명단</span>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- 🔮 4부 2장. 지니월드 관리자 (생텀 - Sanctum) -->
+        <h3 class="section-h3" id="app-sanctum" style="margin-top: 50px; color: #ff9f47;">🔮 4부 2장. 지니월드 관리자 (생텀 - Sanctum)</h3>
+        <p style="font-size: 0.98rem; color: #ced6e0; margin-bottom: 25px;">
+          생텀(Sanctum)은 어드민 대시보드 모달 상의 <strong>'지니월드 관리센터'</strong> 링크를 통해 진입하는 가상 월드 조율용 이장의 사령부입니다. 이곳은 이장(관리자)이 가상 마을의 신비로운 마법 날씨 환경과 배경음악(BGM), AI 지식 매거진(황금두루마리) 기사 집필 및 실시간 주민 연계 돌발 퀘스트를 창조하고 통제하는 최상위 운영실입니다.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 280px; gap: 30px; align-items: start;">
+          <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.7; display: flex; flex-direction: column; gap: 20px;">
+            
+            <!-- [1] 상단 배너 & 정세 -->
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong style="color: #fff; font-size: 1rem; display: block; margin-bottom: 8px;">🏰 상단 배너 '마을 이장의 집' & 실시간 정세판</strong>
+              <p style="font-size: 0.88rem; margin: 0; line-height: 1.6;">
+                • <strong>🚪 [실무 모드] 복귀 버튼</strong>: 상단 우측에 상시 대기하는 금빛 [🚪 실무 모드] 단추를 터치하면, 복잡한 뒤로 가기 연타 없이 단번에 실무 어드민 대시보드 화면으로 즉시 안전하게 귀환합니다.<br>
+                • <strong>📊 실시간 마을 정세 스캔</strong>: 생텀 홈 상단에 <strong>[오늘 접속한 회원 🏃 / 오늘 지급된 총 점수 ✨]</strong> 실시간 통계 카운터가 은은한 가죽 질감 패널 위에 동적 렌더링되어 금일 마을 주민들의 활력도를 실시간으로 관찰할 수 있습니다.
+              </p>
+            </div>
+
+            <!-- [2] 마을 기후 및 음악 마법 환경 제어 -->
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong style="color: #fff; font-size: 1rem; display: block; margin-bottom: 8px;">🌦️ 마을 기후 및 음악 마법 환경 제어 사양</strong>
+              <p style="font-size: 0.88rem; margin-bottom: 12px; line-height: 1.6;">
+                가상 마을 노형 빌리지의 하늘 기후와 소리 환경을 조율하는 마법 패널입니다.
+              </p>
+              <div style="background: rgba(0,0,0,0.25); padding: 15px; border-radius: 12px; font-size: 0.82rem; line-height: 1.5;">
+                • <strong>🔒 마을 마법 환경 일괄 활성화 스위치</strong>: 이 옵션을 체크 해제하여 끄면, 마을 전체의 기후 애니메이션 효과(비, 눈, 낙엽, 벚꽃 등) 및 배경 음악 재생 기능이 <strong>전면 일괄 정지(차단)</strong>됩니다. 이 경우 회원용 광장 상에서 기후 배너와 BGM 음표 위젯이 아예 렌더링되지 않고 투명하게 블라인드 처리되어 사이트 최적화를 돕습니다.<br>
+                • <strong>🌤️ 6대 환경 모드 선택</strong>: <strong>[기본 맑음 / 비 내림 / 눈 내림 / 벚꽃 / 낙엽 / 제주 실시간 기후 씽크]</strong> 카드 중 하나를 선택해 즉각 기후 스킨을 변경할 수 있습니다.<br>
+                • <strong>🎵 특정 음악 강제 고정하기</strong>: 날씨 및 기후 동기화 규칙을 우회하고, 특정 이벤트(예: 크리스마스, 특별 챌린지 등) 시 원하는 음악 주소를 입력해 전체 마을에 강제 고정 노출할 수 있습니다.<br>
+                • <strong>🎼 기후 연동 배경음악 플레이리스트 지정 (Suno 또는 MP3)</strong>:
+                - 각 기후별 입력란에 음악 주소를 <strong>쉼표(,)나 줄바꿈(엔터)으로 묶어 여러 개 기입</strong>하면 회원 대시보드 상에서 순서대로 감미롭게 무한 순환 재생되는 플레이리스트가 형성됩니다.<br>
+                - 날것의 <strong>수노(Suno) 공유 링크를 그대로 입력하더라도 앱이 실행될 때 실시간 재생이 가능한 특수 포맷 주소로 백엔드에서 완벽히 자동 변환</strong>해 적재하므로 오등록 걱정이 없습니다.<br>
+                - 모바일 화면 상에서 긴 주소들을 여러 개 복사해 넣기가 불편하다면, <strong>구글 스프레드시트 원본 셀에 직접 여러 주소를 쉼표로 붙여 넣고 저장해도 완벽 호환 변환</strong>됩니다.<br>
+                • <strong>🪄 마을 기후 마법 적용하기 최종 트리거</strong>:
+                설정을 마친 뒤 하단의 오렌지빛 [🪄 마을 기후 마법 적용하기] 단추를 최종 터치해 주어야 비로소 기후 마법이 마을 전역에 송출됩니다. 해제 시에도 이 버튼을 동일하게 터치해 해소합니다. 적용 시 <em>"마을의 기후와 음악 환경이 신비롭게 변화했습니다"</em> 컨펌 팝업이 울리며, 화면을 한 번 새로고침(Reload)하면 완전히 동기화되어 표출됩니다.
+              </div>
+            </div>
+
+            <!-- [3] 지혜의 보물고 (집필실) -->
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong style="color: #fff; font-size: 1rem; display: block; margin-bottom: 8px;">📜 지혜의 보물고 (황금두루마리 집필실)</strong>
+              <p style="font-size: 0.88rem; margin: 0; line-height: 1.6;">
+                • <strong>황금두루마리 집필 & AI 비서</strong>: 회원들의 웰니스 지식창고 매거진에 실시간 발행되는 건강 상식 아티클 에디터입니다. 총 5개의 섹션 카테고리로 세밀 기획되어 있으며, 이장이 글을 기록하지 않은 <strong>빈 섹션은 화면상에서 자동으로 블라인드(숨김)</strong>됩니다. 직접 원고를 타이핑할 수도 있고, 간단한 키워드만 기입해 AI 집필실에 넘기면 <strong>의학 영양학 전문 톤앤매너 문장 자동 빌드 및 그에 매칭되는 기품 있는 자동 일러스트 삽화까지 자동 생성</strong>해 배포합니다.
+              </p>
+            </div>
+
+            <!-- [4] 마을 중대사 선포 (마을 공지사항) -->
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong style="color: #fff; font-size: 1rem; display: block; margin-bottom: 8px;">📢 마을 중대사 선포 (마을 공지사항)</strong>
+              <p style="font-size: 0.88rem; margin: 0; line-height: 1.6;">
+                • <strong>공지사항 작성 및 배포</strong>: [마을 중대사 선포] 버튼을 터치하여 마을의 공식 공지사항(TOC 공지사항)을 직접 작성 및 선포합니다. 작성된 중대사 내용은 회원 화면 메인의 롤링 공지사항에 즉각 업데이트되며, 지난 예전 공지들은 아코디언 아카이브 보관소에 영구 축적됩니다.
+              </p>
+            </div>
+
+            <!-- [5] 돌발 퀘스트 캘린더 선세팅 -->
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); padding: 20px; border-radius: 16px;">
+              <strong style="color: #fff; font-size: 1rem; display: block; margin-bottom: 8px;">📅 돌발 퀘스트 캘린더 선세팅 및 자동 에디터</strong>
+              <p style="font-size: 0.88rem; margin-bottom: 8px; line-height: 1.6;">
+                마을 광장에 롤링되는 일일 웰니스 돌발 퀘스트의 일정을 선행 배정 및 제어하는 달력 패널입니다.
+              </p>
+              <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; font-size: 0.8rem; line-height: 1.5;">
+                • <strong>🤖 45일 예비 자동 세팅 에디터</strong>: 매일 밤 백그라운드 스케줄러가 스스로 가동되어 **14가지 전문 영양 퀘스트, 주말 미션, 주간/월간 랭킹 발표 퀘스트 등을 약 한 달(45일) 동안 절대 서로 겹치지 않게 무작위 고른 분포로 예고 배정**해 둡니다.<br>
+                • <strong>✏️ 수동 우선권 (Override) 자동 정렬</strong>: 이장이 달력 뷰 상에서 특정 날짜를 터치해 새로운 돌발 퀘스트를 강제 수동 예약하거나 기존 예비 세팅을 변경하게 되면, **자동 에디터 엔진이 이를 민감하게 판독하여 겹치는 예약 순서들을 뒤로 밀어내며 자율 유기적으로 예약 타임라인을 자동 재배치** 완료합니다.<br>
+                • <strong>🔔 실시간 작동 및 개인 쪽지 일제 발송</strong>: 돌발 퀘스트 발동일 날 아침이 밝으면, 회원 대시보드 광장에 붉게 번쩍이는 **돌발 전용 배너**가 즉각 생성되며, 터치 시 곧바로 오아시스의 **돌발 게시판**으로 다이렉트 순간 이동됩니다. 또한, 돌발 개시와 동시에 **전체 주민들의 가상 쪽지함에 참여 독려 쪽지가 실시간 일제히 자동 발송**되어 소통율을 극대화합니다.
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 생텀 캡처 화면 2부 분할 탑재 -->
+          <div style="text-align: center; display: flex; flex-direction: column; gap: 20px;">
+            <div>
+              <div class="phone-mockup" style="border: 4px solid #33295c; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); background: #0b071a; width: 100%; max-width: 240px; margin: 0 auto;">
+                <img src="media__1779969417973.jpg" alt="생텀 기후 및 환경 제어" style="width: 100%; height: auto; display: block;">
+              </div>
+              <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 8px;">📷 생텀 기후 및 BGM 제어</span>
+            </div>
+            <div>
+              <div class="phone-mockup" style="border: 4px solid #33295c; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); background: #0b071a; width: 100%; max-width: 240px; margin: 0 auto;">
+                <img src="media__1779969417958.jpg" alt="생텀 보물고 및 캘린더" style="width: 100%; height: auto; display: block;">
+              </div>
+              <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 8px;">📷 생텀 캘린더 및 보물고</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // 단순 인터랙션 효과: 스크롤 및 메뉴 하이라이팅
+    document.addEventListener('DOMContentLoaded', () => {
+      const navItems = document.querySelectorAll('.nav-item');
+      const sections = document.querySelectorAll('.card');
+
+      window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+          const sectionTop = section.offsetTop;
+          const sectionHeight = section.clientHeight;
+          if (pageYOffset >= (sectionTop - 200)) {
+            current = section.getAttribute('id');
+          }
+        });
+
+        navItems.forEach(item => {
+          item.classList.remove('active');
+          if (item.querySelector('a').getAttribute('href') === `#${current}`) {
+            item.classList.add('active');
+          }
+        });
+      });
+    });
+
+
+
+    // --- 실제 100% 매핑 로그인 프리뷰 핸들러 ---
+    let realPin = "";
+    function pressRealKey(num) {
+      if (realPin.length < 4) {
+        realPin += num;
+        updateRealPinDisplay();
+      }
+    }
+    function clearRealKey() {
+      realPin = "";
+      updateRealPinDisplay();
+      document.getElementById('real-member-match-area').style.display = "none";
+    }
+    function updateRealPinDisplay() {
+      const display = document.getElementById('real-pin-display');
+      let stars = "";
+      for(let i=0; i<4; i++) {
+        if (i < realPin.length) {
+          stars += "●";
+        } else {
+          stars += "•";
+        }
+      }
+      display.innerText = stars;
+    }
+    function submitRealLogin() {
+      if (realPin.length === 4) {
+        // 매칭 멤버 영역 활성화
+        document.getElementById('real-member-match-area').style.display = "block";
+      } else {
+        alert("4자리 숫자를 올바르게 입력해주세요.");
+      }
+    }
+    function completeRealLogin() {
+      alert("🌌 지니월드 로그인 성공! 노형 빌리지 광장 채널이 활성화됩니다.");
+      document.getElementById('app-plaza').scrollIntoView({ behavior: 'smooth' });
+      clearRealKey();
+    }
+
+  </script>
+</body>
+</html>
