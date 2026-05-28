@@ -825,16 +825,46 @@
     <!-- 메인 콘텐츠 영역 -->
     <main class="content-area">
       
-      <!-- [NEW] 1초 요약 카드뉴스 뷰어 (Health Stat Focus) -->
+      <!-- [NEW] 1초 요약 카드뉴스 뷰어 & 원터치 종합 조절기 -->
       <section class="story-viewer-section">
         <div class="story-header">
           <div class="story-header-title">
-            <span>⚡ 체력 스탯 (Health EXP) 1초 요약 카드뉴스</span>
+            <span>📱 지니월드 3대 스탯 원터치 요약 카드뉴스</span>
           </div>
-          <div class="story-badge-highlight">💡 화면 터치로 슬라이드 넘김</div>
+          <div class="story-badge-highlight">💡 원터치 탭 스위칭 & 속도 조절 지원</div>
         </div>
 
-        <div class="story-slider-container" id="story-slider">
+        <!-- 원터치 종합 조절기 (Premium Control Panel) -->
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 20px; margin-bottom: 25px; display: flex; flex-direction: column; gap: 15px;">
+          <!-- 1. 스탯 카드뉴스 종류 선택 버튼 -->
+          <div>
+            <span style="font-size: 0.82rem; font-weight: 700; color: #a4b0be; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px;">스탯 테마 원터치 전환</span>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+              <button onclick="switchStoryTheme('health')" id="btn-theme-health" style="background: linear-gradient(135deg, #ff4757, #ff6b81); color: #fff; border: none; padding: 12px 6px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(255, 71, 87, 0.25);">⚡ 체력 스탯</button>
+              <button onclick="switchStoryTheme('practice')" id="btn-theme-practice" style="background: rgba(255, 255, 255, 0.05); color: #a4b0be; border: 1px solid rgba(255, 255, 255, 0.1); padding: 12px 6px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: all 0.3s;">🎯 실천력 스탯</button>
+              <button onclick="switchStoryTheme('recovery')" id="btn-theme-recovery" style="background: rgba(255, 255, 255, 0.05); color: #a4b0be; border: 1px solid rgba(255, 255, 255, 0.1); padding: 12px 6px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: all 0.3s;">❤️ 회복력 스탯</button>
+            </div>
+          </div>
+
+          <!-- 2. 카드뉴스 속도 및 ON/OFF 컨트롤러 -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+            <div>
+              <span style="font-size: 0.82rem; font-weight: 700; color: #a4b0be; display: block; margin-bottom: 8px;">⏳ 자동 재생 속도 설정</span>
+              <select id="story-speed-select" onchange="adjustStorySpeed(this.value)" style="width: 100%; background: #0f0c20; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 8px 12px; font-size: 0.85rem; font-weight: 600; outline: none; cursor: pointer;">
+                <option value="3000">빠르게 (3초)</option>
+                <option value="5000" selected>보통 (5초)</option>
+                <option value="8000">느긋하게 (8초)</option>
+              </select>
+            </div>
+            <div>
+              <span style="font-size: 0.82rem; font-weight: 700; color: #a4b0be; display: block; margin-bottom: 8px;">⚙️ 뷰어 제어</span>
+              <button id="story-global-toggle-btn" onclick="toggleStoryViewerVisibility()" style="width: 100%; background: rgba(30, 144, 255, 0.15); color: #1e90ff; border: 1px solid rgba(30, 144, 255, 0.3); padding: 8px 12px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">✨ 카드뉴스 뷰어 숨기기</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 카드뉴스 메인 프레임 -->
+        <div class="story-slider-container" id="story-slider" style="transition: max-height 0.4s ease-in-out;">
           <!-- Progress bars -->
           <div class="story-progress-bar" id="story-progress-container">
             <!-- Dynamic progress bars will be inserted here by JS -->
@@ -848,9 +878,10 @@
           <div class="story-nav-btn story-nav-next" onclick="moveStory(1)"></div>
 
           <!-- Pages Wrapper -->
-          <div class="story-pages-wrapper">
+          <div class="story-pages-wrapper" id="story-pages-wrapper">
+            <!-- ==================== [HEALTH EXP SLIDES] ==================== -->
             <!-- Slide 1: Welcome -->
-            <div class="story-page active" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600&auto=format&fit=crop');">
+            <div class="story-page active" data-theme="health" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600&auto=format&fit=crop');">
               <span class="story-page-badge">Health EXP</span>
               <div class="story-glass-card">
                 <h3 class="story-page-title">⚡ <span>체력 스탯</span> 공식이<br>왜 그렇게 중요할까요?</h3>
@@ -867,7 +898,7 @@
             </div>
 
             <!-- Slide 2: InBody Score -->
-            <div class="story-page" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=600&auto=format&fit=crop');">
+            <div class="story-page" data-theme="health" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=600&auto=format&fit=crop');">
               <span class="story-page-badge">InBody</span>
               <div class="story-glass-card">
                 <h3 class="story-page-title">📊 <span>인바디 체성분 개선</span><br>체중 감량 & 근육 증량</h3>
@@ -892,7 +923,7 @@
             </div>
 
             <!-- Slide 3: Keep Weight Bonus -->
-            <div class="story-page" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=600&auto=format&fit=crop');">
+            <div class="story-page" data-theme="health" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=600&auto=format&fit=crop');">
               <span class="story-page-badge">Maintenance</span>
               <div class="story-glass-card">
                 <h3 class="story-page-title">👑 달성하면 끝이 아니다!<br><span>명품 체중 유지 보너스</span></h3>
@@ -909,7 +940,7 @@
             </div>
 
             <!-- Slide 4: Attendance Milestone -->
-            <div class="story-page" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?q=80&w=600&auto=format&fit=crop');">
+            <div class="story-page" data-theme="health" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?q=80&w=600&auto=format&fit=crop');">
               <span class="story-page-badge">Milestone</span>
               <div class="story-glass-card">
                 <h3 class="story-page-title">📅 주 3회 이상 출석!<br><span>다회 출석 마일스톤</span></h3>
@@ -934,7 +965,7 @@
             </div>
 
             <!-- Slide 5: Debuff Alert -->
-            <div class="story-page" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1594470115504-239ab798aee8?q=80&w=600&auto=format&fit=crop');">
+            <div class="story-page" data-theme="health" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1594470115504-239ab798aee8?q=80&w=600&auto=format&fit=crop');">
               <span class="story-page-badge">Alert</span>
               <div class="story-glass-card">
                 <h3 class="story-page-title">🚨 3일 이상 안 나오면?<br><span>연속 결석 디버프 & 부활</span></h3>
@@ -953,6 +984,77 @@
                 </div>
               </div>
             </div>
+
+            <!-- ==================== [PRACTICE EXP SLIDES] ==================== -->
+            <!-- Practice Slide 1 -->
+            <div class="story-page" data-theme="practice" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600&auto=format&fit=crop');">
+              <span class="story-page-badge" style="background: linear-gradient(135deg, #2ed573, #7b61ff);">Practice EXP</span>
+              <div class="story-glass-card">
+                <h3 class="story-page-title" style="color: #2ed573;">🎯 <span>실천력 스탯</span>이란?<br>매일 행동하여 쌓는 성장스토리</h3>
+                <p class="story-page-desc">
+                  실천력 스탯은 클럽 방문 출석, 운동 시간 채우기, 수분 및 끼니별 AI 식단 인증, 그리고 실시간 돌발 퀘스트 적극적 달성률에 따라 가변적으로 지급됩니다!
+                </p>
+              </div>
+            </div>
+
+            <!-- Practice Slide 2 -->
+            <div class="story-page" data-theme="practice" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=600&auto=format&fit=crop');">
+              <span class="story-page-badge" style="background: linear-gradient(135deg, #2ed573, #7b61ff);">Practice Stats</span>
+              <div class="story-glass-card">
+                <h3 class="story-page-title" style="color: #2ed573;">🥤 <span>수분 & 식단</span> 인증과<br>클럽 체크인 보상</h3>
+                <p class="story-page-desc">
+                  노형점핑 실물 키오스크에 로그인하는 체크인 점수와, 하루 수분 섭취 슬라이더 조절, 식단 사진 기록에 따라 점수가 보상됩니다.
+                </p>
+                <div class="story-val-grid">
+                  <div class="story-val-row">
+                    <span class="label">🏢 기본 체크인 (1일 1회)</span>
+                    <span class="val" style="color: #2ed573; background: rgba(46, 213, 115, 0.15);">+100 EXP</span>
+                  </div>
+                  <div class="story-val-row">
+                    <span class="label">💧 수분 목표 달성 & 인증</span>
+                    <span class="val" style="color: #2ed573; background: rgba(46, 213, 115, 0.15);">최대 +35 EXP</span>
+                  </div>
+                  <div class="story-val-row">
+                    <span class="label">🥗 식단 인증 (끼니당)</span>
+                    <span class="val" style="color: #2ed573; background: rgba(46, 213, 115, 0.15);">+30 EXP</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ==================== [RECOVERY EXP SLIDES] ==================== -->
+            <!-- Recovery Slide 1 -->
+            <div class="story-page" data-theme="recovery" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=600&auto=format&fit=crop');">
+              <span class="story-page-badge" style="background: linear-gradient(135deg, #1e90ff, #7b61ff);">Recovery EXP</span>
+              <div class="story-glass-card">
+                <h3 class="story-page-title" style="color: #1e90ff;">❤️ <span>회복력 스탯</span>이란?<br>세포의 활력과 심리적 안정</h3>
+                <p class="story-page-desc">
+                  회복력 스탯은 신체의 부교감 신경을 활성화하고 세포의 활력과 심리적 안정, 치유 루틴에 귀 기울인 모든 시간에 비례해 정밀 적립됩니다.
+                </p>
+              </div>
+            </div>
+
+            <!-- Recovery Slide 2 -->
+            <div class="story-page" data-theme="recovery" style="background-image: linear-gradient(rgba(11, 7, 26, 0.4), rgba(11, 7, 26, 0.95)), url('https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=600&auto=format&fit=crop');">
+              <span class="story-page-badge" style="background: linear-gradient(135deg, #1e90ff, #7b61ff);">Recovery Stats</span>
+              <div class="story-glass-card">
+                <h3 class="story-page-title" style="color: #1e90ff;">🌿 <span>미라클 9대 습관</span>과<br>체온 테라피 반신욕</h3>
+                <p class="story-page-desc">
+                  아침 물 한잔, 가벼운 스트레칭 등 미라클 루틴 정착과 체온 테라피 반신욕 수료 시 풍성하게 가산됩니다.
+                </p>
+                <div class="story-val-grid">
+                  <div class="story-val-row">
+                    <span class="label">✅ 9대 습관 (개당 / 올클리어)</span>
+                    <span class="val" style="color: #1e90ff; background: rgba(30, 144, 255, 0.15);">+10 / +50 EXP</span>
+                  </div>
+                  <div class="story-val-row">
+                    <span class="label">🛁 테라피 예약 및 입실 수료</span>
+                    <span class="val" style="color: #1e90ff; background: rgba(30, 144, 255, 0.15);">+100 EXP</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
           <!-- Bottom Swipe Guide -->
@@ -2533,16 +2635,99 @@
     // [NEW] Premium Instagram Story Slider Logic (Health Stat Card News)
     // ==========================================================================
     let storyIndex = 0;
-    const storyPages = document.querySelectorAll('.story-page');
-    const totalStories = storyPages.length;
+    let currentTheme = 'health';
+    let storyPages = [];
+    let totalStories = 0;
     const storyProgressContainer = document.getElementById('story-progress-container');
     const playPauseBtn = document.getElementById('story-play-pause-btn');
     
     let storyTimer = null;
     let storyProgressInterval = null;
-    let storyDuration = 5000; // 5 seconds per story
+    let storyDuration = 5000; // Default: 5 seconds per story
     let storyProgressPercent = 0;
     let isStoryPaused = false;
+
+    // Filter pages and buttons by active theme
+    function filterStoryPages() {
+      // Find all story pages in the wrapper
+      const allPages = document.querySelectorAll('#story-pages-wrapper .story-page');
+      storyPages = [];
+      
+      allPages.forEach(page => {
+        const pageTheme = page.getAttribute('data-theme');
+        if (pageTheme === currentTheme) {
+          page.style.display = 'flex';
+          storyPages.push(page);
+        } else {
+          page.style.display = 'none';
+          page.classList.remove('active');
+        }
+      });
+      
+      totalStories = storyPages.length;
+      storyIndex = 0;
+    }
+
+    // Switch story theme via Control buttons
+    function switchStoryTheme(theme) {
+      currentTheme = theme;
+      
+      // Update active button state styling
+      const themes = ['health', 'practice', 'recovery'];
+      themes.forEach(t => {
+        const btn = document.getElementById(`btn-theme-${t}`);
+        if (t === theme) {
+          btn.style.background = t === 'health' ? 'linear-gradient(135deg, #ff4757, #ff6b81)' :
+                                 t === 'practice' ? 'linear-gradient(135deg, #2ed573, #7bed9f)' :
+                                 'linear-gradient(135deg, #1e90ff, #70a1ff)';
+          btn.style.color = '#fff';
+          btn.style.border = 'none';
+          btn.style.boxShadow = `0 4px 15px rgba(255, 255, 255, 0.15)`;
+        } else {
+          btn.style.background = 'rgba(255, 255, 255, 0.05)';
+          btn.style.color = '#a4b0be';
+          btn.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+          btn.style.boxShadow = 'none';
+        }
+      });
+
+      filterStoryPages();
+      initStoryProgress();
+      showStory(0);
+    }
+
+    // Adjust speed from selector
+    function adjustStorySpeed(speed) {
+      storyDuration = parseInt(speed);
+      resetStoryTimers();
+    }
+
+    // Toggle entire story viewer visibility (ON/OFF switcher)
+    function toggleStoryViewerVisibility() {
+      const slider = document.getElementById('story-slider');
+      const toggleBtn = document.getElementById('story-global-toggle-btn');
+      
+      if (slider.style.maxHeight === '0px') {
+        slider.style.maxHeight = '800px';
+        slider.style.opacity = '1';
+        slider.style.marginTop = '0px';
+        toggleBtn.innerText = '✨ 카드뉴스 뷰어 숨기기';
+        toggleBtn.style.background = 'rgba(30, 144, 255, 0.15)';
+        toggleBtn.style.color = '#1e90ff';
+        isStoryPaused = false;
+        resetStoryTimers();
+      } else {
+        slider.style.maxHeight = '0px';
+        slider.style.opacity = '0';
+        slider.style.marginTop = '-20px';
+        toggleBtn.innerText = '✨ 카드뉴스 뷰어 켜기';
+        toggleBtn.style.background = 'rgba(46, 213, 115, 0.15)';
+        toggleBtn.style.color = '#2ed573';
+        isStoryPaused = true;
+        clearInterval(storyProgressInterval);
+        clearTimeout(storyTimer);
+      }
+    }
 
     // Initialize Story Progress Bars
     function initStoryProgress() {
@@ -2562,6 +2747,8 @@
 
     // Update story state & display
     function showStory(index) {
+      if (totalStories === 0) return;
+      
       if (index >= totalStories) {
         storyIndex = 0; // Loop back
       } else if (index < 0) {
@@ -2605,7 +2792,7 @@
       clearTimeout(storyTimer);
       storyProgressPercent = 0;
 
-      if (isStoryPaused) return;
+      if (isStoryPaused || totalStories === 0) return;
 
       const activeStep = document.querySelectorAll('.story-progress-step')[storyIndex];
       const activeFill = activeStep ? activeStep.querySelector('.story-progress-fill') : null;
@@ -2693,8 +2880,7 @@
 
     // Initialize on load
     document.addEventListener('DOMContentLoaded', () => {
-      initStoryProgress();
-      showStory(0);
+      switchStoryTheme('health');
     });
   </script>
 </body>
