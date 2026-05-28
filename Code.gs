@@ -8211,7 +8211,34 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
     classInfo = "new_no_record";
   }
   
-  // 🚨 [회원권 성향별 맞춤 가이드 주입 - v64.70 신규 미출석 무기록 가이드 탑재]
+  // [v65.00] 실시간 이용 만료일(유효기간) 동적 조회
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+  var expireDateStr = "기록없음 (미입력)";
+  if (regSheet && phone) {
+    var regData = regSheet.getDataRange().getDisplayValues();
+    var regCols = getRegColumnIndices(regSheet);
+    var cleanPhone = phone.replace(/[^0-9]/g, "");
+    var lastExpire = new Date(0);
+    for (var i = 1; i < regData.length; i++) {
+      var rowPhone = String(regData[i][regCols.phone] || "").replace(/[^0-9]/g, "");
+      if (rowPhone === cleanPhone || (cleanPhone.length >= 8 && rowPhone.endsWith(cleanPhone.substring(cleanPhone.length - 8)))) {
+        var rowStatus = String(regData[i][regCols.status] || "").trim();
+        if (rowStatus === "진행중" || rowStatus === "진행 중") {
+          var rowExpireStr = regData[i][regCols.expire];
+          if (rowExpireStr) {
+            var expDate = new Date(rowExpireStr);
+            if (expDate > lastExpire) lastExpire = expDate;
+          }
+        }
+      }
+    }
+    if (lastExpire.getTime() > 0) {
+      expireDateStr = Utilities.formatDate(lastExpire, "GMT+9", "yyyy-MM-dd");
+    }
+  }
+  
+  // 🚨 [회원권 성향별 맞춤 가입 주입 - v64.70 신규 미출석 무기록 가이드 탑재]
   var classDesc = "";
   if (classInfo === "therapy") {
     classDesc = "★[회원 성향 맞춤] 이 회원은 점핑 운동을 하지 않고 '원적외선 테라피(반신욕/테라피룸 편백 힐링)'만을 이용하던 힐링 전용 회원입니다. 절대 격렬한 점핑 운동 복귀나 트램폴린 뛰기 등을 언급하지 마시고, 편안하고 따뜻하게 땀 빼며 쉴 수 있는 편백 원적외선 테라피실의 안부와 여유를 핵심 주제로 삼아 작성하십시오.";
@@ -8232,12 +8259,15 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
   var systemInstruction = "당신은 제주 노형점핑클럽의 친근하고 열정적인 최고의 '웰니스 코치'입니다. " +
                           "마을 주민(회원)들의 건강을 진심으로 걱정하고 다시 클럽으로 복귀하도록 이끄는 따뜻하고 감성 넘치는 메시지를 작성해 주세요. " +
                           "글자수는 " + channelInfo + " 발송용이므로 150자~250자 내외로 간결하게 작성하고, 격려와 친근함을 담아 이모티콘(😊, ❤️, 🏃‍♀️, 🔥)을 적절히 융합해 주세요. 절대 딱딱하거나 기계적인 말투를 쓰지 마세요.\n\n" +
-                          "★가장 중요한 비즈니스 규칙 (필수 준수)★\n" +
-                          "1. 분류 유형이 '장기미방문' (결석 중)인 경우:\n" +
+                          "★가장 중요한 비즈니스 및 작문 규칙 (필수 준수)★\n" +
+                          "1. 📅 이용 기한(만료일)과 📊 잔여 횟수를 한눈에 잘 들어오게 표기하여 강조해야 합니다.\n" +
+                          "   - 예: '📅 이용 기한: ~ O월 O일까지' 및 '📊 잔여 횟수: O회'\n" +
+                          "   - 잔여 횟수만 언급하면 기한을 잊어버리고 안 오는 경우가 많으므로, 반드시 '**이용 기한인 [만료일]까지 남은 [횟수]회를 소진하셔야 하며, 기한이 지나면 소멸된다**'는 점을 아주 친근하고 따뜻하면서도 확실하게 각인시켜 주십시오. 기한 내에 다 쓰실 수 있도록 서둘러 늦지 않게 방문을 독려하는 멘트를 필수 주입하십시오.\n\n" +
+                          "2. 분류 유형이 '장기미방문' (결석 중)인 경우:\n" +
                           "   - 이 회원은 아직 수강권이 마감되지 않았고 남은 회원권 횟수가 유효하게 보존되어 있는 상태입니다.\n" +
                           "   - 따라서 '원적외선 테라피 무료 체험', '깜짝 소생 보너스 복구', '추가 보너스 이용권 제공' 등 어떠한 무료 서비스나 추가 보상 혜택도 절대 제시하거나 언급하지 마십시오.\n" +
                           "   - 오직 '회원님이 보유하고 계신 소중한 남은 회원권(잔여 횟수)이 아깝게 기한 만료로 소멸되기 전에 어서 클럽에 복귀하여 유효기간 안에 다 쓰시라'고 복귀를 따뜻하게 권유하고 소모를 독려하는 내용만으로 메시지를 작성하십시오.\n\n" +
-                          "2. 분류 유형이 '복귀권유' (수강 마감 상태)인 경우 (마감된 회원):\n" +
+                          "3. 분류 유형이 '복귀권유' (수강 마감 상태)인 경우 (마감된 회원):\n" +
                           "   - [중요: 기간별 문조 차별화]\n" +
                           "     * 마감 경과일이 최근(1일~14일)인 경우: '최근에 이용권이 마감되었다'며 빠른 복귀와 안부를 유도하십시오.\n" +
                           "     * 마감 경과일이 중기(15일~60일)인 경우: '이용권이 마감되고 한동안 뵙지 못했는데 그간 잘 지내셨는지 궁금하다'는 안부로 대화를 유도하십시오.\n" +
@@ -8245,8 +8275,8 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
                           "   - [중요: 잔여 횟수에 따른 혜택 통제 규칙]\n" +
                           "     * 잔여 횟수가 7회 미만(0회~6회)인 경우: 잔여 횟수 소생이나 보너스 복구 등의 언급을 절대 하지 마십시오. 5회 이하 등의 소량은 소생 멘트 없이 '체력 루틴 복귀 및 테라피 힐링 안부' 중심으로 재등록만 따뜻하게 유치하십시오.\n" +
                           "     * 잔여 횟수가 7회 이상인 경우: 남은 횟수가 많아 안타깝다는 아쉬움은 따뜻하게 언급(예: '이용권 마감 당시 쓰지 못하셨던 잔여 횟수들이 꽤 많이 남았어서 마음이 아프다')하되, '이걸 다 살려주겠다'는 100% 직접적 복구 표현은 나중에 분란의 소지가 있으므로 절대 금지하십시오! 대신 '이번에 다시 오셔서 시작하시면 코치가 안타까운 마음을 채워드릴 수 있게 넉넉한 보너스 횟수를 챙겨서 보태드리겠다'는 식의 넉넉하고 두루뭉술한 혜택 보너스 표현으로 작성하십시오.\n\n" +
-                          "3. 제공되는 [최근 메시지 발송 이력]을 반드시 분석하여, 이전과 겹치지 않는 신선한 멘트를 창출하십시오.\n" +
-                          "4. " + classDesc;
+                          "4. 제공되는 [최근 메시지 발송 이력]을 반드시 분석하여, 이전과 겹치지 않는 신선한 멘트를 창출하십시오.\n" +
+                          "5. " + classDesc;
   
   // 🛡️ [원장님 스마트 가드] 출석 기록이 아예 없어 999일로 기입되는 회원에 대한 AI 프롬프트 정밀 가드
   var elapsedDaysPromptVal = (elapsedDays === 999) ? "기록 없음 (오랫동안 미방문 상태)" : elapsedDays + "일";
@@ -8256,8 +8286,9 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
   
   var prompt = "■ 회원 상황 정보\n" +
                "- 회원 이름: " + cleanName + "\n" +
-               "- 미출석/만료 경과일: " + elapsedDaysPromptVal + "\n" +
                "- 회원권 잔여 횟수: " + remain + "회\n" +
+               "- 회원권 이용 기한(만료일): " + expireDateStr + "\n" +
+               "- 미출석/만료 경과일: " + elapsedDaysPromptVal + "\n" +
                "- 분류 유형: " + type + " (" + (type === "장기미방문" ? "결석 중 (남은 회원권 소진 독려 대상)" : "수강 마감 상태 (재등록 유치 대상)") + ")\n" +
                "- 회원 이용 성향: " + classInfo + " (" + (classInfo === "therapy" ? "테라피 전용" : classInfo === "jumping" ? "점핑 운동 전용" : classInfo === "complex" ? "점핑 및 테라피 복합" : classInfo === "new_no_record" ? "신규 가입 무기록 회원" : "일반 회원") + ")\n" +
                "- 발송 예정 채널: " + channelInfo + "\n\n" +
@@ -8265,6 +8296,7 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
                recentHistoryText + "\n\n" +
                "위 상황 정보와 최근 발송 히스토리를 꿰뚫어 보고, 이 회원에게 다음 단계로 전달할 가장 자연스럽고 마음을 끄는 최고의 넥스트 " + channelInfo + " 문장을 새로 작성해 주세요.\n" +
                "※ 필수 준수:\n" +
+               "- 기한인 " + expireDateStr + "과 남은 횟수 " + remain + "회를 글에 알맞게 녹여내고, 이 기한 내에 다 쓰지 않으면 횟수가 소멸된다는 중요 내용을 확실히 일러두십시오.\n" +
                "- 분류 유형이 '장기미방문'인 경우 무료 혜택이나 보너스 선물 언급을 100% 배제하고 '남은 회원권을 기간 내에 쓰시라'는 취지만 따뜻하게 작성하십시오.\n" +
                "- 분류 유형이 '복귀권유'이고 경과일이 오래된 장기 미등록 회원의 경우 절대 '며칠 전 이용권이 마감되었다'고 쓰지 말고 오랜 소식을 여쭙는 감성 멘트를 쓰십시오.\n" +
                "- 잔여 횟수가 7회 미만이면 횟수 살려주겠다는 보너스 복구 제안을 절대 하지 마십시오.\n" +
@@ -8461,23 +8493,35 @@ function generateAiDraftForManualMessage(payload) {
     var recentHistoryText = getMemberMessageHistory(cleanPhone);
     var cleanName = name.replace(/\d{4}$/, ""); // 이름 끝 숫자 제거
     
+    // [v65.00] 만료일 포맷 변환
+    var formattedExpireDate = "기록없음 (미입력)";
+    if (lastExpire && lastExpire.getTime() > 0) {
+      formattedExpireDate = Utilities.formatDate(lastExpire, "GMT+9", "yyyy-MM-dd");
+    }
+    
     var systemInstruction = "당신은 제주 노형점핑클럽의 다정한 '웰니스 코치'이자 최고의 헬스 코치입니다. " +
                             "웰니스 코치가 특정 회원에게 1:1로 직접 보낼 '감성 케어 편지/쪽지'의 명품 본문을 작성해야 합니다.\n" +
                             "제공되는 [최근 메시지 발송 이력]과 [웰니스 코치의 작문 메모]를 100% 정밀 분석하여, " +
-                            "중복 멘트를 완벽 방어하고 회원과 1:1로 친근하게 속삭이는 감동적인 다이어리 피드백/안부 쪽지를 지어내십시오.\n" +
-                            "⚠️ 절대 규칙: 최근 발송 히스토리에 있는 문자 내용이나 끊긴 예전 문구를 절대로 그대로 복사하거나 뒤이어 쓰지 마십시오. 항상 기승전결이 완벽히 마감되는 새로운 편지를 창작해야 합니다.";
+                            "중복 멘트를 완벽 방어하고 회원과 1:1로 친근하게 속삭이는 감동적인 다이어리 피드백/안부 쪽지를 지어내십시오.\n\n" +
+                            "⚠️ 가장 중요한 비즈니스 및 작문 규칙 (필수 준수):\n" +
+                            "1. 📅 이용 기한(만료일)과 📊 잔여 횟수를 문장 내에 잘 들어오게 표기하여 강조해야 합니다.\n" +
+                            "   - 예: '📅 이용 기한: ~ O월 O일까지' 및 '📊 잔여 횟수: O회'\n" +
+                            "   - 잔여 횟수만 언급하면 기한을 잊어버리고 안 오는 경우가 많으므로, 반드시 '**이용 기한인 [만료일]까지 남은 [횟수]회를 소진하셔야 하며, 기한이 지나면 소멸된다**'는 점을 아주 친근하고 따뜻하면서도 확실하게 각인시켜 주십시오. 기한 내에 다 쓰실 수 있도록 서둘러 늦지 않게 방문을 독려하는 멘트를 필수 주입하십시오.\n" +
+                            "2. 최근 발송 히스토리에 있는 문자 내용이나 끊긴 예전 문구를 절대로 그대로 복사하거나 뒤이어 쓰지 마십시오. 항상 기승전결이 완벽히 마감되는 새로운 편지를 창작해야 합니다.";
     
     var prompt = "■ 수신인 회원 정보\n" +
                  "- 회원 이름: " + cleanName + "\n" +
                  "- 잔여 수강 횟수: " + remain + "회\n" +
+                 "- 회원권 이용 기한(만료일): " + formattedExpireDate + "\n" +
                  "- 미출석/만료 경과일: " + elapsedDays + "일 (" + status + " 상태)\n" +
                  "- 웰니스 코치의 직접 지시사항(작문 요지): [" + (memo || "다정하고 편안하게 안부와 건강 챙기기") + "]\n\n" +
                  "■ 최근 발송 히스토리\n" +
                  recentHistoryText + "\n\n" +
                  "⚠️ [작문 지침]\n" +
                  "1. 위 정보와 웰니스 코치의 지시 메모를 기반으로 회원의 가슴을 뭉클하게 할 150자~200자 내외의 명품 1:1 쪽지 초안 본문을 작성해 주세요.\n" +
-                 "2. 절대로 히스토리에 들어있는 기존 메시지 문구(특히 끊긴 문구)를 베끼거나 복제하지 마십시오.\n" +
-                 "3. 메시지 본문은 절대로 중간에 뚝 끊기면 안 되며, 반드시 온전한 마침표('.') 또는 이모티콘과 함께 완결된 종결어미('~요.', '~입니다.', '❤️')로 확실하게 끝마쳐야 합니다.";
+                 "2. 기한인 " + formattedExpireDate + "과 남은 횟수 " + remain + "회를 텍스트 중간에 인용하고, 기한 내에 모두 쓰셔야 소멸되지 않는다는 점을 명확히 리마인드하십시오.\n" +
+                 "3. 절대로 히스토리에 들어있는 기존 메시지 문구(특히 끊긴 문구)를 베끼거나 복제하지 마십시오.\n" +
+                 "4. 메시지 본문은 절대로 중간에 뚝 끊기면 안 되며, 반드시 온전한 마침표('.') 또는 이모티콘과 함께 완결된 종결어미('~요.', '~입니다.', '❤️')로 확실하게 끝마쳐야 합니다.";
     
     var apiRes = callGeminiBackendWithDetails(prompt, systemInstruction);
     var draft = "";
@@ -8493,7 +8537,7 @@ function generateAiDraftForManualMessage(payload) {
               "1. 환경설정 시트 API Key 로드 결과: " + (apiKeyRes.success ? "성공 ✅" : "실패 ❌") + "\n" +
               "2. 감지된 API Key 상태: " + keySnippet + " (길이: " + rawKey.length + "글자)\n" +
               "3. 백엔드가 감지한 진짜 오류 원인:\n➡️ " + apiRes.error + "\n\n" +
-              "👉 임시 쪽지: " + cleanName + "님, 오늘 하루도 활기차고 행복 가득하게 보내세요! 클럽에서 뵙겠습니다. ❤️";
+              "👉 임시 쪽지: " + cleanName + "님, 이용 기한(" + formattedExpireDate + ") 내에 남은 회원권(" + remain + "회)을 소중하게 다 쓰실 수 있도록 서둘러 자주 방문해 주세요! 늦기 전에 클럽에서 뵙겠습니다. ❤️";
     }
     return { success: true, draft: draft };
     
