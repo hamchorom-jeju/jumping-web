@@ -27,6 +27,9 @@
       --text-main: #f1f2f6;
       --text-muted: #a4b0be;
       --glow-purple: rgba(123, 97, 255, 0.3);
+      
+      /* NEW Base Zoom variable */
+      --base-zoom: 1rem;
     }
 
     * {
@@ -42,6 +45,8 @@
       min-height: 100vh;
       line-height: 1.7;
       overflow-x: hidden;
+      font-size: var(--base-zoom);
+      transition: font-size 0.2s ease-in-out;
     }
 
     /* Decorative Glow Orbs */
@@ -502,6 +507,94 @@
     }
 
     /* ==========================================================================
+       [NEW] Premium Font Zoom Controller Floating Panel CSS
+       ========================================================================== */
+    .zoom-controller-floating {
+      position: fixed;
+      bottom: 90px; /* 위쪽 탭 네비게이션바나 다른 플로팅 버블과 겹치지 않는 황금 영역 */
+      right: 24px;
+      z-index: 9999;
+      background: rgba(15, 10, 35, 0.85);
+      border: 2px solid rgba(123, 97, 255, 0.3);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(123, 97, 255, 0.2);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .zoom-controller-floating:hover {
+      border-color: rgba(123, 97, 255, 0.6);
+      transform: translateY(-2px);
+    }
+
+    .zoom-label {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #7b61ff;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      background: rgba(123, 97, 255, 0.1);
+      padding: 4px 8px;
+      border-radius: 8px;
+    }
+
+    .zoom-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .zoom-btn:hover {
+      background: #7b61ff;
+      border-color: #7b61ff;
+      box-shadow: 0 0 10px rgba(123, 97, 255, 0.5);
+    }
+
+    .zoom-indicator {
+      font-family: 'Pretendard', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #fff;
+      min-width: 48px;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .zoom-controller-floating {
+        bottom: 24px; /* 모바일에서는 하단 탭 위에 편하게 위치 조율 */
+        right: 16px;
+        padding: 8px 10px;
+        gap: 8px;
+      }
+      .zoom-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+      }
+      .zoom-indicator {
+        font-size: 0.8rem;
+        min-width: 40px;
+      }
+    }
+
+
+    /* ==========================================================================
        [NEW] Premium Instagram Story Style Card News Viewer (Health Stat Focus)
        ========================================================================== */
     .story-viewer-section {
@@ -788,6 +881,14 @@
   </style>
 </head>
 <body>
+
+  <!-- [NEW] 원터치 글씨 크기 조절기 (Font Zoom Controller) 플로팅 패널 -->
+  <div class="zoom-controller-floating">
+    <span class="zoom-label">🔍 글씨 크기</span>
+    <button class="zoom-btn" onclick="adjustGlobalFontSize(-0.1)" title="글씨 작게">A-</button>
+    <span class="zoom-indicator" id="zoom-indicator-val">100%</span>
+    <button class="zoom-btn" onclick="adjustGlobalFontSize(0.1)" title="글씨 크게">A+</button>
+  </div>
 
   <div class="glow-orb"></div>
   <div class="glow-orb-2"></div>
@@ -2875,6 +2976,24 @@
       } else if (swipeDistance > 50) {
         // Swipe Right -> Prev
         moveStory(-1);
+      }
+    }
+
+    // ==========================================================================
+    // [NEW] Font Zoom Controller Handler Logic
+    // ==========================================================================
+    let currentZoomLevel = 1.0;
+    
+    function adjustGlobalFontSize(change) {
+      currentZoomLevel = Math.max(0.7, Math.min(2.0, currentZoomLevel + change));
+      
+      // Update the base-zoom CSS custom property on the document root
+      document.documentElement.style.setProperty('--base-zoom', `${currentZoomLevel}rem`);
+      
+      // Update indicator text
+      const zoomIndicator = document.getElementById('zoom-indicator-val');
+      if (zoomIndicator) {
+        zoomIndicator.innerText = `${Math.round(currentZoomLevel * 100)}%`;
       }
     }
 
