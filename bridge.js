@@ -910,7 +910,8 @@ const Mailbox = {
       path.includes('registration') || 
       path.includes('renewal') || 
       path.includes('admin') ||
-      path.includes('login')
+      path.includes('login') ||
+      path.includes('idea_collector')
     ) {
       console.log("🚫 [Mailbox] Disabled for utility/kiosk page.");
       return;
