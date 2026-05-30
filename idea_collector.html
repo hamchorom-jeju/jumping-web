@@ -855,92 +855,605 @@
       from { transform: translateY(12px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
+
+    /* ==========================================================================
+       🌿 [v70] 구글 킵 오리지널 최적화 & 미니멀 레이아웃 CSS 규격
+       ========================================================================== */
+
+    /* 🍔 [사이드바] 마우스 호버 감응형 좌측 사이드바 및 레이아웃 */
+    .sidebar-drawer {
+      position: fixed;
+      top: 65px;
+      left: 0;
+      bottom: 0;
+      width: 64px;
+      background: var(--card-bg);
+      border-right: 1px solid var(--card-border);
+      z-index: 900;
+      transition: width 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      padding-top: 15px;
+      overflow: hidden;
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+    }
+
+    /* 호버 시 혹은 강제 잠금 상태일 때 280px 확장 */
+    .sidebar-drawer:hover,
+    .sidebar-drawer.expanded {
+      width: 280px;
+      box-shadow: 10px 0 25px rgba(0, 0, 0, 0.03);
+    }
+
+    .sidebar-menu-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 18px;
+      color: var(--text-title);
+      text-decoration: none;
+      font-weight: 750;
+      font-size: 0.85rem;
+      border-radius: 0 24px 24px 0;
+      margin-right: 8px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+
+    .sidebar-menu-item i {
+      font-size: 1.1rem;
+      min-width: 24px;
+      margin-right: 20px;
+      text-align: center;
+      color: var(--text-muted);
+      transition: color 0.15s;
+    }
+
+    .sidebar-menu-item .label {
+      opacity: 0;
+      transition: opacity 0.15s;
+      pointer-events: none;
+    }
+
+    .sidebar-drawer:hover .sidebar-menu-item .label,
+    .sidebar-drawer.expanded .sidebar-menu-item .label {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sidebar-menu-item:hover,
+    .sidebar-menu-item.active {
+      background: rgba(129, 140, 248, 0.08);
+      color: var(--primary-solid);
+    }
+    .sidebar-menu-item.active i,
+    .sidebar-menu-item:hover i {
+      color: var(--primary-solid);
+    }
+
+    /* 모바일 서랍 레이아웃 */
+    @media (max-width: 900px) {
+      .sidebar-drawer {
+        left: -280px;
+        width: 280px;
+        top: 0;
+        z-index: 1100;
+        transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        padding-top: 60px;
+      }
+      .sidebar-drawer.show {
+        left: 0;
+      }
+      .sidebar-drawer:hover,
+      .sidebar-drawer.expanded {
+        width: 280px; /* 모바일은 항시 280px */
+      }
+      .sidebar-drawer .sidebar-menu-item .label {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+      }
+      
+      .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 1050;
+        display: none;
+      }
+      .sidebar-overlay.show {
+        display: block;
+      }
+    }
+
+    /* 메인 뷰포트 여백 조정 */
+    @media (min-width: 901px) {
+      .container {
+        margin-left: 80px !important;
+        max-width: calc(100% - 100px) !important;
+        transition: margin-left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      body.sidebar-locked .container {
+        margin-left: 300px !important;
+        max-width: calc(100% - 320px) !important;
+      }
+    }
+
+    /* 💊 헤더 영역 리뉴얼 */
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-center {
+      flex: 1;
+      max-width: 600px;
+      margin: 0 24px;
+    }
+
+    /* 알약형 검색바 */
+    .search-capsule {
+      display: flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.04);
+      border-radius: 24px;
+      padding: 0 16px;
+      width: 100%;
+      border: 1.5px solid transparent;
+      transition: all 0.2s;
+    }
+    body.dark-mode .search-capsule {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .search-capsule:focus-within {
+      background: #fff;
+      border-color: var(--primary-solid);
+      box-shadow: 0 4px 12px rgba(129, 140, 248, 0.1);
+    }
+    body.dark-mode .search-capsule:focus-within {
+      background: rgba(25, 20, 50, 0.8);
+      border-color: var(--primary-solid);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+    }
+
+    .search-capsule .search-icon {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-right: 12px;
+    }
+
+    .search-capsule input {
+      background: transparent;
+      border: none;
+      color: var(--text-title);
+      padding: 8px 0;
+      font-size: 0.85rem;
+      font-weight: 700;
+      outline: none;
+      width: 100%;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* 설정 및 API 상태 기어 단독 배치 */
+    .api-status-gear-wrapper {
+      position: relative;
+      display: inline-flex;
+    }
+    
+    .api-status-dot-mini {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--danger-solid);
+      border: 2px solid white;
+      transition: background 0.3s;
+    }
+    body.dark-mode .api-status-dot-mini {
+      border-color: #15102a;
+    }
+
+    /* 🎙️ [초소형 퀵 캡처 박스] */
+    .quick-capture-section {
+      padding: 16px 20px !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .quick-text-box textarea {
+      height: 48px; /* 콤팩트한 한 줄~두 줄 높이 */
+      transition: height 0.2s ease, background 0.2s;
+    }
+    
+    .quick-text-box textarea:focus {
+      height: 95px; /* 포커싱되었을 때만 넓어짐 */
+    }
+
+    .capture-bottom-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      border-top: 1px solid rgba(0, 0, 0, 0.03);
+      padding-top: 10px;
+    }
+    body.dark-mode .capture-bottom-row {
+      border-top-color: rgba(255, 255, 255, 0.04);
+    }
+
+    .capture-left-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* 마이크 단추 */
+    .record-mic-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(129, 140, 248, 0.08);
+      border: 1px solid var(--card-border);
+      color: var(--primary-solid);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .record-mic-btn:hover {
+      background: var(--primary-grad);
+      color: white;
+      border-color: transparent;
+      transform: scale(1.08);
+    }
+
+    .record-mic-btn.recording {
+      background: linear-gradient(135deg, var(--secondary-solid) 0%, #059669 100%);
+      color: white;
+      border-color: transparent;
+      animation: pulse-mic 1.5s infinite;
+    }
+
+    .record-status-text {
+      font-size: 0.72rem;
+      font-weight: 750;
+      color: var(--text-muted);
+    }
+
+    /* AI 변환 단추 */
+    .btn-extract-compact {
+      padding: 8px 16px;
+      border-radius: 12px;
+      border: none;
+      background: var(--primary-grad);
+      color: white;
+      font-weight: 850;
+      font-size: 0.78rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(129, 140, 248, 0.15);
+      transition: all 0.2s;
+    }
+
+    .btn-extract-compact:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 15px rgba(129, 140, 248, 0.25);
+    }
+
+    .btn-extract-compact:disabled {
+      background: rgba(0, 0, 0, 0.04);
+      color: var(--text-muted);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+    body.dark-mode .btn-extract-compact:disabled {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    @keyframes pulse-mic {
+      0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
+      70% { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+    }
+
+    /* ➕ [플로팅 액션 버튼 FAB] */
+    .floating-action-button {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: var(--primary-grad);
+      color: white;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(129, 140, 248, 0.35);
+      z-index: 950;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .floating-action-button:hover {
+      transform: scale(1.06);
+      box-shadow: 0 8px 20px rgba(129, 140, 248, 0.45);
+    }
+
+    .floating-action-button:active {
+      transform: scale(0.95);
+    }
+
+    /* 🗑️ 휴지통 배너 */
+    .trash-banner {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.02);
+      border: 1.5px dashed rgba(244, 63, 94, 0.25);
+      border-radius: 18px;
+      padding: 12px 18px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      box-sizing: border-box;
+    }
+    body.dark-mode .trash-banner {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    
+    .trash-banner-text {
+      font-size: 0.76rem;
+      font-weight: 750;
+      color: var(--text-title);
+    }
+    
+    .btn-empty-trash {
+      background: rgba(244, 63, 94, 0.1);
+      border: 1px solid rgba(244, 63, 94, 0.25);
+      color: var(--danger-solid);
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      font-weight: 850;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-empty-trash:hover {
+      background: var(--danger-solid);
+      color: white;
+      border-color: transparent;
+    }
+
+    /* 🍞 플랫 토스트 스낵바 */
+    .snackbar-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      background: #201a30;
+      color: #f1f0f5;
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 750;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+      z-index: 2000;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+    }
+    .snackbar-toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .snackbar-undo-btn {
+      color: #a78bfa;
+      background: none;
+      border: none;
+      font-weight: 850;
+      font-size: 0.8rem;
+      cursor: pointer;
+      padding: 0;
+    }
+    .snackbar-undo-btn:hover {
+      color: #c084fc;
+      text-decoration: underline;
+    }
+
+    /* 📋 인터랙티브 투두 항목 스타일 */
+    .note-todo-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 6px 0;
+      font-size: 0.82rem;
+      color: var(--text-title);
+      animation: slideIn 0.2s ease-out;
+    }
+    .note-todo-checkbox {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--primary-solid);
+      cursor: pointer;
+      border: 1.5px solid var(--text-muted);
+      border-radius: 4px;
+      transition: transform 0.15s ease;
+    }
+    .note-todo-checkbox:hover {
+      transform: scale(1.1);
+    }
+    .note-todo-text {
+      flex: 1;
+      font-weight: 600;
+      color: var(--text-title);
+      transition: color 0.2s, text-decoration 0.2s;
+    }
+    .note-todo-item.completed {
+      opacity: 0.6;
+    }
+    .completed-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .note-text-line {
+      font-size: 0.8rem;
+      margin: 3px 0;
+      color: var(--text-desc);
+      white-space: pre-wrap;
+      font-weight: 550;
+    }
   </style>
 </head>
 <body>
 
   <header>
     <div class="header-container">
-      <div class="logo" onclick="location.reload()">
-        <span class="logo-icon">🌿</span>
-        <h1>GENIE KEEP</h1>
-      </div>
-      <div class="header-controls">
-        <div id="api-status-badge">
-          <div id="api-status-dot"></div>
-          <span id="api-status-text">연결 대기</span>
+      <div class="header-left">
+        <button class="btn-icon" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="메뉴"><i class="fas fa-bars"></i></button>
+        <div class="logo" onclick="location.reload()">
+          <span class="logo-icon">🌿</span>
+          <h1>GENIE KEEP</h1>
         </div>
-        <button class="btn-icon" onclick="toggleTheme()" title="테마 변경"><i class="fas fa-moon" id="theme-icon"></i></button>
-        <button class="btn-icon" onclick="openKeyModal()" title="Gemini 설정"><i class="fas fa-cog"></i></button>
+      </div>
+      
+      <div class="header-center">
+        <div class="search-capsule">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" id="search-input" oninput="filterNotes()" placeholder="메모 실시간 검색...">
+        </div>
+      </div>
+      
+      <div class="header-right">
+        <div class="api-status-gear-wrapper">
+          <button class="btn-icon" onclick="openKeyModal()" title="Gemini 설정"><i class="fas fa-cog"></i></button>
+          <div id="api-status-dot" class="api-status-dot-mini"></div>
+        </div>
       </div>
     </div>
   </header>
 
+  <!-- 🍔 마우스 호버 감응형 좌측 사이드바 -->
+  <div class="sidebar-drawer" id="sidebar-drawer">
+    <!-- ➕ 최상단 새 메모 작성 단추 (Google Drive/Gmail 스타일) -->
+    <div class="sidebar-menu-item sidebar-create-btn" id="menu-create" onclick="createNewNoteManual()" title="새 메모 작성">
+      <i class="fas fa-plus" style="color: var(--primary-solid); font-size: 1rem;"></i>
+      <span class="label" style="font-weight: 850; color: var(--primary-solid);">새 메모 작성</span>
+    </div>
+    
+    <div style="height: 1px; background: rgba(0, 0, 0, 0.05); margin: 6px 0; margin-right: 8px;" class="sidebar-divider"></div>
+
+    <div class="sidebar-menu-item active" id="menu-notes" onclick="switchSidebarView('notes', this)">
+      <i class="fas fa-lightbulb"></i>
+      <span class="label">💡 메모</span>
+    </div>
+    <div class="sidebar-menu-item" id="menu-archive" onclick="switchSidebarView('archive', this)">
+      <i class="fas fa-archive"></i>
+      <span class="label">📥 보관처리</span>
+    </div>
+    <div class="sidebar-menu-item" id="menu-trash" onclick="switchSidebarView('trash', this)">
+      <i class="fas fa-trash-alt"></i>
+      <span class="label">🗑️ 휴지통</span>
+    </div>
+  </div>
+
+  <!-- 모바일 사이드바 암전 오버레이 -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
   <div class="container">
     
+    <!-- 🗑️ 휴지통 상태 배너 -->
+    <div class="trash-banner" id="trash-banner">
+      <span class="trash-banner-text">🗑️ 휴지통에 있는 메모는 7일 후 삭제됩니다.</span>
+      <button class="btn-empty-trash" onclick="emptyTrashConfirm()">휴지통 비우기</button>
+    </div>
+
     <!-- 🌿 다스림 감성 가득한 상단 캐릭터 안내 배너 -->
     <div class="dasrim-banner" id="banner-home">
       <span class="dasrim-banner-icon">💭</span>
       <div class="dasrim-banner-text">
-        <h2>안녕하세요, 생각 수집기입니다.</h2>
-        <p>오늘 떠오른 영감들을 자유롭게 남겨보세요 🌌</p>
+        <h2 id="banner-title">안녕하세요, 생각 수집기입니다.</h2>
+        <p id="banner-desc">오늘 떠오른 영감들을 자유롭게 남겨보세요 🌌</p>
       </div>
     </div>
 
-    <!-- 🎙️ 퀵 캡처 섹션 (바둑판 홈) -->
+    <!-- 🎙️ 콤팩트 & 다이나믹 퀵 캡처 섹션 -->
     <div class="quick-capture-section glass-card" id="capture-card">
       <div class="card-title">
         <i class="fas fa-feather"></i> <span>오늘의 영감 빠른 포착</span>
       </div>
-      <div class="recorder-box">
-        <div class="visualizer-container">
-          <canvas id="visualizer"></canvas>
-        </div>
-        
-        <div class="record-timer" id="record-timer">00:00</div>
-        
-        <div class="record-btn-wrapper">
-          <button class="record-btn" id="record-btn" onclick="toggleRecording()"><i class="fas fa-microphone"></i></button>
-          <div class="ripple"></div>
-        </div>
-        
-        <div class="record-status-text" id="record-status">마이크를 눌러 음성 독백을 기록해 보세요</div>
-        
-        <div class="recording-controls">
-          <button class="control-btn" id="btn-pause-record" disabled onclick="pauseRecording()"><i class="fas fa-pause"></i> 일시정지</button>
-          <button class="control-btn" id="btn-reset-record" disabled onclick="resetRecording()"><i class="fas fa-redo"></i> 다시하기</button>
-        </div>
-
-        <!-- 오디오 재생기 -->
-        <div class="audio-player-box" id="audio-player-box">
-          <button class="player-play-btn" id="player-play-btn" onclick="togglePlayAudio()"><i class="fas fa-play"></i></button>
-          <div class="player-progress-container" id="player-progress-container" onclick="seekAudio(event)">
-            <div class="player-progress-bar" id="player-progress-bar"></div>
-          </div>
-          <span class="player-timer" id="player-time-display">00:00</span>
-        </div>
-      </div>
-
-      <!-- 생각 타이핑 -->
-      <div class="quick-text-box" style="margin-top: 15px;">
+      
+      <!-- 생각을 적는 곳 (입력창) -->
+      <div class="quick-text-box">
         <textarea class="raw-textarea" id="raw-textarea" placeholder="여기에 생각나는 메모들을 자유롭게 작성해 보세요. 요가 매트 주문 및 수량 목록처럼 동일한 키워드는 똑똑하게 하나로 묶어 정제해 냅니다."></textarea>
       </div>
 
-      <!-- 실행 버튼 -->
-      <button class="btn-extract" id="btn-extract" disabled onclick="extractIdeas()" style="margin-top: 12px;">
-        <i class="fas fa-wand-magic-sparkles"></i> <span>생각 다듬기 & AI 메모 정제</span>
-      </button>
+      <!-- 🎙️ 다이나믹 녹음 영역 (녹음 중일 때만 표시) -->
+      <div class="dynamic-recorder-area" id="dynamic-recorder-area" style="display: none; margin-top: 12px; background: rgba(0,0,0,0.02); padding: 12px; border-radius: 18px; border: 1px solid var(--card-border);">
+        <div class="visualizer-container" style="height: 50px; margin-bottom: 10px; border-radius: 12px; overflow: hidden; background: rgba(255,255,255,0.4); border: 1px solid var(--card-border);">
+          <canvas id="visualizer" style="width: 100%; height: 100%;"></canvas>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="record-timer" id="record-timer" style="font-size: 1.3rem; font-weight: 900; color: var(--text-title); font-variant-numeric: tabular-nums;">00:00</div>
+          <div class="recording-controls" style="display: flex; gap: 8px;">
+            <button class="control-btn" id="btn-pause-record" disabled onclick="pauseRecording()"><i class="fas fa-pause"></i> 일시정지</button>
+            <button class="control-btn" id="btn-reset-record" disabled onclick="resetRecording()"><i class="fas fa-redo"></i> 다시하기</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 오디오 재생기 (녹음이 완료되었을 때만 표시) -->
+      <div class="audio-player-box" id="audio-player-box" style="display: none; margin-top: 12px; background: rgba(255,255,255,0.5); border: 1px solid var(--card-border); border-radius: 18px; padding: 12px; align-items: center; gap: 12px;">
+        <button class="player-play-btn" id="player-play-btn" onclick="togglePlayAudio()"><i class="fas fa-play"></i></button>
+        <div class="player-progress-container" id="player-progress-container" style="flex:1; height:6px; background:rgba(0,0,0,0.04); border-radius:3px; cursor:pointer;" onclick="seekAudio(event)">
+          <div class="player-progress-bar" id="player-progress-bar" style="width:0%; height:100%; background:var(--primary-grad); border-radius:3px;"></div>
+        </div>
+        <span class="player-timer" id="player-time-display" style="font-size:0.72rem; color:var(--text-muted); font-weight:800;">00:00</span>
+        <button class="toolbar-btn text-danger" onclick="deleteRecordedAudio()" style="margin-left: 8px; font-size: 0.85rem; background:none; border:none; cursor:pointer;" title="녹음 삭제"><i class="fas fa-trash-alt"></i></button>
+      </div>
+
+      <!-- 녹음 상태 및 제어 한 줄 바 (기본 Idle 상태) -->
+      <div class="capture-bottom-row">
+        <div class="capture-left-actions">
+          <button class="record-mic-btn" id="record-mic-btn" onclick="toggleRecording()" title="음성 독백 녹음">
+            <i class="fas fa-microphone"></i>
+          </button>
+          <span class="record-status-text" id="record-status">마이크를 눌러 생각을 독백해 보세요</span>
+        </div>
+        
+        <!-- AI 변환 실행 버튼 -->
+        <button class="btn-extract-compact" id="btn-extract" disabled onclick="extractIdeas()">
+          <i class="fas fa-wand-magic-sparkles"></i> <span>AI 변환</span>
+        </button>
+      </div>
     </div>
 
-    <!-- 🔍 검색 & 필터 영역 -->
-    <div class="filter-section glass-card" id="search-card">
-      <div class="search-bar-container">
-        <i class="fas fa-search search-icon"></i>
-        <input type="text" id="search-input" oninput="filterNotes()" placeholder="기록된 메모 실시간 검색하기...">
-      </div>
-      <div class="tags-scrollbar" id="tags-scrollbar">
-        <!-- 동적 태그 목록 -->
-      </div>
+    <!-- 🏷️ 카테고리 필터 스크롤바 -->
+    <div class="tags-scrollbar" id="tags-scrollbar" style="margin-bottom: 5px;">
+      <!-- 동적 태그 목록 -->
     </div>
 
     <!-- ✨ AI 추천 임시 드래프트 영역 -->
@@ -975,24 +1488,12 @@
 
   </div>
 
-  <!-- 🔒 iOS 스타일 하단 플로팅 네비게이션 바 (다스림 모바일 디자인 완벽 이식) -->
-  <div class="bottom-nav-bar">
-    <div class="nav-item active" onclick="scrollToSection('banner-home', this)">
-      <i class="fas fa-home"></i>
-      <span>생각 수집</span>
-    </div>
-    <div class="nav-item" onclick="scrollToSection('search-card', this)">
-      <i class="fas fa-search"></i>
-      <span>검색 필터</span>
-    </div>
-    <div class="nav-item" onclick="scrollToSection('all-notes-group', this)">
-      <i class="fas fa-sticky-note"></i>
-      <span>내 메모</span>
-    </div>
-    <div class="nav-item" onclick="openKeyModal()">
-      <i class="fas fa-cog"></i>
-      <span>Gemini 설정</span>
-    </div>
+
+
+  <!-- 🍞 실행취소(Undo) 전용 플랫 스낵바 -->
+  <div id="snackbar-container" class="snackbar-toast">
+    <span id="snackbar-text">메모를 삭제했습니다.</span>
+    <button class="snackbar-undo-btn" onclick="triggerSnackbarUndo()">실행취소</button>
   </div>
 
   <!-- 🔒 API Key 모달 -->
@@ -1060,6 +1561,12 @@
     let activeTagFilter = "전체";
     let localApiKey = '';
 
+    // 🍔 구글 킵 오리지널 상태 머신
+    let currentSidebarView = 'notes'; // notes, archive, trash
+    let lastDeletedNote = null;      // 실행취소(Undo) 스냅샷
+    let lastArchivedNote = null;     // 실행취소(Undo) 스냅샷
+    let snackbarTimer = null;
+
     // 오디오 녹음 및 visualizer 전역 변수
     let mediaRecorder = null;
     let audioChunks = [];
@@ -1075,43 +1582,79 @@
     let animationFrameId = null;
 
     window.addEventListener('DOMContentLoaded', () => {
-      // 테마 상태 복구
-      if (localStorage.getItem('genie_theme') === 'dark') {
-        document.body.classList.add('dark-mode');
-        document.getElementById('theme-icon').className = 'fas fa-sun';
-      }
-      
+      // 라이트 모드를 기본 테마로 정밀 관리 (야간모드 버튼 제거 및 최적화)
+      document.body.classList.remove('dark-mode');
+      localStorage.setItem('genie_theme', 'light');
+
       initNotesDatabase();
       loadApiKey();
       initCanvasWaveform();
       setupTextareaListener();
     });
 
-    // 🌗 라이트/다크 테마 토글
+    // 🌗 라이트/다크 테마 토글 (야간모드가 제거되었으므로 경량 폴백 유지)
     function toggleTheme() {
-      const body = document.body;
-      const icon = document.getElementById('theme-icon');
-      
-      if (body.classList.contains('dark-mode')) {
-        body.classList.remove('dark-mode');
-        localStorage.setItem('genie_theme', 'light');
-        icon.className = 'fas fa-moon';
-      } else {
-        body.classList.add('dark-mode');
-        localStorage.setItem('genie_theme', 'dark');
-        icon.className = 'fas fa-sun';
-      }
-      initCanvasWaveform();
+      // 야간모드는 미사용이므로 항상 라이트 유지
+      document.body.classList.remove('dark-mode');
+      localStorage.setItem('genie_theme', 'light');
     }
 
-    // 바톱 네비 스크롤 연동
-    function scrollToSection(id, element) {
-      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      element.classList.add('active');
-      const target = document.getElementById(id);
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // 🍔 사이드바 열기/닫기 토글 (데스크톱에서는 잠금 상태(locked) 토글, 모바일에서는 show 토글)
+    function toggleSidebar() {
+      const drawer = document.getElementById('sidebar-drawer');
+      const overlay = document.getElementById('sidebar-overlay');
+      const body = document.body;
+
+      if (window.innerWidth > 900) {
+        // 데스크톱: 본문 밀어내기 클래스 토글 및 사이드바 고정
+        drawer.classList.toggle('expanded');
+        body.classList.toggle('sidebar-locked');
+      } else {
+        // 모바일: 절대 서랍형 드로어 노출 토글
+        drawer.classList.toggle('show');
+        overlay.classList.toggle('show');
       }
+    }
+
+    // 🍔 사이드바 뷰 전환 (메모 / 보관처리 / 휴지통)
+    function switchSidebarView(view, element) {
+      currentSidebarView = view;
+
+      // 사이드바 액티브 메뉴 스타일 업데이트
+      document.querySelectorAll('.sidebar-menu-item').forEach(item => item.classList.remove('active'));
+      element.classList.add('active');
+
+      // 모바일일 경우 사이드바를 자동으로 접습니다
+      if (window.innerWidth <= 900) {
+        document.getElementById('sidebar-drawer').classList.remove('show');
+        document.getElementById('sidebar-overlay').classList.remove('show');
+      }
+
+      // 대시보드 배너 정보 변경
+      const bannerTitle = document.getElementById('banner-title');
+      const bannerDesc = document.getElementById('banner-desc');
+      const trashBanner = document.getElementById('trash-banner');
+      const captureCard = document.getElementById('capture-card');
+
+      // 뷰별 콤팩트 가시성 제어
+      if (view === 'notes') {
+        bannerTitle.innerText = "안녕하세요, 생각 수집기입니다.";
+        bannerDesc.innerText = "오늘 떠오른 영감들을 자유롭게 남겨보세요 🌌";
+        trashBanner.style.display = 'none';
+        captureCard.style.display = 'block';
+      } else if (view === 'archive') {
+        bannerTitle.innerText = "📥 보관된 영감 목록";
+        bannerDesc.innerText = "대시보드에서 치워 정돈해 둔 깨끗한 영감첩입니다.";
+        trashBanner.style.display = 'none';
+        captureCard.style.display = 'none'; // 캡처 박스는 숨김
+      } else if (view === 'trash') {
+        bannerTitle.innerText = "🗑️ 영감의 임시 보관소";
+        bannerDesc.innerText = "휴지통 안에서는 메모 편집이 제한되며, 7일이 지나면 정리됩니다.";
+        trashBanner.style.display = 'flex';
+        captureCard.style.display = 'none'; // 캡처 박스 숨김
+      }
+
+      renderDashboard();
     }
 
     // 🗂️ 구글 킵 데이터베이스 이니셜라이징
@@ -1133,6 +1676,8 @@
             category: '📋 할 일',
             color: 'default',
             pinned: true,
+            archived: false,
+            trash: false,
             createdAt: '2026-05-30 12:15'
           },
           {
@@ -1142,6 +1687,8 @@
             category: '🎬 릴스 기획',
             color: 'blue',
             pinned: false,
+            archived: false,
+            trash: false,
             createdAt: '2026-05-30 12:16'
           }
         ];
@@ -1162,10 +1709,23 @@
 
       // 필터링된 노트 구하기
       const filtered = notesList.filter(note => {
+        // 검색 필터
         const matchSearch = note.title.toLowerCase().includes(searchVal) || 
                             note.content.toLowerCase().includes(searchVal);
+        // 카테고리 태그 필터
         const matchTag = (activeTagFilter === "전체") || (note.category === activeTagFilter);
-        return matchSearch && matchTag;
+        
+        // 🍔 사이드바 뷰별 전용 분기 필터링!
+        let matchView = false;
+        if (currentSidebarView === 'notes') {
+          matchView = !note.archived && !note.trash;
+        } else if (currentSidebarView === 'archive') {
+          matchView = !!note.archived && !note.trash;
+        } else if (currentSidebarView === 'trash') {
+          matchView = !!note.trash;
+        }
+        
+        return matchSearch && matchTag && matchView;
       });
 
       const pinnedNotes = filtered.filter(n => n.pinned);
@@ -1174,7 +1734,7 @@
       // Pinned 그리기
       const pinnedGrid = document.getElementById('pinned-grid');
       const pinnedGroup = document.getElementById('pinned-group');
-      if (pinnedNotes.length > 0) {
+      if (pinnedNotes.length > 0 && currentSidebarView === 'notes') {
         pinnedGroup.style.display = 'flex';
         pinnedGrid.innerHTML = "";
         pinnedNotes.forEach(note => pinnedGrid.appendChild(createNoteCardDOM(note)));
@@ -1218,6 +1778,222 @@
       renderDashboard();
     }
 
+    // 🍔 플랫 스낵바 노출 및 실행취소 핸들러
+    let snackbarUndoAction = null;
+
+    function showSnackbar(text, undoCallback) {
+      const container = document.getElementById('snackbar-container');
+      const label = document.getElementById('snackbar-text');
+      
+      label.innerText = text;
+      snackbarUndoAction = undoCallback;
+      
+      container.classList.add('show');
+      
+      if (snackbarTimer) clearTimeout(snackbarTimer);
+      
+      // 5초 후 자동 숨김
+      snackbarTimer = setTimeout(() => {
+        container.classList.remove('show');
+        snackbarUndoAction = null;
+      }, 5000);
+    }
+
+    function triggerSnackbarUndo() {
+      if (snackbarUndoAction) {
+        snackbarUndoAction();
+        document.getElementById('snackbar-container').classList.remove('show');
+        snackbarUndoAction = null;
+      }
+    }
+
+    // 📋 투두 항목 및 본문 줄바꿈 처리 파서
+    function renderNoteContentHTML(note) {
+      const content = note.content || '';
+      if (!content.trim()) return `<div class="note-text-line" style="color:var(--text-muted);">내용 없음</div>`;
+      
+      const lines = content.split('\n');
+      let html = '';
+      const isTrashView = currentSidebarView === 'trash';
+
+      lines.forEach((line, lineIdx) => {
+        // - [ ] 혹은 [ ] 정규식 매칭
+        const todoMatch = line.match(/^(?:-\s*)?\[\s*\]\s*(.*)$/);
+        // - [x] 혹은 [x] 정규식 매칭
+        const doneMatch = line.match(/^(?:-\s*)?\[x\]\s*(.*)$/i);
+
+        if (todoMatch) {
+          const text = todoMatch[1].trim();
+          html += `
+            <div class="note-todo-item">
+              <input type="checkbox" class="note-todo-checkbox" 
+                     ${isTrashView ? 'disabled' : ''} 
+                     onclick="handleTodoCheckClick('${note.id}', ${lineIdx}, event)">
+              <span class="note-todo-text">${escapeHTML(text)}</span>
+            </div>
+          `;
+        } else if (doneMatch) {
+          const text = doneMatch[1].trim();
+          html += `
+            <div class="note-todo-item completed">
+              <input type="checkbox" class="note-todo-checkbox" checked 
+                     ${isTrashView ? 'disabled' : ''} 
+                     onclick="handleTodoUncheckClick('${note.id}', ${lineIdx}, event)">
+              <span class="note-todo-text completed-text">${escapeHTML(text)}</span>
+            </div>
+          `;
+        } else {
+          html += `<div class="note-text-line">${escapeHTML(line)}</div>`;
+        }
+      });
+
+      return html;
+    }
+
+    // 📋 투두 체크 클릭 시: 원본 카드에서 즉시 항목 제거 -> '📥 해결과제' 보관 카드로 이동 누적
+    function handleTodoCheckClick(noteId, lineIdx, event) {
+      if (event) event.stopPropagation(); // 카드 클릭 상세 편집 모달 팝업 방지
+
+      const note = notesList.find(n => n.id === noteId);
+      if (!note) return;
+
+      const lines = (note.content || '').split('\n');
+      if (lineIdx >= lines.length) return;
+
+      const checkedLine = lines[lineIdx];
+      const match = checkedLine.match(/^(?:-\s*)?\[\s*\]\s*(.*)$/);
+      if (!match) return;
+
+      const taskText = match[1].trim();
+
+      // 전체 상태 백업 (완벽한 Undo 롤백용)
+      const originalNotesListBackup = JSON.parse(JSON.stringify(notesList));
+
+      // 1. 원본 카드에서 해당 항목 삭제
+      lines.splice(lineIdx, 1);
+      note.content = lines.join('\n');
+
+      // 만약 원본 카드가 빈 내용에 제목도 없다면 삭제 처리
+      let wasRemoved = false;
+      if (!note.title.trim() && !note.content.trim()) {
+        notesList = notesList.filter(n => n.id !== noteId);
+        wasRemoved = true;
+      }
+
+      // 2. '📥 해결과제' 마스터 보관용 카드 찾거나 신설
+      let solvedNote = notesList.find(n => !n.trash && n.archived && n.title === '📥 해결과제');
+      if (!solvedNote) {
+        solvedNote = {
+          id: 'note_solved_master',
+          title: '📥 해결과제',
+          content: '',
+          category: '📥 해결과제',
+          color: 'green', // 에메랄드 그린
+          pinned: false,
+          archived: true,
+          trash: false,
+          createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ')
+        };
+        // 새로 만든 해결과제 카드는 목록 가장 처음에 삽입 (보관 탭에서 잘 보이도록)
+        notesList.unshift(solvedNote);
+      }
+
+      // 3. 완료 항목을 '📥 해결과제' 본문에 추가 (시각 추가 MM-DD)
+      const nowStr = new Date().toISOString().slice(5, 10); // MM-DD
+      const appendLine = `- [x] ${taskText} (해결: ${nowStr})`;
+      if (solvedNote.content.trim()) {
+        solvedNote.content = solvedNote.content.trim() + '\n' + appendLine;
+      } else {
+        solvedNote.content = appendLine;
+      }
+
+      // 📥 해결과제 카드도 보관 탭 상단 노출을 위해 unshift
+      const solvedIdx = notesList.indexOf(solvedNote);
+      if (solvedIdx > -1) {
+        notesList.splice(solvedIdx, 1);
+      }
+      notesList.unshift(solvedNote);
+
+      saveNotesToStorage();
+      renderDashboard();
+
+      // 스낵바 노출 및 실행취소 제공
+      showSnackbar("과제를 해결하여 '보관함(해결과제)'에 보관했습니다.", () => {
+        notesList = originalNotesListBackup;
+        saveNotesToStorage();
+        renderDashboard();
+      });
+    }
+
+    // 📋 보관함의 완료된 항목을 다시 체크 해제할 때: 보관함에서 삭제 -> 원래 카드로 원복
+    function handleTodoUncheckClick(noteId, lineIdx, event) {
+      if (event) event.stopPropagation();
+
+      const note = notesList.find(n => n.id === noteId);
+      if (!note) return;
+
+      const lines = (note.content || '').split('\n');
+      if (lineIdx >= lines.length) return;
+
+      const uncheckedLine = lines[lineIdx];
+      const match = uncheckedLine.match(/^(?:-\s*)?\[x\]\s*(.*?)(?:\s*\(해결: \d{2}-\d{2}\))?$/i);
+      if (!match) return;
+
+      const taskText = match[1].trim();
+
+      const originalNotesListBackup = JSON.parse(JSON.stringify(notesList));
+
+      // 1. 보관 카드에서 삭제
+      lines.splice(lineIdx, 1);
+      note.content = lines.join('\n');
+
+      // 보관 카드가 비었으면 제거
+      if (!note.content.trim()) {
+        notesList = notesList.filter(n => n.id !== noteId);
+      }
+
+      // 2. 원래 활성 상태의 '📋 할 일' 카드 찾거나 신설하여 복귀
+      let activeTodoNote = notesList.find(n => !n.trash && !n.archived && n.category === '📋 할 일');
+      if (!activeTodoNote) {
+        activeTodoNote = {
+          id: 'note_' + Date.now(),
+          title: '📋 할 일',
+          content: '',
+          category: '📋 할 일',
+          color: 'default',
+          pinned: true, // 복귀 시 핀 고정으로 잘 보이게
+          archived: false,
+          trash: false,
+          createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ')
+        };
+        notesList.unshift(activeTodoNote);
+      }
+
+      // 3. 미완료 항목 `- [ ]`으로 변환하여 복원
+      const restoreLine = `- [ ] ${taskText}`;
+      if (activeTodoNote.content.trim()) {
+        activeTodoNote.content = activeTodoNote.content.trim() + '\n' + restoreLine;
+      } else {
+        activeTodoNote.content = restoreLine;
+      }
+
+      // 복귀한 카드 상단 배치를 위해 unshift
+      const activeIdx = notesList.indexOf(activeTodoNote);
+      if (activeIdx > -1) {
+        notesList.splice(activeIdx, 1);
+      }
+      notesList.unshift(activeTodoNote);
+
+      saveNotesToStorage();
+      renderDashboard();
+
+      showSnackbar("해결된 과제를 다시 활성 '할 일' 목록으로 복원했습니다.", () => {
+        notesList = originalNotesListBackup;
+        saveNotesToStorage();
+        renderDashboard();
+      });
+    }
+
     // 🔨 개별 메모 카드 DOM 객체 생성기
     function createNoteCardDOM(note) {
       const card = document.createElement('div');
@@ -1225,13 +2001,44 @@
       card.className = `note-card ${colorClass} ${note.pinned ? 'pinned' : ''}`;
       card.id = `note-card-${note.id}`;
 
-      card.innerHTML = `
-        <div class="note-pin-btn" onclick="togglePinNote('${note.id}', event)" title="메모 고정"><i class="fas fa-thumbtack"></i></div>
-        <div class="note-card-body" onclick="openEditModal('${note.id}')">
-          <div class="note-card-title">${escapeHTML(note.title)}</div>
-          <div class="note-card-content">${escapeHTML(note.content)}</div>
+      // 🗑️ 휴지통 내에서는 카드 클릭 상세 및 편집 비활성화
+      const isTrashView = currentSidebarView === 'trash';
+      const bodyOnClick = isTrashView ? '' : `onclick="openEditModal('${note.id}')"`;
+      
+      // 📌 핀 고정 버튼 (휴지통에서는 미노출)
+      const pinBtnHTML = isTrashView ? '' : `
+        <div class="note-pin-btn" onclick="togglePinNote('${note.id}', event)" title="메모 고정">
+          <i class="fas fa-thumbtack"></i>
         </div>
-        <div class="note-card-footer">
+      `;
+
+      // 🛠️ 휴지통 전용 도구바 vs 일반 도구바 분기 렌더링!
+      let toolbarHTML = '';
+      if (isTrashView) {
+        toolbarHTML = `
+          <div style="display: flex; gap: 8px; width: 100%; justify-content: flex-end;">
+            <button class="draft-btn draft-btn-approve" onclick="restoreNote('${note.id}', event)" style="font-size:0.68rem; padding: 4px 8px;">
+              <i class="fas fa-undo"></i> 복원
+            </button>
+            <button class="draft-btn draft-btn-delete" onclick="permanentlyDeleteNote('${note.id}', event)" style="font-size:0.68rem; padding: 4px 8px;">
+              <i class="fas fa-times"></i> 영구 삭제
+            </button>
+          </div>
+        `;
+      } else {
+        // 일반 & 보관처리 뷰 도구바
+        const isArchivedView = currentSidebarView === 'archive';
+        const archiveIconHTML = isArchivedView ? `
+          <button class="toolbar-btn" onclick="unarchiveNote('${note.id}', event)" title="보관 취소">
+            <i class="fas fa-upload" style="font-size: 0.72rem;"></i>
+          </button>
+        ` : `
+          <button class="toolbar-btn" onclick="archiveNote('${note.id}', event)" title="보관처리">
+            <i class="fas fa-archive" style="font-size: 0.72rem;"></i>
+          </button>
+        `;
+
+        toolbarHTML = `
           <span class="note-card-tag">${escapeHTML(note.category || '📝 일반')}</span>
           <div class="note-card-toolbar">
             <button class="toolbar-btn" onclick="changeNoteColor('${note.id}', 'default', event)" title="기본"><i class="fas fa-circle" style="color:#b5b5c3;"></i></button>
@@ -1239,8 +2046,20 @@
             <button class="toolbar-btn" onclick="changeNoteColor('${note.id}', 'green', event)" title="초록"><i class="fas fa-circle" style="color:#34d399;"></i></button>
             <button class="toolbar-btn" onclick="changeNoteColor('${note.id}', 'blue', event)" title="파랑"><i class="fas fa-circle" style="color:#60a5fa;"></i></button>
             <button class="toolbar-btn" onclick="changeNoteColor('${note.id}', 'yellow', event)" title="노랑"><i class="fas fa-circle" style="color:#fbbf24;"></i></button>
+            ${archiveIconHTML}
             <button class="toolbar-btn text-danger" onclick="deleteNote('${note.id}', event)" title="삭제"><i class="fas fa-trash"></i></button>
           </div>
+        `;
+      }
+
+      card.innerHTML = `
+        ${pinBtnHTML}
+        <div class="note-card-body" ${bodyOnClick}>
+          <div class="note-card-title">${escapeHTML(note.title || '제목 없음')}</div>
+          <div class="note-card-content">${renderNoteContentHTML(note)}</div>
+        </div>
+        <div class="note-card-footer">
+          ${toolbarHTML}
         </div>
       `;
 
@@ -1299,14 +2118,127 @@
       }
     }
 
-    // 🗑️ 메모 삭제
+    // 📥 보관처리 및 실행취소 스냅샷 연결
+    function archiveNote(noteId, event) {
+      if (event) event.stopPropagation();
+      const note = notesList.find(n => n.id === noteId);
+      if (note) {
+        note.archived = true;
+        const wasPinned = note.pinned;
+        note.pinned = false; // 보관 시 핀 해제
+        
+        saveNotesToStorage();
+        renderDashboard();
+
+        showSnackbar("메모를 보관처리했습니다.", () => {
+          note.archived = false;
+          note.pinned = wasPinned; // 원래 핀 복구
+          saveNotesToStorage();
+          renderDashboard();
+        });
+      }
+    }
+
+    // 📥 보관처리 취소 및 실행취소 스냅샷 연결
+    function unarchiveNote(noteId, event) {
+      if (event) event.stopPropagation();
+      const note = notesList.find(n => n.id === noteId);
+      if (note) {
+        note.archived = false;
+        saveNotesToStorage();
+        renderDashboard();
+
+        showSnackbar("메모를 보관 취소했습니다.", () => {
+          note.archived = true;
+          note.pinned = false;
+          saveNotesToStorage();
+          renderDashboard();
+        });
+      }
+    }
+
+    // 🗑️ 메모를 휴지통으로 이동 (삭제 파이프라인)
     function deleteNote(noteId, event) {
       if (event) event.stopPropagation();
-      if (confirm("이 메모를 정말 삭제하시겠습니까?")) {
+      const note = notesList.find(n => n.id === noteId);
+      if (note) {
+        note.trash = true;
+        note.trashAt = Date.now();
+        const wasPinned = note.pinned;
+        const wasArchived = note.archived;
+        note.pinned = false; // 휴지통 이동 시 핀/보관 무효
+        note.archived = false;
+
+        saveNotesToStorage();
+        renderDashboard();
+
+        showSnackbar("메모를 휴지통으로 이동했습니다.", () => {
+          note.trash = false;
+          note.pinned = wasPinned;
+          note.archived = wasArchived;
+          saveNotesToStorage();
+          renderDashboard();
+        });
+      }
+    }
+
+    // 🔄 휴지통 메모 복원
+    function restoreNote(noteId, event) {
+      if (event) event.stopPropagation();
+      const note = notesList.find(n => n.id === noteId);
+      if (note) {
+        note.trash = false;
+        saveNotesToStorage();
+        renderDashboard();
+        showSnackbar("메모를 복원했습니다.");
+      }
+    }
+
+    // ❌ 휴지통 메모 영구 삭제
+    function permanentlyDeleteNote(noteId, event) {
+      if (event) event.stopPropagation();
+      if (confirm("이 메모를 영구히 삭제하시겠습니까? 복구할 수 없습니다.")) {
         notesList = notesList.filter(n => n.id !== noteId);
         saveNotesToStorage();
         renderDashboard();
       }
+    }
+
+    // 🧼 일괄 휴지통 비우기
+    function emptyTrashConfirm() {
+      const trashCount = notesList.filter(n => n.trash).length;
+      if (trashCount === 0) {
+        alert("휴지통이 이미 비어 있습니다.");
+        return;
+      }
+      if (confirm(`휴지통에 있는 ${trashCount}개의 메모를 모두 영구 삭제하시겠습니까?`)) {
+        notesList = notesList.filter(n => !n.trash);
+        saveNotesToStorage();
+        renderDashboard();
+        showSnackbar("휴지통을 완전히 비웠습니다.");
+      }
+    }
+
+    // ➕ 사이드바 수동 빈 노트 신설 및 모달 연계 (선택된 카테고리 태그 자동 상속)
+    function createNewNoteManual() {
+      const newId = 'note_' + Date.now();
+      const defaultCategory = (activeTagFilter === "전체") ? "📝 일반" : activeTagFilter;
+      const newNote = {
+        id: newId,
+        title: '',
+        content: '',
+        category: defaultCategory,
+        color: 'default',
+        pinned: false,
+        archived: false,
+        trash: false,
+        createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ')
+      };
+
+      notesList.unshift(newNote);
+      saveNotesToStorage();
+      renderDashboard();
+      openEditModal(newId);
     }
 
     // 📝 상세 편집 모달
@@ -1323,33 +2255,70 @@
       document.getElementById('note-edit-modal').classList.add('show');
     }
 
+    // 구글 킵 핵심: 모달을 닫을 때 텍스트 자동 영구 저장 연동! (중복 카테고리/제목 시 스마트 누적 병합 지원)
     function closeEditModal() {
       document.getElementById('note-edit-modal').classList.remove('show');
+      
+      const id = document.getElementById('edit-note-id').value;
+      const note = notesList.find(n => n.id === id);
+      if (note) {
+        const titleVal = document.getElementById('edit-note-title').value.trim();
+        const contentVal = document.getElementById('edit-note-content').value.trim();
+        const tagVal = document.getElementById('edit-note-tag').value.trim() || '📝 일반';
+        const colorVal = document.getElementById('edit-note-color').value;
+        
+        // 제목과 본문이 모두 비어 있으면 킵스 사양에 따라 삭제
+        if (!titleVal && !contentVal) {
+          notesList = notesList.filter(n => n.id !== id);
+          showSnackbar("빈 메모가 버려졌습니다.");
+        } else {
+          // 중복 병합 대상 카드 탐색 (자기 자신 제외)
+          let otherExistingNote = null;
+          if (tagVal === '📋 할 일' || titleVal === '📋 할 일') {
+            otherExistingNote = notesList.find(n => n.id !== id && !n.trash && (n.category === '📋 할 일' || n.title === '📋 할 일'));
+          } else {
+            otherExistingNote = notesList.find(n => n.id !== id && !n.trash && titleVal !== '' && n.title === titleVal);
+          }
+
+          if (otherExistingNote) {
+            // 기존 카드에 누적 병합
+            const trimmedExisting = (otherExistingNote.content || '').trim();
+            const trimmedNew = contentVal.trim();
+            
+            if (trimmedExisting && trimmedNew) {
+              otherExistingNote.content = trimmedExisting + "\n" + trimmedNew;
+            } else if (trimmedNew) {
+              otherExistingNote.content = trimmedNew;
+            }
+            
+            // 기존 카드는 최상단 이동 및 보관 해제
+            otherExistingNote.archived = false;
+            otherExistingNote.pinned = true;
+            const origIdx = notesList.indexOf(otherExistingNote);
+            if (origIdx > -1) {
+              notesList.splice(origIdx, 1);
+            }
+            notesList.unshift(otherExistingNote);
+
+            // 현재 빈 카드는 누적 처리되었으므로 삭제
+            notesList = notesList.filter(n => n.id !== id);
+            
+            showSnackbar(`기존 '${otherExistingNote.title}' 메모로 누적 통합되었습니다!`);
+          } else {
+            // 겹치는 카드가 없으므로 정상 저장
+            note.title = titleVal || "제목 없음";
+            note.content = contentVal;
+            note.category = tagVal;
+            note.color = colorVal;
+          }
+        }
+        saveNotesToStorage();
+        renderDashboard();
+      }
     }
 
     function saveNoteEdits() {
-      const id = document.getElementById('edit-note-id').value;
-      const title = document.getElementById('edit-note-title').value.trim();
-      const content = document.getElementById('edit-note-content').value.trim();
-      const tag = document.getElementById('edit-note-tag').value.trim();
-      const color = document.getElementById('edit-note-color').value;
-
-      if (!title) {
-        alert("제목을 입력해 주세요.");
-        return;
-      }
-
-      const note = notesList.find(n => n.id === id);
-      if (note) {
-        note.title = title;
-        note.content = content;
-        note.category = tag || '📝 일반';
-        note.color = color;
-        
-        saveNotesToStorage();
-        renderDashboard();
-        closeEditModal();
-      }
+      closeEditModal(); // 중복 코드를 완벽히 하나로 통합 관리
     }
 
     // 🔒 API Key 및 모달
@@ -1357,7 +2326,7 @@
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run.withSuccessHandler((res) => {
           if (res && res.success && res.key) {
-            updateApiState(res.key, "시트 연동 완료");
+            updateApiState(res.key, "연동 완료");
           } else {
             fallbackLocalApiKey();
           }
@@ -1372,23 +2341,20 @@
       if (localKey) {
         updateApiState(localKey, "로컬 저장됨");
       } else {
-        updateApiState("", "연결 대기 (설정 필요)");
+        updateApiState("", "연결 대기");
       }
     }
 
     function updateApiState(key, text) {
       const dot = document.getElementById('api-status-dot');
-      const label = document.getElementById('api-status-text');
       
       if (key && key.trim().startsWith('AIzaSy')) {
         localApiKey = key.trim();
         dot.style.background = 'var(--secondary-solid)';
-        label.innerText = text;
         checkExtractButtonState();
       } else {
         localApiKey = '';
         dot.style.background = 'var(--danger-solid)';
-        label.innerText = "연결 대기";
         checkExtractButtonState();
       }
     }
@@ -1454,17 +2420,19 @@
     }
 
     async function toggleRecording() {
-      const btn = document.getElementById('record-btn');
+      const btn = document.getElementById('record-mic-btn');
       const status = document.getElementById('record-status');
+      const dynamicArea = document.getElementById('dynamic-recorder-area');
 
       if (!mediaRecorder || mediaRecorder.state === 'inactive') {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
           startAudioRecordingEngine(stream);
           
+          dynamicArea.style.display = 'block'; // 파형 visualizer 및 제어기 노출
           btn.classList.add('recording');
           btn.innerHTML = '<i class="fas fa-stop"></i>';
-          status.innerText = "생각을 듣고 있습니다... 말씀이 끝나면 정지 버튼을 누르세요.";
+          status.innerText = "생각을 듣고 있습니다...";
           document.getElementById('btn-pause-record').disabled = false;
           document.getElementById('btn-reset-record').disabled = false;
           document.getElementById('audio-player-box').style.display = 'none';
@@ -1500,7 +2468,7 @@
         document.getElementById('audio-player-box').style.display = 'flex';
         document.getElementById('player-time-display').innerText = document.getElementById('record-timer').innerText;
         document.getElementById('player-progress-bar').style.width = '0%';
-        document.getElementById('record-status').innerText = "영감 포착 완료! 아래 정제 버튼을 터치하세요.";
+        document.getElementById('record-status').innerText = "영감 포착 완료! AI 변환을 눌러보세요.";
         checkExtractButtonState();
       };
 
@@ -1527,8 +2495,7 @@
         animationFrameId = requestAnimationFrame(draw);
         analyser.getByteFrequencyData(dataArray);
 
-        const isDark = document.body.classList.contains('dark-mode');
-        ctx.fillStyle = isDark ? 'rgba(15, 12, 27, 0.25)' : 'rgba(255, 255, 255, 0.25)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         const barWidth = (canvas.width / bufferLength) * 1.5;
@@ -1537,7 +2504,7 @@
 
         for (let i = 0; i < bufferLength; i++) {
           barHeight = dataArray[i] / 2.5;
-          ctx.fillStyle = isDark ? `hsla(250, 75%, 70%, 0.7)` : `hsla(238, 75%, 68%, 0.65)`;
+          ctx.fillStyle = `hsla(238, 75%, 68%, 0.65)`;
           ctx.fillRect(x, (canvas.height - barHeight) / 2, barWidth - 1.5, barHeight);
           x += barWidth;
         }
@@ -1553,9 +2520,10 @@
       if (recordingTimer) { clearInterval(recordingTimer); recordingTimer = null; }
       if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
 
+      document.getElementById('dynamic-recorder-area').style.display = 'none'; // 파형 캔버스 숨김
       setTimeout(initCanvasWaveform, 200);
 
-      const btn = document.getElementById('record-btn');
+      const btn = document.getElementById('record-mic-btn');
       btn.classList.remove('recording');
       btn.innerHTML = '<i class="fas fa-microphone"></i>';
       document.getElementById('btn-pause-record').disabled = true;
@@ -1574,7 +2542,7 @@
       } else if (mediaRecorder && mediaRecorder.state === 'paused') {
         mediaRecorder.resume();
         btn.innerHTML = '<i class="fas fa-pause"></i> 일시정지';
-        status.innerText = "생각을 담고 있습니다...";
+        status.innerText = "생각을 듣고 있습니다...";
         recordingTimer = setInterval(() => {
           recordSeconds++;
           const m = String(Math.floor(recordSeconds / 60)).padStart(2, '0');
@@ -1585,14 +2553,32 @@
     }
 
     function resetRecording() {
-      if (confirm("녹음을 초기화하고 처음부터 다시 촬영하시겠습니까?")) {
+      if (confirm("녹음을 초기화하고 처음부터 다시 시작하시겠습니까?")) {
         stopAudioRecordingEngine();
         audioChunks = [];
         audioBlob = null;
         audioUrl = null;
         document.getElementById('record-timer').innerText = "00:00";
-        document.getElementById('record-status').innerText = "마이크를 눌러 음성 독백을 기록해 보세요";
+        document.getElementById('record-status').innerText = "마이크를 눌러 생각을 독백해 보세요";
         document.getElementById('audio-player-box').style.display = 'none';
+        document.getElementById('dynamic-recorder-area').style.display = 'none';
+        checkExtractButtonState();
+      }
+    }
+
+    function deleteRecordedAudio() {
+      if (confirm("녹음 파일을 삭제하시겠습니까?")) {
+        audioChunks = [];
+        audioBlob = null;
+        audioUrl = null;
+        document.getElementById('audio-player-box').style.display = 'none';
+        document.getElementById('record-timer').innerText = "00:00";
+        document.getElementById('record-status').innerText = "마이크를 눌러 생각을 독백해 보세요";
+        
+        if (playAudioInstance) {
+          playAudioInstance.pause();
+          playAudioInstance = null;
+        }
         checkExtractButtonState();
       }
     }
@@ -1656,7 +2642,7 @@
       const deck = document.getElementById('draft-deck');
 
       btnExtract.disabled = true;
-      btnExtract.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 생각을 다듬는 중...';
+      btnExtract.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 정제 중...';
       
       draftPanel.style.display = 'block';
       loader.style.display = 'flex';
@@ -1694,7 +2680,7 @@
       document.getElementById('extraction-loader').style.display = 'none';
       const btn = document.getElementById('btn-extract');
       btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> 생각 다듬기 & AI 메모 정제';
+      btn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> AI 변환';
       alert(`Gemini AI 분석에 실패했습니다.\n상세: ${err.message || err.toString()}`);
     }
 
@@ -1765,20 +2751,24 @@
 
 [핵심 지침]
 1. 절대로 요약하지 말 것: 생각을 과도하게 압축하거나 요약하여 영감의 디테일을 날려버리지 마라. 오타와 비문, 문맥만 부드럽게 다듬고, 쏟아낸 상세 디테일은 100% 그대로 다 보존해라.
-2. 맥락적 초정밀 병합(Contextual Merge): 독백 속에서 말한 여러 가지 활동이나 태스크들을 쪼개지 말고, 대상물이나 비즈니스 맥락이 동일한 주체(예: '요가 매트', '릴스 촬영', '센터 에어컨 청소' 등)를 가리키고 있다면 반드시 단 하나의 메모 카드로 병합해라.
-   - 예: "요가매트 새로 주문하기"와 "요가매트 수량 목록 갱신하기"는 행동은 다르나 대상이 '요가 매트'로 동일하므로 반드시 '🧘 요가 매트 교체 및 최신화'라는 단 하나의 카드로 병합해야 한다.
-3. 본문 구조화: 하나의 카드로 병합하되, 그 안에 담긴 개별 행동들이나 상세 내역들은 날려버리지 말고 글머리 기호(- ) 또는 체크박스(- [ ]) 형태로 예쁘게 구조화하여 본문(content)에 100% 상세히 보존해라.
-4. 분류 태그 지정: 기존 태그 목록 중 하나에 어울린다면 해당 태그를 할당하고, 그렇지 않다면 이쁜 이모지 접두사와 함께 2~3단어로 구성된 직관적인 새 태그(예: 🍳 요리/레시피, 📈 사업/기획, 📚 독서/인문학)를 창조하여 추천해라.
-   - 행동으로 실행해야 하는 구체적인 태스크는 무조건 '📋 할 일'로 분류해라.
+2. 실행 과제(ToDo)의 절대 규칙:
+   - 행동으로 실행해야 하는 구체적인 과제나 할 일 태스크들은 무조건 '📋 할 일' 카테고리로 분류해라.
+   - 본문(content)의 각 항목들은 무조건 '- [ ] 과제 내용' 형태로 작성해라. (반드시 '- [ ] ' 대괄호 공백 형태여야 함).
+   - 절대로 '오늘할일', '내일할일', '3일뒤할일'처럼 특정 날짜나 일시적인 제목을 지닌 일회성 카드를 따로 생성하지 마라. 모든 과제는 '📋 할 일' 마스터 카드로 귀속되도록 설계해야 하므로, 카테고리가 '📋 할 일'일 경우 제목(title) 역시 무조건 '📋 할 일'로 통일하여 지정해라.
+3. 창의적 아이디어/생각의 절대 규칙:
+   - 과제가 아닌 창의적 아이디어, 비즈니스 영감, 기획안, 독서 메모 등은 억지로 합치지 말고, 그 아이디어만의 고유한 매력을 살릴 수 있도록 개별 주제를 제목(title)으로 정해라.
+   - 예: 레시피 아이디어라면 카테고리는 '🍳 레시피'로 정하고, 제목은 '🍳 삼겹살 촉촉하게 굽는 황금 비법'처럼 명확하고 흥미로운 제목을 지어라.
+   - 이 경우 본문(content)은 체크박스가 아닌 일반 줄글이나 글머리표(- ) 형태로 구조화해라.
+4. 분류 태그 지정: 기존 태그 목록 중 하나에 어울린다면 해당 태그를 할당하고, 그렇지 않다면 이쁜 이모지 접두사와 함께 2~3단어로 구성된 직관적인 새 태그(예: 📈 사업/기획, 📚 독서/인문학)를 창조하여 추천해라.
    - 기존 활성화된 태그 목록: ${JSON.stringify(existingTags)}
 
 반드시 아래 JSON 스키마 형식으로만 응답해라:
 {
   "ideas": [
     {
-      "category": "추천 태그 이름 (기존 목록 중 하나를 정확히 적거나 네가 직접 창조한 새 태그 이름)",
-      "title": "아이디어의 핵심 주제를 담은 명확한 제목 (예: 🧘 요가 매트 교체 및 최신화)",
-      "content": "오타/비문이 다듬어지고 파편들이 글머리표(- )나 체크박스로 구조화되어 디테일이 100% 보존된 본문"
+      "category": "추천 태그 이름 (예: 📋 할 일, 🎬 릴스 기획, 🍳 레시피)",
+      "title": "아이디어의 핵심 주제를 담은 명확한 제목 (📋 할 일인 경우 반드시 '📋 할 일'로 지정)",
+      "content": "오타/비문이 다듬어지고 파편들이 체크박스(- [ ])나 글머리표(- )로 구조화된 본문"
     }
   ]
 }`;
@@ -1821,7 +2811,7 @@
     function resetExtractButtonAfterProcess() {
       const btnExtract = document.getElementById('btn-extract');
       btnExtract.disabled = false;
-      btnExtract.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> 생각 다듬기 & AI 메모 정제';
+      btnExtract.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> AI 변환';
       
       audioChunks = [];
       audioBlob = null;
@@ -1861,19 +2851,73 @@
         return;
       }
 
-      const newNote = {
-        id: 'note_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-        title: titleVal,
-        content: contentVal,
-        category: tagVal || '📝 일반',
-        color: 'default',
-        pinned: false,
-        createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ')
-      };
+      // 백업 생성 (실행취소용)
+      const originalNotesListBackup = JSON.parse(JSON.stringify(notesList));
 
-      notesList.unshift(newNote);
-      saveNotesToStorage();
-      renderDashboard();
+      // 중복 병합 대상 카드 탐색
+      let existingNote = null;
+      if (tagVal === '📋 할 일' || titleVal === '📋 할 일') {
+        // ToDo 카드는 항상 마스터 카드 하나에 병합
+        existingNote = notesList.find(n => !n.trash && (n.category === '📋 할 일' || n.title === '📋 할 일'));
+      } else {
+        // 그 외 크리에이티브 카드는 제목(title)이 정확히 일치하는 카드가 있을 경우에만 병합
+        existingNote = notesList.find(n => !n.trash && n.title === titleVal);
+      }
+
+      if (existingNote) {
+        // 기존 마스터 카드에 내용 누적 병합
+        const trimmedExisting = (existingNote.content || '').trim();
+        const trimmedNew = contentVal.trim();
+        
+        if (trimmedExisting && trimmedNew) {
+          existingNote.content = trimmedExisting + "\n" + trimmedNew;
+        } else if (trimmedNew) {
+          existingNote.content = trimmedNew;
+        }
+
+        // 보관되어 있었거나 핀이 풀려있을 시 상태 최적화
+        existingNote.archived = false; // 보관함에 있었으면 다시 대시보드로 복귀
+        existingNote.pinned = true;    // 최상단 고정
+
+        // 대시보드 상단 노출을 위해 unshift
+        const origIdx = notesList.indexOf(existingNote);
+        if (origIdx > -1) {
+          notesList.splice(origIdx, 1);
+        }
+        notesList.unshift(existingNote);
+
+        saveNotesToStorage();
+        renderDashboard();
+
+        showSnackbar(`기존 '${existingNote.title}' 메모에 새로운 과제/아이디어가 누적 병합되었습니다!`, () => {
+          notesList = originalNotesListBackup;
+          saveNotesToStorage();
+          renderDashboard();
+        });
+      } else {
+        // 겹치는 카드가 없으므로 신규 카드로 생성 (아이디어 유연성 확보!)
+        const newNote = {
+          id: 'note_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+          title: titleVal,
+          content: contentVal,
+          category: tagVal || '📝 일반',
+          color: 'default',
+          pinned: false,
+          archived: false,
+          trash: false,
+          createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ')
+        };
+
+        notesList.unshift(newNote);
+        saveNotesToStorage();
+        renderDashboard();
+
+        showSnackbar("새로운 독립 아이디어 카드를 생성했습니다.", () => {
+          notesList = originalNotesListBackup;
+          saveNotesToStorage();
+          renderDashboard();
+        });
+      }
 
       // 날아가기 승인 애니메이션
       card.style.transform = 'translateY(-60px) scale(0.8)';
