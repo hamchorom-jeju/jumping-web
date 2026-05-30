@@ -473,12 +473,13 @@ window.applySharedEnvironment = function(settings) {
   if (!settings) return;
   
   const path = window.location.pathname.toLowerCase();
-  // [v51.0] 출석체크, 회원가입, 회원재등록, 어드민 등 업무용/키오스크 페이지는 날씨 마법사 및 BGM을 원천 차단하여 성능을 보장합니다!
+  // [v51.0] 출석체크, 회원가입, 회원재등록, 어드민 등 업무용/키오스크 페이지 및 지니킵 수집기는 날씨 마법사 및 BGM을 원천 차단하여 성능을 보장합니다!
   if (
     path.includes('attendance') || 
     path.includes('registration') || 
     path.includes('renewal') || 
-    path.includes('admin')
+    path.includes('admin') ||
+    path.includes('idea_collector')
   ) {
     console.log("🚫 [Shared Environment] Weather and BGM disabled for utility/kiosk page.");
     const oldWrap = document.getElementById('village-weather-wrapper');

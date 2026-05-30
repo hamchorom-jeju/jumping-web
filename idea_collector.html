@@ -1,0 +1,1906 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🌿 GENIE KEEP - 생각을 담는 따뜻한 감성 메모장</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="bridge.js?v=58.4"></script>
+  <style>
+    /* 🎨 원장님이 제안하신 '다스림' 목업의 감성적이고 세련된 라벤더-코랄 파스텔 테마 */
+    :root {
+      --bg-gradient: linear-gradient(135deg, #f5f3ff 0%, #fdf2f8 40%, #fffbeb 100%);
+      --card-bg: rgba(255, 255, 255, 0.72);
+      --card-border: rgba(255, 255, 255, 0.6);
+      --text-title: #312e81; /* 묵직하고 고급스러운 딥 인디고 */
+      --text-body: #4f46e5;
+      --text-desc: #6b7280;
+      --text-muted: #9ca3af;
+      
+      /* 다스림 특유의 시그니처 그라데이션 */
+      --primary-grad: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+      --primary-solid: #818cf8;
+      --secondary-solid: #34d399;
+      --danger-solid: #f43f5e;
+      --text-gold: #fbbf24;
+      
+      --shadow-dream: 0 15px 35px rgba(129, 140, 248, 0.08), 0 5px 15px rgba(0, 0, 0, 0.02);
+      --shadow-card: 0 10px 25px rgba(167, 139, 250, 0.06);
+      --border-radius: 28px;
+    }
+
+    /* 🌙 감성 다크 모드 (완전히 차분한 딥 라벤더 나이트 감성) */
+    body.dark-mode {
+      --bg-gradient: linear-gradient(135deg, #0f0c1b 0%, #15102a 50%, #1a1635 100%);
+      --card-bg: rgba(25, 20, 50, 0.65);
+      --card-border: rgba(255, 255, 255, 0.06);
+      --text-title: #e0e7ff;
+      --text-body: #a5b4fc;
+      --text-desc: #9ca3af;
+      --text-muted: #6b7280;
+      --primary-grad: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      --shadow-dream: 0 15px 35px rgba(0, 0, 0, 0.35);
+      --shadow-card: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      transition: background-color 0.4s ease, border-color 0.4s ease, transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-desc);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      line-height: 1.6;
+      padding-bottom: 75px; /* 하단 네비게이션 바 공간 */
+    }
+
+    header {
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    body.dark-mode header {
+      background: rgba(15, 12, 27, 0.6);
+    }
+
+    .header-container {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .logo-icon {
+      font-size: 1.6rem;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .logo h1 {
+      font-size: 1.2rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: var(--text-title);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #api-status-badge {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: var(--text-body);
+      background: rgba(255, 255, 255, 0.8);
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    body.dark-mode #api-status-badge {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    #api-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--danger-solid);
+    }
+
+    .btn-icon {
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid var(--card-border);
+      color: var(--text-title);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+    }
+    body.dark-mode .btn-icon {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-icon:hover {
+      transform: scale(1.05);
+      border-color: var(--primary-solid);
+    }
+
+    .container {
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      flex: 1;
+    }
+
+    /* 🌿 다스림 감성 가득한 일러스트 배너 */
+    .dasrim-banner {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 10px 5px;
+      animation: float 5s ease-in-out infinite alternate;
+    }
+
+    .dasrim-banner-icon {
+      font-size: 2.8rem;
+      filter: drop-shadow(0 5px 10px rgba(129, 140, 248, 0.15));
+    }
+
+    .dasrim-banner-text h2 {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: var(--text-title);
+      margin-bottom: 2px;
+    }
+
+    .dasrim-banner-text p {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--border-radius);
+      padding: 24px;
+      box-shadow: var(--shadow-dream);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+    }
+
+    .card-title {
+      font-size: 0.92rem;
+      font-weight: 850;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-title);
+    }
+
+    .card-title i {
+      color: var(--primary-solid);
+    }
+
+    /* 🎙️ 다스림 오늘의 감정 만나기 카드 연출 */
+    .recorder-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .visualizer-container {
+      width: 100%;
+      height: 60px;
+      margin-bottom: 18px;
+      border-radius: 18px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid var(--card-border);
+    }
+    body.dark-mode .visualizer-container {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    #visualizer {
+      width: 100%;
+      height: 100%;
+    }
+
+    .record-timer {
+      font-size: 1.8rem;
+      font-weight: 900;
+      margin-bottom: 12px;
+      color: var(--text-title);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.5px;
+    }
+
+    .record-btn-wrapper {
+      position: relative;
+      margin-bottom: 8px;
+    }
+
+    .record-btn {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: var(--primary-grad);
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 25px rgba(129, 140, 248, 0.35);
+      z-index: 2;
+      position: relative;
+    }
+
+    .record-btn.recording {
+      background: linear-gradient(135deg, var(--secondary-solid) 0%, #059669 100%);
+      box-shadow: 0 10px 25px rgba(52, 211, 153, 0.35);
+    }
+
+    .record-status-text {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--text-body);
+      margin-top: 5px;
+      text-align: center;
+    }
+
+    .recording-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      width: 100%;
+      max-width: 280px;
+    }
+
+    .control-btn {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid var(--card-border);
+      color: var(--text-title);
+      font-size: 0.76rem;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.01);
+    }
+    body.dark-mode .control-btn {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .control-btn:hover:not(:disabled) {
+      border-color: var(--primary-solid);
+      background: white;
+    }
+    body.dark-mode .control-btn:hover:not(:disabled) {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .control-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    /* 🔊 커스텀 감성 오디오 플레이어 */
+    .audio-player-box {
+      width: 100%;
+      margin-top: 16px;
+      background: rgba(255, 255, 255, 0.45);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 12px;
+      display: none;
+      align-items: center;
+      gap: 12px;
+    }
+    body.dark-mode .audio-player-box {
+      background: rgba(0,0,0,0.15);
+    }
+
+    .player-play-btn {
+      background: var(--primary-grad);
+      border: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .player-progress-container {
+      flex: 1;
+      height: 6px;
+      background: rgba(0, 0, 0, 0.04);
+      border-radius: 3px;
+      cursor: pointer;
+      position: relative;
+    }
+    body.dark-mode .player-progress-container {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .player-progress-bar {
+      width: 0%;
+      height: 100%;
+      background: var(--primary-grad);
+      border-radius: 3px;
+    }
+
+    .player-timer {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 800;
+    }
+
+    /* ✍️ 노션/다스림 스타일 텍스트에리어 */
+    .raw-textarea {
+      width: 100%;
+      height: 95px;
+      background: rgba(255, 255, 255, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      color: var(--text-title);
+      padding: 15px;
+      font-size: 0.85rem;
+      outline: none;
+      resize: none;
+      font-weight: 600;
+    }
+    body.dark-mode .raw-textarea {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .raw-textarea:focus {
+      border-color: var(--primary-solid);
+      background: white;
+    }
+    body.dark-mode .raw-textarea:focus {
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    /* 🚀 감성 그라데이션 실행 버튼 */
+    .btn-extract {
+      width: 100%;
+      padding: 15px;
+      border-radius: 18px;
+      border: none;
+      background: var(--primary-grad);
+      color: white;
+      font-weight: 900;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(129, 140, 248, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-extract:hover {
+      box-shadow: 0 8px 25px rgba(129, 140, 248, 0.4);
+      transform: translateY(-1.5px);
+    }
+
+    .btn-extract:disabled {
+      background: rgba(0, 0, 0, 0.04);
+      color: var(--text-muted);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* 🔍 검색 바 및 태그 스크롤 */
+    .filter-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .search-bar-container {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 0 14px;
+      width: 100%;
+    }
+    body.dark-mode .search-bar-container {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .search-icon {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-right: 10px;
+    }
+
+    .search-bar-container input {
+      background: transparent;
+      border: none;
+      color: var(--text-title);
+      padding: 11px 0;
+      font-size: 0.85rem;
+      font-weight: 700;
+      outline: none;
+      width: 100%;
+    }
+
+    .tags-scrollbar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+      width: 100%;
+    }
+
+    .tags-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tag-filter-btn {
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid var(--card-border);
+      color: var(--text-desc);
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    body.dark-mode .tag-filter-btn {
+      background: rgba(0,0,0,0.15);
+    }
+
+    .tag-filter-btn.active {
+      background: var(--primary-grad);
+      color: white !important;
+      border-color: transparent;
+      box-shadow: 0 4px 10px rgba(129, 140, 248, 0.2);
+    }
+
+    /* 📌/📝 카드 대시보드 */
+    .notes-dashboard-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .dashboard-group-title {
+      font-size: 0.76rem;
+      font-weight: 850;
+      color: var(--text-title);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-left: 3px;
+      opacity: 0.7;
+    }
+
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr); /* 모바일/데스크톱 모두 콤팩트한 2열 유지 */
+      gap: 12px;
+      width: 100%;
+    }
+
+    /* 🏷️ 다스림 감성 가득한 은은한 파스텔 톤 카드 */
+    .note-card {
+      border-radius: 22px;
+      padding: 16px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 140px;
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow-card);
+      cursor: pointer;
+      animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .note-card:hover {
+      box-shadow: 0 10px 20px rgba(167, 139, 250, 0.09);
+      transform: translateY(-2px);
+    }
+
+    /* 다스림 특유의 몽환적이고 따뜻한 라이트/다크 그라데이션 팔레트 */
+    .color-default { background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%); }
+    .color-red { background: linear-gradient(135deg, #fff5f5 0%, #ffe4e6 100%); border-color: #fecdd3; }
+    .color-green { background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); border-color: #a7f3d0; }
+    .color-blue { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-color: #bae6fd; }
+    .color-yellow { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-color: #fef08a; }
+
+    /* 다크모드 대응 오버라이드 */
+    body.dark-mode .color-default { background: linear-gradient(135deg, #1b1633 0%, #15102a 100%); }
+    body.dark-mode .color-red { background: linear-gradient(135deg, #2b1417 0%, #200f11 100%); border-color: #4c1d24; }
+    body.dark-mode .color-green { background: linear-gradient(135deg, #0e2014 0%, #0a170e 100%); border-color: #1b3d22; }
+    body.dark-mode .color-blue { background: linear-gradient(135deg, #0e1a29 0%, #0a121e 100%); border-color: #1e2e3d; }
+    body.dark-mode .color-yellow { background: linear-gradient(135deg, #272210 0%, #1c180b 100%); border-color: #3d3b1e; }
+
+    .note-pin-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      opacity: 0.3;
+      cursor: pointer;
+      z-index: 5;
+    }
+
+    .note-card:hover .note-pin-btn,
+    .note-card.pinned .note-pin-btn {
+      opacity: 1;
+    }
+
+    .note-card.pinned .note-pin-btn {
+      color: var(--text-gold) !important;
+    }
+
+    .note-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex: 1;
+    }
+
+    .note-card-title {
+      font-size: 0.82rem;
+      font-weight: 850;
+      color: var(--text-title);
+      padding-right: 15px;
+      line-height: 1.4;
+      letter-spacing: -0.2px;
+    }
+
+    .note-card-content {
+      font-size: 0.74rem;
+      color: var(--text-desc);
+      font-weight: 600;
+      white-space: pre-wrap;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .note-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(0, 0, 0, 0.02);
+      padding-top: 6px;
+    }
+    body.dark-mode .note-card-footer {
+      border-top-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .note-card-tag {
+      font-size: 0.58rem;
+      font-weight: 850;
+      color: var(--text-body);
+      background: rgba(129, 140, 248, 0.07);
+      padding: 3px 6px;
+      border-radius: 6px;
+    }
+
+    .note-card-toolbar {
+      display: flex;
+      gap: 3px;
+      opacity: 0.8; /* 모바일에서 즉시 보일 수 있도록 고정 투명도 처리 */
+    }
+
+    .toolbar-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      cursor: pointer;
+      padding: 2px;
+    }
+
+    .toolbar-btn:hover {
+      color: var(--text-title);
+      transform: scale(1.1);
+    }
+
+    /* 🔒 iOS 스타일 바텀 네비게이션 바 (다스림 앱 레이아웃 완벽 재현) */
+    .bottom-nav-bar {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 92%;
+      max-width: 500px;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-radius: 30px;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      box-shadow: 0 12px 35px rgba(129, 140, 248, 0.12);
+      z-index: 999;
+    }
+    body.dark-mode .bottom-nav-bar {
+      background: rgba(21, 16, 42, 0.82);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.65rem;
+      font-weight: 800;
+    }
+
+    .nav-item i {
+      font-size: 1.1rem;
+    }
+
+    .nav-item.active {
+      color: var(--text-title);
+    }
+
+    /* 🔒 상세 편집 및 설정 모달 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    body.dark-mode .modal-overlay {
+      background: rgba(0, 0, 0, 0.55);
+    }
+
+    .modal-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-overlay.show .modal-card {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      width: 90%;
+      max-width: 400px;
+      padding: 26px !important;
+      text-align: center;
+      box-shadow: 0 20px 45px rgba(129, 140, 248, 0.08);
+      transform: translateY(20px) scale(0.96);
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal-card h2 {
+      font-size: 1.2rem;
+      font-weight: 900;
+      margin-bottom: 10px;
+      color: var(--text-title);
+    }
+
+    .modal-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 10px 14px;
+      color: var(--text-title);
+      font-size: 0.82rem;
+      font-weight: 700;
+      outline: none;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    body.dark-mode .modal-input {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-input:focus {
+      border-color: var(--primary-solid);
+    }
+
+    .modal-btns {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 11px 18px;
+      border-radius: 14px;
+      font-weight: 850;
+      font-size: 0.8rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .modal-btn-cancel {
+      background: rgba(0, 0, 0, 0.03);
+      border-color: var(--card-border);
+      color: var(--text-desc);
+    }
+    body.dark-mode .modal-btn-cancel {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .modal-btn-save {
+      background: var(--primary-grad);
+      color: white;
+      box-shadow: 0 4px 12px rgba(129, 140, 248, 0.2);
+    }
+
+    /* 🏷️ 드래프트 카드 액션 */
+    .draft-btn {
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .draft-btn-delete {
+      background: rgba(244, 63, 94, 0.06);
+      border-color: rgba(244, 63, 94, 0.15);
+      color: var(--danger-solid);
+    }
+
+    .draft-btn-approve {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.18);
+      color: var(--secondary-solid);
+    }
+
+    @keyframes ripple {
+      0% { width: 100%; height: 100%; opacity: 0.8; }
+      100% { width: 140%; height: 140%; opacity: 0; }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    @keyframes bounce {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-4px); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-container">
+      <div class="logo" onclick="location.reload()">
+        <span class="logo-icon">🌿</span>
+        <h1>GENIE KEEP</h1>
+      </div>
+      <div class="header-controls">
+        <div id="api-status-badge">
+          <div id="api-status-dot"></div>
+          <span id="api-status-text">연결 대기</span>
+        </div>
+        <button class="btn-icon" onclick="toggleTheme()" title="테마 변경"><i class="fas fa-moon" id="theme-icon"></i></button>
+        <button class="btn-icon" onclick="openKeyModal()" title="Gemini 설정"><i class="fas fa-cog"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- 🌿 다스림 감성 가득한 상단 캐릭터 안내 배너 -->
+    <div class="dasrim-banner" id="banner-home">
+      <span class="dasrim-banner-icon">💭</span>
+      <div class="dasrim-banner-text">
+        <h2>안녕하세요, 생각 수집기입니다.</h2>
+        <p>오늘 떠오른 영감들을 자유롭게 남겨보세요 🌌</p>
+      </div>
+    </div>
+
+    <!-- 🎙️ 퀵 캡처 섹션 (바둑판 홈) -->
+    <div class="quick-capture-section glass-card" id="capture-card">
+      <div class="card-title">
+        <i class="fas fa-feather"></i> <span>오늘의 영감 빠른 포착</span>
+      </div>
+      <div class="recorder-box">
+        <div class="visualizer-container">
+          <canvas id="visualizer"></canvas>
+        </div>
+        
+        <div class="record-timer" id="record-timer">00:00</div>
+        
+        <div class="record-btn-wrapper">
+          <button class="record-btn" id="record-btn" onclick="toggleRecording()"><i class="fas fa-microphone"></i></button>
+          <div class="ripple"></div>
+        </div>
+        
+        <div class="record-status-text" id="record-status">마이크를 눌러 음성 독백을 기록해 보세요</div>
+        
+        <div class="recording-controls">
+          <button class="control-btn" id="btn-pause-record" disabled onclick="pauseRecording()"><i class="fas fa-pause"></i> 일시정지</button>
+          <button class="control-btn" id="btn-reset-record" disabled onclick="resetRecording()"><i class="fas fa-redo"></i> 다시하기</button>
+        </div>
+
+        <!-- 오디오 재생기 -->
+        <div class="audio-player-box" id="audio-player-box">
+          <button class="player-play-btn" id="player-play-btn" onclick="togglePlayAudio()"><i class="fas fa-play"></i></button>
+          <div class="player-progress-container" id="player-progress-container" onclick="seekAudio(event)">
+            <div class="player-progress-bar" id="player-progress-bar"></div>
+          </div>
+          <span class="player-timer" id="player-time-display">00:00</span>
+        </div>
+      </div>
+
+      <!-- 생각 타이핑 -->
+      <div class="quick-text-box" style="margin-top: 15px;">
+        <textarea class="raw-textarea" id="raw-textarea" placeholder="여기에 생각나는 메모들을 자유롭게 작성해 보세요. 요가 매트 주문 및 수량 목록처럼 동일한 키워드는 똑똑하게 하나로 묶어 정제해 냅니다."></textarea>
+      </div>
+
+      <!-- 실행 버튼 -->
+      <button class="btn-extract" id="btn-extract" disabled onclick="extractIdeas()" style="margin-top: 12px;">
+        <i class="fas fa-wand-magic-sparkles"></i> <span>생각 다듬기 & AI 메모 정제</span>
+      </button>
+    </div>
+
+    <!-- 🔍 검색 & 필터 영역 -->
+    <div class="filter-section glass-card" id="search-card">
+      <div class="search-bar-container">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="search-input" oninput="filterNotes()" placeholder="기록된 메모 실시간 검색하기...">
+      </div>
+      <div class="tags-scrollbar" id="tags-scrollbar">
+        <!-- 동적 태그 목록 -->
+      </div>
+    </div>
+
+    <!-- ✨ AI 추천 임시 드래프트 영역 -->
+    <div class="draft-section glass-card" id="draft-panel" style="display: none; border-color: #818cf8; box-shadow: var(--shadow-dream);">
+      <div class="card-title" style="color: var(--text-title); margin-bottom: 12px;">
+        <i class="fas fa-wand-magic-sparkles"></i> <span>✨ AI가 하나로 병합한 추천 메모</span>
+      </div>
+      
+      <!-- 로더 -->
+      <div class="extraction-loader" id="extraction-loader" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px 0; border: 1px dashed var(--card-border); border-radius: 18px; text-align: center; margin-bottom: 12px;">
+        <div class="loader-ring" style="width: 40px; height: 40px; border: 3.5px solid rgba(129, 140, 248, 0.1); border-top: 3.5px solid var(--primary-solid); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px;"></div>
+        <div class="loader-text" style="font-size: 0.85rem; font-weight: 800; color: var(--text-title); margin-bottom: 5px;">Gemini AI가 실타래를 정밀하게 정리하는 중...</div>
+        <div class="loader-sub" style="font-size: 0.72rem; color: var(--text-muted); font-weight: 500;">요가매트처럼 흩어진 동일 맥락의 생각들을 하나로 통합 중입니다.</div>
+      </div>
+
+      <div class="notes-grid" id="draft-deck">
+        <!-- AI 임시 추천 드래프트 카드 로드 -->
+      </div>
+    </div>
+
+    <!-- 📌 고정된 메모 영역 -->
+    <div class="notes-dashboard-group" id="pinned-group" style="display: none;">
+      <div class="dashboard-group-title"><i class="fas fa-thumbtack" style="color: var(--text-gold); margin-right: 5px;"></i> 고정됨</div>
+      <div class="notes-grid" id="pinned-grid"></div>
+    </div>
+
+    <!-- 📝 일반 메모 영역 -->
+    <div class="notes-dashboard-group" id="all-notes-group">
+      <div class="dashboard-group-title"><i class="fas fa-sticky-note" style="margin-right: 5px;"></i> 내 메모첩</div>
+      <div class="notes-grid" id="all-notes-grid"></div>
+    </div>
+
+  </div>
+
+  <!-- 🔒 iOS 스타일 하단 플로팅 네비게이션 바 (다스림 모바일 디자인 완벽 이식) -->
+  <div class="bottom-nav-bar">
+    <div class="nav-item active" onclick="scrollToSection('banner-home', this)">
+      <i class="fas fa-home"></i>
+      <span>생각 수집</span>
+    </div>
+    <div class="nav-item" onclick="scrollToSection('search-card', this)">
+      <i class="fas fa-search"></i>
+      <span>검색 필터</span>
+    </div>
+    <div class="nav-item" onclick="scrollToSection('all-notes-group', this)">
+      <i class="fas fa-sticky-note"></i>
+      <span>내 메모</span>
+    </div>
+    <div class="nav-item" onclick="openKeyModal()">
+      <i class="fas fa-cog"></i>
+      <span>Gemini 설정</span>
+    </div>
+  </div>
+
+  <!-- 🔒 API Key 모달 -->
+  <div class="modal-overlay" id="key-modal">
+    <div class="modal-card">
+      <div class="modal-icon" style="font-size: 2.5rem; margin-bottom: 12px; animation: bounce 1.5s infinite alternate;">🌿</div>
+      <h2>Gemini AI 설정</h2>
+      <p style="font-size: 0.78rem; color: var(--text-desc); line-height: 1.5; margin-bottom: 20px;">
+        개인 Google Gemini API Key를 입력하세요. 브라우저(localStorage)에 안전하게 보관됩니다.
+      </p>
+      <input type="password" class="modal-input" id="api-key-input" placeholder="AIzaSy... 형식의 API Key 입력">
+      <div class="modal-btns">
+        <button class="modal-btn modal-btn-cancel" onclick="closeKeyModal()">취소</button>
+        <button class="modal-btn modal-btn-save" onclick="saveApiKey()">설정 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📝 메모 상세 편집 모달 -->
+  <div class="modal-overlay" id="note-edit-modal">
+    <div class="modal-card" style="max-width: 480px; text-align: left;">
+      <h3 style="font-size: 1.05rem; font-weight: 900; margin-bottom: 15px; color: var(--text-title); display: flex; align-items: center; gap: 6px;">
+        <i class="fas fa-edit" style="color: var(--primary-solid);"></i> 메모 상세 편집
+      </h3>
+      <input type="hidden" id="edit-note-id">
+      
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 0.7rem; color: var(--text-muted); font-weight: 800; display: block; margin-bottom: 4px;">제목</label>
+        <input type="text" class="modal-input" id="edit-note-title" placeholder="제목을 입력하세요" style="text-align: left; margin-bottom: 0; padding: 10px 14px; font-size:0.85rem;">
+      </div>
+
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 0.7rem; color: var(--text-muted); font-weight: 800; display: block; margin-bottom: 4px;">본문 내용</label>
+        <textarea class="raw-textarea" id="edit-note-content" placeholder="내용을 작성하세요" style="height: 140px; font-size: 0.8rem;"></textarea>
+      </div>
+
+      <div style="margin-bottom: 18px; display: flex; gap: 12px;">
+        <div style="flex: 1;">
+          <label style="font-size: 0.7rem; color: var(--text-muted); font-weight: 800; display: block; margin-bottom: 4px;">분류 태그</label>
+          <input type="text" class="modal-input" id="edit-note-tag" placeholder="예: 📋 할 일, 🎬 릴스" style="text-align: left; margin-bottom: 0; padding: 9px 12px; font-size:0.8rem;">
+        </div>
+        <div style="flex: 1;">
+          <label style="font-size: 0.7rem; color: var(--text-muted); font-weight: 800; display: block; margin-bottom: 4px;">배경 테마 지정</label>
+          <select id="edit-note-color" class="modal-input" style="text-align: left; margin-bottom: 0; padding: 9px 12px; cursor: pointer; color: var(--text-title); background: var(--bg-gradient); font-size:0.8rem; font-weight: 700;">
+            <option value="default">⚪ 기본 라벤더</option>
+            <option value="red">❤️ 로즈 핑크</option>
+            <option value="green">💚 에메랄드 그린</option>
+            <option value="blue">💙 오션 블루</option>
+            <option value="yellow">💛 앰버 선셋</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-btns">
+        <button class="modal-btn modal-btn-cancel" onclick="closeEditModal()">닫기</button>
+        <button class="modal-btn modal-btn-save" onclick="saveNoteEdits()">변경 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 📂 데이터 스키마 및 상태 엔진
+    let notesList = [];
+    let draftNotes = []; 
+    let activeTagFilter = "전체";
+    let localApiKey = '';
+
+    // 오디오 녹음 및 visualizer 전역 변수
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let audioBlob = null;
+    let audioUrl = null;
+    let playAudioInstance = null;
+    let recordingTimer = null;
+    let recordSeconds = 0;
+    
+    let audioContext = null;
+    let analyser = null;
+    let microphoneNode = null;
+    let animationFrameId = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // 테마 상태 복구
+      if (localStorage.getItem('genie_theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('theme-icon').className = 'fas fa-sun';
+      }
+      
+      initNotesDatabase();
+      loadApiKey();
+      initCanvasWaveform();
+      setupTextareaListener();
+    });
+
+    // 🌗 라이트/다크 테마 토글
+    function toggleTheme() {
+      const body = document.body;
+      const icon = document.getElementById('theme-icon');
+      
+      if (body.classList.contains('dark-mode')) {
+        body.classList.remove('dark-mode');
+        localStorage.setItem('genie_theme', 'light');
+        icon.className = 'fas fa-moon';
+      } else {
+        body.classList.add('dark-mode');
+        localStorage.setItem('genie_theme', 'dark');
+        icon.className = 'fas fa-sun';
+      }
+      initCanvasWaveform();
+    }
+
+    // 바톱 네비 스크롤 연동
+    function scrollToSection(id, element) {
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      element.classList.add('active');
+      const target = document.getElementById(id);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    // 🗂️ 구글 킵 데이터베이스 이니셜라이징
+    function initNotesDatabase() {
+      const storedNotes = localStorage.getItem('genie_keep_notes');
+      if (storedNotes) {
+        try {
+          notesList = JSON.parse(storedNotes);
+        } catch (e) {
+          notesList = [];
+        }
+      } else {
+        // 기본 콤팩트 샘플 데이터 탑재
+        notesList = [
+          {
+            id: 'note_sample_1',
+            title: '🧘 요가 매트 주문 및 최신화',
+            content: '- 찢어진 요가매트 파악 후 신규 교체용 5개 주문 진행\n- 센터 비품 대장의 요가매트 수량 목록 최신화 반영',
+            category: '📋 할 일',
+            color: 'default',
+            pinned: true,
+            createdAt: '2026-05-30 12:15'
+          },
+          {
+            id: 'note_sample_2',
+            title: '🎬 릴스 홈트 피트니스 영상 구상',
+            content: '- 빠른 비트의 신나는 댄스음악 베이스 선정\n- 홈 트레이닝 초보자들을 위한 필수 루틴 3가지 촬영 일정 확정하기',
+            category: '🎬 릴스 기획',
+            color: 'blue',
+            pinned: false,
+            createdAt: '2026-05-30 12:16'
+          }
+        ];
+        saveNotesToStorage();
+      }
+      renderDashboard();
+    }
+
+    function saveNotesToStorage() {
+      localStorage.setItem('genie_keep_notes', JSON.stringify(notesList));
+    }
+
+    // 🗂️ 구글 킵 대시보드 렌더러
+    function renderDashboard() {
+      const searchVal = document.getElementById('search-input').value.toLowerCase().trim();
+      
+      renderTagsFilterBar();
+
+      // 필터링된 노트 구하기
+      const filtered = notesList.filter(note => {
+        const matchSearch = note.title.toLowerCase().includes(searchVal) || 
+                            note.content.toLowerCase().includes(searchVal);
+        const matchTag = (activeTagFilter === "전체") || (note.category === activeTagFilter);
+        return matchSearch && matchTag;
+      });
+
+      const pinnedNotes = filtered.filter(n => n.pinned);
+      const otherNotes = filtered.filter(n => !n.pinned);
+
+      // Pinned 그리기
+      const pinnedGrid = document.getElementById('pinned-grid');
+      const pinnedGroup = document.getElementById('pinned-group');
+      if (pinnedNotes.length > 0) {
+        pinnedGroup.style.display = 'flex';
+        pinnedGrid.innerHTML = "";
+        pinnedNotes.forEach(note => pinnedGrid.appendChild(createNoteCardDOM(note)));
+      } else {
+        pinnedGroup.style.display = 'none';
+      }
+
+      // 일반 메모 그리기
+      const allGrid = document.getElementById('all-notes-grid');
+      allGrid.innerHTML = "";
+      
+      if (otherNotes.length > 0) {
+        otherNotes.forEach(note => allGrid.appendChild(createNoteCardDOM(note)));
+      } else {
+        if (pinnedNotes.length === 0) {
+          allGrid.innerHTML = `<div style="grid-column: 1/-1; padding: 40px 0; text-align: center; color: var(--text-muted); font-size: 0.8rem; font-weight: 700;">🌱 영감을 담아 다채롭고 소중한 감성 메모를 채워보세요!</div>`;
+        }
+      }
+    }
+
+    // 🏷️ 동적 태그 필터 바
+    function renderTagsFilterBar() {
+      const scrollbar = document.getElementById('tags-scrollbar');
+      const allTags = [...new Set(notesList.map(n => n.category))].filter(t => t);
+      
+      let html = `<button class="tag-filter-btn ${activeTagFilter === '전체' ? 'active' : ''}" onclick="setTagFilter('전체')">🏷️ 전체</button>`;
+      
+      allTags.forEach(tag => {
+        html += `<button class="tag-filter-btn ${activeTagFilter === tag ? 'active' : ''}" onclick="setTagFilter('${tag}')">${tag}</button>`;
+      });
+
+      scrollbar.innerHTML = html;
+    }
+
+    function setTagFilter(tag) {
+      activeTagFilter = tag;
+      renderDashboard();
+    }
+
+    function filterNotes() {
+      renderDashboard();
+    }
+
+    // 🔨 개별 메모 카드 DOM 객체 생성기
+    function createNoteCardDOM(note) {
+      const card = document.createElement('div');
+      const colorClass = note.color ? `color-${note.color}` : 'color-default';
+      card.className = `note-card ${colorClass} ${note.pinned ? 'pinned' : ''}`;
+      card.id = `note-card-${note.id}`;
+
+      card.innerHTML = `
+        <div class="note-pin-btn" onclick="togglePinNote('${note.id}', event)" title="메모 고정"><i class="fas fa-thumbtack"></i></div>
+        <div class="note-card-body" onclick="openEditModal('${note.id}')">
+          <div class="note-card-title">${escapeHTML(note.title)}</div>
+          <div class="note-card-content">${escapeHTML(note.content)}</div>
+        </div>
+        <div class="note-card-footer">
+          <span class="note-card-tag">${escapeHTML(note.category || '📝 일반')}</span>
+          <div class="note-card-toolbar">
+            <button class="toolbar-btn" onclick="changeNoteColor('${note.id}', 'default', event)" title="기본"><i class="fas fa-circle" style="color:#b5b5c3;"></i></button>
+            <button class="toolbar-btn" onclick="changeNoteColor('${note.id}', 'red', event)" title="빨강"><i class="fas fa-circle" style="color:#f87171;"></i></button>
+            <button class="toolbar-btn" onclick="changeNoteColor('${note.id}', 'green', event)" title="초록"><i class="fas fa-circle" style="color:#34d399;"></i></button>
+            <button class="toolbar-btn" onclick="changeNoteColor('${note.id}', 'blue', event)" title="파랑"><i class="fas fa-circle" style="color:#60a5fa;"></i></button>
+            <button class="toolbar-btn" onclick="changeNoteColor('${note.id}', 'yellow', event)" title="노랑"><i class="fas fa-circle" style="color:#fbbf24;"></i></button>
+            <button class="toolbar-btn text-danger" onclick="deleteNote('${note.id}', event)" title="삭제"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      `;
+
+      return card;
+    }
+
+    // 🔨 임시 드래프트 카드 DOM 객체 생성기
+    function createDraftCardDOM(draft, idx) {
+      const card = document.createElement('div');
+      card.className = 'note-card color-default';
+      card.id = `draft-card-${idx}`;
+      card.style.borderColor = 'var(--primary-solid)';
+      card.style.boxShadow = '0 0 15px rgba(129, 140, 248, 0.15)';
+      card.style.cursor = 'default';
+
+      card.innerHTML = `
+        <div class="note-card-body" style="padding-top:2px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+            <span style="font-size:0.62rem; font-weight:800; background:var(--primary-grad); color:white; padding:2px 6px; border-radius:6px;">✨ AI 추천 정제</span>
+            <input type="text" class="modal-input" id="draft-tag-${idx}" value="${escapeHTML(draft.category || '📋 할 일')}" style="background:var(--bg-gradient); border:1px solid var(--card-border); color:var(--text-title); border-radius:6px; font-size:0.65rem; font-weight:800; padding:2px 5px; outline:none; margin-bottom:0; width:75px; text-align:center;">
+          </div>
+          <input type="text" class="modal-input" id="draft-title-${idx}" value="${escapeHTML(draft.title)}" style="text-align:left; font-size:0.85rem; font-weight:800; padding:5px 8px; margin-bottom:6px; background:var(--bg-gradient);">
+          <textarea class="raw-textarea" id="draft-content-${idx}" style="font-size:0.75rem; height:85px; padding:8px; background:var(--bg-gradient);">${escapeHTML(draft.content)}</textarea>
+        </div>
+        <div class="note-card-footer" style="margin-top:2px; border:none; padding-top:0;">
+          <span></span>
+          <div class="draft-actions" style="display:flex; gap:6px;">
+            <button class="draft-btn draft-btn-delete" onclick="discardDraftCard(${idx})"><i class="fas fa-trash"></i> 버리기</button>
+            <button class="draft-btn draft-btn-approve" onclick="approveDraftCard(${idx})"><i class="fas fa-check"></i> 저장</button>
+          </div>
+        </div>
+      `;
+
+      return card;
+    }
+
+    // 📌 핀 고정 토글
+    function togglePinNote(noteId, event) {
+      if (event) event.stopPropagation();
+      const note = notesList.find(n => n.id === noteId);
+      if (note) {
+        note.pinned = !note.pinned;
+        saveNotesToStorage();
+        renderDashboard();
+      }
+    }
+
+    // 🎨 색상 피커
+    function changeNoteColor(noteId, colorName, event) {
+      if (event) event.stopPropagation();
+      const note = notesList.find(n => n.id === noteId);
+      if (note) {
+        note.color = colorName;
+        saveNotesToStorage();
+        renderDashboard();
+      }
+    }
+
+    // 🗑️ 메모 삭제
+    function deleteNote(noteId, event) {
+      if (event) event.stopPropagation();
+      if (confirm("이 메모를 정말 삭제하시겠습니까?")) {
+        notesList = notesList.filter(n => n.id !== noteId);
+        saveNotesToStorage();
+        renderDashboard();
+      }
+    }
+
+    // 📝 상세 편집 모달
+    function openEditModal(noteId) {
+      const note = notesList.find(n => n.id === noteId);
+      if (!note) return;
+
+      document.getElementById('edit-note-id').value = note.id;
+      document.getElementById('edit-note-title').value = note.title;
+      document.getElementById('edit-note-content').value = note.content;
+      document.getElementById('edit-note-tag').value = note.category || '';
+      document.getElementById('edit-note-color').value = note.color || 'default';
+
+      document.getElementById('note-edit-modal').classList.add('show');
+    }
+
+    function closeEditModal() {
+      document.getElementById('note-edit-modal').classList.remove('show');
+    }
+
+    function saveNoteEdits() {
+      const id = document.getElementById('edit-note-id').value;
+      const title = document.getElementById('edit-note-title').value.trim();
+      const content = document.getElementById('edit-note-content').value.trim();
+      const tag = document.getElementById('edit-note-tag').value.trim();
+      const color = document.getElementById('edit-note-color').value;
+
+      if (!title) {
+        alert("제목을 입력해 주세요.");
+        return;
+      }
+
+      const note = notesList.find(n => n.id === id);
+      if (note) {
+        note.title = title;
+        note.content = content;
+        note.category = tag || '📝 일반';
+        note.color = color;
+        
+        saveNotesToStorage();
+        renderDashboard();
+        closeEditModal();
+      }
+    }
+
+    // 🔒 API Key 및 모달
+    function loadApiKey() {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler((res) => {
+          if (res && res.success && res.key) {
+            updateApiState(res.key, "시트 연동 완료");
+          } else {
+            fallbackLocalApiKey();
+          }
+        }).getGeminiApiKey();
+      } else {
+        fallbackLocalApiKey();
+      }
+    }
+
+    function fallbackLocalApiKey() {
+      const localKey = localStorage.getItem('gemini_api_key') || localStorage.getItem('mock_gemini_api_key');
+      if (localKey) {
+        updateApiState(localKey, "로컬 저장됨");
+      } else {
+        updateApiState("", "연결 대기 (설정 필요)");
+      }
+    }
+
+    function updateApiState(key, text) {
+      const dot = document.getElementById('api-status-dot');
+      const label = document.getElementById('api-status-text');
+      
+      if (key && key.trim().startsWith('AIzaSy')) {
+        localApiKey = key.trim();
+        dot.style.background = 'var(--secondary-solid)';
+        label.innerText = text;
+        checkExtractButtonState();
+      } else {
+        localApiKey = '';
+        dot.style.background = 'var(--danger-solid)';
+        label.innerText = "연결 대기";
+        checkExtractButtonState();
+      }
+    }
+
+    function openKeyModal() {
+      document.getElementById('api-key-input').value = localApiKey || '';
+      document.getElementById('key-modal').classList.add('show');
+    }
+
+    function closeKeyModal() {
+      document.getElementById('key-modal').classList.remove('show');
+    }
+
+    function saveApiKey() {
+      const inputVal = document.getElementById('api-key-input').value.trim();
+      if (inputVal && inputVal.startsWith('AIzaSy')) {
+        localStorage.setItem('gemini_api_key', inputVal);
+        updateApiState(inputVal, "로컬 저장됨");
+        closeKeyModal();
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+          google.script.run.setGeminiApiKey(inputVal);
+        }
+      } else {
+        alert("올바른 Google Gemini API Key 형식이 아닙니다.");
+      }
+    }
+
+    function setupTextareaListener() {
+      document.getElementById('raw-textarea').addEventListener('input', checkExtractButtonState);
+    }
+
+    function checkExtractButtonState() {
+      const btn = document.getElementById('btn-extract');
+      const hasText = document.getElementById('raw-textarea').value.trim().length > 0;
+      const hasAudio = audioBlob !== null;
+      const hasKey = localApiKey !== '';
+
+      btn.disabled = !(hasKey && (hasText || hasAudio));
+    }
+
+
+    // 🎙️ 실시간 마이크 수음 및 비주얼라이저
+    function initCanvasWaveform() {
+      const canvas = document.getElementById('visualizer');
+      const ctx = canvas.getContext('2d');
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.lineWidth = 2.5;
+      
+      const isDark = document.body.classList.contains('dark-mode');
+      ctx.strokeStyle = isDark ? 'rgba(167, 139, 250, 0.4)' : 'rgba(129, 140, 248, 0.3)';
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height / 2);
+      ctx.lineTo(canvas.width, canvas.height / 2);
+      ctx.stroke();
+
+      window.addEventListener('resize', () => {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+      });
+    }
+
+    async function toggleRecording() {
+      const btn = document.getElementById('record-btn');
+      const status = document.getElementById('record-status');
+
+      if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          startAudioRecordingEngine(stream);
+          
+          btn.classList.add('recording');
+          btn.innerHTML = '<i class="fas fa-stop"></i>';
+          status.innerText = "생각을 듣고 있습니다... 말씀이 끝나면 정지 버튼을 누르세요.";
+          document.getElementById('btn-pause-record').disabled = false;
+          document.getElementById('btn-reset-record').disabled = false;
+          document.getElementById('audio-player-box').style.display = 'none';
+          
+          recordSeconds = 0;
+          document.getElementById('record-timer').innerText = "00:00";
+          recordingTimer = setInterval(() => {
+            recordSeconds++;
+            const m = String(Math.floor(recordSeconds / 60)).padStart(2, '0');
+            const s = String(recordSeconds % 60).padStart(2, '0');
+            document.getElementById('record-timer').innerText = `${m}:${s}`;
+          }, 1000);
+        } catch (err) {
+          alert('마이크 접근 권한이 부족합니다.');
+        }
+      } else {
+        stopAudioRecordingEngine();
+      }
+    }
+
+    function startAudioRecordingEngine(stream) {
+      audioChunks = [];
+      mediaRecorder = new MediaRecorder(stream);
+      
+      mediaRecorder.ondataavailable = event => {
+        if (event.data.size > 0) audioChunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        audioUrl = URL.createObjectURL(audioBlob);
+        
+        document.getElementById('audio-player-box').style.display = 'flex';
+        document.getElementById('player-time-display').innerText = document.getElementById('record-timer').innerText;
+        document.getElementById('player-progress-bar').style.width = '0%';
+        document.getElementById('record-status').innerText = "영감 포착 완료! 아래 정제 버튼을 터치하세요.";
+        checkExtractButtonState();
+      };
+
+      mediaRecorder.start();
+
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      microphoneNode = audioContext.createMediaStreamSource(stream);
+      microphoneNode.connect(analyser);
+
+      drawLiveWaveform();
+    }
+
+    function drawLiveWaveform() {
+      const canvas = document.getElementById('visualizer');
+      const ctx = canvas.getContext('2d');
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      function draw() {
+        if (!mediaRecorder || mediaRecorder.state === 'inactive') return;
+
+        animationFrameId = requestAnimationFrame(draw);
+        analyser.getByteFrequencyData(dataArray);
+
+        const isDark = document.body.classList.contains('dark-mode');
+        ctx.fillStyle = isDark ? 'rgba(15, 12, 27, 0.25)' : 'rgba(255, 255, 255, 0.25)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const barWidth = (canvas.width / bufferLength) * 1.5;
+        let barHeight;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+          barHeight = dataArray[i] / 2.5;
+          ctx.fillStyle = isDark ? `hsla(250, 75%, 70%, 0.7)` : `hsla(238, 75%, 68%, 0.65)`;
+          ctx.fillRect(x, (canvas.height - barHeight) / 2, barWidth - 1.5, barHeight);
+          x += barWidth;
+        }
+      }
+      draw();
+    }
+
+    function stopAudioRecordingEngine() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+      }
+      if (recordingTimer) { clearInterval(recordingTimer); recordingTimer = null; }
+      if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
+
+      setTimeout(initCanvasWaveform, 200);
+
+      const btn = document.getElementById('record-btn');
+      btn.classList.remove('recording');
+      btn.innerHTML = '<i class="fas fa-microphone"></i>';
+      document.getElementById('btn-pause-record').disabled = true;
+      document.getElementById('btn-pause-record').innerHTML = '<i class="fas fa-pause"></i> 일시정지';
+      document.getElementById('btn-reset-record').disabled = true;
+    }
+
+    function pauseRecording() {
+      const btn = document.getElementById('btn-pause-record');
+      const status = document.getElementById('record-status');
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.pause();
+        clearInterval(recordingTimer);
+        btn.innerHTML = '<i class="fas fa-play"></i> 재개';
+        status.innerText = "잠시 중단되었습니다.";
+      } else if (mediaRecorder && mediaRecorder.state === 'paused') {
+        mediaRecorder.resume();
+        btn.innerHTML = '<i class="fas fa-pause"></i> 일시정지';
+        status.innerText = "생각을 담고 있습니다...";
+        recordingTimer = setInterval(() => {
+          recordSeconds++;
+          const m = String(Math.floor(recordSeconds / 60)).padStart(2, '0');
+          const s = String(recordSeconds % 60).padStart(2, '0');
+          document.getElementById('record-timer').innerText = `${m}:${s}`;
+        }, 1000);
+      }
+    }
+
+    function resetRecording() {
+      if (confirm("녹음을 초기화하고 처음부터 다시 촬영하시겠습니까?")) {
+        stopAudioRecordingEngine();
+        audioChunks = [];
+        audioBlob = null;
+        audioUrl = null;
+        document.getElementById('record-timer').innerText = "00:00";
+        document.getElementById('record-status').innerText = "마이크를 눌러 음성 독백을 기록해 보세요";
+        document.getElementById('audio-player-box').style.display = 'none';
+        checkExtractButtonState();
+      }
+    }
+
+    // 🔊 오디오 플레이어 조작
+    function togglePlayAudio() {
+      const playBtn = document.getElementById('player-play-btn');
+      if (!playAudioInstance) {
+        playAudioInstance = new Audio(audioUrl);
+        playAudioInstance.play();
+        playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        
+        playAudioInstance.ontimeupdate = () => {
+          const progress = (playAudioInstance.currentTime / playAudioInstance.duration) * 100;
+          document.getElementById('player-progress-bar').style.width = `${progress}%`;
+          
+          const leftSec = Math.ceil(playAudioInstance.duration - playAudioInstance.currentTime);
+          const m = String(Math.floor(leftSec / 60)).padStart(2, '0');
+          const s = String(leftSec % 60).padStart(2, '0');
+          document.getElementById('player-time-display').innerText = `${m}:${s}`;
+        };
+
+        playAudioInstance.onended = () => {
+          playBtn.innerHTML = '<i class="fas fa-play"></i>';
+          document.getElementById('player-progress-bar').style.width = '0%';
+          playAudioInstance = null;
+          const m = String(Math.floor(recordSeconds / 60)).padStart(2, '0');
+          const s = String(recordSeconds % 60).padStart(2, '0');
+          document.getElementById('player-time-display').innerText = `${m}:${s}`;
+        };
+      } else {
+        if (playAudioInstance.paused) {
+          playAudioInstance.play();
+          playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        } else {
+          playAudioInstance.pause();
+          playBtn.innerHTML = '<i class="fas fa-play"></i>';
+        }
+      }
+    }
+
+    function seekAudio(event) {
+      if (!playAudioInstance) return;
+      const progressContainer = document.getElementById('player-progress-container');
+      const percentage = event.offsetX / progressContainer.clientWidth;
+      playAudioInstance.currentTime = percentage * playAudioInstance.duration;
+    }
+
+
+    // 🔮 구글 Gemini AI 생각 정제 & 동적 추출 로직
+    async function extractIdeas() {
+      if (!localApiKey) {
+        openKeyModal();
+        return;
+      }
+
+      const btnExtract = document.getElementById('btn-extract');
+      const rawText = document.getElementById('raw-textarea').value.trim();
+      const draftPanel = document.getElementById('draft-panel');
+      const loader = document.getElementById('extraction-loader');
+      const deck = document.getElementById('draft-deck');
+
+      btnExtract.disabled = true;
+      btnExtract.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 생각을 다듬는 중...';
+      
+      draftPanel.style.display = 'block';
+      loader.style.display = 'flex';
+      deck.innerHTML = ""; 
+
+      draftPanel.scrollIntoView({ behavior: 'smooth' });
+
+      try {
+        let responseJson = null;
+
+        if (audioBlob) {
+          const reader = new FileReader();
+          reader.readAsDataURL(audioBlob);
+          reader.onloadend = async function() {
+            const base64Data = reader.result.split(',')[1];
+            const mimeType = audioBlob.type || 'audio/webm';
+            try {
+              responseJson = await callGeminiAudioApi(base64Data, mimeType);
+              renderDraftCards(responseJson);
+            } catch (err) {
+              handleExtractionError(err);
+            }
+          };
+        } else if (rawText) {
+          responseJson = await callGeminiTextApi(rawText);
+          renderDraftCards(responseJson);
+        }
+      } catch (err) {
+        handleExtractionError(err);
+      }
+    }
+
+    function handleExtractionError(err) {
+      console.error(err);
+      document.getElementById('extraction-loader').style.display = 'none';
+      const btn = document.getElementById('btn-extract');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> 생각 다듬기 & AI 메모 정제';
+      alert(`Gemini AI 분석에 실패했습니다.\n상세: ${err.message || err.toString()}`);
+    }
+
+    // 📞 Gemini API 통신 빔
+    async function callGeminiAudioApi(base64Data, mimeType) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${localApiKey}`;
+      const payload = {
+        contents: [
+          {
+            parts: [
+              { inlineData: { mimeType: mimeType, data: base64Data } },
+              { text: getSystemInstructions() }
+            ]
+          }
+        ],
+        generationConfig: { responseMimeType: "application/json" }
+      };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error ? errorData.error.message : 'API 호출 실패');
+      }
+
+      const resData = await response.json();
+      return parseGeminiResponse(resData);
+    }
+
+    async function callGeminiTextApi(rawText) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${localApiKey}`;
+      const payload = {
+        contents: [
+          {
+            parts: [
+              { text: `여기에 정제되지 않은 독백 원본 텍스트가 있다:\n"${rawText}"\n\n위 독백에 들어있는 영감들을 분석해 다듬고 정제해라.` },
+              { text: getSystemInstructions() }
+            ]
+          }
+        ],
+        generationConfig: { responseMimeType: "application/json" }
+      };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error ? errorData.error.message : 'API 호출 실패');
+      }
+
+      const resData = await response.json();
+      return parseGeminiResponse(resData);
+    }
+
+    function getSystemInstructions() {
+      const existingTags = [...new Set(notesList.map(n => n.category))];
+      if (existingTags.length === 0) existingTags.push("📋 할 일");
+
+      return `너는 두서없는 혼잣말이나 독백을 분석하여, 오타와 비문만 부드럽게 고쳐주고 주제별로 파편을 병합하여 구조화해주는 일류 생각 정제 비서이다.
+
+[핵심 지침]
+1. 절대로 요약하지 말 것: 생각을 과도하게 압축하거나 요약하여 영감의 디테일을 날려버리지 마라. 오타와 비문, 문맥만 부드럽게 다듬고, 쏟아낸 상세 디테일은 100% 그대로 다 보존해라.
+2. 맥락적 초정밀 병합(Contextual Merge): 독백 속에서 말한 여러 가지 활동이나 태스크들을 쪼개지 말고, 대상물이나 비즈니스 맥락이 동일한 주체(예: '요가 매트', '릴스 촬영', '센터 에어컨 청소' 등)를 가리키고 있다면 반드시 단 하나의 메모 카드로 병합해라.
+   - 예: "요가매트 새로 주문하기"와 "요가매트 수량 목록 갱신하기"는 행동은 다르나 대상이 '요가 매트'로 동일하므로 반드시 '🧘 요가 매트 교체 및 최신화'라는 단 하나의 카드로 병합해야 한다.
+3. 본문 구조화: 하나의 카드로 병합하되, 그 안에 담긴 개별 행동들이나 상세 내역들은 날려버리지 말고 글머리 기호(- ) 또는 체크박스(- [ ]) 형태로 예쁘게 구조화하여 본문(content)에 100% 상세히 보존해라.
+4. 분류 태그 지정: 기존 태그 목록 중 하나에 어울린다면 해당 태그를 할당하고, 그렇지 않다면 이쁜 이모지 접두사와 함께 2~3단어로 구성된 직관적인 새 태그(예: 🍳 요리/레시피, 📈 사업/기획, 📚 독서/인문학)를 창조하여 추천해라.
+   - 행동으로 실행해야 하는 구체적인 태스크는 무조건 '📋 할 일'로 분류해라.
+   - 기존 활성화된 태그 목록: ${JSON.stringify(existingTags)}
+
+반드시 아래 JSON 스키마 형식으로만 응답해라:
+{
+  "ideas": [
+    {
+      "category": "추천 태그 이름 (기존 목록 중 하나를 정확히 적거나 네가 직접 창조한 새 태그 이름)",
+      "title": "아이디어의 핵심 주제를 담은 명확한 제목 (예: 🧘 요가 매트 교체 및 최신화)",
+      "content": "오타/비문이 다듬어지고 파편들이 글머리표(- )나 체크박스로 구조화되어 디테일이 100% 보존된 본문"
+    }
+  ]
+}`;
+    }
+
+    function parseGeminiResponse(resData) {
+      if (resData.candidates && resData.candidates[0].content.parts[0].text) {
+        const text = resData.candidates[0].content.parts[0].text;
+        try {
+          return JSON.parse(text.trim());
+        } catch (e) {
+          console.error("JSON 파싱 오류:", text);
+          throw new Error("Gemini 응답을 규격된 스키마로 해석하지 못했습니다.");
+        }
+      }
+      throw new Error("올바른 응답을 받지 못했습니다.");
+    }
+
+    // 🏷️ AI 임시 추천 드래프트 카드 로드
+    function renderDraftCards(data) {
+      document.getElementById('extraction-loader').style.display = 'none';
+      const deck = document.getElementById('draft-deck');
+      deck.innerHTML = "";
+
+      if (!data.ideas || data.ideas.length === 0) {
+        deck.innerHTML = `<div style="grid-column: 1/-1; padding:20px; text-align:center; color:var(--text-muted); font-size:0.8rem; font-weight:700;">추출된 특별한 영감이 없습니다. 🌿</div>`;
+        resetExtractButtonAfterProcess();
+        return;
+      }
+
+      draftNotes = data.ideas;
+
+      draftNotes.forEach((idea, idx) => {
+        deck.appendChild(createDraftCardDOM(idea, idx));
+      });
+
+      resetExtractButtonAfterProcess();
+    }
+
+    function resetExtractButtonAfterProcess() {
+      const btnExtract = document.getElementById('btn-extract');
+      btnExtract.disabled = false;
+      btnExtract.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> 생각 다듬기 & AI 메모 정제';
+      
+      audioChunks = [];
+      audioBlob = null;
+      audioUrl = null;
+      document.getElementById('audio-player-box').style.display = 'none';
+      document.getElementById('record-timer').innerText = "00:00";
+      
+      if (playAudioInstance) {
+        playAudioInstance.pause();
+        playAudioInstance = null;
+      }
+      checkExtractButtonState();
+    }
+
+    // 🗑️ 임시 드래프트 카드 버리기
+    function discardDraftCard(idx) {
+      const card = document.getElementById(`draft-card-${idx}`);
+      card.style.transform = 'scale(0.8)';
+      card.style.opacity = '0';
+      card.style.transition = 'all 0.3s';
+      setTimeout(() => {
+        card.remove();
+        draftNotes[idx] = null;
+        checkDraftDeckEmpty();
+      }, 300);
+    }
+
+    // ✔️ 임시 드래프트 카드 승인 및 구글 킵 저장
+    function approveDraftCard(idx) {
+      const card = document.getElementById(`draft-card-${idx}`);
+      const tagVal = document.getElementById(`draft-tag-${idx}`).value.trim();
+      const titleVal = document.getElementById(`draft-title-${idx}`).value.trim();
+      const contentVal = document.getElementById(`draft-content-${idx}`).value.trim();
+
+      if (!titleVal) {
+        alert("제목은 필수입니다.");
+        return;
+      }
+
+      const newNote = {
+        id: 'note_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        title: titleVal,
+        content: contentVal,
+        category: tagVal || '📝 일반',
+        color: 'default',
+        pinned: false,
+        createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ')
+      };
+
+      notesList.unshift(newNote);
+      saveNotesToStorage();
+      renderDashboard();
+
+      // 날아가기 승인 애니메이션
+      card.style.transform = 'translateY(-60px) scale(0.8)';
+      card.style.opacity = '0';
+      card.style.borderColor = 'var(--secondary-solid)';
+      card.style.transition = 'all 0.3s ease-out';
+      
+      setTimeout(() => {
+        card.remove();
+        draftNotes[idx] = null;
+        checkDraftDeckEmpty();
+      }, 300);
+    }
+
+    function checkDraftDeckEmpty() {
+      const hasAny = draftNotes.some(d => d !== null);
+      if (!hasAny) {
+        document.getElementById('draft-panel').style.display = 'none';
+        document.getElementById('raw-textarea').value = "";
+        checkExtractButtonState();
+      }
+    }
+
+    function escapeHTML(str) {
+      if (!str) return "";
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
