@@ -5858,8 +5858,8 @@ function checkLongTermAbsentees() {
         var attStats = memberAttendanceTypeMap[phone] || { therapy: 0, jumping: 0 };
         var regClass = determineMemberClassInfo(mTypes, attStats);
         
-        // 🤖 [v64.50] 제미나이 AI 기반 히스토리-성향-맥락 융합 본문 2채널 동적 생성
-        var msg = generateWellnessAiSms(cleanName, remain, absentDays, "장기미방문", formattedPhone, "sms", regClass);
+        // 🤖 [v64.50] 제미나이 AI 기반 히스토리-성향-맥락 융합 본문 2채널 동적 생성 (만료일 인자 수혈하여 버그 100% 박멸!)
+        var msg = generateWellnessAiSms(cleanName, remain, absentDays, "장기미방문", formattedPhone, "sms", regClass, false, expire);
         
         var notiTitle = "회원님, 에너지를 다시 채워드릴게요! ❤️";
         if (absentDays >= 14 && absentDays <= 29) {
@@ -5868,7 +5868,7 @@ function checkLongTermAbsentees() {
           notiTitle = "회원님, 건강한 습관을 항상 응원합니다! 🌟";
         }
         
-        var notiContent = generateWellnessAiSms(cleanName, remain, absentDays, "장기미방문", formattedPhone, "noti", regClass) + expWarn;
+        var notiContent = generateWellnessAiSms(cleanName, remain, absentDays, "장기미방문", formattedPhone, "noti", regClass, false, expire) + expWarn;
         
         // A. 오프라인 문자 적재
         smsSheet.appendRow([
@@ -5965,10 +5965,15 @@ function checkLongTermAbsentees() {
 
 /**
  * [자동화/관리자 공용] 등록이 끊긴 지 1일 이상 된 미등록 회원 스캔 및 복귀 권유 문자 자동 적재 (v64.20)
- * 잔여 횟수 및 마감 경과일 기준 세심한 다이내믹 6개 세그먼트 메시지 템플릿 탑재
+ * 🚨 [v66.1] 자동 낭비 방지를 위한 수동화 패치 완료
  */
-function checkInactiveMembers() {
+function checkInactiveMembers(baseDateStr, isManual) {
   try {
+    if (!isManual) {
+      Logger.log("⚠️ 장기 미등록(복귀권유) 자동 생성 차단 (어드민 수동 생성만 허용)");
+      return { success: false, error: "장기 미등록 문자 자동 생성은 멈춤 상태입니다. 어드민에서 수동으로 생성해 주세요." };
+    }
+    
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var regSheet = ss.getSheetByName("등록 현황");
     var smsSheet = ss.getSheetByName("문자발송");
@@ -5995,7 +6000,8 @@ function checkInactiveMembers() {
     var regCols = getRegColumnIndices(regSheet);
     var logCols = logSheet ? getAttendanceColumnIndices(logSheet) : null;
     
-    var now = new Date();
+    var now = baseDateStr ? new Date(baseDateStr) : new Date();
+    now.setHours(23, 59, 59, 999); // 일수 계산 정밀성 극대화 및 기준일 연동
     
     // 1. 회원별 출석기록에서 테라피/점핑 횟수 집계 (출석 성향 분석용)
     var memberAttendanceTypeMap = {}; // { phone: { therapy: 0, jumping: 0 } }
@@ -6135,8 +6141,9 @@ function checkInactiveMembers() {
           }
         }
         
-        // AI 본문 동적 생성 (과거 히스토리 + 회원 이용 성향 맥락 인지형)
-        var msg = generateWellnessAiSms(cleanName, totalRemain, elapsedDays, "복귀권유", formattedPhone, targetChannel, regClass, hasNoAttendance);
+        // AI 본문 동적 생성 (과거 히스토리 + 회원 이용 성향 맥락 인지형 + 만료일 유실 버그 원천 차단!)
+        var formattedExpireDate = (m.lastExpire && m.lastExpire.getTime() > 0) ? Utilities.formatDate(m.lastExpire, "GMT+9", "yyyy-MM-dd") : "기록없음 (미입력)";
+        var msg = generateWellnessAiSms(cleanName, totalRemain, elapsedDays, "복귀권유", formattedPhone, targetChannel, regClass, hasNoAttendance, formattedExpireDate);
         
         if (targetChannel === "noti") {
           // 무료 개인 쪽지 즉시 발송
@@ -8445,7 +8452,7 @@ function getMemberMessageHistory(phone) {
  * 회원의 상황(이름, 남은횟수, 경과일수, 유형, 번호, 발송채널)을 받아, 과거 발송 이력을 읽은 제미나이가
  * 회원이 스팸처럼 느끼지 않고 따뜻한 안부를 체감하도록 최적화된 맞춤형 복귀 권유/안부 문구를 실시간 창조합니다.
  */
-function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetChannel, memberClassInfo, hasNoAttendance) {
+function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetChannel, memberClassInfo, hasNoAttendance, expireDateParam) {
   var cleanName = name.replace(/\d{4}$/, ""); // 이름 끝 숫자 제거
   var recentHistoryText = getMemberMessageHistory(phone); // 최근 3~5건의 문자+쪽지 발송 내역 취합
   
@@ -8457,30 +8464,34 @@ function generateWellnessAiSms(name, remain, elapsedDays, type, phone, targetCha
     classInfo = "new_no_record";
   }
   
-  // [v65.00] 실시간 이용 만료일(유효기간) 동적 조회
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+  // [v65.00] 실시간 이용 만료일(유효기간) 동적 조회 (넘겨받은 파라미터가 있다면 우선 적용하여 버그 예방!)
   var expireDateStr = "기록없음 (미입력)";
-  if (regSheet && phone) {
-    var regData = regSheet.getDataRange().getDisplayValues();
-    var regCols = getRegColumnIndices(regSheet);
-    var cleanPhone = phone.replace(/[^0-9]/g, "");
-    var lastExpire = new Date(0);
-    for (var i = 1; i < regData.length; i++) {
-      var rowPhone = String(regData[i][regCols.phone] || "").replace(/[^0-9]/g, "");
-      if (rowPhone === cleanPhone || (cleanPhone.length >= 8 && rowPhone.endsWith(cleanPhone.substring(cleanPhone.length - 8)))) {
-        var rowStatus = String(regData[i][regCols.status] || "").trim();
-        if (rowStatus === "진행중" || rowStatus === "진행 중") {
-          var rowExpireStr = regData[i][regCols.expire];
-          if (rowExpireStr) {
-            var expDate = new Date(rowExpireStr);
-            if (expDate > lastExpire) lastExpire = expDate;
+  if (expireDateParam && String(expireDateParam).trim() !== "" && String(expireDateParam) !== "미정" && String(expireDateParam) !== "기록없음 (미입력)") {
+    expireDateStr = String(expireDateParam).trim();
+  } else {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+    if (regSheet && phone) {
+      var regData = regSheet.getDataRange().getDisplayValues();
+      var regCols = getRegColumnIndices(regSheet);
+      var cleanPhone = phone.replace(/[^0-9]/g, "");
+      var lastExpire = new Date(0);
+      for (var i = 1; i < regData.length; i++) {
+        var rowPhone = String(regData[i][regCols.phone] || "").replace(/[^0-9]/g, "");
+        if (rowPhone === cleanPhone || (cleanPhone.length >= 8 && rowPhone.endsWith(cleanPhone.substring(cleanPhone.length - 8)))) {
+          var rowStatus = String(regData[i][regCols.status] || "").trim();
+          if (rowStatus === "진행중" || rowStatus === "진행 중") {
+            var rowExpireStr = regData[i][regCols.expire];
+            if (rowExpireStr) {
+              var expDate = new Date(rowExpireStr);
+              if (expDate > lastExpire) lastExpire = expDate;
+            }
           }
         }
       }
-    }
-    if (lastExpire.getTime() > 0) {
-      expireDateStr = Utilities.formatDate(lastExpire, "GMT+9", "yyyy-MM-dd");
+      if (lastExpire.getTime() > 0) {
+        expireDateStr = Utilities.formatDate(lastExpire, "GMT+9", "yyyy-MM-dd");
+      }
     }
   }
   
