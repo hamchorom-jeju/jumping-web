@@ -8200,21 +8200,32 @@ function sendWeeklyBonusSms(phoneStr, memberName, count) {
 // [v46.35] 구글의 소스코드 노출 자동차단을 예방하는 안전한 백엔드 API 키 저장/배포 시스템
 function getGeminiApiKey() {
   try {
-    // 1단계: 보안을 위해 Script Properties에서 꺼내옵니다.
-    var key = PropertiesService.getScriptProperties().getProperty("GEMINI_API_KEY");
-    if (key && key.trim()) return { success: true, key: key.trim() };
-    
-    // 2단계: 백업용으로 "환경설정" 시트에서 읽어옵니다. (Properties가 초기화되었을 경우 대비)
+    // 1단계: "환경설정" 시트의 키값을 실시간으로 확인하여 최우선 연동합니다. (시트에서 수정 시 즉시 동기화)
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("환경설정");
+    var sheetKey = "";
     if (sheet) {
-      var val = sheet.getRange("B2").getValue();
-      if (val && String(val).trim()) {
-        // 복구용으로 PropertiesService에도 함께 갱신해 줍니다.
-        PropertiesService.getScriptProperties().setProperty("GEMINI_API_KEY", String(val).trim());
-        return { success: true, key: String(val).trim() };
-      }
+      sheetKey = String(sheet.getRange("B2").getValue() || "").trim();
     }
+
+    var cachedKey = String(PropertiesService.getScriptProperties().getProperty("GEMINI_API_KEY") || "").trim();
+
+    // 시트에 새 키가 들어있고 캐시된 키와 다른 경우, 캐시를 즉시 갱신하고 새 키를 반환합니다.
+    if (sheetKey && sheetKey !== cachedKey) {
+      PropertiesService.getScriptProperties().setProperty("GEMINI_API_KEY", sheetKey);
+      return { success: true, key: sheetKey };
+    }
+
+    // 만약 시트에 값이 없고 캐시된 키가 있다면 캐시된 키를 반환합니다.
+    if (cachedKey) {
+      return { success: true, key: cachedKey };
+    }
+
+    // 시트에 값이 있다면 시트의 값을 반환합니다.
+    if (sheetKey) {
+      return { success: true, key: sheetKey };
+    }
+
     return { success: true, key: "" };
   } catch (e) {
     Logger.log("🚨 getGeminiApiKey 오류: " + e.toString());
