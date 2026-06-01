@@ -5537,27 +5537,41 @@
             
             updateProgressUI();
             
+            var hasFinished = false;
+            var timeoutTimer = setTimeout(function() {
+              if (!hasFinished) {
+                hasFinished = true;
+                console.warn(`🚨 ${member.name} 생성 시간 초과 (25초). 다음 작업으로 강제 이행합니다.`);
+                completedCount++;
+                updateProgressUI();
+                launchNextTask();
+              }
+            }, 25000); // 25초 안전 타임아웃
+            
             google.script.run.withSuccessHandler(function(memberRes) {
-              if (memberRes.error) {
+              if (hasFinished) return; // 이미 타임아웃으로 이행됨
+              hasFinished = true;
+              clearTimeout(timeoutTimer);
+              
+              if (memberRes && memberRes.error) {
                 console.error(`🚨 ${member.name} 생성 실패: ${memberRes.error}`);
-              } else {
+              } else if (memberRes) {
                 if (memberRes.status === "created") successCount++;
               }
               completedCount++;
               updateProgressUI();
-              
-              // 완료되었으므로 파이프라인의 다음 대기 태스크 즉각 발동!
               launchNextTask();
             }).withFailureHandler(function(err) {
+              if (hasFinished) return; // 이미 타임아웃으로 이행됨
+              hasFinished = true;
+              clearTimeout(timeoutTimer);
+              
               console.error(`🚨 ${member.name} 통신 실패: ${err.message}`);
               completedCount++;
               updateProgressUI();
-              
-              // 실패했어도 다음 대기 태스크 발동하여 중단 차단
               launchNextTask();
             }).generateIndividualAttendanceSms(member, start, end, base);
           }
-          
           // 동시성 제한만큼 처음에 동시에 시작!
           for (let p = 0; p < Math.min(concurrencyLimit, members.length); p++) {
             launchNextTask();
