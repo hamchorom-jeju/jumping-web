@@ -1040,31 +1040,31 @@
       
       // 1. 구글 서버 과부하 (High Demand)
       if (errStr.includes("high demand") || errStr.includes("429") || errStr.includes("ResourceExhausted") || errStr.includes("quota")) {
-        return "🚨 구글 AI 서버 일시적 부하 발생!\n\n현재 구글 AI 본사 서버에 전 세계 사용자가 몰려 일시적으로 응답이 지연되고 있습니다. 대단히 죄송하오니 5초~10초만 기다리신 후 다시 한번 스캔 버튼을 눌러주시면 감사하겠습니다! 😊";
+        return "🚨 AI 서버 일시 혼잡\n\n현재 구글 AI 서버가 혼잡하여 지연되고 있습니다. 5초 뒤에 다시 시도해 주세요! ⏳";
       }
       
       // 2. 네트워크 지연 또는 타임아웃
       if (errStr.includes("fetch") || errStr.includes("network") || errStr.includes("status 503") || errStr.includes("status 502")) {
-        return "🚨 AI 통신망 연결 일시 지연!\n\n현재 클럽 인터넷 환경 또는 구글 통신망 연결이 고르지 못합니다. 5초 뒤에 다시 시도해 주시기 바랍니다. 🤸‍♂️";
+        return "🚨 네트워크 연결 지연\n\n인터넷 연결이 원활하지 않습니다. 잠시 후 다시 시도해 주세요! 📡";
       }
       
       // 3. 사진 파일 용량 초과
       if (errStr.includes("Request payload size exceeds")) {
-        return "🚨 업로드 사진 용량 초과!\n\n선택하신 사진의 용량이 너무 큽니다. 해상도를 낮추거나 화면을 캡처한 작은 용량의 이미지로 다시 시도해 주세요! 📷";
+        return "🚨 이미지 용량 초과\n\n사진 크기가 너무 큽니다. 해상도를 낮추거나 화면을 캡처한 이미지로 다시 시도해 주세요! 📷";
       }
       
       // 4. API 키 문제
       if (errStr.includes("API key not valid") || errStr.includes("key is invalid")) {
-        return "🚨 AI 보안 키 오류!\n\n등록된 구글 API 키가 만료되었거나 올바르지 않습니다. 우측 하단의 [설정] 메뉴에서 API 키가 잘 입력되어 있는지 확인해 주세요! 🔑";
+        return "🚨 AI 보안 키(API Key) 오류\n\n등록된 구글 API 키가 올바르지 않거나 만료되었습니다. 관리자(이장님)에게 API 키 확인을 요청해 주세요! 🔑";
       }
 
-      // ✂️ 잡다하고 길게 쏟아지는 Stack Trace 및 에러 텍스트 길이 정밀 제어 (최대 100자)
-      if (errStr.length > 100) {
-        errStr = errStr.substring(0, 100) + "...";
+      // ✂️ 에러 텍스트 길이 정밀 제어 (최대 80자)
+      if (errStr.length > 80) {
+        errStr = errStr.substring(0, 80) + "...";
       }
 
       // 기본 한국어 에러 메시지
-      return "🚨 지니 AI 스캔 일시 오류!\n\n지니가 분석하는 도중 잠시 삐끗했습니다. 5초 후에 스캔 시작 버튼을 한 번 더 눌러주세요!\n(계속해서 실패할 경우 사진을 변경해 촬영해 보시길 권장합니다.)\n\n(참고 코드: " + errStr + ")";
+      return "🚨 지니 AI 스캔 오류\n\n지니가 판독하는 도중 오류가 발생했습니다. 글씨가 흔들리거나 어둡지 않게 선명히 재촬영해 주시고, 지속될 경우 관리자에게 문의해 주세요.\n\n(참고 코드: " + errStr + ")";
     }
 
     let aiSelectedTime = 'morning';
@@ -2166,7 +2166,7 @@
           scanLine.style.display = 'none';
           btn.innerText = '지니 AI 인바디 스캔 시작 📊';
           btn.disabled = false;
-          showAppAlert(formatAiFriendlyError(err) + "\n\n💡 해결 꿀팁:\n1. 모바일 기기의 초고화질 사진 용량 때문에 일시적인 전송 과부하가 걸렸을 수 있습니다. 화면을 '새로고침' 하시면 이제 대용량 사진도 120KB 수준으로 자동 초압축하는 엔진이 가동됩니다!\n2. 결과지 사진이 흔들렸거나 수치가 어두워 판독이 어려울 수 있으니, 밝은 곳에서 글씨가 선명하게 나오도록 재촬영해 주세요.\n3. 지속될 경우 우측 하단의 '설정 ⚙️' 아이콘을 클릭하여 지니 AI API Key가 만료되지 않고 정상 등록되어 있는지 확인해 보세요! 😊", "error");
+          showAppAlert(formatAiFriendlyError(err), "error");
         }
       }).getGeminiApiKey();
     }
