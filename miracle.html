@@ -1398,6 +1398,22 @@
       ctx.restore();
     }
 
+    function cleanAndGetApiKey(keyFromBackend) {
+      let localKey = (localStorage.getItem('gemini_api_key') || '').trim();
+      let backendKey = (keyFromBackend || '').trim();
+      
+      // 옛날 차단 키(AIzaSyAzX...) 감지 시 완벽 차단 및 청소
+      if (localKey.startsWith('AIzaSyAzX')) {
+        localStorage.removeItem('gemini_api_key');
+        localKey = "";
+      }
+      if (backendKey.startsWith('AIzaSyAzX')) {
+        backendKey = "";
+      }
+      
+      return localKey || backendKey || "";
+    }
+
     async function startAiScan() {
       if (!aiBase64Image) {
         alert('분석할 음식 사진을 촬영하거나 선택해주세요!');
@@ -1413,7 +1429,7 @@
 
       google.script.run.withSuccessHandler(async (res) => {
         const keyFromBackend = (res && res.success) ? res.key : "";
-        let apiKey = String(localStorage.getItem('gemini_api_key') || keyFromBackend || '').trim();
+        let apiKey = cleanAndGetApiKey(keyFromBackend);
 
         if (!apiKey) {
           scanLine.style.display = 'none';
@@ -1721,7 +1737,7 @@
       google.script.run.withSuccessHandler(res => {
         hideLoading();
         const keyFromBackend = (res && res.success) ? res.key : "";
-        const currentKey = String(localStorage.getItem('gemini_api_key') || keyFromBackend || '');
+        const currentKey = cleanAndGetApiKey(keyFromBackend);
         
         // 2. 브라우저 차단 경고를 예방하기 위해 자체 모달을 띄웁니다.
         openGeminiKeyModal(currentKey);
@@ -1741,17 +1757,26 @@
 
     function saveGeminiKeyFromModal() {
       const newKey = document.getElementById('modal-gemini-key-input').value.trim();
+      
+      // 유니코드 유령 공백 및 옛날 차단 키 감지 시 즉시 청소
+      let cleanKey = newKey.replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim();
+      if (cleanKey.startsWith('AIzaSyAzX')) {
+        cleanKey = "";
+      }
+      
       closeGeminiKeyModal();
       
       // [보안 백업] 백엔드가 미처 웹앱 배포되기 전이라도, 이장님 브라우저 로컬스토리지에는 즉시 임시 저장하여 바로 스캔이 되도록 선반영!
-      if (newKey) {
-        localStorage.setItem('gemini_api_key', newKey);
+      if (cleanKey) {
+        localStorage.setItem('gemini_api_key', cleanKey);
         const keyWarning = document.getElementById('api-key-warning');
         if (keyWarning) keyWarning.style.display = 'none';
+        alert("✅ 이장님 브라우저 로컬에 최신 API Key가 성공적으로 임시 등록되었습니다!\n\nAI 스캔 기능을 바로 이용하실 수 있습니다.");
       } else {
         localStorage.removeItem('gemini_api_key');
         const keyWarning = document.getElementById('api-key-warning');
         if (keyWarning) keyWarning.style.display = 'block';
+        alert("🔑 API Key가 초기화되었습니다.");
       }
       
       showLoading();
@@ -2028,7 +2053,7 @@
 
       google.script.run.withSuccessHandler(async (res) => {
         const keyFromBackend = (res && res.success) ? res.key : "";
-        let apiKey = String(localStorage.getItem('gemini_api_key') || keyFromBackend || '').trim();
+        let apiKey = cleanAndGetApiKey(keyFromBackend);
         if (!apiKey) {
           scanLine.style.display = 'none';
           btn.disabled = false;
