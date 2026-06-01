@@ -5490,7 +5490,7 @@
           let successCount = 0;
           let completedCount = 0;
           let currentIdx = 0;
-          const concurrencyLimit = 5; // 상시 5명 동시 병렬 생성 처리 (속도 500% 극대화)
+          const concurrencyLimit = 2; // 안전한 동시 2명 병렬 생성 처리 (1분당 15회 호출 제한 완벽 방어)
           
           function updateProgressUI() {
             const progressPct = Math.round((completedCount / members.length) * 100);
