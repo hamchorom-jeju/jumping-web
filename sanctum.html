@@ -55,6 +55,10 @@
       --cal-cell-past-border: rgba(255, 255, 255, 0.02);
       --cal-cell-auto-bg: rgba(255, 255, 255, 0.03);
       --cal-cell-auto-border: rgba(255, 255, 255, 0.15);
+
+      --theme-btn-bg: rgba(255, 255, 255, 0.08);
+      --theme-btn-border: rgba(255, 255, 255, 0.15);
+      --theme-btn-color: #fbbf24;
     }
 
     :root[data-theme="light"] {
@@ -98,6 +102,10 @@
       --cal-cell-past-border: rgba(0, 0, 0, 0.02);
       --cal-cell-auto-bg: rgba(255, 255, 255, 0.2);
       --cal-cell-auto-border: rgba(124, 42, 232, 0.15);
+
+      --theme-btn-bg: rgba(124, 42, 232, 0.08);
+      --theme-btn-border: rgba(124, 42, 232, 0.2);
+      --theme-btn-color: #7c2ae8;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', 'Pretendard', sans-serif; }
@@ -508,7 +516,7 @@
       <p>Sanctum of the Chief</p>
     </div>
     <div style="display: flex; gap: 8px; align-items: center;">
-      <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" style="background: rgba(255, 255, 255, 0.08); border: 1.5px solid var(--sanctum-border); color: var(--sanctum-gold-light); padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 32px; transition: all 0.2s;"><i class="fa-solid fa-sun" id="theme-icon"></i></button>
+      <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" style="background: var(--theme-btn-bg); border: 1.5px solid var(--theme-btn-border); color: var(--theme-btn-color); padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 32px; transition: all 0.2s;"><i class="fa-solid fa-sun" id="theme-icon"></i></button>
       <button class="mode-switch" onclick="window.location.href='admin.html'">💼 실무 모드</button>
     </div>
   </div>
@@ -788,9 +796,9 @@
       const icon = document.getElementById('theme-icon');
       if (icon) {
         if (theme === 'light') {
-          icon.className = 'fa-solid fa-moon';
+          icon.className = 'fa-solid fa-sun'; // 낮 버전일 때 해(☀️) 아이콘 표시
         } else {
-          icon.className = 'fa-solid fa-sun';
+          icon.className = 'fa-solid fa-moon'; // 밤 버전일 때 달(🌙) 아이콘 표시
         }
       }
     }
