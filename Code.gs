@@ -6175,34 +6175,17 @@ function checkInactiveMembers() {
 }
 
 /**
- * 📅 [v66.0] 관리자용 특정 기간 출석 분석 및 AI 평가 기반 출석정산 문자 일괄 자동 생성 API
+ * 📅 [v66.0] 관리자용 진행중인 정산 대상 회원 목록 조회 API (초고속 리턴)
  */
-function generateAttendancePeriodSms(startDateStr, endDateStr, baseDateStr) {
+function getActiveMembersForSettle() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
-    var logSheet = ss.getSheetByName("출석기록");
-    var smsSheet = ss.getSheetByName("문자발송");
-    
-    if (!regSheet || !logSheet || !smsSheet) {
-      return { error: "필요한 시트(등록현황/출석기록/문자발송)가 누락되었습니다." };
-    }
+    if (!regSheet) return { error: "등록 현황 시트가 누락되었습니다." };
     
     var regData = regSheet.getDataRange().getDisplayValues();
-    var logData = logSheet.getDataRange().getDisplayValues();
-    var smsData = smsSheet.getDataRange().getDisplayValues();
-    
     var regCols = getRegColumnIndices(regSheet);
-    var logCols = getAttendanceColumnIndices(logSheet);
     
-    var startD = new Date(startDateStr);
-    var endD = new Date(endDateStr);
-    startD.setHours(0,0,0,0);
-    endD.setHours(23,59,59,999);
-    
-    var now = new Date();
-    
-    // 1. 등록 현황에서 "진행중"인 회원들만 추출
     var activeMembers = [];
     var activePhonesMap = {}; 
     for (var i = 1; i < regData.length; i++) {
@@ -6229,11 +6212,40 @@ function generateAttendancePeriodSms(startDateStr, endDateStr, baseDateStr) {
         }
       }
     }
+    return { success: true, members: activeMembers };
+  } catch (e) {
+    return { error: e.toString() };
+  }
+}
+
+/**
+ * 📅 [v66.0] 개별 회원 1인에 대해 출석기록 분석, 이전 이력 대조 및 AI 평가를 수행하는 청크 생성 API (실행시간 2초, 타임아웃 0%)
+ */
+function generateIndividualAttendanceSms(member, startDateStr, endDateStr, baseDateStr) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var logSheet = ss.getSheetByName("출석기록");
+    var smsSheet = ss.getSheetByName("문자발송");
     
-    // 2. 문자발송 시트에서 기존 "출석정산" 역대 데이터 분석 (비교 분석 피딩용 및 중복 생성 가드)
-    var previousSmsMap = {}; 
-    var currentPeriodPendingMap = {}; 
+    if (!logSheet || !smsSheet) {
+      return { error: "필요한 시트(출석기록/문자발송)가 누락되었습니다." };
+    }
     
+    var logData = logSheet.getDataRange().getDisplayValues();
+    var smsData = smsSheet.getDataRange().getDisplayValues();
+    var logCols = getAttendanceColumnIndices(logSheet);
+    
+    var startD = new Date(startDateStr);
+    var endD = new Date(endDateStr);
+    startD.setHours(0,0,0,0);
+    endD.setHours(23,59,59,999);
+    
+    var phone = member.phone;
+    var now = new Date();
+    
+    // A. 중복 가드 및 이전 정산 이력 단 1건만 역순 스캔 추출
+    var isDuplicate = false;
+    var prevSms = "";
     for (var j = 1; j < smsData.length; j++) {
       var sPhone = String(smsData[j][2] || "").replace(/[^0-9]/g, "");
       var sCategory = String(smsData[j][3] || "").trim();
@@ -6241,99 +6253,73 @@ function generateAttendancePeriodSms(startDateStr, endDateStr, baseDateStr) {
       var sContent = String(smsData[j][4] || "");
       var sTime = String(smsData[j][0] || "");
       
-      if (sCategory === "출석정산") {
-        if (sStatus === "대기") {
-          // 오늘 생성된 동일 카테고리 문자 중복 대기 가드
-          if (sTime.includes(Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd"))) {
-            currentPeriodPendingMap[sPhone] = true;
-          }
+      if (sPhone === phone && sCategory === "출석정산") {
+        if (sStatus === "대기" && sTime.includes(Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd"))) {
+          isDuplicate = true;
         }
-        previousSmsMap[sPhone] = sContent;
+        prevSms = sContent;
       }
     }
     
-    // 3. 출석기록에서 지정된 기간 내의 회원별 출석 횟수 집계
-    var memberStatsMap = {}; 
+    if (isDuplicate) return { success: true, status: "duplicate" };
+    
+    // B. 출석기록 시트에서 지정 기간 내 출석 집계
+    var stats = { total: 0, jumping: 0, therapy: 0 };
     for (var k = 1; k < logData.length; k++) {
       var lPhone = String(logData[k][logCols.phone] || "").replace(/[^0-9]/g, "");
       var lDateStr = logData[k][logCols.date];
       var lType = String(logData[k][logCols.type] || ""); 
       
-      if (!lPhone || !lDateStr) continue;
-      
-      var lDate = new Date(lDateStr);
-      if (lDate >= startD && lDate <= endD) {
-        if (!memberStatsMap[lPhone]) {
-          memberStatsMap[lPhone] = { total: 0, jumping: 0, therapy: 0 };
-        }
-        
-        memberStatsMap[lPhone].total++;
-        if (lType.indexOf("테라피") !== -1 || lType.indexOf("원적외선") !== -1 || lType.indexOf("반신욕") !== -1 || lType.indexOf("보너스") !== -1) {
-          memberStatsMap[lPhone].therapy++;
-        } else {
-          memberStatsMap[lPhone].jumping++;
+      if (lPhone === phone && lDateStr) {
+        var lDate = new Date(lDateStr);
+        if (lDate >= startD && lDate <= endD) {
+          stats.total++;
+          if (lType.indexOf("테라피") !== -1 || lType.indexOf("원적외선") !== -1 || lType.indexOf("반신욕") !== -1 || lType.indexOf("보너스") !== -1) {
+            stats.therapy++;
+          } else {
+            stats.jumping++;
+          }
         }
       }
     }
     
-    var count = 0;
-    var addedNames = [];
+    // C. Gemini AI 평가 코멘트 생성
+    var cleanName = member.name.replace(/\d{4}$/, "");
+    var aiComment = generateAttendanceReportAiComment(
+      cleanName, 
+      stats, 
+      prevSms, 
+      member.remain, 
+      member.expire, 
+      startDateStr, 
+      endDateStr
+    );
     
-    // 4. 회원별 정산 문자 일괄 빌드
-    for (var mIdx = 0; mIdx < activeMembers.length; mIdx++) {
-      var member = activeMembers[mIdx];
-      var phone = member.phone;
-      
-      if (currentPeriodPendingMap[phone]) continue;
-      
-      var cleanName = member.name.replace(/\d{4}$/, "");
-      var stats = memberStatsMap[phone] || { total: 0, jumping: 0, therapy: 0 };
-      var prevSms = previousSmsMap[phone] || ""; 
-      
-      var aiComment = generateAttendanceReportAiComment(
-        cleanName, 
-        stats, 
-        prevSms, 
-        member.remain, 
-        member.expire, 
-        startDateStr, 
-        endDateStr
-      );
-      
-      var smsBody = "[노형점핑 웰니스 정산]\n" +
-                    "♥" + cleanName + " 회원님, 소중한 건강 여정 정산 보고서가 도착했습니다! 🌟\n\n" +
-                    "📅 정산 기간: " + startDateStr + " ~ " + endDateStr + "\n" +
-                    "🏃 출석 기록: 총 " + stats.total + "회 (점핑 " + stats.jumping + "회 / 테라피 " + stats.therapy + "회)\n\n" +
-                    "🪄 AI 코치 분석 평가:\n" +
-                    "\"" + aiComment + "\"\n\n" +
-                    "🎫 회원권 현황 (기준일: " + baseDateStr + "):\n" +
-                    "- 잔여 횟수: " + member.remain + "회\n" +
-                    "- 이용 만료일: " + member.expire + "\n\n" +
-                    "바쁘신 일상 속에서도 건강한 매일을 향해 묵묵히 나아가시는 회원님이 정말 멋집니다! 다음 달도 활기차고 기분 좋은 건강 관리를 위해 코치가 늘 정성을 다할게요. 클럽에서 뵙겠습니다! ❤️";
-      
-      var formattedPhone = formatPhoneForSms(member.phoneRaw);
-      smsSheet.appendRow([
-        Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm"),
-        cleanName,
-        formattedPhone,
-        "출석정산", 
-        smsBody,
-        "대기"
-      ]);
-      
-      count++;
-      addedNames.push(cleanName);
-    }
+    // D. 최종 문자 조립
+    var smsBody = "[노형점핑 웰니스 정산]\n" +
+                  "♥" + cleanName + " 회원님, 소중한 건강 여정 정산 보고서가 도착했습니다! 🌟\n\n" +
+                  "📅 정산 기간: " + startDateStr + " ~ " + endDateStr + "\n" +
+                  "🏃 출석 기록: 총 " + stats.total + "회 (점핑 " + stats.jumping + "회 / 테라피 " + stats.therapy + "회)\n\n" +
+                  "🪄 AI 코치 분석 평가:\n" +
+                  "\"" + aiComment + "\"\n\n" +
+                  "🎫 회원권 현황 (기준일: " + baseDateStr + "):\n" +
+                  "- 잔여 횟수: " + member.remain + "회\n" +
+                  "- 이용 만료일: " + member.expire + "\n\n" +
+                  "바쁘신 일상 속에서도 건강한 매일을 향해 묵묵히 나아가시는 회원님이 정말 멋집니다! 다음 달도 활기차고 기분 좋은 건강 관리를 위해 코치가 늘 정성을 다할게요. 클럽에서 뵙겠습니다! ❤️";
     
-    return {
-      success: true,
-      count: count,
-      message: count > 0 ? "총 " + count + "명의 회원을 성공적으로 분석하여 정산 문자를 생성했습니다!" : "새로 생성할 정산 대상이 없습니다.",
-      addedNames: addedNames
-    };
+    var formattedPhone = formatPhoneForSms(member.phoneRaw);
+    smsSheet.appendRow([
+      Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm"),
+      cleanName,
+      formattedPhone,
+      "출석정산", 
+      smsBody,
+      "대기"
+    ]);
     
+    return { success: true, status: "created", name: cleanName };
   } catch (e) {
-    return { error: "출석정산 문자 생성 오류: " + e.toString() };
+    return { error: e.toString() };
   }
 }
 
