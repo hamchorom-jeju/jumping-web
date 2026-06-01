@@ -6295,14 +6295,14 @@ function generateIndividualAttendanceSms(member, startDateStr, endDateStr, baseD
       endDateStr
     );
     
-    // D. 최종 문자 조립
+    // D. 최종 문자 조립 (정산 기준 시각 HH:mm 현재 포맷 주입으로 명확성 극대화)
     var smsBody = "[노형점핑 웰니스 정산]\n" +
                   "♥" + cleanName + " 회원님, 소중한 건강 여정 정산 보고서가 도착했습니다! 🌟\n\n" +
                   "📅 정산 기간: " + startDateStr + " ~ " + endDateStr + "\n" +
                   "🏃 출석 기록: 총 " + stats.total + "회 (점핑 " + stats.jumping + "회 / 테라피 " + stats.therapy + "회)\n\n" +
                   "🪄 AI 코치 분석 평가:\n" +
                   "\"" + aiComment + "\"\n\n" +
-                  "🎫 회원권 현황 (기준일: " + baseDateStr + "):\n" +
+                  "🎫 회원권 현황 (정산 기준 시점: " + baseDateStr + " " + Utilities.formatDate(now, "GMT+9", "HH:mm") + " 현재):\n" +
                   "- 잔여 횟수: " + member.remain + "회\n" +
                   "- 이용 만료일: " + member.expire + "\n\n" +
                   "바쁘신 일상 속에서도 건강한 매일을 향해 묵묵히 나아가시는 회원님이 정말 멋집니다! 다음 달도 활기차고 기분 좋은 건강 관리를 위해 코치가 늘 정성을 다할게요. 클럽에서 뵙겠습니다! ❤️";
