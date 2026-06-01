@@ -1413,7 +1413,7 @@
 
       google.script.run.withSuccessHandler(async (res) => {
         const keyFromBackend = (res && res.success) ? res.key : "";
-        let apiKey = String(keyFromBackend || localStorage.getItem('gemini_api_key') || '').trim();
+        let apiKey = String(localStorage.getItem('gemini_api_key') || keyFromBackend || '').trim();
 
         if (!apiKey) {
           scanLine.style.display = 'none';
@@ -1721,7 +1721,7 @@
       google.script.run.withSuccessHandler(res => {
         hideLoading();
         const keyFromBackend = (res && res.success) ? res.key : "";
-        const currentKey = String(keyFromBackend || localStorage.getItem('gemini_api_key') || '');
+        const currentKey = String(localStorage.getItem('gemini_api_key') || keyFromBackend || '');
         
         // 2. 브라우저 차단 경고를 예방하기 위해 자체 모달을 띄웁니다.
         openGeminiKeyModal(currentKey);
@@ -2028,7 +2028,7 @@
 
       google.script.run.withSuccessHandler(async (res) => {
         const keyFromBackend = (res && res.success) ? res.key : "";
-        let apiKey = String(keyFromBackend || localStorage.getItem('gemini_api_key') || '').trim();
+        let apiKey = String(localStorage.getItem('gemini_api_key') || keyFromBackend || '').trim();
         if (!apiKey) {
           scanLine.style.display = 'none';
           btn.disabled = false;
