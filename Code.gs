@@ -6175,6 +6175,225 @@ function checkInactiveMembers() {
 }
 
 /**
+ * 📅 [v66.0] 관리자용 특정 기간 출석 분석 및 AI 평가 기반 출석정산 문자 일괄 자동 생성 API
+ */
+function generateAttendancePeriodSms(startDateStr, endDateStr, baseDateStr) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+    var logSheet = ss.getSheetByName("출석기록");
+    var smsSheet = ss.getSheetByName("문자발송");
+    
+    if (!regSheet || !logSheet || !smsSheet) {
+      return { error: "필요한 시트(등록현황/출석기록/문자발송)가 누락되었습니다." };
+    }
+    
+    var regData = regSheet.getDataRange().getDisplayValues();
+    var logData = logSheet.getDataRange().getDisplayValues();
+    var smsData = smsSheet.getDataRange().getDisplayValues();
+    
+    var regCols = getRegColumnIndices(regSheet);
+    var logCols = getAttendanceColumnIndices(logSheet);
+    
+    var startD = new Date(startDateStr);
+    var endD = new Date(endDateStr);
+    startD.setHours(0,0,0,0);
+    endD.setHours(23,59,59,999);
+    
+    var now = new Date();
+    
+    // 1. 등록 현황에서 "진행중"인 회원들만 추출
+    var activeMembers = [];
+    var activePhonesMap = {}; 
+    for (var i = 1; i < regData.length; i++) {
+      var status = String(regData[i][regCols.status] || "").trim();
+      if (status === "진행중" || status === "진행 중") {
+        var phone = String(regData[i][regCols.phone] || "").replace(/[^0-9]/g, "");
+        var name = regData[i][regCols.name];
+        var membership = regData[i][regCols.membership] || "이용권";
+        var remain = regData[i][regCols.remain] || "0";
+        var expire = regData[i][regCols.expire] || "미정";
+        
+        if (!phone) continue;
+        
+        if (!activePhonesMap[phone]) {
+          activePhonesMap[phone] = true;
+          activeMembers.push({
+            name: name,
+            phone: phone,
+            phoneRaw: regData[i][regCols.phone],
+            membership: membership,
+            remain: remain,
+            expire: expire
+          });
+        }
+      }
+    }
+    
+    // 2. 문자발송 시트에서 기존 "출석정산" 역대 데이터 분석 (비교 분석 피딩용 및 중복 생성 가드)
+    var previousSmsMap = {}; 
+    var currentPeriodPendingMap = {}; 
+    
+    for (var j = 1; j < smsData.length; j++) {
+      var sPhone = String(smsData[j][2] || "").replace(/[^0-9]/g, "");
+      var sCategory = String(smsData[j][3] || "").trim();
+      var sStatus = String(smsData[j][5] || "").trim();
+      var sContent = String(smsData[j][4] || "");
+      var sTime = String(smsData[j][0] || "");
+      
+      if (sCategory === "출석정산") {
+        if (sStatus === "대기") {
+          // 오늘 생성된 동일 카테고리 문자 중복 대기 가드
+          if (sTime.includes(Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd"))) {
+            currentPeriodPendingMap[sPhone] = true;
+          }
+        }
+        previousSmsMap[sPhone] = sContent;
+      }
+    }
+    
+    // 3. 출석기록에서 지정된 기간 내의 회원별 출석 횟수 집계
+    var memberStatsMap = {}; 
+    for (var k = 1; k < logData.length; k++) {
+      var lPhone = String(logData[k][logCols.phone] || "").replace(/[^0-9]/g, "");
+      var lDateStr = logData[k][logCols.date];
+      var lType = String(logData[k][logCols.type] || ""); 
+      
+      if (!lPhone || !lDateStr) continue;
+      
+      var lDate = new Date(lDateStr);
+      if (lDate >= startD && lDate <= endD) {
+        if (!memberStatsMap[lPhone]) {
+          memberStatsMap[lPhone] = { total: 0, jumping: 0, therapy: 0 };
+        }
+        
+        memberStatsMap[lPhone].total++;
+        if (lType.indexOf("테라피") !== -1 || lType.indexOf("원적외선") !== -1 || lType.indexOf("반신욕") !== -1 || lType.indexOf("보너스") !== -1) {
+          memberStatsMap[lPhone].therapy++;
+        } else {
+          memberStatsMap[lPhone].jumping++;
+        }
+      }
+    }
+    
+    var count = 0;
+    var addedNames = [];
+    
+    // 4. 회원별 정산 문자 일괄 빌드
+    for (var mIdx = 0; mIdx < activeMembers.length; mIdx++) {
+      var member = activeMembers[mIdx];
+      var phone = member.phone;
+      
+      if (currentPeriodPendingMap[phone]) continue;
+      
+      var cleanName = member.name.replace(/\d{4}$/, "");
+      var stats = memberStatsMap[phone] || { total: 0, jumping: 0, therapy: 0 };
+      var prevSms = previousSmsMap[phone] || ""; 
+      
+      var aiComment = generateAttendanceReportAiComment(
+        cleanName, 
+        stats, 
+        prevSms, 
+        member.remain, 
+        member.expire, 
+        startDateStr, 
+        endDateStr
+      );
+      
+      var smsBody = "[노형점핑 웰니스 정산]\n" +
+                    "♥" + cleanName + " 회원님, 소중한 건강 여정 정산 보고서가 도착했습니다! 🌟\n\n" +
+                    "📅 정산 기간: " + startDateStr + " ~ " + endDateStr + "\n" +
+                    "🏃 출석 기록: 총 " + stats.total + "회 (점핑 " + stats.jumping + "회 / 테라피 " + stats.therapy + "회)\n\n" +
+                    "🪄 AI 코치 분석 평가:\n" +
+                    "\"" + aiComment + "\"\n\n" +
+                    "🎫 회원권 현황 (기준일: " + baseDateStr + "):\n" +
+                    "- 잔여 횟수: " + member.remain + "회\n" +
+                    "- 이용 만료일: " + member.expire + "\n\n" +
+                    "바쁘신 일상 속에서도 건강한 매일을 향해 묵묵히 나아가시는 회원님이 정말 멋집니다! 다음 달도 활기차고 기분 좋은 건강 관리를 위해 코치가 늘 정성을 다할게요. 클럽에서 뵙겠습니다! ❤️";
+      
+      var formattedPhone = formatPhoneForSms(member.phoneRaw);
+      smsSheet.appendRow([
+        Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd HH:mm"),
+        cleanName,
+        formattedPhone,
+        "출석정산", 
+        smsBody,
+        "대기"
+      ]);
+      
+      count++;
+      addedNames.push(cleanName);
+    }
+    
+    return {
+      success: true,
+      count: count,
+      message: count > 0 ? "총 " + count + "명의 회원을 성공적으로 분석하여 정산 문자를 생성했습니다!" : "새로 생성할 정산 대상이 없습니다.",
+      addedNames: addedNames
+    };
+    
+  } catch (e) {
+    return { error: "출석정산 문자 생성 오류: " + e.toString() };
+  }
+}
+
+/**
+ * 🤖 [v66.0] 제미나이를 통한 개별 회원 맞춤형 한 달 출석 평가 코멘트 생성기
+ */
+function generateAttendanceReportAiComment(name, stats, prevSms, remain, expire, startDateStr, endDateStr) {
+  try {
+    var systemInstruction = "당신은 제주 노형점핑클럽의 따뜻하고 쾌활하며 전문적인 웰니스 코치입니다. " +
+                            "회원의 한 달 동안의 출석 기록을 보고 격려, 염려, 칭찬 코멘트를 전문적이면서 다정하게 작성하십시오. " +
+                            "답변은 반드시 한국어 경어체로 100자~170자 이내로 정밀 요약하여 완성도 높게 써주시고, 절대 이모지나 딱딱한 문구를 남발하지 말아주십시오. " +
+                            "친근감을 유도하되 격조 있는 맞춤 피드백을 제공해야 합니다.";
+    
+    var prompt = "■ 회원 및 출석 정보\n" +
+                 "- 회원 이름: " + name + "\n" +
+                 "- 정산 기간: " + startDateStr + " ~ " + endDateStr + "\n" +
+                 "- 이번 출석 횟수: 총 " + stats.total + "회 (점핑 운동: " + stats.jumping + "회, 원적외선 테라피: " + stats.therapy + "회)\n" +
+                 "- 회원권 남은 횟수: " + remain + "회\n" +
+                 "- 회원권 이용 마감일: " + expire + "\n\n" +
+                 "■ 지난 정산 문자 기록 (가장 최근 발송된 히스토리)\n" +
+                 (prevSms ? prevSms : "(과거 출석정산 이력 없음 - 첫 정산 대상)") + "\n\n" +
+                 "■ 핵심 지시사항 및 평가 규칙 (필수 준수)\n" +
+                 "1. 이번 출석 빈도 분석 및 평가:\n" +
+                 "   - 출석이 0회이거나 너무 적을 때(1~4회): 바쁜 일상을 따뜻하게 공감해주되, 소중한 남은 횟수(" + remain + "회)와 마감일(" + expire + ")을 상기시켜 이용 기한 내에 다 쓰지 못하고 소멸될까 걱정하고 아쉬워하는 코치의 진심어린 우려 톤을 강조하십시오.\n" +
+                 "   - 출석이 보통/양호할 때(5~12회): 꾸준함에 칭찬을 건네고, 점핑과 테라피의 조화로운 이용 습관이 주는 건강 루틴 효과를 격려해 주십시오.\n" +
+                 "   - 출석이 아주 높을 때(13회 이상): 엄청난 꾸준함과 뜨거운 건강 열정에 기쁨의 감동을 어필하고 웰니스 루틴이 삶에 완전 안착했음을 찬사하십시오.\n" +
+                 "2. 지난 정산 이력과의 1:1 대조 분석:\n" +
+                 "   - 만약 '지난 정산 문자 기록'이 주어졌다면, 그 문장에 언급된 지난 출석 횟수와 비교하십시오.\n" +
+                 "   - 지난번에 비해 이번 출석이 늘어났다면 '지난달에 비해 출석이 늘어 너무 자랑스럽고 멋지다'며 성취를 극찬하십시오.\n" +
+                 "   - 줄어들었다면 아쉬움과 함께 안부를 묻고 활력을 다시 찾을 수 있도록 다정히 독려하십시오.\n" +
+                 "   - 첫 정산이라면 과거 이력 언급 없이 따뜻한 웰커밍 감성으로 환영해주십시오.\n" +
+                 "3. 격조 있는 코멘트 한 줄:\n" +
+                 "   - 문자 전체 본문의 앞뒤 인사말이나 잔여횟수 정보 등은 시스템이 별도로 붙이므로, 이곳에서는 **오직 큰따옴표(\"\") 안에 삽입될 AI 코치의 평가 코멘트 단독 본문**만 100~170자 이내로 반환하십시오.";
+    
+    var aiComment = callGeminiBackend(prompt, systemInstruction);
+    
+    if (aiComment) {
+      aiComment = aiComment.trim().replace(/^["']|["']$/g, "");
+      return aiComment;
+    }
+  } catch (e) {
+    Logger.log("Gemini 정산 코멘트 생성 에러: " + e.toString());
+  }
+  
+  var total = stats.total;
+  var comment = "";
+  if (total === 0) {
+    comment = name + " 회원님, 정산 기간 동안 클럽에서 뵙지 못해 코치가 너무나 아쉽고 걱정스러운 한 달이었습니다. 😢 바쁘신 일상이 끝나는 대로, 소중한 남은 회원권이 만료 전에 소멸되지 않도록 꼭 다시 클럽에 들러서 웰니스 활력을 채워보세요!";
+  } else if (total <= 4) {
+    comment = name + " 회원님, 이번 달에는 " + total + "회의 소중한 출석을 해주셨네요! 바쁜 일정 속에 잊지 않고 오신 점은 기쁘지만, 이용 만료일 안에 남은 " + remain + "회를 소진하시기에 출석 횟수가 부족하여 기한 만료로 소멸될까 코치가 무척 염려됩니다. 조금만 더 힘을 내서 자주 뵈어요! ❤️";
+  } else if (total <= 12) {
+    comment = name + " 회원님, 한 달 동안 총 " + total + "회나 꾸준히 출석하며 건강을 가꾸시는 모습이 참 멋지십니다! 점핑의 강력한 활력과 테라피의 온화한 힐링을 자연스럽게 넘나들며 회원님만의 아름다운 건강 리듬이 아주 조화롭게 형성되고 있습니다. 늘 자랑스럽습니다. 😊";
+  } else {
+    comment = name + " 회원님, 이번 정산 기간 동안 무려 " + total + "회라는 눈부신 출석 기록을 달성하셨네요! 대단하십니다. 🏆💪 회원님의 끈기와 뜨거운 건강 열정에 코치도 엄청난 감동과 활력 에너지를 듬뿍 얻었습니다. 웰니스 라이프의 정석이신 회원님을 늘 축복하고 온 맘 다해 응원합니다!";
+  }
+  
+  return comment;
+}
+
+/**
  * [관리자 전용] 4~6일 연속 결석으로 점수가 차감 중인 회원 추출 및 문자 생성 (v46.35)
  */
 function checkInactivityDebuffAbsentees() {

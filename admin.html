@@ -1090,25 +1090,76 @@
   <div class="modal-overlay" id="smsLogModal">
     <div class="modal-content"
       style="height: 85vh; max-height: 85vh; display: flex; flex-direction: column; background: #ffffff; padding: 25px 15px;">
-      <div class="modal-header" style="margin-bottom:10px;">📧 문자 발송 관리</div>
+      <div class="modal-header" style="margin-bottom:10px;">📧 문자 관리 및 출석 정산</div>
 
-      <!-- 카테고리 탭 -->
-      <div
-        style="display: flex; gap: 5px; margin-bottom: 20px; background: #f1f5f9; padding: 5px; border-radius: 12px;">
-        <button class="sms-tab-btn active" id="tab-sms-reg" onclick="setSmsCategory('registration')"
-          style="flex:1; border:none; padding:10px 5px; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;">등록
-          안내</button>
-        <button class="sms-tab-btn" id="tab-sms-absent" onclick="setSmsCategory('absent')"
-          style="flex:1; border:none; padding:10px 5px; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;">미방문/디버프</button>
-        <button class="sms-tab-btn" id="tab-sms-return" onclick="setSmsCategory('return')"
-          style="flex:1; border:none; padding:10px 5px; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;">장기
-          미등록</button>
+      <!-- 🌟 대분류 메인 2단 서브 탭 🌟 -->
+      <div style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">
+        <button class="sms-main-tab-btn active" id="main-tab-generate" onclick="switchSmsMainTab('generate')"
+          style="flex:1; border:none; padding:10px; font-size:0.9rem; font-weight:800; cursor:pointer; background:transparent; border-bottom:3px solid var(--primary); color:var(--primary); transition:all 0.2s; outline:none;">
+          🪄 출석 정산 문자 생성
+        </button>
+        <button class="sms-main-tab-btn" id="main-tab-view" onclick="switchSmsMainTab('view')"
+          style="flex:1; border:none; padding:10px; font-size:0.9rem; font-weight:800; cursor:pointer; background:transparent; border-bottom:3px solid transparent; color:#64748b; transition:all 0.2s; outline:none;">
+          💬 생성된 문자 대기열
+        </button>
       </div>
 
-      <div id="smsLogList" style="flex: 1; overflow-y: auto; padding-bottom: 20px;">
-        <div style="text-align:center; padding:20px; color:var(--text-sub);">불러오는 중...</div>
+      <!-- 1. [문자 생성 패널] -->
+      <div id="sms-panel-generate" style="display: block; text-align: left; overflow-y: auto; padding: 5px 2px;">
+        <div style="background:#f8fafc; border:1px solid #edf2f7; border-radius:18px; padding:20px; display:flex; flex-direction:column; gap:16px;">
+          <div style="font-size:0.9rem; color:#4a5568; font-weight:700; border-left:4px solid var(--primary); padding-left:8px;">
+            📅 출석 정산 기간 설정
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div>
+              <label class="form-label" style="font-size:0.8rem; font-weight:800; color:#64748b; margin-bottom:6px; display:block;">시작 날짜 *</label>
+              <input type="date" id="settleStartDate" class="form-control" style="background:white; border:1.5px solid #edf2f7; border-radius:10px; padding:10px; font-size:0.85rem;">
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.8rem; font-weight:800; color:#64748b; margin-bottom:6px; display:block;">종료 날짜 *</label>
+              <input type="date" id="settleEndDate" class="form-control" style="background:white; border:1.5px solid #edf2f7; border-radius:10px; padding:10px; font-size:0.85rem;">
+            </div>
+          </div>
+          
+          <div style="font-size:0.9rem; color:#4a5568; font-weight:700; border-left:4px solid var(--primary); padding-left:8px; margin-top:5px;">
+            🎫 잔여횟수 정산 기준일 설정
+          </div>
+          <div>
+            <label class="form-label" style="font-size:0.8rem; font-weight:800; color:#64748b; margin-bottom:6px; display:block;">기준일 날짜 *</label>
+            <input type="date" id="settleBaseDate" class="form-control" style="background:white; border:1.5px solid #edf2f7; border-radius:10px; padding:10px; font-size:0.85rem;">
+          </div>
+          
+          <button class="btn-submit" id="btnRunSettleSms" onclick="runAttendanceSmsGeneration()" 
+            style="background:linear-gradient(135deg, var(--primary), #6a1b9a); margin-top:15px; font-weight:800; height:50px; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <span>🪄 출석 정산 문자 일괄 생성</span>
+          </button>
+          
+          <p style="font-size:0.75rem; color:#718096; line-height:1.45; margin-top:5px; text-align:center; word-break:keep-all;">
+            ※ 진행 중인 전체 회원들의 출석 기록(점핑/테라피)과 잔여 회원권을 파악하여, AI 분석 코멘트를 포함한 맞춤형 보고서 문자를 대기열에 자동 적재합니다.
+          </p>
+        </div>
       </div>
-      <button class="btn-close" onclick="closeSmsLogModal()">닫기</button>
+
+      <!-- 2. [생성문자 보기 패널] -->
+      <div id="sms-panel-view" style="display: none; flex-direction: column; flex: 1; height: 100%;">
+        <!-- 카테고리 탭 (출석정산 신규 추가) -->
+        <div style="display: flex; gap: 4px; margin-bottom: 15px; background: #f1f5f9; padding: 4px; border-radius: 12px; flex-wrap: wrap;">
+          <button class="sms-tab-btn active" id="tab-sms-reg" onclick="setSmsCategory('registration')"
+            style="flex:1; border:none; padding:10px 4px; border-radius:8px; font-size:0.78rem; font-weight:700; cursor:pointer; transition:all 0.2s; min-width: 60px; outline:none;">등록 안내</button>
+          <button class="sms-tab-btn" id="tab-sms-settle" onclick="setSmsCategory('settlement')"
+            style="flex:1; border:none; padding:10px 4px; border-radius:8px; font-size:0.78rem; font-weight:700; cursor:pointer; transition:all 0.2s; min-width: 60px; outline:none;">출석정산</button>
+          <button class="sms-tab-btn" id="tab-sms-absent" onclick="setSmsCategory('absent')"
+            style="flex:1; border:none; padding:10px 4px; border-radius:8px; font-size:0.78rem; font-weight:700; cursor:pointer; transition:all 0.2s; min-width: 85px; outline:none;">미방문/디버프</button>
+          <button class="sms-tab-btn" id="tab-sms-return" onclick="setSmsCategory('return')"
+            style="flex:1; border:none; padding:10px 4px; border-radius:8px; font-size:0.78rem; font-weight:700; cursor:pointer; transition:all 0.2s; min-width: 70px; outline:none;">장기 미등록</button>
+        </div>
+
+        <div id="smsLogList" style="flex: 1; overflow-y: auto; padding-bottom: 10px;">
+          <div style="text-align:center; padding:20px; color:var(--text-sub);">불러오는 중...</div>
+        </div>
+      </div>
+
+      <button class="btn-close" onclick="closeSmsLogModal()" style="margin-top:15px; flex-shrink:0;">닫기</button>
     </div>
   </div>
 
@@ -5316,9 +5367,32 @@
       }).saveFlashSetting({ date: dateVal, type: typeVal, note: noteVal });
     }
 
-    // --- 문자 발송 관리 함수 ---
+    // --- 문자 발송 및 출석 정산 관리 함수 ---
     function openSmsLogModal() {
       document.getElementById('smsLogModal').classList.add('show');
+      
+      // 📅 정산 날짜 달력 폼 기본값 세팅 (이전 달 1일 ~ 말일 / 오늘 기준일)
+      if (!document.getElementById('settleStartDate').value) {
+        let d = new Date();
+        let prevMonth = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+        let prevMonthLast = new Date(d.getFullYear(), d.getMonth(), 0);
+        
+        let yStart = prevMonth.getFullYear();
+        let mStart = String(prevMonth.getMonth() + 1).padStart(2, '0');
+        let dStart = "01";
+        
+        let yEnd = prevMonthLast.getFullYear();
+        let mEnd = String(prevMonthLast.getMonth() + 1).padStart(2, '0');
+        let dEnd = String(prevMonthLast.getDate()).padStart(2, '0');
+        
+        document.getElementById('settleStartDate').value = yStart + "-" + mStart + "-" + dStart;
+        document.getElementById('settleEndDate').value = yEnd + "-" + mEnd + "-" + dEnd;
+        document.getElementById('settleBaseDate').value = d.toISOString().split('T')[0];
+      }
+      
+      // 기본 메인 탭을 "출석 정산 문자 생성"으로 초기화
+      switchSmsMainTab('generate');
+      
       loadSmsLogData();
       if (window.registerModalOpen) {
         window.registerModalOpen(closeSmsLogModal);
@@ -5332,13 +5406,126 @@
       }
     }
 
+    // 메인 서브 탭 ('generate' / 'view') 전환 처리기
+    function switchSmsMainTab(tab) {
+      document.querySelectorAll('.sms-main-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.color = '#64748b';
+        btn.style.borderBottomColor = 'transparent';
+      });
+      
+      document.getElementById('sms-panel-generate').style.display = 'none';
+      document.getElementById('sms-panel-view').style.display = 'none';
+      
+      if (tab === 'generate') {
+        const btn = document.getElementById('main-tab-generate');
+        btn.classList.add('active');
+        btn.style.color = 'var(--primary)';
+        btn.style.borderBottomColor = 'var(--primary)';
+        document.getElementById('sms-panel-generate').style.display = 'block';
+      } else if (tab === 'view') {
+        const btn = document.getElementById('main-tab-view');
+        btn.classList.add('active');
+        btn.style.color = 'var(--primary)';
+        btn.style.borderBottomColor = 'var(--primary)';
+        document.getElementById('sms-panel-view').style.display = 'flex';
+      }
+    }
+
+    // 🪄 [v66.0] 출석정산 문자 일괄 자동 생성 백엔드 호출기
+    function runAttendanceSmsGeneration() {
+      const start = document.getElementById('settleStartDate').value;
+      const end = document.getElementById('settleEndDate').value;
+      const base = document.getElementById('settleBaseDate').value;
+      
+      if (!start || !end || !base) {
+        alert("⚠️ 정산 시작일, 종료일, 기준일을 모두 빠짐없이 선택해 주세요!");
+        return;
+      }
+      
+      // 동적 풀 스크린 로딩 디브 생성 (원장님 피드백 보장용 프리미엄 UX)
+      const overlay = document.createElement('div');
+      overlay.style.position = 'fixed';
+      overlay.style.top = '0';
+      overlay.style.left = '0';
+      overlay.style.width = '100vw';
+      overlay.style.height = '100vh';
+      overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.85)';
+      overlay.style.backdropFilter = 'blur(8px)';
+      overlay.style.zIndex = '99999';
+      overlay.style.display = 'flex';
+      overlay.style.flexDirection = 'column';
+      overlay.style.alignItems = 'center';
+      overlay.style.justifyContent = 'center';
+      overlay.style.color = 'white';
+      overlay.style.padding = '30px';
+      overlay.style.textAlign = 'center';
+      
+      overlay.innerHTML = `
+        <div style="font-size: 3rem; margin-bottom: 20px; animation: spin 1s linear infinite;">🔄</div>
+        <h3 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 12px; color: var(--primary);">🪄 AI 출석 정산 리포트 생성 중...</h3>
+        <p style="font-size: 0.9rem; color: #a0aec0; max-width: 400px; line-height: 1.5; word-break: keep-all;">
+          진행중인 회원들의 기간별 출석 유형(점핑/테라피) 횟수를 정교히 분석하고, 이전 출석정산 이력 대조를 통해 Gemini AI 맞춤 분석 격려 코멘트를 한땀 한땀 작성하고 있습니다. 약 10초~20초 가량 소요됩니다.
+        </p>
+      `;
+      
+      document.body.appendChild(overlay);
+      
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run.withSuccessHandler(function(res) {
+          overlay.remove();
+          if (res.error) {
+            alert("🚨 생성 중 오류가 발생했습니다: " + res.error);
+            return;
+          }
+          
+          // 성공 토스트 띄우기
+          const toast = document.createElement('div');
+          toast.style.position = 'fixed';
+          toast.style.bottom = '100px';
+          toast.style.left = '50%';
+          toast.style.transform = 'translateX(-50%)';
+          toast.style.background = '#48bb78';
+          toast.style.color = 'white';
+          toast.style.padding = '12px 24px';
+          toast.style.borderRadius = '30px';
+          toast.style.fontWeight = 'bold';
+          toast.style.fontSize = '0.9rem';
+          toast.style.zIndex = '99999';
+          toast.style.boxShadow = '0 10px 15px rgba(0,0,0,0.2)';
+          toast.style.opacity = '1';
+          toast.style.transition = 'all 0.5s';
+          toast.innerText = `✅ ${res.count}명의 출석정산 문자 생성 완료!`;
+          document.body.appendChild(toast);
+          setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 500); }, 2500);
+          
+          // 대기열 목록 리로드
+          allSmsLogs = [];
+          loadSmsLogData();
+          
+          // 대기열 목록 탭으로 자동 이동하여 원장님이 즉각 확인하도록 흐름 제공!
+          switchSmsMainTab('view');
+          setSmsCategory('settlement');
+          
+        }).withFailureHandler(function(err) {
+          overlay.remove();
+          alert("🚨 서버 통신 실패: " + err.message);
+        }).generateAttendancePeriodSms(start, end, base);
+      } else {
+        overlay.remove();
+        alert("⚠️ 서버 연결 환경이 아닙니다. (테스트 모드)");
+      }
+    }
+
     let allSmsLogs = [];
-    let currentSmsTab = 'registration'; // 'registration', 'absent', 'return'
+    let currentSmsTab = 'registration'; // 'registration', 'settlement', 'absent', 'return'
 
     function setSmsCategory(tab) {
       currentSmsTab = tab;
       document.querySelectorAll('.sms-tab-btn').forEach(btn => btn.classList.remove('active'));
+      
       if (tab === 'registration') document.getElementById('tab-sms-reg').classList.add('active');
+      else if (tab === 'settlement') document.getElementById('tab-sms-settle').classList.add('active');
       else if (tab === 'absent') document.getElementById('tab-sms-absent').classList.add('active');
       else if (tab === 'return') document.getElementById('tab-sms-return').classList.add('active');
 
@@ -5370,12 +5557,20 @@
       let filteredLogs = [];
       let limit = 0;
 
-      // 원장님 요청: '완료'된 항목은 리스트에서 제외 (누적 방지)
       const pendingLogs = allSmsLogs.filter(log => String(log.status || "").trim() === '대기');
 
       if (currentSmsTab === 'registration') {
-        filteredLogs = pendingLogs.filter(log => log.category !== '장기미방문' && log.category !== '복귀권유' && log.category !== '출석디버프');
+        // 등록 안내 탭에서는 '출석정산' 카테고리는 확실히 제외!
+        filteredLogs = pendingLogs.filter(log => 
+          log.category !== '장기미방문' && 
+          log.category !== '복귀권유' && 
+          log.category !== '출석디버프' && 
+          log.category !== '출석정산'
+        );
         limit = 15;
+      } else if (currentSmsTab === 'settlement') {
+        // 출석 정산 전용 필터
+        filteredLogs = pendingLogs.filter(log => log.category === '출석정산');
       } else if (currentSmsTab === 'absent') {
         filteredLogs = pendingLogs.filter(log => log.category === '장기미방문' || log.category === '출석디버프');
       } else if (currentSmsTab === 'return') {
