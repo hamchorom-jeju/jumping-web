@@ -500,6 +500,21 @@
     .scroll-tab:not(.active):hover {
       background: rgba(170, 124, 17, 0.15);
     }
+
+    /* [v46.220] Global Loading Overlay Styles for Sanctum */
+    .v-loading-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--modal-overlay-bg); backdrop-filter: blur(5px);
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 10000; animation: vFadeIn 0.3s;
+    }
+    .v-loading-spinner {
+      width: 50px; height: 50px; border: 5px solid rgba(255, 255, 255, 0.1);
+      border-top: 5px solid var(--sanctum-purple-light); border-radius: 50%;
+      animation: vSpin 1s linear infinite; margin-bottom: 15px;
+    }
+    @keyframes vSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes vFadeIn { from { opacity: 0; } to { opacity: 1; } }
   </style>
 </head>
 <body>
@@ -1503,7 +1518,22 @@
       }
     }
 
+    function resetAiSummonState() {
+      window.isAiSummoning = false;
+      const summonBtn = document.getElementById('ai-summon-btn');
+      if (summonBtn) {
+        summonBtn.disabled = false;
+        summonBtn.innerText = "비법서 소환 🔮";
+      }
+    }
+
     function summonAiDraft() {
+      // 🔮 중복 소환 방지 보호막 가드 격발
+      if (window.isAiSummoning) {
+        console.warn("⚠️ 이미 지니 AI 비법서 소환 마법이 진행 중입니다. 잠시만 기다려 주십시오.");
+        return;
+      }
+
       const keywords = document.getElementById('scroll-ai-keywords-input').value.trim();
       const section = document.getElementById('scroll-category-select').value;
       const needImage = document.getElementById('scroll-ai-image-check').checked;
@@ -1513,9 +1543,17 @@
         return;
       }
 
+      window.isAiSummoning = true;
+      const summonBtn = document.getElementById('ai-summon-btn');
+      if (summonBtn) {
+        summonBtn.disabled = true;
+        summonBtn.innerText = "🔮 비법서 소환 중...";
+      }
+
       showLoading("지니 AI가 우주의 기운을 모아 비법서를 작성 중...");
 
       if (typeof google === 'undefined') {
+        resetAiSummonState();
         hideLoading();
         alert("⚠️ 구글 Apps Script 로컬 실행 환경에서는 소환 마법을 사용할 수 없습니다.");
         return;
@@ -1525,6 +1563,7 @@
       google.script.run
         .withSuccessHandler(res => {
           if (!res.success || !res.key) {
+            resetAiSummonState();
             hideLoading();
             alert("⚠️ 구글 시트 또는 스크립트 속성에 GEMINI_API_KEY가 설정되어 있지 않습니다. 설정 완료 후 다시 강림시켜 주십시오.");
             return;
@@ -1533,6 +1572,7 @@
           executeGeminiCall(apiKey, keywords, section, needImage);
         })
         .withFailureHandler(err => {
+          resetAiSummonState();
           hideLoading();
           alert("구글 금고 통신 실패: " + err.toString());
         })
@@ -1649,8 +1689,10 @@
         }
         
         document.getElementById('ai-preview-area').style.display = 'block';
+        resetAiSummonState();
         hideLoading();
       } catch (err) {
+        resetAiSummonState();
         hideLoading();
         alert("🔮 비법서 소환 중 마법 장벽에 부딪혔습니다 (에러): " + err.toString());
       }
