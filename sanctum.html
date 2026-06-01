@@ -1580,8 +1580,6 @@
     }
 
     async function executeGeminiCall(apiKey, keywords, section, needImage) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-      
       // 화풍 스타일 획득
       const imageStyleSelect = document.getElementById('scroll-image-style-select');
       const imageStyle = imageStyleSelect ? imageStyleSelect.value : 'wellness_photo';
@@ -1645,16 +1643,64 @@
       };
 
       try {
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
+        let response;
+        let success = false;
+        let errMsg = "";
+        let is429 = false;
 
-        if (!response.ok) {
-          throw new Error(`Gemini API 호출 실패 (상태 코드: ${response.status})`);
+        // 1차 시도: 최신 대세 모델인 gemini-2.5-flash
+        try {
+          const url1 = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+          response = await fetch(url1, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (response.ok) {
+            success = true;
+          } else {
+            is429 = (response.status === 429);
+            const errData = await response.json();
+            errMsg = errData.error ? errData.error.message : `API 실패 (HTTP ${response.status})`;
+          }
+        } catch (e) {
+          errMsg = e.toString();
+        }
+
+        // 2차 예비 시도: 1차가 마비되었을 경우 자동으로 gemini-1.5-flash 우회 작동!
+        if (!success) {
+          console.warn("Primary model (gemini-2.5-flash) failed or overloaded. Trying fallback model (gemini-1.5-flash)... Details: " + errMsg);
+          try {
+            const url2 = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            response = await fetch(url2, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+              success = true;
+            } else {
+              is429 = (response.status === 429 || is429);
+              const errData = await response.json();
+              errMsg = errData.error ? errData.error.message : `API 실패 (HTTP ${response.status})`;
+            }
+          } catch (e) {
+            errMsg = e.toString();
+          }
+        }
+
+        if (!success) {
+          if (is429) {
+            throw new Error(`429 Too Many Requests\n사유: ${errMsg}\n\n💡 [조치 안내] 구글 AI Studio 무료 티어 API Key의 호출 한도(분당 15회 또는 하루 1500회)가 일시적으로 소진되었을 가능성이 있습니다. 1분 정도 기다렸다가 다시 시도해 주시거나, 구글 AI Studio에서 새 API Key를 발급받아 [환경설정] 시트 B2 셀에 교체 입력해 주시면 즉시 해결됩니다!`);
+          } else {
+            throw new Error(errMsg);
+          }
         }
 
         const data = await response.json();
@@ -1694,7 +1740,7 @@
       } catch (err) {
         resetAiSummonState();
         hideLoading();
-        alert("🔮 비법서 소환 중 마법 장벽에 부딪혔습니다 (에러): " + err.toString());
+        alert("🔮 비법서 소환 중 마법 장벽에 부딪혔습니다 (에러):\n" + err.toString());
       }
     }
 
