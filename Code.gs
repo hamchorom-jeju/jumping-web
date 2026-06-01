@@ -6308,7 +6308,7 @@ function generateIndividualAttendanceSms(member, startDateStr, endDateStr, baseD
                   "♥" + cleanName + " 회원님, 소중한 건강 여정 정산 보고서가 도착했습니다! 🌟\n\n" +
                   "📅 정산 기간: " + startDateStr + " ~ " + endDateStr + "\n" +
                   "🏃 출석 기록: 총 " + stats.total + "회 (점핑 " + stats.jumping + "회 / 테라피 " + stats.therapy + "회)\n\n" +
-                  "🪄 AI 코치 분석 평가:\n" +
+                  "🪄 웰니스 코치 분석 평가:\n" +
                   "\"" + aiComment + "\"\n\n" +
                   "🎫 회원권 현황 (정산 기준 시점: " + baseDateStr + " " + Utilities.formatDate(now, "GMT+9", "HH:mm") + " 현재):\n" +
                   "- 잔여 횟수: " + member.remain + "회\n" +
