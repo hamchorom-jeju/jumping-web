@@ -971,6 +971,20 @@
       }
     }
 
+    /* 📱 모바일 상세 편집기 오버레이 스크롤바 기동 (키보드 대응 & 스크롤 트랩 원천 방어!) */
+    @media (max-width: 600px) {
+      .modal-overlay {
+        align-items: flex-start !important;
+        overflow-y: auto !important;
+        padding: 20px 10px !important;
+        -webkit-overflow-scrolling: touch;
+      }
+      .modal-card {
+        margin: auto 0 !important;
+        max-height: none !important;
+      }
+    }
+
     /* 메인 뷰포트 여백 조정 */
     @media (min-width: 901px) {
       .container {
@@ -1074,12 +1088,13 @@
     }
     
     .quick-text-box textarea {
-      height: 48px; /* 콤팩트한 한 줄~두 줄 높이 */
-      transition: height 0.2s ease, background 0.2s;
-    }
-    
-    .quick-text-box textarea:focus {
-      height: 95px; /* 포커싱되었을 때만 넓어짐 */
+      height: 24px;
+      min-height: 24px;
+      max-height: 220px;
+      line-height: 1.5;
+      padding: 2px 8px;
+      overflow-y: auto;
+      border-radius: 8px;
     }
 
     .capture-bottom-row {
@@ -1416,11 +1431,25 @@
         <div class="visualizer-container" style="height: 50px; margin-bottom: 10px; border-radius: 12px; overflow: hidden; background: rgba(255,255,255,0.4); border: 1px solid var(--card-border);">
           <canvas id="visualizer" style="width: 100%; height: 100%;"></canvas>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div class="record-timer" id="record-timer" style="font-size: 1.3rem; font-weight: 900; color: var(--text-title); font-variant-numeric: tabular-nums;">00:00</div>
-          <div class="recording-controls" style="display: flex; gap: 8px;">
-            <button class="control-btn" id="btn-pause-record" disabled onclick="pauseRecording()"><i class="fas fa-pause"></i> 일시정지</button>
-            <button class="control-btn" id="btn-reset-record" disabled onclick="resetRecording()"><i class="fas fa-redo"></i> 다시하기</button>
+        <!-- 🎙️ 스마트폰 스타일의 3버튼 녹음 제어 도크 (다스림/라벤더 감성 적용) -->
+        <div class="recorder-dock" style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 5px; width: 100%;">
+          <div class="record-timer" id="record-timer" style="font-size: 1.5rem; font-weight: 900; color: var(--text-title); letter-spacing: 0.5px;">00:00</div>
+          
+          <div class="recorder-buttons-row" style="display: flex; align-items: center; justify-content: center; gap: 20px; width: 100%;">
+            <!-- Left Button: Reset (다시하기) -->
+            <button class="control-btn recorder-btn-left" id="btn-reset-record" disabled onclick="resetRecording()" title="처음부터 다시 녹음" style="width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; padding: 0; background: rgba(255,255,255,0.8); border: 1px solid var(--card-border); color: var(--text-title); cursor: pointer; transition: all 0.2s;">
+              <i class="fas fa-redo"></i>
+            </button>
+            
+            <!-- Center Button: Pause / Resume Toggle -->
+            <button class="recorder-btn-center" id="btn-pause-record" disabled onclick="pauseRecording()" title="녹음 일시정지" style="width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; background: var(--primary-grad); border: none; color: #fff; cursor: pointer; box-shadow: 0 4px 14px rgba(129, 140, 248, 0.3); transition: all 0.2s; position: relative;">
+              <i class="fas fa-pause" id="pause-record-icon"></i>
+            </button>
+            
+            <!-- Right Button: Complete / Save (완료) -->
+            <button class="recorder-btn-right" id="btn-stop-record" disabled onclick="stopRecordingComplete()" title="녹음 완료 및 저장" style="width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; background: var(--text-title); border: none; color: var(--card-bg); cursor: pointer; transition: all 0.2s; box-shadow: 0 3px 8px rgba(0,0,0,0.15);">
+              <i class="fas fa-stop"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -1527,7 +1556,7 @@
 
       <div style="margin-bottom: 12px;">
         <label style="font-size: 0.7rem; color: var(--text-muted); font-weight: 800; display: block; margin-bottom: 4px;">본문 내용</label>
-        <textarea class="raw-textarea" id="edit-note-content" placeholder="내용을 작성하세요" style="height: 140px; font-size: 0.8rem;"></textarea>
+        <textarea class="raw-textarea" id="edit-note-content" placeholder="내용을 작성하세요" oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';" style="min-height: 140px; height: auto; font-size: 0.8rem; resize: none; overflow-y: hidden; outline: none;"></textarea>
       </div>
 
       <div style="margin-bottom: 18px; display: flex; gap: 12px;">
@@ -1590,6 +1619,26 @@
       loadApiKey();
       initCanvasWaveform();
       setupTextareaListener();
+
+      // 에디터 모달의 외부(배경) 클릭 시 자동 저장 후 닫기 (구글 킵 스타일)
+      const editModal = document.getElementById('note-edit-modal');
+      if (editModal) {
+        editModal.addEventListener('click', (event) => {
+          if (event.target === editModal) {
+            closeEditModal();
+          }
+        });
+      }
+
+      // 설정 모달의 외부(배경) 클릭 시 닫기
+      const keyModal = document.getElementById('key-modal');
+      if (keyModal) {
+        keyModal.addEventListener('click', (event) => {
+          if (event.target === keyModal) {
+            closeKeyModal();
+          }
+        });
+      }
     });
 
     // 🌗 라이트/다크 테마 토글 (야간모드가 제거되었으므로 경량 폴백 유지)
@@ -2082,7 +2131,7 @@
             <input type="text" class="modal-input" id="draft-tag-${idx}" value="${escapeHTML(draft.category || '📋 할 일')}" style="background:var(--bg-gradient); border:1px solid var(--card-border); color:var(--text-title); border-radius:6px; font-size:0.65rem; font-weight:800; padding:2px 5px; outline:none; margin-bottom:0; width:75px; text-align:center;">
           </div>
           <input type="text" class="modal-input" id="draft-title-${idx}" value="${escapeHTML(draft.title)}" style="text-align:left; font-size:0.85rem; font-weight:800; padding:5px 8px; margin-bottom:6px; background:var(--bg-gradient);">
-          <textarea class="raw-textarea" id="draft-content-${idx}" style="font-size:0.75rem; height:85px; padding:8px; background:var(--bg-gradient);">${escapeHTML(draft.content)}</textarea>
+          <textarea class="raw-textarea" id="draft-content-${idx}" oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';" style="font-size:0.75rem; min-height:85px; height:auto; padding:8px; background:var(--bg-gradient); resize:none; overflow-y:hidden; outline:none;">${escapeHTML(draft.content)}</textarea>
         </div>
         <div class="note-card-footer" style="margin-top:2px; border:none; padding-top:0;">
           <span></span>
@@ -2253,6 +2302,13 @@
       document.getElementById('edit-note-color').value = note.color || 'default';
 
       document.getElementById('note-edit-modal').classList.add('show');
+
+      // 초기 높이 동적 계산 가동 (스크롤 트랩 해결용)
+      const contentTextarea = document.getElementById('edit-note-content');
+      if (contentTextarea) {
+        contentTextarea.style.height = 'auto';
+        contentTextarea.style.height = contentTextarea.scrollHeight + 'px';
+      }
     }
 
     // 구글 킵 핵심: 모달을 닫을 때 텍스트 자동 영구 저장 연동! (중복 카테고리/제목 시 스마트 누적 병합 지원)
@@ -2369,21 +2425,48 @@
     }
 
     function saveApiKey() {
-      const inputVal = document.getElementById('api-key-input').value.trim();
-      if (inputVal && inputVal.startsWith('AIzaSy')) {
+      let inputVal = document.getElementById('api-key-input').value;
+      
+      // 1. 유니코드 보이지 않는 유령 공백 및 NBSP 등 완전 제거
+      inputVal = inputVal.replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim();
+      
+      // 2. 혹시 앞뒤에 따옴표(' 나 ")가 같이 복사되었다면 제거
+      inputVal = inputVal.replace(/^["']|["']$/g, '').trim();
+      
+      // 3. 복사 도중 앞뒤에 다른 텍스트가 묻어왔거나 전체를 통째로 붙여넣은 경우, AIzaSy로 시작하는 키만 쏙 골라냄
+      const geminiKeyRegex = /(AIzaSy[A-Za-z0-9_-]+)/;
+      const match = inputVal.match(geminiKeyRegex);
+      if (match) {
+        inputVal = match[1];
+      }
+
+      if (inputVal && !inputVal.startsWith('AIzaSy')) {
+        const proceed = confirm("입력하신 API Key가 구글 Gemini 표준 형식('AIzaSy'로 시작)과 다릅니다. 이대로 저장하시겠습니까?");
+        if (!proceed) {
+          return;
+        }
+      }
+
+      if (inputVal) {
         localStorage.setItem('gemini_api_key', inputVal);
         updateApiState(inputVal, "로컬 저장됨");
         closeKeyModal();
         if (typeof google !== 'undefined' && google.script && google.script.run) {
           google.script.run.setGeminiApiKey(inputVal);
         }
+        alert("API Key가 성공적으로 저장되었습니다!");
       } else {
-        alert("올바른 Google Gemini API Key 형식이 아닙니다.");
+        alert("저장할 API Key를 입력해주세요.");
       }
     }
 
     function setupTextareaListener() {
-      document.getElementById('raw-textarea').addEventListener('input', checkExtractButtonState);
+      const textarea = document.getElementById('raw-textarea');
+      textarea.addEventListener('input', () => {
+        textarea.style.height = '24px'; // Reset height to recalculate scrollHeight
+        textarea.style.height = (textarea.scrollHeight) + 'px'; // Apply actual scrollHeight
+        checkExtractButtonState();
+      });
     }
 
     function checkExtractButtonState() {
@@ -2433,8 +2516,18 @@
           btn.classList.add('recording');
           btn.innerHTML = '<i class="fas fa-stop"></i>';
           status.innerText = "생각을 듣고 있습니다...";
-          document.getElementById('btn-pause-record').disabled = false;
+          // 3버튼 리뉴얼 도크 제어
+          const pauseBtn = document.getElementById('btn-pause-record');
+          pauseBtn.disabled = false;
+          pauseBtn.className = 'recorder-btn-center recording';
+          pauseBtn.title = '녹음 일시정지';
+          const pauseIcon = document.getElementById('pause-record-icon') || pauseBtn.querySelector('i');
+          if (pauseIcon) pauseIcon.className = 'fas fa-pause';
+
           document.getElementById('btn-reset-record').disabled = false;
+          if (document.getElementById('btn-stop-record')) {
+            document.getElementById('btn-stop-record').disabled = false;
+          }
           document.getElementById('audio-player-box').style.display = 'none';
           
           recordSeconds = 0;
@@ -2526,22 +2619,36 @@
       const btn = document.getElementById('record-mic-btn');
       btn.classList.remove('recording');
       btn.innerHTML = '<i class="fas fa-microphone"></i>';
-      document.getElementById('btn-pause-record').disabled = true;
-      document.getElementById('btn-pause-record').innerHTML = '<i class="fas fa-pause"></i> 일시정지';
+      const pauseBtn = document.getElementById('btn-pause-record');
+      pauseBtn.disabled = true;
+      pauseBtn.className = 'recorder-btn-center';
+      const pauseIcon = document.getElementById('pause-record-icon') || pauseBtn.querySelector('i');
+      if (pauseIcon) pauseIcon.className = 'fas fa-pause';
+
       document.getElementById('btn-reset-record').disabled = true;
+      if (document.getElementById('btn-stop-record')) {
+        document.getElementById('btn-stop-record').disabled = true;
+      }
     }
 
     function pauseRecording() {
       const btn = document.getElementById('btn-pause-record');
+      const icon = document.getElementById('pause-record-icon') || btn.querySelector('i');
       const status = document.getElementById('record-status');
       if (mediaRecorder && mediaRecorder.state === 'recording') {
         mediaRecorder.pause();
         clearInterval(recordingTimer);
-        btn.innerHTML = '<i class="fas fa-play"></i> 재개';
+        if (icon) icon.className = 'fas fa-microphone';
+        btn.title = "녹음 재개";
+        btn.classList.add('paused');
+        btn.classList.remove('recording');
         status.innerText = "잠시 중단되었습니다.";
       } else if (mediaRecorder && mediaRecorder.state === 'paused') {
         mediaRecorder.resume();
-        btn.innerHTML = '<i class="fas fa-pause"></i> 일시정지';
+        if (icon) icon.className = 'fas fa-pause';
+        btn.title = "녹음 일시정지";
+        btn.classList.add('recording');
+        btn.classList.remove('paused');
         status.innerText = "생각을 듣고 있습니다...";
         recordingTimer = setInterval(() => {
           recordSeconds++;
@@ -2550,6 +2657,10 @@
           document.getElementById('record-timer').innerText = `${m}:${s}`;
         }, 1000);
       }
+    }
+
+    function stopRecordingComplete() {
+      stopAudioRecordingEngine();
     }
 
     function resetRecording() {
@@ -2803,6 +2914,12 @@
 
       draftNotes.forEach((idea, idx) => {
         deck.appendChild(createDraftCardDOM(idea, idx));
+        // 초기 높이 동적 계산 가동 (내부 스크롤바 생성 억제하여 모바일 전체 페이지 스크롤 보장)
+        const textarea = document.getElementById(`draft-content-${idx}`);
+        if (textarea) {
+          textarea.style.height = 'auto';
+          textarea.style.height = textarea.scrollHeight + 'px';
+        }
       });
 
       resetExtractButtonAfterProcess();
