@@ -6269,12 +6269,20 @@ function generateIndividualAttendanceSms(member, startDateStr, endDateStr, baseD
       var lPhone = String(logData[k][logCols.phone] || "").replace(/[^0-9]/g, "");
       var lDateStr = logData[k][logCols.date];
       var lType = String(logData[k][logCols.type] || ""); 
+      var lReason = String(logData[k][logCols.reason] || ""); 
       
       if (lPhone === phone && lDateStr) {
         var lDate = new Date(lDateStr);
         if (lDate >= startD && lDate <= endD) {
           stats.total++;
-          if (lType.indexOf("테라피") !== -1 || lType.indexOf("원적외선") !== -1 || lType.indexOf("반신욕") !== -1 || lType.indexOf("보너스") !== -1) {
+          
+          var isCombo = (lType === "복합" || lType.indexOf("복합") !== -1 || lReason.indexOf("복합") !== -1);
+          var isTherapy = (lType.indexOf("테라피") !== -1 || lType.indexOf("원적외선") !== -1 || lType.indexOf("반신욕") !== -1 || lType.indexOf("보너스") !== -1 || lReason.indexOf("테라피") !== -1 || lReason.indexOf("보너스") !== -1) && !isCombo;
+          
+          if (isCombo) {
+            stats.jumping++;
+            stats.therapy++;
+          } else if (isTherapy) {
             stats.therapy++;
           } else {
             stats.jumping++;

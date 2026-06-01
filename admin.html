@@ -5432,7 +5432,7 @@
       }
     }
 
-    // 🪄 [v66.0] 출석정산 문자 일괄 자동 생성 백엔드 호출기 (타임아웃 0% 비동기 순차 체인 방식)
+    // 🪄 [v66.0] 출석정산 문자 일괄 자동 생성 백엔드 호출기 (5배속 동시 병렬 파이프라인 Concurrency Pipeline 기법 적용)
     function runAttendanceSmsGeneration() {
       const start = document.getElementById('settleStartDate').value;
       const end = document.getElementById('settleEndDate').value;
@@ -5461,9 +5461,9 @@
       overlay.innerHTML = `
         <div style="font-size: 3rem; margin-bottom: 20px; animation: spin 1s linear infinite;">🔄</div>
         <h3 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 12px; color: var(--primary);" id="settle-loading-title">🪄 정산 대상 모험가 명단 분석 중...</h3>
-        <p style="font-size: 1.1rem; color: #fbbf24; font-weight: 800; margin-bottom: 10px;" id="settle-loading-progress">0% 완료</p>
+        <p style="font-size: 1.25rem; color: #fbbf24; font-weight: 900; margin-bottom: 10px;" id="settle-loading-progress">0% 완료</p>
         <p style="font-size: 0.88rem; color: #cbd5e1; max-width: 420px; line-height: 1.55; word-break: keep-all;" id="settle-loading-desc">
-          진행중인 모험가들을 한 분씩 순차 정밀 정산 분석하고 있습니다. 구글 응답 속도 조절을 통해 타임아웃 오류 없이 안전하게 끝까지 완수합니다.
+          진행중인 모험가들의 출석 데이터 및 역대 정산 기록을 가져오고 있습니다.
         </p>
       `;
       
@@ -5485,42 +5485,57 @@
             return;
           }
           
-          document.getElementById('settle-loading-title').innerText = "🪄 초정밀 AI 출석 정산 생성 중...";
+          document.getElementById('settle-loading-title').innerText = "🪄 ⚡ 5배속 AI 정산 리포트 병렬 생성 중...";
           
           let successCount = 0;
+          let completedCount = 0;
           let currentIdx = 0;
+          const concurrencyLimit = 5; // 상시 5명 동시 병렬 생성 처리 (속도 500% 극대화)
           
-          // 2단계: 1명씩 연쇄 비동기 루프 호출 (구글 서버 과부하 및 타임아웃을 100% 영리하게 회피!)
-          function processNextMember() {
+          function updateProgressUI() {
+            const progressPct = Math.round((completedCount / members.length) * 100);
+            document.getElementById('settle-loading-progress').innerText = `${progressPct}% 완료 (${completedCount} / ${members.length}명)`;
+            
+            // 현재 활발하게 정산 중인 회원 이름들 노출
+            let activeNames = [];
+            for (let i = Math.max(0, currentIdx - concurrencyLimit); i < Math.min(currentIdx, members.length); i++) {
+              activeNames.push(members[i].name.replace(/\d{4}$/, ""));
+            }
+            document.getElementById('settle-loading-desc').innerHTML = `현재 모험가 <span style="color:#f59e0b; font-weight:800;">[${activeNames.join(", ")}]</span> 님의 고품격 감성 AI 코치를 병렬 연쇄 동시 조립하고 있습니다...`;
+          }
+          
+          // 핵심: 5개의 동시 병렬 파이프라인 가동 및 피드백 처리
+          function launchNextTask() {
             if (currentIdx >= members.length) {
-              // 3단계: 전체 생성 완료 콜백
-              overlay.remove();
-              
-              const toast = document.createElement('div');
-              toast.style.position = 'fixed'; toast.style.bottom = '100px'; toast.style.left = '50%';
-              toast.style.transform = 'translateX(-50%)'; toast.style.background = '#48bb78';
-              toast.style.color = 'white'; toast.style.padding = '12px 24px';
-              toast.style.borderRadius = '30px'; toast.style.fontWeight = 'bold';
-              toast.style.fontSize = '0.9rem'; toast.style.zIndex = '99999';
-              toast.style.boxShadow = '0 10px 15px rgba(0,0,0,0.2)';
-              toast.style.opacity = '1'; toast.style.transition = 'all 0.5s';
-              toast.innerText = `✅ 총 ${successCount}명의 AI 출석정산 문자 일괄 생성 완료!`;
-              document.body.appendChild(toast);
-              setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 500); }, 2500);
-              
-              allSmsLogs = [];
-              loadSmsLogData();
-              switchSmsMainTab('view');
-              setSmsCategory('settlement');
+              // 더 이상 쏠 태스크가 없고, 이미 쏜 모든 태스크가 마쳐졌을 때 최종 완료 콜백
+              if (completedCount >= members.length) {
+                overlay.remove();
+                
+                const toast = document.createElement('div');
+                toast.style.position = 'fixed'; toast.style.bottom = '100px'; toast.style.left = '50%';
+                toast.style.transform = 'translateX(-50%)'; toast.style.background = '#48bb78';
+                toast.style.color = 'white'; toast.style.padding = '12px 24px';
+                toast.style.borderRadius = '30px'; toast.style.fontWeight = 'bold';
+                toast.style.fontSize = '0.9rem'; toast.style.zIndex = '99999';
+                toast.style.boxShadow = '0 10px 15px rgba(0,0,0,0.2)';
+                toast.style.opacity = '1'; toast.style.transition = 'all 0.5s';
+                toast.innerText = `✅ 총 ${successCount}명의 AI 출석정산 문자 일괄 생성 완료!`;
+                document.body.appendChild(toast);
+                setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 500); }, 2500);
+                
+                allSmsLogs = [];
+                loadSmsLogData();
+                switchSmsMainTab('view');
+                setSmsCategory('settlement');
+              }
               return;
             }
             
-            const member = members[currentIdx];
-            const progressPct = Math.round((currentIdx / members.length) * 100);
-            const cleanName = member.name.replace(/\d{4}$/, "");
+            const taskIdx = currentIdx;
+            const member = members[taskIdx];
+            currentIdx++; // 인덱스 선점하여 중복 방지
             
-            document.getElementById('settle-loading-progress').innerText = `${progressPct}% 완료 (${currentIdx} / ${members.length}명)`;
-            document.getElementById('settle-loading-desc').innerHTML = `현재 모험가 <span style="color:#f59e0b; font-weight:800;">[${cleanName}]</span> 님의 한 달 건강 여정 분석 코멘트를 이전 정산 히스토리와 매끄럽게 연동 중입니다...`;
+            updateProgressUI();
             
             google.script.run.withSuccessHandler(function(memberRes) {
               if (memberRes.error) {
@@ -5528,17 +5543,25 @@
               } else {
                 if (memberRes.status === "created") successCount++;
               }
-              currentIdx++;
-              processNextMember(); // 다음 청크 쏘기
+              completedCount++;
+              updateProgressUI();
+              
+              // 완료되었으므로 파이프라인의 다음 대기 태스크 즉각 발동!
+              launchNextTask();
             }).withFailureHandler(function(err) {
               console.error(`🚨 ${member.name} 통신 실패: ${err.message}`);
-              currentIdx++;
-              processNextMember(); // 통신 실패 건이 나와도 멈추지 않고 끝까지 안정 완수 보장!
+              completedCount++;
+              updateProgressUI();
+              
+              // 실패했어도 다음 대기 태스크 발동하여 중단 차단
+              launchNextTask();
             }).generateIndividualAttendanceSms(member, start, end, base);
           }
           
-          // 연쇄 호출 체인 웅장하게 발동!
-          processNextMember();
+          // 동시성 제한만큼 처음에 동시에 시작!
+          for (let p = 0; p < Math.min(concurrencyLimit, members.length); p++) {
+            launchNextTask();
+          }
           
         }).withFailureHandler(function(err) {
           overlay.remove();
