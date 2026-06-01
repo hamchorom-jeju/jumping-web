@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>VILLAGE CHIEF'S SANCTUM - GENIE WORLD</title>
@@ -14,30 +20,104 @@
       --sanctum-gold: #d97706;
       --sanctum-gold-light: #fbbf24;
       --sanctum-bg: #0b071a;
+      --sanctum-bg-gradient: radial-gradient(circle at 0% 0%, rgba(92, 27, 155, 0.25) 0%, transparent 60%), radial-gradient(circle at 100% 100%, rgba(217, 119, 6, 0.15) 0%, transparent 60%);
       --sanctum-card: rgba(22, 15, 45, 0.7);
       --sanctum-border: rgba(217, 119, 6, 0.25);
       --text-main: #f8fafc;
       --text-sub: #94a3b8;
+      
+      --top-bar-bg: rgba(11, 7, 26, 0.9);
+      --stat-box-bg: rgba(0, 0, 0, 0.4);
+      --stat-val-color: #ffffff;
+      --input-bg: rgba(0, 0, 0, 0.4);
+      --calendar-item-bg: rgba(0,0,0,0.2);
+      --bottom-tabs-bg: rgba(11, 7, 26, 0.95);
+      --blessing-card-bg: rgba(255,255,255,0.02);
+      --blessing-thumb-bg: rgba(92, 27, 155, 0.2);
+      --writing-btn-bg: rgba(92, 27, 155, 0.15);
+      --writing-btn-hover-bg: rgba(92, 27, 155, 0.3);
+      --env-btn-bg: rgba(255,255,255,0.03);
+      --env-btn-border: rgba(255,255,255,0.1);
+      --magic-master-bg: rgba(92, 27, 155, 0.18);
+      --custom-bgm-bg: rgba(0,0,0,0.3);
+      --modal-overlay-bg: rgba(11, 7, 26, 0.85);
+
+      --cal-bg: rgba(0, 0, 0, 0.25);
+      --cal-border: rgba(255, 255, 255, 0.08);
+      --cal-nav-btn-bg: rgba(255, 255, 255, 0.08);
+      --cal-nav-btn-border: rgba(255, 255, 255, 0.12);
+      --cal-nav-btn-color: #fff;
+      --cal-cell-bg: rgba(255, 255, 255, 0.02);
+      --cal-cell-border: rgba(255, 255, 255, 0.04);
+      --cal-cell-hover-bg: rgba(255, 255, 255, 0.06);
+      --cal-cell-hover-border: rgba(255, 255, 255, 0.12);
+      --cal-cell-past-bg: rgba(0, 0, 0, 0.15);
+      --cal-cell-past-border: rgba(255, 255, 255, 0.02);
+      --cal-cell-auto-bg: rgba(255, 255, 255, 0.03);
+      --cal-cell-auto-border: rgba(255, 255, 255, 0.15);
+    }
+
+    :root[data-theme="light"] {
+      --sanctum-purple: #7c2ae8;
+      --sanctum-purple-light: #9d5cf2;
+      --sanctum-gold: #b45309;
+      --sanctum-gold-light: #92400e;
+      --sanctum-bg: #f5f3fa;
+      --sanctum-bg-gradient: radial-gradient(circle at 0% 0%, rgba(124, 42, 232, 0.08) 0%, transparent 60%), radial-gradient(circle at 100% 100%, rgba(180, 83, 9, 0.08) 0%, transparent 60%);
+      --sanctum-card: rgba(255, 255, 255, 0.85);
+      --sanctum-border: rgba(180, 83, 9, 0.25);
+      --text-main: #201335;
+      --text-sub: #6c5d80;
+      
+      --top-bar-bg: rgba(245, 243, 250, 0.9);
+      --stat-box-bg: rgba(255, 255, 255, 0.9);
+      --stat-val-color: #201335;
+      --input-bg: rgba(255, 255, 255, 0.9);
+      --calendar-item-bg: rgba(255, 255, 255, 0.7);
+      --bottom-tabs-bg: rgba(245, 243, 250, 0.95);
+      --blessing-card-bg: rgba(255, 255, 255, 0.6);
+      --blessing-thumb-bg: rgba(124, 42, 232, 0.15);
+      --writing-btn-bg: rgba(124, 42, 232, 0.08);
+      --writing-btn-hover-bg: rgba(124, 42, 232, 0.15);
+      --env-btn-bg: rgba(255, 255, 255, 0.6);
+      --env-btn-border: rgba(124, 42, 232, 0.15);
+      --magic-master-bg: rgba(124, 42, 232, 0.06);
+      --custom-bgm-bg: rgba(255, 255, 255, 0.5);
+      --modal-overlay-bg: rgba(32, 19, 53, 0.65);
+
+      --cal-bg: rgba(255, 255, 255, 0.6);
+      --cal-border: rgba(124, 42, 232, 0.15);
+      --cal-nav-btn-bg: rgba(255, 255, 255, 0.9);
+      --cal-nav-btn-border: rgba(124, 42, 232, 0.2);
+      --cal-nav-btn-color: #201335;
+      --cal-cell-bg: rgba(255, 255, 255, 0.4);
+      --cal-cell-border: rgba(124, 42, 232, 0.08);
+      --cal-cell-hover-bg: rgba(255, 255, 255, 0.85);
+      --cal-cell-hover-border: rgba(124, 42, 232, 0.2);
+      --cal-cell-past-bg: rgba(0, 0, 0, 0.05);
+      --cal-cell-past-border: rgba(0, 0, 0, 0.02);
+      --cal-cell-auto-bg: rgba(255, 255, 255, 0.2);
+      --cal-cell-auto-border: rgba(124, 42, 232, 0.15);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', 'Pretendard', sans-serif; }
 
     body {
       background: var(--sanctum-bg);
-      background-image: 
-        radial-gradient(circle at 0% 0%, rgba(92, 27, 155, 0.25) 0%, transparent 60%),
-        radial-gradient(circle at 100% 100%, rgba(217, 119, 6, 0.15) 0%, transparent 60%);
+      background-image: var(--sanctum-bg-gradient);
       color: var(--text-main);
       min-height: 100vh;
       overflow-x: hidden;
       padding-bottom: 100px;
+      transition: background 0.3s, color 0.3s;
     }
 
     /* 🏠 고도화된 헤더 */
     .top-bar {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 15px 20px; background: rgba(11, 7, 26, 0.9); backdrop-filter: blur(20px);
+      padding: 15px 20px; background: var(--top-bar-bg); backdrop-filter: blur(20px);
       border-bottom: 2px solid var(--sanctum-border); position: sticky; top: 0; z-index: 1000;
+      transition: background 0.3s, border-color 0.3s;
     }
     .header-title h1 { font-size: 1.15rem; font-weight: 900; color: var(--sanctum-gold-light); letter-spacing: 1px; }
     .header-title p { font-size: 0.65rem; color: var(--text-sub); font-weight: 700; text-transform: uppercase; }
@@ -53,29 +133,32 @@
 
     /* 🔮 수정구 모니터링 */
     .crystal-ball {
-      background: radial-gradient(circle at 50% 50%, rgba(92, 27, 155, 0.15), transparent);
+      background: radial-gradient(circle at 50% 50%, rgba(92, 27, 155, 0.08), transparent);
       border-radius: 30px; padding: 25px 20px; text-align: center; margin-bottom: 25px;
       border: 1px solid var(--sanctum-border);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      transition: background 0.3s, border-color 0.3s;
     }
     .village-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    .stat-box { background: rgba(0,0,0,0.4); padding: 15px 5px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
-    .stat-val { font-size: 1.4rem; font-weight: 900; color: #fff; display: block; }
-    .stat-label { font-size: 0.65rem; color: var(--text-sub); font-weight: 700; margin-top: 4px; display: block; }
+    .stat-box { background: var(--stat-box-bg); padding: 15px 5px; border-radius: 20px; border: 1px solid var(--sanctum-border); transition: background 0.3s, border-color 0.3s; }
+    .stat-val { font-size: 1.4rem; font-weight: 900; color: var(--stat-val-color); display: block; transition: color 0.3s; }
+    .stat-label { font-size: 0.65rem; color: var(--text-sub); font-weight: 700; margin-top: 4px; display: block; transition: color 0.3s; }
 
     /* 🧱 카드 디자인 */
     .manager-card {
       background: var(--sanctum-card); border-radius: 28px; padding: 22px;
       border: 1px solid var(--sanctum-border); margin-bottom: 25px;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+      transition: background 0.3s, border-color 0.3s;
     }
-    .section-title { font-size: 0.95rem; font-weight: 900; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--sanctum-gold-light); }
+    .section-title { font-size: 0.95rem; font-weight: 900; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--sanctum-gold-light); transition: color 0.3s; }
     
     .pillar-input {
-      width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--sanctum-border);
-      border-radius: 15px; padding: 12px 15px; color: white; font-size: 0.85rem; margin-bottom: 12px;
+      width: 100%; background: var(--input-bg); border: 1px solid var(--sanctum-border);
+      border-radius: 15px; padding: 12px 15px; color: var(--text-main); font-size: 0.85rem; margin-bottom: 12px;
       box-sizing: border-box;
       font-weight: 700;
+      transition: background 0.3s, border-color 0.3s, color 0.3s;
     }
     .pillar-input:focus {
       outline: none; border-color: var(--sanctum-gold-light);
@@ -91,11 +174,11 @@
     /* ✨ 이장의 축복 (MIRACLE인증) */
     .blessing-list { display: flex; flex-direction: column; gap: 12px; }
     .blessing-card {
-      background: rgba(255,255,255,0.02); border-radius: 20px; padding: 15px;
-      display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255,255,255,0.05);
+      background: var(--blessing-card-bg); border-radius: 20px; padding: 15px;
+      display: flex; align-items: center; gap: 15px; border: 1px solid var(--sanctum-border);
       transition: all 0.3s;
     }
-    .member-thumb { width: 45px; height: 45px; background: rgba(92, 27, 155, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; border: 1px solid rgba(124, 58, 237, 0.2); }
+    .member-thumb { width: 45px; height: 45px; background: var(--blessing-thumb-bg); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; border: 1px solid var(--sanctum-border); transition: background 0.3s, border-color 0.3s; }
     .card-info { flex: 1; }
     .card-info h3 { font-size: 0.85rem; font-weight: 900; }
     .card-info p { font-size: 0.72rem; color: var(--text-sub); font-weight: 700; margin-top: 2px; }
@@ -107,12 +190,12 @@
     /* ✍️ 지혜의 보물고 집필실 */
     .scriptorium { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
     .writing-btn {
-      background: rgba(92, 27, 155, 0.15); border: 1.5px solid var(--sanctum-border);
+      background: var(--writing-btn-bg); border: 1.5px solid var(--sanctum-border);
       border-radius: 20px; padding: 20px 10px; text-align: center; cursor: pointer;
       transition: all 0.2s;
     }
     .writing-btn:hover {
-      background: rgba(92, 27, 155, 0.3); border-color: var(--sanctum-gold);
+      background: var(--writing-btn-hover-bg); border-color: var(--sanctum-gold);
       transform: translateY(-2px);
     }
     .writing-btn .icon { font-size: 1.8rem; margin-bottom: 8px; display: block; }
@@ -121,9 +204,10 @@
     /* 🌦️ 날씨/BGM 컨트롤 박스 */
     .env-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
     .env-btn {
-      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+      background: var(--env-btn-bg); border: 1px solid var(--env-btn-border);
       border-radius: 12px; padding: 10px 5px; text-align: center; cursor: pointer;
       font-size: 1.2rem; transition: all 0.2s;
+      color: var(--text-main);
     }
     .env-btn span { font-size: 0.55rem; display: block; font-weight: 800; margin-top: 4px; color: var(--text-sub); }
     .env-btn.active {
@@ -134,8 +218,9 @@
     /* 📅 캘린더 리스트 */
     .calendar-list { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
     .calendar-item {
-      background: rgba(0,0,0,0.2); border: 1.5px solid rgba(255,255,255,0.05);
+      background: var(--calendar-item-bg); border: 1.5px solid var(--sanctum-border);
       border-radius: 15px; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center;
+      transition: background 0.3s, border-color 0.3s;
     }
     .calendar-info h4 { font-size: 0.8rem; font-weight: 900; color: var(--sanctum-gold-light); }
     .calendar-info p { font-size: 0.7rem; color: var(--text-sub); font-weight: 700; margin-top: 3px; }
@@ -146,13 +231,14 @@
 
     /* 📅 [v66.0] 생텀 프리미엄 하이브리드 달력 그리드 디자인 */
     .sanctum-calendar-container {
-      background: rgba(0, 0, 0, 0.25);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--cal-bg);
+      border: 1px solid var(--cal-border);
       border-radius: 18px;
       padding: 12px;
       margin-top: 10px;
       width: 100%;
       box-sizing: border-box;
+      transition: background 0.3s, border-color 0.3s;
     }
     .sanctum-calendar-header {
       display: flex;
@@ -171,9 +257,9 @@
       gap: 6px;
     }
     .sanctum-calendar-nav-btn {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: #fff;
+      background: var(--cal-nav-btn-bg);
+      border: 1px solid var(--cal-nav-btn-border);
+      color: var(--cal-nav-btn-color);
       padding: 4px 10px;
       border-radius: 8px;
       cursor: pointer;
@@ -208,8 +294,8 @@
     .sanctum-calendar-cell {
       aspect-ratio: 1 / 1.1;
       min-height: 62px;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.04);
+      background: var(--cal-cell-bg);
+      border: 1px solid var(--cal-cell-border);
       border-radius: 12px;
       padding: 5px;
       display: flex;
@@ -223,8 +309,8 @@
       text-align: left;
     }
     .sanctum-calendar-cell:hover {
-      background: rgba(255, 255, 255, 0.06);
-      border-color: rgba(255, 255, 255, 0.12);
+      background: var(--cal-cell-hover-bg);
+      border-color: var(--cal-cell-hover-border);
     }
     .sanctum-calendar-cell.cell-today {
       border: 1.5px solid #ea580c !important;
@@ -240,8 +326,8 @@
       border-color: #c084fc !important;
     }
     .sanctum-calendar-cell.cell-auto {
-      background: rgba(255, 255, 255, 0.03) !important;
-      border: 1px dashed rgba(255, 255, 255, 0.15) !important;
+      background: var(--cal-cell-auto-bg) !important;
+      border: 1px dashed var(--cal-cell-auto-border) !important;
     }
     .sanctum-calendar-cell.cell-empty {
       opacity: 0.15;
@@ -250,8 +336,8 @@
     }
     .sanctum-calendar-cell.cell-past {
       opacity: 0.45;
-      background: rgba(0, 0, 0, 0.15) !important;
-      border: 1px solid rgba(255, 255, 255, 0.02) !important;
+      background: var(--cal-cell-past-bg) !important;
+      border: 1px solid var(--cal-cell-past-border) !important;
     }
     .cell-day-num {
       font-size: 0.65rem;
@@ -324,16 +410,17 @@
     /* 🚪 GOLDEN SCROLL EDITOR MODAL */
     .scroll-modal {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(11, 7, 26, 0.85); display: none; 
+      background: var(--modal-overlay-bg); display: none; 
       align-items: flex-start; justify-content: center;
       z-index: 2000; padding: 40px 15px; backdrop-filter: blur(10px);
       overflow-y: auto; /* 🌟 세로 스크롤 완벽 활성화 */
       -webkit-overflow-scrolling: touch; /* 모바일 관성 스크롤 보장 */
+      transition: background 0.3s;
     }
     .scroll-body {
       background: #fdfaf2; border: 3px solid #aa7c11; border-radius: 30px;
       width: 100%; max-width: 480px; padding: 25px; color: #2c1a04;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.6); position: relative;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4); position: relative;
       background-image: url('https://www.transparenttextures.com/patterns/lined-paper-2.png');
       margin: auto 0; /* 🌟 스크롤 영역 내에서 적절한 중앙 마진 배치 */
     }
@@ -365,9 +452,10 @@
     /* 📱 하단 네비게이션 */
     .bottom-tabs {
       position: fixed; bottom: 0; left: 0; width: 100%;
-      background: rgba(11, 7, 26, 0.95); backdrop-filter: blur(20px);
+      background: var(--bottom-tabs-bg); backdrop-filter: blur(20px);
       border-top: 1.5px solid var(--sanctum-border); display: flex; justify-content: space-around;
       padding: 10px 10px 25px; z-index: 1000;
+      transition: background 0.3s, border-color 0.3s;
     }
     .tab-item { color: var(--text-sub); text-decoration: none; font-size: 0.65rem; font-weight: 800; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
     .tab-item.active { color: var(--sanctum-gold-light); }
@@ -409,7 +497,7 @@
 <body>
 
   <!-- [v44.218] 로딩 오버레이 -->
-  <div id="v-loading" class="v-loading-overlay" style="display: flex; background: rgba(11, 7, 26, 0.8);">
+  <div id="v-loading" class="v-loading-overlay" style="display: flex; background: var(--modal-overlay-bg);">
       <div class="v-loading-spinner"></div>
       <div id="v-loading-msg" style="font-weight: 800; color: var(--sanctum-gold-light); font-size: 0.9rem;">신비로운 이장의 사령부를 여는 중...</div>
   </div>
@@ -419,7 +507,10 @@
       <h1>마을 이장의 집 🏰</h1>
       <p>Sanctum of the Chief</p>
     </div>
-    <button class="mode-switch" onclick="window.location.href='admin.html'">💼 실무 모드</button>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" style="background: rgba(255, 255, 255, 0.08); border: 1.5px solid var(--sanctum-border); color: var(--sanctum-gold-light); padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 32px; transition: all 0.2s;"><i class="fa-solid fa-sun" id="theme-icon"></i></button>
+      <button class="mode-switch" onclick="window.location.href='admin.html'">💼 실무 모드</button>
+    </div>
   </div>
 
   <div class="container">
@@ -447,7 +538,7 @@
       <div class="section-title"><i class="fa-solid fa-cloud-sun"></i> 마을 기후 및 음악 마법 환경 제어</div>
       
       <!-- 🔮 [원장님 피드백 반영] 마법 환경 제어장치 일괄 켜기/끄기 마스터 스위치 -->
-      <div style="margin-bottom: 20px; padding: 14px 16px; background: rgba(92, 27, 155, 0.18); border: 2.2px solid var(--sanctum-gold); border-radius: 20px; box-shadow: 0 4px 15px rgba(217, 119, 6, 0.15); transition: all 0.3s ease;">
+      <div style="margin-bottom: 20px; padding: 14px 16px; background: var(--magic-master-bg); border: 2.2px solid var(--sanctum-gold); border-radius: 20px; box-shadow: 0 4px 15px rgba(217, 119, 6, 0.15); transition: all 0.3s ease;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div style="flex: 1; padding-right: 10px;">
             <span style="font-size: 0.82rem; font-weight: 900; color: var(--sanctum-gold-light); display: flex; align-items: center; gap: 6px;">
@@ -487,7 +578,7 @@
       </div>
       
       <!-- 🎵 기후별 커스텀 BGM 설정 (제주 기상싱크 및 각 기후 매칭용) -->
-      <div id="custom-bgm-panel" style="margin-top: 15px; margin-bottom: 15px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 20px; border: 1px solid rgba(217, 119, 6, 0.2);">
+      <div id="custom-bgm-panel" style="margin-top: 15px; margin-bottom: 15px; padding: 15px; background: var(--custom-bgm-bg); border-radius: 20px; border: 1px solid rgba(217, 119, 6, 0.2); transition: background 0.3s;">
         <div style="font-size: 0.78rem; font-weight: 900; color: var(--sanctum-gold-light); margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
           <i class="fa-solid fa-sliders"></i> 🌦️ 기후 연동 배경음악 세트 지정 (Suno 또는 MP3 주소)
         </div>
@@ -677,11 +768,32 @@
     let currentEditorType = 'tip';
 
     window.onload = function() {
+      updateThemeIcon(); // 테마 스위치 아이콘 초기화
       loadSanctumData();
       // loadRecentCerts(); // [임시 비활성화] 이장의 축복(인증 승인) 기능 잠정 중단에 따른 호출 정지
       loadScheduledQuests();
       loadEnvironmentSettings();
     };
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateThemeIcon();
+    }
+
+    function updateThemeIcon() {
+      const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+      const icon = document.getElementById('theme-icon');
+      if (icon) {
+        if (theme === 'light') {
+          icon.className = 'fa-solid fa-moon';
+        } else {
+          icon.className = 'fa-solid fa-sun';
+        }
+      }
+    }
 
     function showLoading(msg) {
       document.getElementById('v-loading-msg').innerText = msg;
@@ -1439,33 +1551,39 @@
         styleGuide = "A colorful and friendly children's science book graphic illustration, clear bold outlines, vivid educational icons, engaging 2D flat elements, clean white background";
       }
 
-      const systemInstruction = `당신은 '노형 점핑 클럽'의 수석 웰니스 사이언스 에디터입니다.
-당신의 임무는 회원들에게 어렵고 전문적인 생리학적 건강 상식들을 일상 속에서 쉽게 실천할 수 있도록 '이해하기 쉽고 명쾌한 언어'로 전달하는 것입니다.
-동시에, 회원들이 몸을 관리하고 대사를 성공적으로 통제할 수 있도록 우리 '점핑 웹앱'의 다채롭고 훌륭한 기능들을 자연스럽고 스마트하게 소개하고 연계해 주는 것입니다.
+      const promptText = `
+당신은 '노형 점핑 클럽'의 수석 웰니스 사이언스 에디터이자 지성적인 건강 과학 칼럼니스트입니다.
+당신의 임무는 회원들에게 어렵고 전문적인 생리학적 건강 상식이나 영양소 지식을 일상 속에서 쉽게 이해하고 올바르게 실천할 수 있도록 '이해하기 쉽고 명쾌한 언어'로 자세하게 설명해주는 것입니다.
 
-[우리 점핑 웹앱의 시그니처 5대 기능 룰셋 (글과 자연스럽게 연계하여 적극 소개해 주십시오)]
-1. 음식 사진 분석 (항상성 점수): 음식 사진을 찍어 올리면, 지니 AI가 영양 성분을 분석하여 몸의 밸런스를 돕는 '항상성 점수'를 매겨줍니다.
-2. 아침 인증 + 모닝티 (1타 2피): 아침식사를 거르는 사람이 물이나 차 사진을 올리면 '아침식사 인증'과 '모닝티 인증'을 동시에 1타 2피로 처리해 보너스 점수를 줍니다.
-3. 저녁 인증 + 나이트컷 (14시간 단식): 저녁을 가볍게 먹기 위해 물이나 차 사진을 올리면, 지니 AI가 '14시간 단식'을 위한 최상의 식단으로 판별하여 '저녁식사 인증'과 '나이트컷 인증'을 1타 2피로 처리해 보상을 줍니다.
-4. 저녁 과식 판별 시 '글리코겐 방패 퀘스트' 격발: 저녁 식단이 '과식(폭식)'으로 지니 AI에게 판별되면, 즉시 '글리코겐 방패 퀘스트'가 강제 격발됩니다. 체지방 전환 데드라인인 72시간 골든타임 이내에 3일간 점핑클럽에 연속 출석해 완료 보너스를 받을 수 있으며, 매일의 진행 상황이 대시보드에 실시간 기록됩니다.
-5. 인바디 화면 캡처 판독: 인바디를 측정하고 그 점수 화면을 캡처해서 올리면, 지니 AI가 사진을 정밀 판독하여 인바디 기록을 자동으로 등록해 줍니다.
+[⚠️ 절대적 작문 지침 및 주의사항 (🚨필수 준수)]
+1. **요지 초집중 (오버 금지)**:
+   - 제공되는 핵심 키워드/요지의 범위를 임의로 과장하거나 벗어나지 마십시오. 오직 제공된 특정 건강 과학 주제(예: 식이섬유, 비타민 등)에 대해서만 아주 알차고 세부적이며 전문적으로 파고들어 친절하게 설명하십시오.
+   - **중요**: 식단 스캔, 글리코겐 방패, 아침 인증 등 우리 점핑 웹앱 내부의 특정 메뉴 기능이나 이벤트 보상을 인위적으로 연계하여 홍보하거나 언급하지 마십시오! 순수한 고품격 지식 상식 칼럼 전달에만 100% 집중해 주십시오.
 
-[작성 지침]
-1. 내용의 구성과 역할:
-   - 생리학적 건강 지식(현상과 과학적 원리)을 쉽고 재미있게 소개하면서, 자연스럽게 위에 소개된 우리 '점핑 웹앱의 관련 챌린지 및 기능'을 활용할 수 있도록 친절하고 품격 있게 스토리로 엮어 주십시오.
-   - 키워드에 앱 기능이 없더라도, 대사나 식단 관련 상식을 풀어주며 우리 앱의 기능을 연동하여 유용한 꿀팁으로 소개해 주면 매우 좋습니다.
-2. 분량 및 레이아웃:
-   - 글이 너무 짧아(3~4줄) 비문이 되거나 논리가 파괴되지 않도록 하십시오. 독자가 영양가 있는 전문 건강 칼럼으로 느낄 수 있도록 하되, 너무 지루하지 않고 알찬 길이(공백 포함 300~500자 내외)로 작성해 주십시오.
-   - 모바일 화면 가독성을 위해, 2~3문장마다 문맥의 흐름에 맞춰 줄바꿈(\\n)을 적절히 사용하여 시각적 쉼표를 제공하십시오.
-3. 톤앤매너:
-   - 유아적인 어투 및 희화화된 사투리는 일절 배제하고, 지성적이고 정중한 격식체(~입니다, ~해야 합니다, ~해보는 것이 좋습니다)를 구사하십시오.
-4. 이미지 프롬프트 (imagePrompt) 생성 규칙:
-   - 이 글의 주제 및 웰니스 감성에 부합하며, 아래 [삽화 스타일 가이드]를 완벽하게 반영한 영문 Pollinations AI용 프롬프트 1문장을 영어로 작성하십시오.
+2. **모바일 최적화 레이아웃**:
+   - 모바일 화면에서 줄글을 읽을 때 피로감이 없도록, 문맥의 흐름에 맞춰 **반드시 2~3문장마다 줄바꿈(\\n)**을 사용하여 시각적 쉼표를 정확히 제공하십시오.
+   - 독자가 알찬 전문 지식을 흥미롭게 얻을 수 있는 충분한 양(공백 포함 350~500자 내외)으로 기승전결이 매끄럽게 작성하십시오.
+
+3. **지성적이고 따뜻한 톤앤매너**:
+   - 유아적인 어투나 사투리, 지나치게 가벼운 홍보성 어조는 일절 금지하며, 지성적이고 전문적이면서도 따뜻한 온기가 서려 있는 수석 에디터 격식체(~입니다, ~해야 합니다, ~해보는 것이 좋습니다)를 철저히 구사하십시오.
+   - 문장의 맥락에 맞춰 건강 및 과학적 신뢰를 더하는 이모지(🥦, 🌳, 🔬, 🌟)를 2~3개 내외로 우아하게 섞어 주십시오.
+
+4. **이미지 프롬프트 (imagePrompt) 생성 규칙**:
+   - 이 글의 주제 및 웰니스 감성에 완벽하게 어울리며, 아래 [삽화 스타일 가이드]를 철저히 반영한 영문 Pollinations AI용 프롬프트 1문장을 영어로 작성하십시오.
    - [삽화 스타일 가이드]: ${styleGuide}
 
-5. 절대 JSON 형식을 벗어나지 마십시오.`;
+[정보 입력]
+- 작성할 섹션: ${section}
+- 핵심 키워드/요지: "${keywords}"
 
-      const promptText = `작성할 섹션: ${section}\n핵심 키워드/요지: "${keywords}"\n\n위 지침과 키워드를 기반으로, 대사 생리학 지식을 쉽게 풀어주는 유려한 수석 에디터 톤으로 명품 건강 비법 칼럼을 작성해 주세요.`;
+[출력 형식 제한 (🚨필수 준수)]
+반드시 다음 JSON 형식만을 정확하게 출력하십시오. 마크다운 따옴표(\`\`\`json)나 부가 설명 텍스트는 절대 포함하지 말고 오직 다음 JSON 내용 자체만 반환하십시오:
+{
+  "title": "여기에 수석 에디터 톤의 멋진 지식 칼럼 제목을 작성하십시오",
+  "content": "여기에 모바일 가독성을 위해 적절한 줄바꿈(\\n)을 섞어 완성도 높은 순수 건강 칼럼 본문을 작성하십시오",
+  "imagePrompt": "여기에 영문 이미지 프롬프트 1문장을 작성하십시오"
+}
+`;
 
       const payload = {
         contents: [{
@@ -1473,22 +1591,8 @@
             text: promptText
           }]
         }],
-        systemInstruction: {
-          parts: [{
-            text: systemInstruction
-          }]
-        },
         generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: "OBJECT",
-            properties: {
-              title: { type: "STRING" },
-              content: { type: "STRING" },
-              imagePrompt: { type: "STRING" }
-            },
-            required: ["title", "content", "imagePrompt"]
-          }
+          responseMimeType: "application/json"
         }
       };
 
@@ -1510,7 +1614,9 @@
           throw new Error("Gemini API가 빈 응답을 반환했습니다.");
         }
         
-        const jsonText = data.candidates[0].content.parts[0].text;
+        let jsonText = data.candidates[0].content.parts[0].text.trim();
+        // 앞뒤 백틱이나 노이즈가 있다면 완벽하게 제거하는 정화 가드 적용
+        jsonText = jsonText.replace(/^```json/, "").replace(/```$/, "").trim();
         const result = JSON.parse(jsonText);
         
         // 결과 표시 (수정 가능한 인풋/텍스트에리어 밸류로 매핑)
