@@ -753,20 +753,6 @@
         <option value="섹션 5">섹션 5: 건강 단신 B (텍스트) 🛡️</option>
       </select>
 
-      <!-- 🎨 AI 삽화 화풍 스타일 선택 (공통) -->
-      <div style="margin: 0 0 12px 5px; display: flex; flex-direction: column; gap: 6px;">
-        <label for="scroll-image-style-select" style="font-size: 0.72rem; font-weight: 850; color: #4a2c00; display: flex; align-items: center; gap: 4px;">
-          🎨 AI 삽화 화풍 스타일 선택
-        </label>
-        <select id="scroll-image-style-select" class="scroll-text-input" style="margin-bottom: 0;">
-          <option value="wellness_photo">📸 내추럴 웰니스 라이프스타일 사진 (기본)</option>
-          <option value="premium_3d">🧸 감성 3D 클레이 일러스트 (주제 밀착형)</option>
-          <option value="editorial_line">✒️ 미니멀 에디토리얼 라인 아트 (뉴욕타임스 스타일)</option>
-          <option value="isometric_concept">📐 아이소메트릭 웰니스 개념화 (감성 테크)</option>
-          <option value="scandinavian_flat">🌿 북유럽식 감성 플랫 그래픽 (킨포크 디자인)</option>
-        </select>
-      </div>
-
       <!-- J열 기본게시물 등록 여부 체크박스 -->
       <div style="display: flex; align-items: center; gap: 8px; margin: 10px 0 8px 5px;">
         <input type="checkbox" id="scroll-default-check" style="width: 18px; height: 18px; accent-color: #aa7c11; cursor: pointer;">
@@ -806,15 +792,39 @@
           <img id="direct-image-preview-img" src="" style="width: 100%; height: 100%; object-fit: cover;" />
         </div>
 
-        <!-- 🎨 [AI 화가 조율 판넬 - 밀착 및 상시 노출 배치] -->
-        <div id="ai-painter-panel" style="margin-bottom: 15px; background: rgba(124, 42, 232, 0.05); border: 1.5px solid rgba(124, 42, 232, 0.2); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
-          <div style="font-size: 0.72rem; font-weight: 850; color: #7c2ae8; display: flex; align-items: center; gap: 4px;">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> 지니 AI 삽화 화가 조율실
+        <!-- 🎨 [지니 AI 삽화 화가 조율실 - 대대적인 UX 대개편] -->
+        <div id="ai-painter-panel" style="margin-bottom: 15px; background: rgba(124, 42, 232, 0.05); border: 2.2px solid rgba(124, 42, 232, 0.3); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 4px 15px rgba(124, 42, 232, 0.08);">
+          <div style="font-size: 0.8rem; font-weight: 900; color: #7c2ae8; display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid rgba(124, 42, 232, 0.15); padding-bottom: 8px;">
+            <span><i class="fa-solid fa-wand-magic-sparkles"></i> 지니 AI 삽화 화가 조율실</span>
+            <span style="font-size: 0.65rem; color: #9d5cf2; font-weight: 700;">💡 제목/본문 입력 후 소환</span>
           </div>
+          
+          <!-- 🎨 1. 화풍 스타일 선택이 조율실 내부 최상단에 안착! -->
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label for="scroll-image-style-select" style="font-size: 0.72rem; font-weight: 850; color: #4a2c00; display: flex; align-items: center; gap: 4px;">
+              🖌️ 삽화 기풍(스타일) 지정
+            </label>
+            <select id="scroll-image-style-select" class="scroll-text-input" style="margin-bottom: 0; background: #ffffff; border: 1.5px solid rgba(124, 42, 232, 0.25);">
+              <option value="wellness_photo">📸 내추럴 웰니스 라이프스타일 사진 (기본)</option>
+              <option value="premium_3d">🧸 감성 3D 클레이 일러스트 (주제 밀착형)</option>
+              <option value="editorial_line">✒️ 미니멀 에디토리얼 라인 아트 (뉴욕타임스 스타일)</option>
+              <option value="isometric_concept">📐 아이소메트릭 웰니스 개념화 (감성 테크)</option>
+              <option value="scandinavian_flat">🌿 북유럽식 감성 플랫 그래픽 (킨포크 디자인)</option>
+            </select>
+          </div>
+
+          <!-- 🎨 2. 부분 수정 vs 완전 리셋 안내 가이드라인 노출 -->
+          <div style="background: rgba(124, 42, 232, 0.08); border-radius: 10px; padding: 8px 10px; font-size: 0.65rem; line-height: 1.45; color: #5c1b9b; font-weight: 700; border: 1px solid rgba(124, 42, 232, 0.12);">
+            <strong>💡 조율 요령:</strong> 화풍만 바꾸려면 화풍 지정 후 즉시 아래 버튼 클릭! <br>
+            - <strong>부분 수정:</strong> 기존 그림에 피드백만 융합 (예: 햇살 더 밝게)<br>
+            - <strong>완전 새로 그리기:</strong> <u>'새로', '다시', '리셋'</u>을 요청사항에 적고 소환 시 기존 족쇄 완전 파기!
+          </div>
+
+          <!-- 🎨 3. 수정 요청 피드백 인풋 및 소환 버튼 밀착 정렬 -->
           <div style="display: flex; gap: 8px; width: 100%; align-items: center;">
-            <input type="text" id="direct-image-feedback-input" class="scroll-text-input" placeholder="🎨 그림 수정 요청사항 (예: 좀 더 밝고 화창하게, 구도를 넓게 등)..." style="flex: 1; margin-bottom: 0; background: #ffffff;">
+            <input type="text" id="direct-image-feedback-input" class="scroll-text-input" placeholder="🎨 그림 수정 요청사항 (예: 좀 더 밝고 화창하게, 구도를 넓게 등)..." style="flex: 1; margin-bottom: 0; background: #ffffff; border: 1.5px solid rgba(124, 42, 232, 0.25); height: 42px;">
             <button class="scroll-submit-btn" id="direct-image-summon-btn" onclick="summonDirectImageOnly()" style="width: auto; padding: 0 16px; margin-bottom: 0; background: linear-gradient(135deg, #7c2ae8 0%, #5c1b9b 100%); color: white; font-size: 0.78rem; font-weight: 800; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(124, 42, 232, 0.25); white-space: nowrap; height: 42px;">
-              <i class="fa-solid fa-paint-brush"></i> 삽화 소환 / 다시 그리기
+              <i class="fa-solid fa-paint-brush"></i> AI 삽화 소환
             </button>
           </div>
         </div>
@@ -2326,18 +2336,24 @@
       // 피드백이 존재하면 프롬프트 지침에 최우선 가이드라인을 강하게 주입!
       let feedbackGuide = "";
       if (feedbackText) {
-        if (window.lastImagePrompt) {
+        // 💡 [지니월드 스마트 리셋 가드]: 새로, 다시, 완전, 리셋 등의 단어가 피드백에 감지되면 기존 족쇄(lastImagePrompt)를 100% 무시하고 리셋시킵니다!
+        const isResetRequest = feedbackText.includes('새로') || feedbackText.includes('다시') || 
+                               feedbackText.includes('완전') || feedbackText.includes('리셋') || 
+                               feedbackText.includes('새 그림') || feedbackText.includes('처음부터');
+
+        if (window.lastImagePrompt && !isResetRequest) {
           feedbackGuide = `
-🚨 [화가의 최우선 피드백 수용 요망 (기존 삽화 수정)]:
-- 이전에 성공적으로 그려진 이미지 프롬프트는 다음과 같습니다: "${window.lastImagePrompt}"
+🚨 [기존 삽화 미세 조율 가이드 (기존 프롬프트 존중)]:
+- 이전에 그려진 이미지 프롬프트는 다음과 같습니다: "${window.lastImagePrompt}"
 - 원장님(에디터)이 이 시안을 바탕으로 다음과 같은 부분 수정 피드백을 주셨습니다: "${feedbackText}"
-- 기존 프롬프트의 구도와 화풍 텍스처를 최대한 존중하면서, 피드백 내용을 정교하게 융합한 한층 더 완벽한 1문장의 영문 이미지 프롬프트를 창조하십시오.
+- 기존 프롬프트의 기본 구도와 화풍 텍스처를 최대한 존중하면서, 피드백 내용을 정교하게 융합한 한층 더 완벽한 1문장의 영문 이미지 프롬프트를 창조하십시오.
 `;
         } else {
           feedbackGuide = `
-🚨 [화가의 최우선 피드백 수용 요망]:
-- 원장님(에디터)이 이전 이미지 시안을 보고 다음과 같은 피드백을 전달했습니다. 아래 지침을 최우선으로 반영하여 이미지 프롬프트를 완전 전향하거나 정교하게 다듬어주세요:
-- "${feedbackText}"
+🚨 [완전 새로운 삽화 창조 가이드 (★기존 프롬프트 100% 폐기★)]:
+- **중요**: 기존 그림이 본문과 맞지 않아 원장님이 기존 프롬프트를 완전히 폐기하고 처음부터 다시 그리기를 요구하셨습니다!
+- 기존 이미지 프롬프트는 완벽하게 무시하고 잊어버리십시오.
+- 오직 본문 제목 "${title}"의 핵심 감성과 원장님의 새로운 수정 요청사항 "${feedbackText}"만을 본질로 삼아, 가장 아름답고 어울리는 고품격 영문 이미지 프롬프트를 제로 베이스에서 새롭게 창조하십시오.
 `;
         }
       }
