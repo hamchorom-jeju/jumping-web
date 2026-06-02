@@ -1487,12 +1487,11 @@
           let errMsg = "";
           let is429 = false;
 
-          // 🌟 원장님의 명설계: 안정적인 멀티 티어 모델 우회(폴백) 리스트 (고도화 버전)
+          // 🌟 원장님의 명설계: 안정적인 멀티 티어 모델 우회(폴백) 리스트 (고도화 버전 - 1.5-pro 시체 모델 완전 제거)
           const fallbackModels = [
             "gemini-2.0-flash",        // 1순위: 초고속 2.0 메인 모델
             "gemini-2.0-flash-lite",   // 2순위: 429 부하가 가장 적어 돌파력이 우수함
-            "gemini-2.5-flash-lite",   // 3순위: 신형 라이트 보조 모델
-            "gemini-1.5-pro"           // 4순위: 지능이 매우 뛰어난 마지막 강력한 보루
+            "gemini-2.5-flash-lite"    // 3순위: 신형 라이트 보조 모델
           ];
 
           for (let i = 0; i < fallbackModels.length; i++) {
@@ -1528,7 +1527,7 @@
                   console.warn(`🚨 [429 제한] ${modelName} 호출 제한 감지. 다음 폴백 모델로 우회를 진행합니다.`);
                 }
 
-                // 다음 모델 호출 전 점진적 지연 (1단계: 1.5초, 2단계: 2.5초, 3단계: 3.5초 대기)
+                // 다음 모델 호출 전 점진적 지연 (1단계: 1.5초, 2단계: 2.5초 대기)
                 const delayTime = 1500 + (i * 1000);
                 console.log(`⏳ [대기 보호막] ${delayTime}ms 동안 지연 후 우회 요청을 전송합니다...`);
                 await new Promise(resolve => setTimeout(resolve, delayTime));
