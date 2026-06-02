@@ -731,6 +731,14 @@
         <option value="섹션 5">섹션 5: 건강 단신 B (텍스트) 🛡️</option>
       </select>
 
+      <!-- J열 기본게시물 등록 여부 체크박스 -->
+      <div style="display: flex; align-items: center; gap: 8px; margin: 10px 0 15px 5px;">
+        <input type="checkbox" id="scroll-default-check" style="width: 18px; height: 18px; accent-color: #aa7c11; cursor: pointer;">
+        <label for="scroll-default-check" style="font-size: 0.78rem; font-weight: 850; color: #4a2c00; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+          📌 이 게시물을 상설 [기본 게시물]로 지정 (매칭 칼럼 부족 시 자동 메우기용)
+        </label>
+      </div>
+
       <!-- 🔮 탭 스위치 컨테이너 -->
       <div class="scroll-tab-container" id="scroll-editor-tabs">
         <div class="scroll-tab active" onclick="setEditorTab('direct')">
@@ -1740,6 +1748,7 @@
       const content = document.getElementById('ai-preview-content').value.trim();
       const category = document.getElementById('scroll-category-select').value;
       const image = window.lastAiGeneratedImageUrl || "";
+      const isDefault = document.getElementById('scroll-default-check').checked ? "Y" : "N";
 
       if (!title || !content) {
         alert("제목과 본문을 작성 또는 소환해 주십시오.");
@@ -1760,7 +1769,8 @@
         title: title,
         content: content,
         category: category,
-        image: image
+        image: image,
+        isDefault: isDefault
       });
     }
 
@@ -1776,6 +1786,9 @@
       document.getElementById('ai-preview-image-box').style.display = 'none';
       document.getElementById('ai-preview-img').src = '';
       window.lastAiGeneratedImageUrl = "";
+      
+      // 기본게시물 체크박스 초기화
+      document.getElementById('scroll-default-check').checked = false;
     }
 
     function submitScroll() {
@@ -1783,6 +1796,7 @@
       const content = document.getElementById('scroll-content-input').value.trim();
       const category = document.getElementById('scroll-category-select').value;
       const image = document.getElementById('scroll-image-input') ? document.getElementById('scroll-image-input').value.trim() : "";
+      const isDefault = document.getElementById('scroll-default-check').checked ? "Y" : "N";
 
       if (!title || !content) {
         alert("제목과 내용을 채워 주십시오!");
@@ -1804,7 +1818,8 @@
           title: title,
           content: content,
           category: category,
-          image: image
+          image: image,
+          isDefault: isDefault
         });
       } else {
         google.script.run.withSuccessHandler(res => {

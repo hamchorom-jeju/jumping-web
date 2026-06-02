@@ -550,32 +550,131 @@
         }
 
         function loadWisdomTips() {
-            // [v65.3] 로딩 장막 자체를 완전히 소거하여 백그라운드 로딩으로 전환
+            const phone = localStorage.getItem('v44_user_phone') || '';
+            
             if (typeof google === 'undefined') {
                 // 오프라인/개발 환경 테스트용 모킹 렌더링
-                renderMagazine([]);
+                renderMagazine([], null);
                 return;
             }
+
+            let loadedTips = null;
+            let loadedQuest = null;
+
+            function checkAndRender() {
+                if (loadedTips !== null && loadedQuest !== null) {
+                    window.allWisdomTips = loadedTips;
+                    renderMagazine(loadedTips, loadedQuest);
+                }
+            }
+
+            // 1. 지식창고 칼럼 목록 조회
             google.script.run
                 .withSuccessHandler(tips => {
-                    window.allWisdomTips = tips || [];
-                    renderMagazine(tips || []);
+                    loadedTips = tips || [];
+                    checkAndRender();
                 })
                 .getWisdomTipsWithReactions();
+
+            // 2. 오늘의 돌발 퀘스트 조회 (로그인 세션이 있을 경우에만 실행)
+            if (phone) {
+                google.script.run
+                    .withSuccessHandler(res => {
+                        loadedQuest = res || { todayQuest: null };
+                        checkAndRender();
+                    })
+                    .getActiveQuestStatus(phone);
+            } else {
+                loadedQuest = { todayQuest: null };
+                checkAndRender();
+            }
         }
 
-        function renderMagazine(tips) {
+        function renderMagazine(tips, questStatus) {
             const gridContainer = document.getElementById('wisdom-magazine-grid');
             
-            // 각 섹션별 최신 글 1개 매핑
-            // tips는 백엔드에서 이미 reverse() (최신순)되어 반환되므로 find가 항상 최신을 고릅니다.
+            // 1. 섹션 1 고정글 매핑 (상시 유지되는 고정 칼럼)
+            // tips에서 category가 '섹션 1'인 글을 찾거나, 없으면 기본 default
             const sec1Tip = tips.find(t => t.category === '섹션 1') || defaultTips["섹션 1"];
-            const sec2Tip = tips.find(t => t.category === '섹션 2') || defaultTips["섹션 2"];
-            const sec3Tip = tips.find(t => t.category === '섹션 3') || defaultTips["섹션 3"];
             
-            // 섹션 4와 5는 유동적 (없으면 렌더링 배제)
-            const sec4Tip = tips.find(t => t.category === '섹션 4');
-            const sec5Tip = tips.find(t => t.category === '섹션 5');
+            // 2. 오늘의 돌발 퀘스트 키워드 추출
+            let todayQuestTitle = "";
+            if (questStatus && questStatus.todayQuest && questStatus.todayQuest.title) {
+                todayQuestTitle = questStatus.todayQuest.title;
+            }
+            
+            // 다이어트 주요 키워드 사전 선언 (오늘의 퀘스트 제목에서 이 키워드를 검출)
+            const keywordList = ["식이섬유", "수분", "물", "오운완", "단식", "체지방", "근육", "단백질", "유산소", "스트레칭", "습관", "식단", "채소"];
+            let detectedKeyword = "";
+            for (let i = 0; i < keywordList.length; i++) {
+                const kw = keywordList[i];
+                if (todayQuestTitle.indexOf(kw) > -1) {
+                    detectedKeyword = kw;
+                    break;
+                }
+            }
+            
+            console.log(`🎯 오늘의 돌발 퀘스트 제목: "${todayQuestTitle}" ➔ 매칭 키워드: "${detectedKeyword}"`);
+
+            // 3. 다이내믹 매칭을 위한 팁 필터링
+            let relatedTips = [];
+            if (detectedKeyword) {
+                // 키워드를 포함하는 팁 검색 (단, sec-1에 노출되는 글은 중복 방지를 위해 제외)
+                relatedTips = tips.filter(t => 
+                    t.id !== sec1Tip.id && 
+                    t.category !== '섹션 1' &&
+                    (
+                        (t.title && t.title.indexOf(detectedKeyword) > -1) ||
+                        (t.content && t.content.indexOf(detectedKeyword) > -1) ||
+                        (t.category && t.category.indexOf(detectedKeyword) > -1)
+                    )
+                );
+                // 🌟 원장님의 명설계: 선제작된 관련 글들은 스프레드시트 등록 순서(ID 오름차순)를 보존하여
+                // '식이섬유란? ➔ 종류 ➔ 음식' 처럼 원장님이 의도한 연재 흐름대로 아름답게 안착시킵니다!
+                relatedTips.sort((a, b) => a.id - b.id);
+            }
+
+            // 4. 기본 게시물(isDefault) 목록 필터링 (섹션 1이나 이미 매칭된 글 제외)
+            const defaultTipsInDb = tips.filter(t => 
+                t.isDefault === true && 
+                t.id !== sec1Tip.id &&
+                t.category !== '섹션 1' &&
+                !relatedTips.some(rt => rt.id === t.id)
+            );
+            // 기본 게시물도 동일하게 등록 순서(ID 오름차순)로 차분하게 배열합니다.
+            defaultTipsInDb.sort((a, b) => a.id - b.id);
+
+            // 5. 기타 일반 게시물 목록 (빵꾸 대비용 최종 수혈)
+            const remainingTips = tips.filter(t => 
+                t.id !== sec1Tip.id &&
+                t.category !== '섹션 1' &&
+                !relatedTips.some(rt => rt.id === t.id) &&
+                !defaultTipsInDb.some(dt => dt.id === t.id)
+            );
+            // 일반 게시물(빵꾸 대비)은 최신글이 먼저 수혈되도록 기본 정렬(ID 내림차순, 즉 tips 본래의 역순 그대로 유지)하여 생동감을 줍니다.
+            remainingTips.sort((a, b) => b.id - a.id);
+
+            // 6. 2, 3, 4, 5번 섹션을 채울 최종 큐레이션 리스트 작성
+            const curatedTips = [];
+            
+            // A. 먼저 관련 팁을 집어넣기
+            curatedTips.push(...relatedTips);
+            
+            // B. 자리가 남으면 기본 게시물로 채우기
+            if (curatedTips.length < 4) {
+                curatedTips.push(...defaultTipsInDb);
+            }
+            
+            // C. 그래도 자리가 남으면 일반 게시물로 끝까지 채우기
+            if (curatedTips.length < 4) {
+                curatedTips.push(...remainingTips);
+            }
+
+            // 7. 각 섹션에 착지시키기
+            const sec2Tip = curatedTips[0] || defaultTips["섹션 2"];
+            const sec3Tip = curatedTips[1] || defaultTips["섹션 3"];
+            const sec4Tip = curatedTips[2] || null; // 4, 5번 섹션은 없으면 렌더링하지 않음
+            const sec5Tip = curatedTips[3] || null;
 
             let html = "";
             

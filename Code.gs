@@ -6942,7 +6942,8 @@ function getWisdomTips() {
         title: data[i][1],
         content: data[i][2],
         category: data[i][3],
-        author: data[i][4]
+        author: data[i][4],
+        isDefault: data[i].length > 9 ? (data[i][9] === "Y" || data[i][9] === "true") : false
       });
     }
     return tips.reverse(); // 최신순
@@ -6954,7 +6955,7 @@ function saveWisdomTip(data) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("지혜의_보물고") || ss.insertSheet("지혜의_보물고");
     if (sheet.getLastRow() === 0) {
-      sheet.appendRow(["날짜", "제목", "내용", "카테고리", "작성자", "조회수", "공감수", "깨달음수", "사진주소"]);
+      sheet.appendRow(["날짜", "제목", "내용", "카테고리", "작성자", "조회수", "공감수", "깨달음수", "사진주소", "기본게시물"]);
       sheet.setFrozenRows(1);
     }
     sheet.appendRow([
@@ -6966,7 +6967,8 @@ function saveWisdomTip(data) {
       0, // 조회수
       0, // 공감수
       0, // 깨달음수
-      data.image || "" // 사진주소
+      data.image || "", // 사진주소
+      data.isDefault || "N" // 기본게시물여부 (Y/N)
     ]);
     return { success: true };
   } catch(e) { return { success: false, error: e.toString() }; }
@@ -9358,7 +9360,7 @@ function getWisdomTipsWithReactions() {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("지혜의_보물고") || ss.insertSheet("지혜의_보물고");
     if (sheet.getLastRow() < 1) {
-      sheet.appendRow(["날짜", "제목", "내용", "카테고리", "작성자", "조회수", "공감수", "깨달음수", "사진주소"]);
+      sheet.appendRow(["날짜", "제목", "내용", "카테고리", "작성자", "조회수", "공감수", "깨달음수", "사진주소", "기본게시물"]);
       sheet.setFrozenRows(1);
       return [];
     }
@@ -9392,6 +9394,7 @@ function getWisdomTipsWithReactions() {
         likes: Number(data[i][6] || 0),
         insights: Number(data[i][7] || 0),
         image: data[i].length > 8 ? data[i][8] : "",
+        isDefault: data[i].length > 9 ? (data[i][9] === "Y" || data[i][9] === "true") : false,
         comments: comments
       });
     }
