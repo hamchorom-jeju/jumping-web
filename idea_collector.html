@@ -1533,7 +1533,7 @@
       <p style="font-size: 0.78rem; color: var(--text-desc); line-height: 1.5; margin-bottom: 20px;">
         개인 Google Gemini API Key를 입력하세요. 브라우저(localStorage)에 안전하게 보관됩니다.
       </p>
-      <input type="password" class="modal-input" id="api-key-input" placeholder="AIzaSy... 형식의 Gemini API Key 입력">
+      <input type="password" class="modal-input" id="api-key-input" placeholder="AIzaSy... 또는 AQ... 형식의 API Key 입력">
       <div class="modal-btns">
         <button class="modal-btn modal-btn-cancel" onclick="closeKeyModal()">취소</button>
         <button class="modal-btn modal-btn-save" onclick="saveApiKey()">설정 저장</button>
@@ -2405,7 +2405,7 @@
       const dot = document.getElementById('api-status-dot');
       const trimmedKey = (key || '').trim();
       
-      if (trimmedKey && trimmedKey.startsWith('AIzaSy')) {
+      if (trimmedKey && (trimmedKey.startsWith('AIzaSy') || trimmedKey.startsWith('AQ.'))) {
         localApiKey = trimmedKey;
         dot.style.background = 'var(--secondary-solid)';
         checkExtractButtonState();
@@ -2434,15 +2434,15 @@
       // 2. 혹시 앞뒤에 따옴표(' 나 ")가 같이 복사되었다면 제거
       inputVal = inputVal.replace(/^["']|["']$/g, '').trim();
       
-      // 3. 복사 도중 앞뒤에 다른 텍스트가 묻어왔거나 전체를 통째로 붙여넣은 경우, AIzaSy로 시작하는 키만 쏙 골라냄
-      const geminiKeyRegex = /(AIzaSy[A-Za-z0-9_-]+)/;
+      // 3. 복사 도중 앞뒤에 다른 텍스트가 묻어왔거나 전체를 통째로 붙여넣은 경우, AIzaSy 또는 AQ. 로 시작하는 키만 쏙 골라냄
+      const geminiKeyRegex = /((?:AIzaSy|AQ\.)[A-Za-z0-9_-]+)/;
       const match = inputVal.match(geminiKeyRegex);
       if (match) {
         inputVal = match[1];
       }
 
-      if (inputVal && !inputVal.startsWith('AIzaSy')) {
-        const proceed = confirm("입력하신 API Key가 구글 Gemini 표준 형식('AIzaSy'로 시작)과 다릅니다. 이대로 저장하시겠습니까?");
+      if (inputVal && !inputVal.startsWith('AIzaSy') && !inputVal.startsWith('AQ.')) {
+        const proceed = confirm("입력하신 API Key가 구글 Gemini 표준 형식('AIzaSy' 또는 'AQ.'로 시작)과 다릅니다. 이대로 저장하시겠습니까?");
         if (!proceed) {
           return;
         }
