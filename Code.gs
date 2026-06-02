@@ -11927,6 +11927,52 @@ function getDailyQuestNoticePreview() {
       return { success: false, error: "오늘(" + todayStr + ") 자 돌발 퀘스트를 판정할 수 없습니다." };
     }
     
+    // 💡 [v66.2] 원장님의 실천 철학: 돌발 퀘스트와 관련된 선제작 지식창고 글이 있을 때만 동적으로 특별 비책 가이드를 우편 꼬리에 넛지로 동봉!
+    // (매칭 칼럼이 전혀 없는 날에는 완전히 숨김 처리하여 메시지 초슬림화 사수)
+    var tipNotice = "";
+    try {
+      // A. 돌발퀘스트 제목에서 다이어트 주요 키워드 추출
+      var keywordList = ["식이섬유", "수분", "물", "오운완", "단식", "체지방", "근육", "단백질", "유산소", "스트레칭", "습관", "식단", "채소"];
+      var detectedKeyword = "";
+      for (var k = 0; k < keywordList.length; k++) {
+        var kw = keywordList[k];
+        if (todayQuest.title.indexOf(kw) > -1) {
+          detectedKeyword = kw;
+          break;
+        }
+      }
+      
+      if (detectedKeyword) {
+        // B. 지혜의_보물고 시트에서 관련 글 매칭 조회
+        var wisdomSheet = ss.getSheetByName("지혜의_보물고");
+        if (wisdomSheet && wisdomSheet.getLastRow() > 1) {
+          var wData = wisdomSheet.getDataRange().getDisplayValues();
+          var relatedTitles = [];
+          
+          for (var w = 1; w < wData.length; w++) {
+            var wCategory = String(wData[w][3] || "").trim();
+            var wTitle = String(wData[w][1] || "").trim();
+            var wContent = String(wData[w][2] || "").trim();
+            
+            // 섹션 1 고정글 제외 및 키워드 매칭
+            if (wCategory !== "섹션 1") {
+              if (wTitle.indexOf(detectedKeyword) > -1 || wContent.indexOf(detectedKeyword) > -1 || wCategory.indexOf(detectedKeyword) > -1) {
+                relatedTitles.push(wTitle);
+              }
+            }
+          }
+          
+          // C. 매칭 칼럼이 존재할 때만 원장님 조율 피드백을 수용한 단정한 넛지 단락 합성!
+          if (relatedTitles.length > 0) {
+            tipNotice = "\n\n오늘 돌발퀘스트와 관련한 지식 칼럼들을 지식창고에서 확인할수 있습니다.\n" +
+                        "추천칼럼: " + relatedTitles.join(", ") + " 등 지식창고 탭을 통해 관련 건강정보를 확인하세요";
+          }
+        }
+      }
+    } catch (e) {
+      Logger.log("⚠️ 쪽지 발송 지식창고 연동 꿀팁 추출 에러: " + e.toString());
+    }
+
     var title = "⚡ [오늘의 돌발 퀘스트] " + todayQuest.title + " ✉️";
     var content = "📢 [이장님의 긴급 돌발 퀘스트 선포!] 📢\n\n" +
                   "오늘의 돌발 퀘스트가 공식적으로 선포되었습니다! 오늘 자정 전까지 완수하고 추가 경험치를 획득해 보세요!\n\n" +
@@ -11934,7 +11980,8 @@ function getDailyQuestNoticePreview() {
                   "🔥 [돌발 퀘스트]: " + todayQuest.title + "\n" +
                   "📝 [임무 설명]: " + todayQuest.description + "\n" +
                   "💎 [보상 EXP]: +" + todayQuest.score + " EXP\n" +
-                  "🎯 [인증 방법]: " + todayQuest.method + " 인증\n\n" +
+                  "🎯 [인증 방법]: " + todayQuest.method + " 인증" +
+                  tipNotice + "\n\n" +
                   "지금 즉시 대시보드에서 아코디언 서랍을 열어 퀘스트 상세 가이드를 확인하고 도전해 보세요! ⚔️";
                   
     return { success: true, title: title, content: content, quest: todayQuest, isManual: isManual };
