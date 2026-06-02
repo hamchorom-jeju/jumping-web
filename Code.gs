@@ -6931,19 +6931,20 @@ function getWisdomTips() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("지혜의_보물고") || ss.insertSheet("지혜의_보물고");
-    if (sheet.getLastRow() < 1) return [];
+    if (sheet.getLastRow() < 2) return []; // 1행은 헤더이므로 데이터는 최소 2행부터 존재함
     
     var data = sheet.getDataRange().getDisplayValues();
     var tips = [];
     for (var i = 1; i < data.length; i++) {
       tips.push({
-        id: i,
+        id: i + 1, // 1-indexed 스프레드시트 실제 행 주소로 매칭 (데이터 첫행은 2행이므로 i=1 일때 id=2)
         date: data[i][0],
         title: data[i][1],
         content: data[i][2],
         category: data[i][3],
         author: data[i][4],
-        isDefault: data[i].length > 9 ? (data[i][9] === "Y" || data[i][9] === "true") : false
+        image: data[i].length > 8 ? data[i][8] : "",
+        isDefault: data[i].length > 9 ? data[i][9] : "N"
       });
     }
     return tips.reverse(); // 최신순
@@ -6972,6 +6973,32 @@ function saveWisdomTip(data) {
     ]);
     return { success: true };
   } catch(e) { return { success: false, error: e.toString() }; }
+}
+
+function updateWisdomTip(rowIdx, data) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("지혜의_보물고");
+    if (!sheet) return { success: false, error: "지혜의_보물고 시트가 존재하지 않습니다." };
+    
+    var row = parseInt(rowIdx);
+    if (isNaN(row) || row < 2 || row > sheet.getLastRow()) {
+      return { success: false, error: "유효하지 않은 행 식별자입니다: " + rowIdx };
+    }
+    
+    // 시트 컬럼 구조:
+    // A: 날짜(1), B: 제목(2), C: 내용(3), D: 카테고리(4), E: 작성자(5)
+    // I: 사진주소(9), J: 기본게시물(10)
+    sheet.getRange(row, 2).setValue(data.title);
+    sheet.getRange(row, 3).setValue(data.content);
+    sheet.getRange(row, 4).setValue(data.category);
+    sheet.getRange(row, 9).setValue(data.image || "");
+    sheet.getRange(row, 10).setValue(data.isDefault || "N");
+    
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
 }
 
 /**
