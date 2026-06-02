@@ -1545,6 +1545,10 @@
           return;
         }
         
+        // 🌟 [최고급 보안 패턴] 글로벌 캐시에 데이터를 온전히 보관하고 ID 매칭식으로 구동합니다.
+        // 뉴라인(\n) 등 JSON.stringify + HTML 속성 치환 시 발생 가능한 문자열 제어 에러를 100% 원천 차단합니다!
+        window.loadedWisdomTipsCache = tips;
+        
         let html = '';
         tips.forEach(tip => {
           // 기본 매칭 설정 텍스트 파싱
@@ -1567,11 +1571,6 @@
             </div>
           `;
           
-          // JSON string 안전 이스케이프 처리
-          const safeTipJson = JSON.stringify(tip)
-            .replace(/'/g, "&#39;")
-            .replace(/"/g, "&quot;");
-          
           html += `
             <div style="background: rgba(255, 255, 255, 0.02); border: 1.5px solid var(--sanctum-border); border-radius: 18px; padding: 12px; display: flex; align-items: center; gap: 12px; transition: all 0.2s;">
               ${imgPreview}
@@ -1584,7 +1583,7 @@
                   ${tip.category || '일반'} &bull; ${tip.date ? tip.date.split('T')[0] : ''}
                 </div>
               </div>
-              <button onclick="startEditWisdomTip('${safeTipJson}')" style="background: var(--writing-btn-bg); border: 1.5px solid var(--sanctum-border); color: var(--sanctum-gold-light); border-radius: 12px; padding: 6px 12px; font-size: 0.72rem; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;">
+              <button onclick="startEditWisdomTip(${tip.id})" style="background: var(--writing-btn-bg); border: 1.5px solid var(--sanctum-border); color: var(--sanctum-gold-light); border-radius: 12px; padding: 6px 12px; font-size: 0.72rem; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;">
                 <i class="fa-solid fa-pen-to-square"></i> 조율
               </button>
             </div>
@@ -1596,15 +1595,21 @@
     }
 
     // ✏️ 지식창고 수정 모드 트랜잭션 바인딩
-    function startEditWisdomTip(tipJsonEscaped) {
+    function startEditWisdomTip(tipId) {
       try {
-        const decodedJson = tipJsonEscaped.replace(/&#39;/g, "'").replace(/&quot;/g, '"');
-        const tipObj = JSON.parse(decodedJson);
+        if (!window.loadedWisdomTipsCache) {
+          throw new Error("소장 지식 캐시가 유실되었습니다. 새로고침을 해주세요.");
+        }
+        
+        const tipObj = window.loadedWisdomTipsCache.find(t => t && t.id === parseInt(tipId));
+        if (!tipObj) {
+          throw new Error("소장 도서 정보가 캐시에 존재하지 않습니다: " + tipId);
+        }
         
         // 수정창 전용 바인딩 모드로 열기
         openEditor('tip', tipObj);
       } catch (err) {
-        console.error("❌ startEditWisdomTip Parse Error:", err);
+        console.error("❌ startEditWisdomTip Error:", err);
         alert("글 정보를 조율기(에디터)에 수급하는 중 오류가 발생했습니다: " + err.toString());
       }
     }
