@@ -797,11 +797,8 @@
       <div id="direct-write-container">
         <input type="text" id="scroll-title-input" class="scroll-text-input" placeholder="비법서 제목을 쓰세요...">
         
-        <div style="display: flex; gap: 8px; margin-bottom: 12px; width: 100%;">
-          <input type="text" id="scroll-image-input" class="scroll-text-input" placeholder="사진 이미지 URL (선택사항, 생략 가능)..." style="flex: 1; margin-bottom: 0;">
-          <button class="scroll-submit-btn" id="direct-image-summon-btn" onclick="summonDirectImageOnly()" style="width: auto; padding: 0 16px; margin-bottom: 0; background: linear-gradient(135deg, #7c2ae8 0%, #5c1b9b 100%); color: white; font-size: 0.8rem; font-weight: 800; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(124, 42, 232, 0.25);">
-            <i class="fa-solid fa-image"></i> AI 삽화 소환
-          </button>
+        <div style="margin-bottom: 12px; width: 100%;">
+          <input type="text" id="scroll-image-input" class="scroll-text-input" placeholder="사진 이미지 URL (직접 입력 시에만 사용하며, 생략 가능)..." style="margin-bottom: 0; width: 100%; box-sizing: border-box;">
         </div>
 
         <!-- 🎨 직접작성용 실시간 이미지 미리보기 박스 -->
@@ -809,8 +806,18 @@
           <img id="direct-image-preview-img" src="" style="width: 100%; height: 100%; object-fit: cover;" />
         </div>
 
-        <!-- 🎨 화가 피드백 입력 칸 (선택사항) -->
-        <input type="text" id="direct-image-feedback-input" class="scroll-text-input" placeholder="🎨 화가에게 바라는 추가 요청사항 적기 (선택사항, 예: 영양제 빼고 Q&A 글자만 강조해줘)..." style="margin-bottom: 12px; display: none;">
+        <!-- 🎨 [AI 화가 조율 판넬 - 밀착 및 상시 노출 배치] -->
+        <div id="ai-painter-panel" style="margin-bottom: 15px; background: rgba(124, 42, 232, 0.05); border: 1.5px solid rgba(124, 42, 232, 0.2); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-size: 0.72rem; font-weight: 850; color: #7c2ae8; display: flex; align-items: center; gap: 4px;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> 지니 AI 삽화 화가 조율실
+          </div>
+          <div style="display: flex; gap: 8px; width: 100%; align-items: center;">
+            <input type="text" id="direct-image-feedback-input" class="scroll-text-input" placeholder="🎨 그림 수정 요청사항 (예: 좀 더 밝고 화창하게, 구도를 넓게 등)..." style="flex: 1; margin-bottom: 0; background: #ffffff;">
+            <button class="scroll-submit-btn" id="direct-image-summon-btn" onclick="summonDirectImageOnly()" style="width: auto; padding: 0 16px; margin-bottom: 0; background: linear-gradient(135deg, #7c2ae8 0%, #5c1b9b 100%); color: white; font-size: 0.78rem; font-weight: 800; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(124, 42, 232, 0.25); white-space: nowrap; height: 42px;">
+              <i class="fa-solid fa-paint-brush"></i> 삽화 소환 / 다시 그리기
+            </button>
+          </div>
+        </div>
 
         <textarea id="scroll-content-input" class="scroll-textarea" placeholder="비법 내용을 고서 양식에 맞추어 자세하게 기록해 주십시오..."></textarea>
         <button class="scroll-submit-btn" id="scroll-submit-btn" onclick="submitScroll()">보물고에 소장하기 🏺</button>
@@ -1663,20 +1670,40 @@
           }
         }
 
-        // 이미지 및 화가 피드백 입력창 복구
+        // 이미지 및 화가 피드백 입력창 복구 (지수 디코딩 추출 탑재)
+        window.lastImagePrompt = "";
+        let extractedPrompt = "";
+        
         if (editingTipObj.image) {
           if (directPreviewBox) directPreviewBox.style.display = 'block';
           if (directPreviewImg) directPreviewImg.src = editingTipObj.image;
-          if (directFeedbackInput) {
-            directFeedbackInput.value = '';
-            directFeedbackInput.style.display = 'block'; // 수정 시 피드백 인풋 바로 열어서 삽화 조율 활성화!
+          
+          // Pollinations URL로부터 기존 영문 프롬프트 디코딩 역파싱
+          if (editingTipObj.image.startsWith("https://image.pollinations.ai/prompt/")) {
+            const promptPart = editingTipObj.image.substring("https://image.pollinations.ai/prompt/".length);
+            const qIdx = promptPart.indexOf("?");
+            const encodedPromptText = qIdx > -1 ? promptPart.substring(0, qIdx) : promptPart;
+            try {
+              extractedPrompt = decodeURIComponent(encodedPromptText);
+              window.lastImagePrompt = extractedPrompt;
+              console.log("✨ [도감 로드] 기존 이미지 프롬프트 복원 성공:", extractedPrompt);
+            } catch(e) {
+              console.warn("⚠️ 프롬프트 디코딩 실패:", e);
+            }
           }
         } else {
           if (directPreviewBox) directPreviewBox.style.display = 'none';
           if (directPreviewImg) directPreviewImg.src = '';
-          if (directFeedbackInput) {
-            directFeedbackInput.value = '';
-            directFeedbackInput.style.display = 'none';
+        }
+        
+        if (directFeedbackInput) {
+          directFeedbackInput.value = '';
+          // 🎨 상시 노출 밀착형 조율실로 개편되었으므로 input은 상시 표출
+          directFeedbackInput.style.display = 'block'; 
+          if (extractedPrompt) {
+            directFeedbackInput.placeholder = "🎨 기존 삽화 기풍을 유지하며 수정 (예: 햇살 더 밝게, 인물 제외 등)...";
+          } else {
+            directFeedbackInput.placeholder = "🎨 그림 수정 요청사항 (예: 좀 더 밝고 화창하게, 구도를 넓게 등)...";
           }
         }
       } else {
@@ -1697,8 +1724,10 @@
         if (directPreviewImg) directPreviewImg.src = '';
         if (directFeedbackInput) {
           directFeedbackInput.value = '';
-          directFeedbackInput.style.display = 'none';
+          directFeedbackInput.style.display = 'block'; // 상시 노출 유지
+          directFeedbackInput.placeholder = "🎨 그림 수정 요청사항 (예: 좀 더 밝고 화창하게, 구도를 넓게 등)...";
         }
+        window.lastImagePrompt = "";
       }
       
       // AI 관련 필드 초기화
@@ -2209,6 +2238,12 @@
     }
 
     async function executeDirectImageOnlyGeminiCall(apiKey, title, content) {
+      if (window.isDirectImageSummoning) {
+        console.warn("⚠️ 이미 지니 AI 삽화 소환 마법이 진행 중입니다. 중복 요청을 방어합니다.");
+        return;
+      }
+      window.isDirectImageSummoning = true;
+
       const summonBtn = document.getElementById('direct-image-summon-btn');
       const feedbackInput = document.getElementById('direct-image-feedback-input');
       const feedbackText = feedbackInput ? feedbackInput.value.trim() : '';
@@ -2233,11 +2268,20 @@
       // 피드백이 존재하면 프롬프트 지침에 최우선 가이드라인을 강하게 주입!
       let feedbackGuide = "";
       if (feedbackText) {
-        feedbackGuide = `
-🚨 [에디터의 최우선 피드백 수용 요망]:
+        if (window.lastImagePrompt) {
+          feedbackGuide = `
+🚨 [화가의 최우선 피드백 수용 요망 (기존 삽화 수정)]:
+- 이전에 성공적으로 그려진 이미지 프롬프트는 다음과 같습니다: "${window.lastImagePrompt}"
+- 원장님(에디터)이 이 시안을 바탕으로 다음과 같은 부분 수정 피드백을 주셨습니다: "${feedbackText}"
+- 기존 프롬프트의 구도와 화풍 텍스처를 최대한 존중하면서, 피드백 내용을 정교하게 융합한 한층 더 완벽한 1문장의 영문 이미지 프롬프트를 창조하십시오.
+`;
+        } else {
+          feedbackGuide = `
+🚨 [화가의 최우선 피드백 수용 요망]:
 - 원장님(에디터)이 이전 이미지 시안을 보고 다음과 같은 피드백을 전달했습니다. 아래 지침을 최우선으로 반영하여 이미지 프롬프트를 완전 전향하거나 정교하게 다듬어주세요:
 - "${feedbackText}"
 `;
+        }
       }
 
       const promptText = `
@@ -2351,6 +2395,7 @@ ${feedbackGuide}
         const result = JSON.parse(jsonText);
         
         if (result.imagePrompt) {
+          window.lastImagePrompt = result.imagePrompt; // 기존 프롬프트 업데이트! (연쇄 피드백 보존)
           const randomSeed = Math.floor(Math.random() * 1000000);
           const encodedPrompt = encodeURIComponent(result.imagePrompt);
           const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=500&nologo=true&private=true&feed=false&seed=${randomSeed}`;
@@ -2364,9 +2409,9 @@ ${feedbackGuide}
           if (previewImg) previewImg.src = imageUrl;
           if (previewBox) previewBox.style.display = 'block';
 
-          // 화가 피드백 입력창도 활성화시켜 보여주기
+          // 화가 피드백 입력창 플레이스홀더를 연쇄 조율형으로 다이나믹 업데이트!
           if (feedbackInput) {
-            feedbackInput.style.display = 'block';
+            feedbackInput.placeholder = "🎨 기존 삽화 기풍을 유지하며 수정 (예: 햇살 더 밝게, 인물 제외 등)...";
           }
 
           console.log("🎨 [단독 삽화 소환] 성공:", imageUrl);
@@ -2382,10 +2427,12 @@ ${feedbackGuide}
       } catch (err) {
         if (summonBtn) {
           summonBtn.disabled = false;
-          summonBtn.innerHTML = '<i class="fa-solid fa-image"></i> AI 삽화 소환';
+          summonBtn.innerHTML = '<i class="fa-solid fa-paint-brush"></i> 삽화 소환 / 다시 그리기';
         }
         hideLoading();
         alert("🎨 AI 삽화 소환 중 마법 장벽에 부딪혔습니다 (에러):\n" + err.toString());
+      } finally {
+        window.isDirectImageSummoning = false; // 소환 완료/실패 가드 해제
       }
     }
   </script>
