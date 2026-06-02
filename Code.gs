@@ -7499,7 +7499,64 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
         }
 
         if (dateStr === todayStr) {
-          result.todayQuest = { title: title, description: desc, score: qScore, method: qMethod };
+          // 💡 [v66.2] 지식창고 연동 넛지 배너 동적 결합 (초슬림 한 줄 넛지)
+          var hasRelatedTip = false;
+          try {
+            var keywordList = ["식이섬유", "수분", "물", "오운완", "단식", "체지방", "근육", "단백질", "유산소", "스트레칭", "습관", "식단", "채소"];
+            var detectedKeyword = "";
+            for (var k = 0; k < keywordList.length; k++) {
+              var kw = keywordList[k];
+              if (title.indexOf(kw) > -1) {
+                detectedKeyword = kw;
+                break;
+              }
+            }
+            
+            var normalizeTextForMatch = function(str) {
+              if (!str) return "";
+              return String(str).toLowerCase().replace(/\s+/g, "").replace(/[!?,.『』'"]/g, "").trim();
+            };
+            var normalizedTodayQuest = normalizeTextForMatch(title);
+            
+            if (detectedKeyword || normalizedTodayQuest) {
+              var wisdomSheet = ss.getSheetByName("지혜의_보물고");
+              if (wisdomSheet && wisdomSheet.getLastRow() > 1) {
+                var wData = wisdomSheet.getDataRange().getDisplayValues();
+                for (var w = 1; w < wData.length; w++) {
+                  var wCategory = String(wData[w][3] || "").trim();
+                  var wTitle = String(wData[w][1] || "").trim();
+                  var wContent = String(wData[w][2] || "").trim();
+                  var jVal = wData[w].length > 9 ? String(wData[w][9] || "").trim() : "";
+                  var targetQuest = (jVal !== "Y" && jVal !== "true" && jVal !== "N" && jVal !== "") ? jVal : "";
+                  
+                  // 0순위 J열 타겟팅 매칭
+                  if (targetQuest) {
+                    var normalizedTarget = normalizeTextForMatch(targetQuest);
+                    if (normalizedTarget && normalizedTodayQuest.indexOf(normalizedTarget) > -1) {
+                      hasRelatedTip = true;
+                      break;
+                    }
+                  }
+                  // 1순위 키워드 매칭
+                  if (detectedKeyword) {
+                    if (wTitle.indexOf(detectedKeyword) > -1 || wContent.indexOf(detectedKeyword) > -1 || wCategory.indexOf(detectedKeyword) > -1) {
+                      hasRelatedTip = true;
+                      break;
+                    }
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            Logger.log("⚠️ 배너 넛지 매칭 수집 중 오류: " + e.toString());
+          }
+
+          var finalDesc = desc;
+          if (hasRelatedTip) {
+            finalDesc = desc + "\n\n📖 오늘의 퀘스트 관련 지식칼럼도 지식창고에서 확인해보세요 🌿";
+          }
+
+          result.todayQuest = { title: title, description: finalDesc, score: qScore, method: qMethod };
         }
       }
 
