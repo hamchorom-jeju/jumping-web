@@ -8365,10 +8365,10 @@ function callGeminiBackendWithDetails(prompt, systemInstruction) {
     }
     var apiKey = apiKeyRes.key;
     
-    // 🌟 원장님의 명설계: 백엔드 4단계 전사 통합 모델 리스트
+    // 🌟 원장님의 명설계: 안정적인 멀티 티어 모델 우회(폴백) 리스트
     var fallbackModels = [
-      "gemini-2.5-flash",
       "gemini-2.0-flash",
+      "gemini-2.5-flash",
       "gemini-2.5-flash-lite",
       "gemini-2.0-flash-lite"
     ];
@@ -8423,8 +8423,7 @@ function callGeminiBackendWithDetails(prompt, systemInstruction) {
         Logger.log("⚠️ [백엔드 AI] " + modelName + " 실패: HTTP " + responseCode);
 
         if (responseCode === 429) {
-          Logger.log("🚨 [429 제한] 분당 호출 한도가 초과되었습니다. 무의미한 연속 폴백을 즉시 중단합니다.");
-          break; // 429일 때는 즉시 루프 중단하여 API 키 한도 보존!
+          Logger.log("🚨 [429 제한] " + modelName + " 호출 제한 감지. 다음 폴백 모델로 우회를 진행합니다.");
         }
         
         // 다른 일시적인 에러 시, 다음 폴백 전 미세 지연(500ms)
