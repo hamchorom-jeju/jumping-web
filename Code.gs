@@ -8279,8 +8279,13 @@ function callGeminiBackendWithDetails(prompt, systemInstruction) {
     }
     var apiKey = apiKeyRes.key;
     
-    var model1 = "gemini-2.5-flash";
-    var model2 = "gemini-1.5-flash";
+    // 🌟 원장님의 명설계: 백엔드 4단계 전사 통합 모델 리스트
+    var fallbackModels = [
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-2.5-flash-lite",
+      "gemini-2.0-flash-lite"
+    ];
     
     var payload = {
       "contents": [
@@ -8307,35 +8312,36 @@ function callGeminiBackendWithDetails(prompt, systemInstruction) {
       "muteHttpExceptions": true
     };
     
-    // 1차 시도: gemini-2.5-flash
-    var url1 = "https://generativelanguage.googleapis.com/v1beta/models/" + model1 + ":generateContent?key=" + apiKey;
-    var response1 = UrlFetchApp.fetch(url1, options);
-    var responseCode1 = response1.getResponseCode();
-    var responseText1 = response1.getContentText();
+    var errorLogs = [];
     
-    if (responseCode1 === 200) {
-      var json1 = JSON.parse(responseText1);
-      if (json1.candidates && json1.candidates[0] && json1.candidates[0].content && json1.candidates[0].content.parts[0]) {
-        return { success: true, text: json1.candidates[0].content.parts[0].text.trim() };
+    for (var i = 0; i < fallbackModels.length; i++) {
+      var modelName = fallbackModels[i];
+      var url = "https://generativelanguage.googleapis.com/v1beta/models/" + modelName + ":generateContent?key=" + apiKey;
+      
+      try {
+        Logger.log("🔮 [백엔드 AI] 시도 [" + (i + 1) + "단계]: " + modelName + "...");
+        var response = UrlFetchApp.fetch(url, options);
+        var responseCode = response.getResponseCode();
+        var responseText = response.getContentText();
+        
+        if (responseCode === 200) {
+          var json = JSON.parse(responseText);
+          if (json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts[0]) {
+            Logger.log("✨ [백엔드 AI] 성공: [" + modelName + "] 모델이 완수했습니다.");
+            return { success: true, text: json.candidates[0].content.parts[0].text.trim() };
+          }
+        }
+        
+        // 실패 시 에러 로그 누적
+        errorLogs.push(modelName + " 실패: HTTP " + responseCode + " - " + responseText);
+        Logger.log("⚠️ [백엔드 AI] " + modelName + " 실패: HTTP " + responseCode);
+      } catch (e) {
+        errorLogs.push(modelName + " 통신 에러: " + e.toString());
+        Logger.log("🚨 [백엔드 AI] " + modelName + " 에러: " + e.toString());
       }
     }
     
-    // 2차 시도: 1차 실패 시 gemini-1.5-flash로 자동 우회 작동!
-    Logger.log("⚠️ Primary model (" + model1 + ") failed. Trying fallback model (" + model2 + ")...");
-    var url2 = "https://generativelanguage.googleapis.com/v1beta/models/" + model2 + ":generateContent?key=" + apiKey;
-    var response2 = UrlFetchApp.fetch(url2, options);
-    var responseCode2 = response2.getResponseCode();
-    var responseText2 = response2.getContentText();
-    
-    if (responseCode2 === 200) {
-      var json2 = JSON.parse(responseText2);
-      if (json2.candidates && json2.candidates[0] && json2.candidates[0].content && json2.candidates[0].content.parts[0]) {
-        return { success: true, text: json2.candidates[0].content.parts[0].text.trim() };
-      }
-      return { success: false, error: "2차 모델 파싱 실패: " + responseText2 };
-    }
-    
-    return { success: false, error: "1차 모델(" + model1 + ") 실패: HTTP " + responseCode1 + " - " + responseText1 + " \n\n 2차 모델(" + model2 + ") 실패: HTTP " + responseCode2 + " - " + responseText2 };
+    return { success: false, error: "모든 백엔드 AI 모델 호출에 실패했습니다.\n\n상세 정보:\n" + errorLogs.join("\n\n") };
     
   } catch (e) {
     return { success: false, error: e.toString() };

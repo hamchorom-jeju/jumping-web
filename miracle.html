@@ -1485,62 +1485,58 @@
           let response;
           let success = false;
           let errMsg = "";
+          let is429 = false;
 
-          // 1차 시도: 최신 대세 모델인 gemini-2.5-flash
-        try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-          response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{
-                parts: [
-                  { text: systemPrompt },
-                  { inlineData: { mimeType: aiMimeType, data: aiBase64Image } }
-                ]
-              }],
-              generationConfig: { responseMimeType: "application/json" }
-            })
-          });
-          if (response.ok) {
-            success = true;
-          } else {
-            const errData = await response.json();
-            errMsg = errData.error ? errData.error.message : JSON.stringify(errData);
-          }
-        } catch (e) {
-          errMsg = e.toString();
-        }
+          // 🌟 원장님의 명설계: 신형 4단계 전사 통합 모델 리스트
+          const fallbackModels = [
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-2.5-flash-lite",
+            "gemini-2.0-flash-lite"
+          ];
 
-        // 2차 예비 시도: 1차가 마비되었을 경우 자동으로 gemini-1.5-flash 우회 작동!
-        if (!success) {
-          console.warn("Primary model (gemini-2.5-flash) failed or overloaded. Trying fallback model (gemini-1.5-flash)... Details: " + errMsg);
-          try {
-            const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-            response = await fetch(fallbackUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{
-                  parts: [
-                    { text: systemPrompt },
-                    { inlineData: { mimeType: aiMimeType, data: aiBase64Image } }
-                  ]
-                }],
-                generationConfig: { responseMimeType: "application/json" }
-              })
-            });
-            if (response.ok) {
-              success = true;
-            } else {
-              const errData = await response.json();
-              const finalErrMsg = errData.error ? errData.error.message : JSON.stringify(errData);
-              throw new Error("모든 AI 모델 마비: " + finalErrMsg);
+          for (let i = 0; i < fallbackModels.length; i++) {
+            const modelName = fallbackModels[i];
+            console.log(`🔮 [식단 분석] 시도 [${i + 1}단계]: ${modelName}...`);
+            try {
+              const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+              response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{
+                    parts: [
+                      { text: systemPrompt },
+                      { inlineData: { mimeType: aiMimeType, data: aiBase64Image } }
+                    ]
+                  }],
+                  generationConfig: { responseMimeType: "application/json" }
+                })
+              });
+
+              if (response.ok) {
+                success = true;
+                console.log(`✨ [식단 분석] 성공: [${modelName}] 모델이 완수했습니다.`);
+                break;
+              } else {
+                is429 = (response.status === 429 || is429);
+                const errData = await response.json();
+                errMsg = errData.error ? errData.error.message : `API 실패 (HTTP ${response.status})`;
+                console.warn(`⚠️ [식단 분석] ${modelName} 실패:`, errMsg);
+              }
+            } catch (e) {
+              errMsg = e.toString();
+              console.error(`🚨 [식단 분석] ${modelName} 통신 에러:`, e);
             }
-          } catch (fallbackErr) {
-            throw new Error("AI 분석 실패 (백업 모델 포함): " + fallbackErr.message);
           }
-        }
+
+          if (!success) {
+            if (is429) {
+              throw new Error(`429 Too Many Requests\n사유: ${errMsg}\n\n💡 [조치 안내] 구글 AI Studio 무료 티어 API Key의 호출 한도(분당 15회 또는 하루 1500회)가 일시적으로 소진되었을 가능성이 있습니다. 1분 정도 기다렸다가 다시 시도해 주시거나, 구글 AI Studio에서 새 API Key를 발급받아 등록해 주시면 즉시 해결됩니다!`);
+            } else {
+              throw new Error(errMsg);
+            }
+          }
 
           const result = await response.json();
           
@@ -2088,69 +2084,62 @@
           let response;
           let success = false;
           let errMsg = "";
+          let is429 = false;
 
-          // 1차 시도: 최신 대세 모델인 gemini-2.5-flash
-        try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-          response = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [
-                    { text: promptText },
-                    { inlineData: { mimeType: inbodyMimeType, data: inbodyBase64Image } }
-                  ]
-                }
-              ],
-              generationConfig: {
-                responseMimeType: "application/json"
-              }
-            })
-          });
-          if (response.ok) {
-            success = true;
-          } else {
-            const errData = await response.json();
-            errMsg = errData.error?.message || "HTTP " + response.status;
-          }
-        } catch (e) {
-          errMsg = e.toString();
-        }
+          // 🌟 원장님의 명설계: 신형 4단계 전사 통합 모델 리스트
+          const fallbackModels = [
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-2.5-flash-lite",
+            "gemini-2.0-flash-lite"
+          ];
 
-        // 2차 예비 시도: 1차가 과부하 등으로 실패 시 자동으로 gemini-1.5-flash 우회 작동!
-        if (!success) {
-          console.warn("Primary InBody model (gemini-2.5-flash) failed or overloaded. Trying fallback model (gemini-1.5-flash)... Details: " + errMsg);
-          try {
-            const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-            response = await fetch(fallbackUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                contents: [
-                  {
-                    parts: [
-                      { text: promptText },
-                      { inlineData: { mimeType: inbodyMimeType, data: inbodyBase64Image } }
-                    ]
+          for (let i = 0; i < fallbackModels.length; i++) {
+            const modelName = fallbackModels[i];
+            console.log(`🔮 [인바디 판독] 시도 [${i + 1}단계]: ${modelName}...`);
+            try {
+              const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+              response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  contents: [
+                    {
+                      parts: [
+                        { text: promptText },
+                        { inlineData: { mimeType: inbodyMimeType, data: inbodyBase64Image } }
+                      ]
+                    }
+                  ],
+                  generationConfig: {
+                    responseMimeType: "application/json"
                   }
-                ],
-                generationConfig: {
-                  responseMimeType: "application/json"
-                }
-              })
-            });
-            if (response.ok) {
-              success = true;
-            } else {
-              const errData = await response.json();
-              throw new Error(errData.error?.message || "HTTP " + response.status);
+                })
+              });
+
+              if (response.ok) {
+                success = true;
+                console.log(`✨ [인바디 판독] 성공: [${modelName}] 모델이 완수했습니다.`);
+                break;
+              } else {
+                is429 = (response.status === 429 || is429);
+                const errData = await response.json();
+                errMsg = errData.error ? errData.error.message : `API 실패 (HTTP ${response.status})`;
+                console.warn(`⚠️ [인바디 판독] ${modelName} 실패:`, errMsg);
+              }
+            } catch (e) {
+              errMsg = e.toString();
+              console.error(`🚨 [인바디 판독] ${modelName} 통신 에러:`, e);
             }
-          } catch (fallbackErr) {
-            throw new Error("AI 인바디 분석 실패 (백업 모델 포함): " + fallbackErr.message);
           }
-        }
+
+          if (!success) {
+            if (is429) {
+              throw new Error(`429 Too Many Requests\n사유: ${errMsg}\n\n💡 [조치 안내] 구글 AI Studio 무료 티어 API Key의 호출 한도(분당 15회 또는 하루 1500회)가 일시적으로 소진되었을 가능성이 있습니다. 1분 정도 기다렸다가 다시 시도해 주시거나, 구글 AI Studio에서 새 API Key를 발급받아 등록해 주시면 즉시 해결됩니다!`);
+            } else {
+              throw new Error(errMsg);
+            }
+          }
 
           const result = await response.json();
           const textResult = result.candidates[0].content.parts[0].text;

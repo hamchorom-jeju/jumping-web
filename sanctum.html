@@ -1648,34 +1648,20 @@
         let errMsg = "";
         let is429 = false;
 
-        // 1차 시도: 최신 대세 모델인 gemini-2.5-flash
-        try {
-          const url1 = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-          response = await fetch(url1, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-          });
+        // 🌟 원장님의 명설계: 신형 4단계 전사 통합 모델 리스트
+        const fallbackModels = [
+          "gemini-2.5-flash",
+          "gemini-2.0-flash",
+          "gemini-2.5-flash-lite",
+          "gemini-2.0-flash-lite"
+        ];
 
-          if (response.ok) {
-            success = true;
-          } else {
-            is429 = (response.status === 429);
-            const errData = await response.json();
-            errMsg = errData.error ? errData.error.message : `API 실패 (HTTP ${response.status})`;
-          }
-        } catch (e) {
-          errMsg = e.toString();
-        }
-
-        // 2차 예비 시도: 1차가 마비되었을 경우 자동으로 gemini-1.5-flash 우회 작동!
-        if (!success) {
-          console.warn("Primary model (gemini-2.5-flash) failed or overloaded. Trying fallback model (gemini-1.5-flash)... Details: " + errMsg);
+        for (let i = 0; i < fallbackModels.length; i++) {
+          const modelName = fallbackModels[i];
+          console.log(`🔮 [비법서 소환] 시도 [${i + 1}단계]: ${modelName}...`);
           try {
-            const url2 = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-            response = await fetch(url2, {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+            response = await fetch(url, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
@@ -1685,13 +1671,17 @@
 
             if (response.ok) {
               success = true;
+              console.log(`✨ [비법서 소환] 성공: [${modelName}] 모델이 완수했습니다.`);
+              break;
             } else {
               is429 = (response.status === 429 || is429);
               const errData = await response.json();
               errMsg = errData.error ? errData.error.message : `API 실패 (HTTP ${response.status})`;
+              console.warn(`⚠️ [비법서 소환] ${modelName} 실패:`, errMsg);
             }
           } catch (e) {
             errMsg = e.toString();
+            console.error(`🚨 [비법서 소환] ${modelName} 통신 에러:`, e);
           }
         }
 
