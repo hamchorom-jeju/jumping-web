@@ -1519,14 +1519,23 @@
                 console.log(`✨ [식단 분석] 성공: [${modelName}] 모델이 완수했습니다.`);
                 break;
               } else {
-                is429 = (response.status === 429 || is429);
                 const errData = await response.json();
                 errMsg = errData.error ? errData.error.message : `API 실패 (HTTP ${response.status})`;
                 console.warn(`⚠️ [식단 분석] ${modelName} 실패:`, errMsg);
+
+                if (response.status === 429) {
+                  is429 = true;
+                  console.warn("🚨 [429 제한] 분당 호출 한도가 초과되었습니다. 무의미한 연속 폴백을 즉시 중단합니다.");
+                  break; // 429일 때는 즉시 루프 중단하여 API 키 한도 보존!
+                }
+
+                // 다음 모델 호출 전 미세 지연(500ms)
+                await new Promise(resolve => setTimeout(resolve, 500));
               }
             } catch (e) {
               errMsg = e.toString();
               console.error(`🚨 [식단 분석] ${modelName} 통신 에러:`, e);
+              await new Promise(resolve => setTimeout(resolve, 500));
             }
           }
 
@@ -2122,10 +2131,18 @@
                 console.log(`✨ [인바디 판독] 성공: [${modelName}] 모델이 완수했습니다.`);
                 break;
               } else {
-                is429 = (response.status === 429 || is429);
                 const errData = await response.json();
                 errMsg = errData.error ? errData.error.message : `API 실패 (HTTP ${response.status})`;
                 console.warn(`⚠️ [인바디 판독] ${modelName} 실패:`, errMsg);
+
+                if (response.status === 429) {
+                  is429 = true;
+                  console.warn("🚨 [429 제한] 분당 호출 한도가 초과되었습니다. 무의미한 연속 폴백을 즉시 중단합니다.");
+                  break; // 429일 때는 즉시 루프 중단하여 API 키 한도 보존!
+                }
+
+                // 다음 모델 호출 전 미세 지연(500ms)
+                await new Promise(resolve => setTimeout(resolve, 500));
               }
             } catch (e) {
               errMsg = e.toString();

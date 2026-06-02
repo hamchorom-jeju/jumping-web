@@ -8394,9 +8394,18 @@ function callGeminiBackendWithDetails(prompt, systemInstruction) {
         // 실패 시 에러 로그 누적
         errorLogs.push(modelName + " 실패: HTTP " + responseCode + " - " + responseText);
         Logger.log("⚠️ [백엔드 AI] " + modelName + " 실패: HTTP " + responseCode);
+
+        if (responseCode === 429) {
+          Logger.log("🚨 [429 제한] 분당 호출 한도가 초과되었습니다. 무의미한 연속 폴백을 즉시 중단합니다.");
+          break; // 429일 때는 즉시 루프 중단하여 API 키 한도 보존!
+        }
+        
+        // 다른 일시적인 에러 시, 다음 폴백 전 미세 지연(500ms)
+        Utilities.sleep(500);
       } catch (e) {
         errorLogs.push(modelName + " 통신 에러: " + e.toString());
         Logger.log("🚨 [백엔드 AI] " + modelName + " 에러: " + e.toString());
+        Utilities.sleep(500);
       }
     }
     
