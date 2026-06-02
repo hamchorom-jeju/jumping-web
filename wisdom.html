@@ -641,8 +641,8 @@
                 t.category !== '섹션 1' &&
                 !relatedTips.some(rt => rt.id === t.id)
             );
-            // 기본 게시물도 동일하게 등록 순서(ID 오름차순)로 차분하게 배열합니다.
-            defaultTipsInDb.sort((a, b) => a.id - b.id);
+            // 기본 게시물은 최신에 등록된 기본글이 우선 수혈되도록 최신순(ID 내림차순)으로 배열합니다.
+            defaultTipsInDb.sort((a, b) => b.id - a.id);
 
             // 5. 기타 일반 게시물 목록 (빵꾸 대비용 최종 수혈)
             const remainingTips = tips.filter(t => 
