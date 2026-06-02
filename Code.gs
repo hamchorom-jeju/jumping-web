@@ -8437,7 +8437,8 @@ function callGeminiBackendWithDetails(prompt, systemInstruction) {
           errorLogs.push("Key [" + keySnippet + "] Model [" + modelName + "] 실패: HTTP " + responseCode + " - " + responseText);
           Logger.log("⚠️ [백엔드 AI] " + modelName + " 실패: HTTP " + responseCode);
   
-          if (responseCode === 429 || responseCode === 400) {
+          // 💡 [v66.10] 429, 400뿐만 아니라 503, 502 등 200이 아닌 모든 이상 상태 코드 발생 시 즉시 다음 키로 로테이션 가동!
+          if (responseCode !== 200) {
             Logger.log("🚨 [키 폐기/우회] API Key [" + keySnippet + "]에서 HTTP " + responseCode + " 감지. 다음 API Key로 즉시 교체합니다.");
             keyFailed = true;
             break; // 안쪽 모델 루프 탈출 -> 다음 API Key 시도
