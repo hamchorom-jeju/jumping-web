@@ -2016,9 +2016,9 @@ ${feedbackGuide}
 
         for (let i = 0; i < fallbackModels.length; i++) {
           const modelName = fallbackModels[i];
-          console.log(\`🔮 [단독 삽화 소환 시도] [\${i + 1}단계]: \${modelName}...\`);
+          console.log(`🔮 [단독 삽화 소환 시도] [${i + 1}단계]: ${modelName}...`);
           try {
-            const url = \`https://generativelanguage.googleapis.com/v1beta/models/\${modelName}:generateContent?key=\${apiKey}\`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
             response = await fetch(url, {
               method: 'POST',
               headers: {
@@ -2029,23 +2029,23 @@ ${feedbackGuide}
 
             if (response.ok) {
               success = true;
-              console.log(\`✨ [단독 삽화 소환 성공]: [\${modelName}] 모델이 완수했습니다.\`);
+              console.log(`✨ [단독 삽화 소환 성공]: [${modelName}] 모델이 완수했습니다.`);
               break;
             } else {
               is429 = (response.status === 429 || is429);
               const errData = await response.json();
-              errMsg = errData.error ? errData.error.message : \`API 실패 (HTTP \${response.status})\`;
-              console.warn(\`⚠️ [단독 삽화 소환] \${modelName} 실패:\`, errMsg);
+              errMsg = errData.error ? errData.error.message : `API 실패 (HTTP ${response.status})`;
+              console.warn(`⚠️ [단독 삽화 소환] ${modelName} 실패:`, errMsg);
             }
           } catch (e) {
             errMsg = e.toString();
-            console.error(\`🚨 [단독 삽화 소환] \${modelName} 통신 에러:\`, e);
+            console.error(`🚨 [단독 삽화 소환] ${modelName} 통신 에러:`, e);
           }
         }
 
         if (!success) {
           if (is429) {
-            throw new Error(\`429 Too Many Requests\\n사유: \${errMsg}\\n\\n💡 [조치 안내] 호출 한도가 초과되었습니다. 1분 정도 기다렸다가 다시 시도해 주십시오.\`);
+            throw new Error(`429 Too Many Requests\n사유: ${errMsg}\n\n💡 [조치 안내] 호출 한도가 초과되었습니다. 1분 정도 기다렸다가 다시 시도해 주십시오.`);
           } else {
             throw new Error(errMsg);
           }
@@ -2063,7 +2063,7 @@ ${feedbackGuide}
         if (result.imagePrompt) {
           const randomSeed = Math.floor(Math.random() * 1000000);
           const encodedPrompt = encodeURIComponent(result.imagePrompt);
-          const imageUrl = \`https://image.pollinations.ai/prompt/\${encodedPrompt}?width=800&height=500&nologo=true&private=true&feed=false&seed=\${randomSeed}\`;
+          const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=500&nologo=true&private=true&feed=false&seed=${randomSeed}`;
           
           // 직접 작성 영역 이미지 URL 및 미리보기 주입
           const imageInput = document.getElementById('scroll-image-input');
@@ -2095,7 +2095,7 @@ ${feedbackGuide}
           summonBtn.innerHTML = '<i class="fa-solid fa-image"></i> AI 삽화 소환';
         }
         hideLoading();
-        alert("🎨 AI 삽화 소환 중 마법 장벽에 부딪혔습니다 (에러):\\n" + err.toString());
+        alert("🎨 AI 삽화 소환 중 마법 장벽에 부딪혔습니다 (에러):\n" + err.toString());
       }
     }
   </script>
