@@ -752,7 +752,22 @@
       <!-- ✍️ 직접 타이핑 작성 영역 -->
       <div id="direct-write-container">
         <input type="text" id="scroll-title-input" class="scroll-text-input" placeholder="비법서 제목을 쓰세요...">
-        <input type="text" id="scroll-image-input" class="scroll-text-input" placeholder="사진 이미지 URL (선택사항, 생략 가능)...">
+        
+        <div style="display: flex; gap: 8px; margin-bottom: 12px; width: 100%;">
+          <input type="text" id="scroll-image-input" class="scroll-text-input" placeholder="사진 이미지 URL (선택사항, 생략 가능)..." style="flex: 1; margin-bottom: 0;">
+          <button class="scroll-submit-btn" id="direct-image-summon-btn" onclick="summonDirectImageOnly()" style="width: auto; padding: 0 16px; margin-bottom: 0; background: linear-gradient(135deg, #7c2ae8 0%, #5c1b9b 100%); color: white; font-size: 0.8rem; font-weight: 800; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(124, 42, 232, 0.25);">
+            <i class="fa-solid fa-image"></i> AI 삽화 소환
+          </button>
+        </div>
+
+        <!-- 🎨 직접작성용 실시간 이미지 미리보기 박스 -->
+        <div id="direct-image-preview-box" style="display: none; margin-bottom: 12px; border-radius: 18px; overflow: hidden; border: 1.5px solid rgba(170, 124, 17, 0.25); background: #000; aspect-ratio: 16/9; position: relative;">
+          <img id="direct-image-preview-img" src="" style="width: 100%; height: 100%; object-fit: cover;" />
+        </div>
+
+        <!-- 🎨 화가 피드백 입력 칸 (선택사항) -->
+        <input type="text" id="direct-image-feedback-input" class="scroll-text-input" placeholder="🎨 화가에게 바라는 추가 요청사항 적기 (선택사항, 예: 영양제 빼고 Q&A 글자만 강조해줘)..." style="margin-bottom: 12px; display: none;">
+
         <textarea id="scroll-content-input" class="scroll-textarea" placeholder="비법 내용을 고서 양식에 맞추어 자세하게 기록해 주십시오..."></textarea>
         <button class="scroll-submit-btn" id="scroll-submit-btn" onclick="submitScroll()">보물고에 소장하기 🏺</button>
       </div>
@@ -1460,6 +1475,17 @@
       contentInput.value = '';
       if (imageInput) imageInput.value = '';
       
+      // 직접작성용 피드백 및 이미지 미리보기 초기화
+      const directFeedbackInput = document.getElementById('direct-image-feedback-input');
+      if (directFeedbackInput) {
+        directFeedbackInput.value = '';
+        directFeedbackInput.style.display = 'none';
+      }
+      const directPreviewBox = document.getElementById('direct-image-preview-box');
+      if (directPreviewBox) directPreviewBox.style.display = 'none';
+      const directPreviewImg = document.getElementById('direct-image-preview-img');
+      if (directPreviewImg) directPreviewImg.src = '';
+      
       // AI 관련 필드 초기화
       document.getElementById('scroll-ai-keywords-input').value = '';
       document.getElementById('ai-preview-area').style.display = 'none';
@@ -1787,6 +1813,19 @@
       document.getElementById('ai-preview-img').src = '';
       window.lastAiGeneratedImageUrl = "";
       
+      // 직접작성용 피드백 및 이미지 초기화
+      const directImageInput = document.getElementById('scroll-image-input');
+      if (directImageInput) directImageInput.value = '';
+      const directImageFeedbackInput = document.getElementById('direct-image-feedback-input');
+      if (directImageFeedbackInput) {
+        directImageFeedbackInput.value = '';
+        directImageFeedbackInput.style.display = 'none';
+      }
+      const directImagePreviewBox = document.getElementById('direct-image-preview-box');
+      if (directImagePreviewBox) directImagePreviewBox.style.display = 'none';
+      const directImagePreviewImg = document.getElementById('direct-image-preview-img');
+      if (directImagePreviewImg) directImagePreviewImg.src = '';
+      
       // 기본게시물 체크박스 초기화
       document.getElementById('scroll-default-check').checked = false;
     }
@@ -1843,6 +1882,221 @@
       document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
       document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
       event.currentTarget.classList.add('active');
+    }
+
+    function summonDirectImageOnly() {
+      // 직접 작성창의 제목과 본문 읽기
+      const title = document.getElementById('scroll-title-input').value.trim();
+      const content = document.getElementById('scroll-content-input').value.trim();
+
+      if (!title || !content) {
+        alert("🎨 삽화를 그리려면 먼저 제목과 비법 내용을 입력해 주십시오!");
+        return;
+      }
+
+      const summonBtn = document.getElementById('direct-image-summon-btn');
+      if (summonBtn) {
+        summonBtn.disabled = true;
+        summonBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 소환 중...';
+      }
+
+      showLoading("Pollinations AI 화가에게 전달할 삽화 구상을 준비 중...");
+
+      if (typeof google === 'undefined') {
+        if (summonBtn) {
+          summonBtn.disabled = false;
+          summonBtn.innerHTML = '<i class="fa-solid fa-image"></i> AI 삽화 소환';
+        }
+        hideLoading();
+        alert("⚠️ 구글 Apps Script 로컬 실행 환경에서는 소환 마법을 사용할 수 없습니다.");
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(res => {
+          if (!res.success || !res.key) {
+            if (summonBtn) {
+              summonBtn.disabled = false;
+              summonBtn.innerHTML = '<i class="fa-solid fa-image"></i> AI 삽화 소환';
+            }
+            hideLoading();
+            alert("⚠️ GEMINI_API_KEY 설정이 누락되었습니다.");
+            return;
+          }
+          const apiKey = res.key;
+          executeDirectImageOnlyGeminiCall(apiKey, title, content);
+        })
+        .withFailureHandler(err => {
+          if (summonBtn) {
+            summonBtn.disabled = false;
+            summonBtn.innerHTML = '<i class="fa-solid fa-image"></i> AI 삽화 소환';
+          }
+          hideLoading();
+          alert("구글 금고 통신 실패: " + err.toString());
+        })
+        .getGeminiApiKey();
+    }
+
+    async function executeDirectImageOnlyGeminiCall(apiKey, title, content) {
+      const summonBtn = document.getElementById('direct-image-summon-btn');
+      const feedbackInput = document.getElementById('direct-image-feedback-input');
+      const feedbackText = feedbackInput ? feedbackInput.value.trim() : '';
+
+      // 화풍 스타일 획득
+      const imageStyleSelect = document.getElementById('scroll-image-style-select');
+      const imageStyle = imageStyleSelect ? imageStyleSelect.value : 'wellness_photo';
+      
+      let styleGuide = "";
+      if (imageStyle === 'wellness_photo') {
+        styleGuide = "A high-end professional 3D realistic wellness lifestyle editorial photography, warm atmospheric sunlight, clean and minimal setup, aesthetic composition, high resolution, soft tones, 8k";
+      } else if (imageStyle === 'premium_3d') {
+        styleGuide = "A premium 3D clay render, cute minimal figures, volumetric soft lighting, pastel color palette, clean smooth surfaces, white background, isometric view, high resolution, 8k";
+      } else if (imageStyle === 'watercolor') {
+        styleGuide = "A beautiful and warm watercolor painting, cozy hand-drawn pastel textures, artistic watercolor splashes, soft elegant colors, dreaming and gentle vibes, white background";
+      } else if (imageStyle === 'minimal_flat') {
+        styleGuide = "A modern minimal flat 2D vector illustration, clean lines, simple shapes, sophisticated color harmony, white background, corporate design style";
+      } else if (imageStyle === 'science_comic') {
+        styleGuide = "A colorful and friendly children's science book graphic illustration, clear bold outlines, vivid educational icons, engaging 2D flat elements, clean white background";
+      }
+
+      // 피드백이 존재하면 프롬프트 지침에 최우선 가이드라인을 강하게 주입!
+      let feedbackGuide = "";
+      if (feedbackText) {
+        feedbackGuide = `
+🚨 [에디터의 최우선 피드백 수용 요망]:
+- 원장님(에디터)이 이전 이미지 시안을 보고 다음과 같은 피드백을 전달했습니다. 아래 지침을 최우선으로 반영하여 이미지 프롬프트를 완전 전향하거나 정교하게 다듬어주세요:
+- "${feedbackText}"
+`;
+      }
+
+      const promptText = `
+당신은 '노형 점핑 클럽'의 수석 웰니스 일러스트레이터이자 비주얼 디렉터입니다.
+현재 에디터가 작성한 건강 지식 비법서(칼럼)의 본문 내용을 기반으로, 모바일 화면을 수놓을 가장 감성적이고 주제에 매칭되는 단독 16:9 AI 삽화용 영문 이미지 프롬프트를 창조하는 임무를 띠고 있습니다.
+
+[칼럼 정보]
+- 제목: "${title}"
+- 본문 내용: "${content}"
+
+[🎨 삽화 스타일 가이드]
+- 아래 스타일 가이드를 철저히 녹여내어 감각적인 영문 프롬프트 1문장을 완성해 주십시오:
+- 스타일 가이드: ${styleGuide}
+${feedbackGuide}
+
+[출력 형식 제한 (🚨필수 준수)]
+반드시 다음 JSON 형식만을 정확하게 출력하십시오. 마크다운 따옴표(\`\`\`json)나 부가 설명 텍스트는 절대 포함하지 말고 오직 다음 JSON 내용 자체만 반환하십시오:
+{
+  "imagePrompt": "여기에 본문 내용과 에디터 피드백을 바탕으로 에디터가 만족할 수 있는 환상적인 영문 이미지 프롬프트 1문장을 작성하십시오"
+}
+`;
+
+      const payload = {
+        contents: [{
+          parts: [{
+            text: promptText
+          }]
+        }],
+        generationConfig: {
+          responseMimeType: "application/json"
+        }
+      };
+
+      try {
+        let response;
+        let success = false;
+        let errMsg = "";
+        let is429 = false;
+
+        // 🌟 4단계 전사 통합 모델 리스트
+        const fallbackModels = [
+          "gemini-2.5-flash",
+          "gemini-2.0-flash",
+          "gemini-2.5-flash-lite",
+          "gemini-2.0-flash-lite"
+        ];
+
+        for (let i = 0; i < fallbackModels.length; i++) {
+          const modelName = fallbackModels[i];
+          console.log(\`🔮 [단독 삽화 소환 시도] [\${i + 1}단계]: \${modelName}...\`);
+          try {
+            const url = \`https://generativelanguage.googleapis.com/v1beta/models/\${modelName}:generateContent?key=\${apiKey}\`;
+            response = await fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+              success = true;
+              console.log(\`✨ [단독 삽화 소환 성공]: [\${modelName}] 모델이 완수했습니다.\`);
+              break;
+            } else {
+              is429 = (response.status === 429 || is429);
+              const errData = await response.json();
+              errMsg = errData.error ? errData.error.message : \`API 실패 (HTTP \${response.status})\`;
+              console.warn(\`⚠️ [단독 삽화 소환] \${modelName} 실패:\`, errMsg);
+            }
+          } catch (e) {
+            errMsg = e.toString();
+            console.error(\`🚨 [단독 삽화 소환] \${modelName} 통신 에러:\`, e);
+          }
+        }
+
+        if (!success) {
+          if (is429) {
+            throw new Error(\`429 Too Many Requests\\n사유: \${errMsg}\\n\\n💡 [조치 안내] 호출 한도가 초과되었습니다. 1분 정도 기다렸다가 다시 시도해 주십시오.\`);
+          } else {
+            throw new Error(errMsg);
+          }
+        }
+
+        const data = await response.json();
+        if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content || !data.candidates[0].content.parts || data.candidates[0].content.parts.length === 0) {
+          throw new Error("Gemini API가 빈 응답을 반환했습니다.");
+        }
+        
+        let jsonText = data.candidates[0].content.parts[0].text.trim();
+        jsonText = jsonText.replace(/^```json/, "").replace(/```$/, "").trim();
+        const result = JSON.parse(jsonText);
+        
+        if (result.imagePrompt) {
+          const randomSeed = Math.floor(Math.random() * 1000000);
+          const encodedPrompt = encodeURIComponent(result.imagePrompt);
+          const imageUrl = \`https://image.pollinations.ai/prompt/\${encodedPrompt}?width=800&height=500&nologo=true&private=true&feed=false&seed=\${randomSeed}\`;
+          
+          // 직접 작성 영역 이미지 URL 및 미리보기 주입
+          const imageInput = document.getElementById('scroll-image-input');
+          if (imageInput) imageInput.value = imageUrl;
+
+          const previewImg = document.getElementById('direct-image-preview-img');
+          const previewBox = document.getElementById('direct-image-preview-box');
+          if (previewImg) previewImg.src = imageUrl;
+          if (previewBox) previewBox.style.display = 'block';
+
+          // 화가 피드백 입력창도 활성화시켜 보여주기
+          if (feedbackInput) {
+            feedbackInput.style.display = 'block';
+          }
+
+          console.log("🎨 [단독 삽화 소환] 성공:", imageUrl);
+        } else {
+          throw new Error("응답 JSON에 imagePrompt 항목이 누락되었습니다.");
+        }
+
+        if (summonBtn) {
+          summonBtn.disabled = false;
+          summonBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> 삽화 다시 소환';
+        }
+        hideLoading();
+      } catch (err) {
+        if (summonBtn) {
+          summonBtn.disabled = false;
+          summonBtn.innerHTML = '<i class="fa-solid fa-image"></i> AI 삽화 소환';
+        }
+        hideLoading();
+        alert("🎨 AI 삽화 소환 중 마법 장벽에 부딪혔습니다 (에러):\\n" + err.toString());
+      }
     }
   </script>
 </body>
