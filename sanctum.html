@@ -732,11 +732,19 @@
       </select>
 
       <!-- J열 기본게시물 등록 여부 체크박스 -->
-      <div style="display: flex; align-items: center; gap: 8px; margin: 10px 0 15px 5px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin: 10px 0 8px 5px;">
         <input type="checkbox" id="scroll-default-check" style="width: 18px; height: 18px; accent-color: #aa7c11; cursor: pointer;">
         <label for="scroll-default-check" style="font-size: 0.78rem; font-weight: 850; color: #4a2c00; cursor: pointer; display: flex; align-items: center; gap: 4px;">
           📌 이 게시물을 상설 [기본 게시물]로 지정 (매칭 칼럼 부족 시 자동 메우기용)
         </label>
+      </div>
+
+      <!-- J열 특정 돌발퀘스트 강제 매칭용 인풋 (상호 작용 탑재) -->
+      <div style="margin: 0 0 15px 5px; display: flex; flex-direction: column; gap: 6px;">
+        <label for="scroll-match-quest-input" style="font-size: 0.75rem; font-weight: 850; color: #4a2c00; display: flex; align-items: center; gap: 4px;">
+          🎯 특정 돌발 퀘스트에 0순위 강제 매칭시키기 (선택사항)
+        </label>
+        <input type="text" id="scroll-match-quest-input" class="scroll-text-input" placeholder="매칭시킬 돌발퀘스트 제목을 똑같이 적어주세요... (예: 나의 웰니스 보물창고 정리 day)" style="margin-bottom: 0;">
       </div>
 
       <!-- 🔮 탭 스위치 컨테이너 -->
@@ -819,6 +827,29 @@
       // loadRecentCerts(); // [임시 비활성화] 이장의 축복(인증 승인) 기능 잠정 중단에 따른 호출 정지
       loadScheduledQuests();
       loadEnvironmentSettings();
+      
+      // 상설 체크박스와 특정 퀘스트 매칭 인풋간의 상호 작용 가드 바인딩
+      const defaultCheck = document.getElementById('scroll-default-check');
+      const matchQuestInput = document.getElementById('scroll-match-quest-input');
+
+      if (defaultCheck && matchQuestInput) {
+        defaultCheck.addEventListener('change', function() {
+          if (this.checked) {
+            matchQuestInput.value = '';
+            matchQuestInput.disabled = true;
+            matchQuestInput.placeholder = "상설 기본게시물로 지정되어 퀘스트 매칭을 적을 수 없습니다 🔒";
+          } else {
+            matchQuestInput.disabled = false;
+            matchQuestInput.placeholder = "매칭시킬 돌발퀘스트 제목을 똑같이 적어주세요... (예: 나의 웰니스 보물창고 정리 day)";
+          }
+        });
+
+        matchQuestInput.addEventListener('input', function() {
+          if (this.value.trim().length > 0) {
+            defaultCheck.checked = false;
+          }
+        });
+      }
     };
 
     function toggleTheme() {
@@ -1475,6 +1506,14 @@
       contentInput.value = '';
       if (imageInput) imageInput.value = '';
       
+      // 특정 퀘스트 강제 매칭 인풋 초기화
+      const matchQuestInput = document.getElementById('scroll-match-quest-input');
+      if (matchQuestInput) {
+        matchQuestInput.value = '';
+        matchQuestInput.disabled = false;
+        matchQuestInput.placeholder = "매칭시킬 돌발퀘스트 제목을 똑같이 적어주세요... (예: 나의 웰니스 보물창고 정리 day)";
+      }
+      
       // 직접작성용 피드백 및 이미지 미리보기 초기화
       const directFeedbackInput = document.getElementById('direct-image-feedback-input');
       if (directFeedbackInput) {
@@ -1774,7 +1813,15 @@
       const content = document.getElementById('ai-preview-content').value.trim();
       const category = document.getElementById('scroll-category-select').value;
       const image = window.lastAiGeneratedImageUrl || "";
-      const isDefault = document.getElementById('scroll-default-check').checked ? "Y" : "N";
+      const defaultCheck = document.getElementById('scroll-default-check');
+      const matchQuestInput = document.getElementById('scroll-match-quest-input');
+      
+      let isDefault = "N";
+      if (defaultCheck && defaultCheck.checked) {
+        isDefault = "Y";
+      } else if (matchQuestInput && matchQuestInput.value.trim()) {
+        isDefault = matchQuestInput.value.trim();
+      }
 
       if (!title || !content) {
         alert("제목과 본문을 작성 또는 소환해 주십시오.");
@@ -1828,6 +1875,12 @@
       
       // 기본게시물 체크박스 초기화
       document.getElementById('scroll-default-check').checked = false;
+      const matchQuestInput = document.getElementById('scroll-match-quest-input');
+      if (matchQuestInput) {
+        matchQuestInput.value = '';
+        matchQuestInput.disabled = false;
+        matchQuestInput.placeholder = "매칭시킬 돌발퀘스트 제목을 똑같이 적어주세요... (예: 나의 웰니스 보물창고 정리 day)";
+      }
     }
 
     function submitScroll() {
@@ -1835,7 +1888,15 @@
       const content = document.getElementById('scroll-content-input').value.trim();
       const category = document.getElementById('scroll-category-select').value;
       const image = document.getElementById('scroll-image-input') ? document.getElementById('scroll-image-input').value.trim() : "";
-      const isDefault = document.getElementById('scroll-default-check').checked ? "Y" : "N";
+      const defaultCheck = document.getElementById('scroll-default-check');
+      const matchQuestInput = document.getElementById('scroll-match-quest-input');
+      
+      let isDefault = "N";
+      if (defaultCheck && defaultCheck.checked) {
+        isDefault = "Y";
+      } else if (matchQuestInput && matchQuestInput.value.trim()) {
+        isDefault = matchQuestInput.value.trim();
+      }
 
       if (!title || !content) {
         alert("제목과 내용을 채워 주십시오!");
