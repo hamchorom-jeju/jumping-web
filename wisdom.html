@@ -593,11 +593,7 @@
         function renderMagazine(tips, questStatus) {
             const gridContainer = document.getElementById('wisdom-magazine-grid');
             
-            // 1. 섹션 1 고정글 매핑 (상시 유지되는 고정 칼럼)
-            // tips에서 category가 '섹션 1'인 글을 찾거나, 없으면 기본 default
-            const sec1Tip = tips.find(t => t.category === '섹션 1') || defaultTips["섹션 1"];
-            
-            // 2. 오늘의 돌발 퀘스트 키워드 추출
+            // 1. 오늘의 돌발 퀘스트 키워드 추출
             let todayQuestTitle = "";
             if (questStatus && questStatus.todayQuest && questStatus.todayQuest.title) {
                 todayQuestTitle = questStatus.todayQuest.title;
@@ -616,65 +612,55 @@
             
             console.log(`🎯 오늘의 돌발 퀘스트 제목: "${todayQuestTitle}" ➔ 매칭 키워드: "${detectedKeyword}"`);
 
-            // 3. 다이내믹 매칭을 위한 팁 필터링
+            // 2. 다이내믹 매칭을 위한 팁 필터링
             let relatedTips = [];
             if (detectedKeyword) {
-                // 키워드를 포함하는 팁 검색 (단, sec-1에 노출되는 글은 중복 방지를 위해 제외)
+                // 키워드를 포함하는 팁 검색 (1번 섹션 도배를 위해 기존의 고정글 가드를 완전히 걷어냅니다!)
                 relatedTips = tips.filter(t => 
-                    t.id !== sec1Tip.id && 
-                    t.category !== '섹션 1' &&
-                    (
-                        (t.title && t.title.indexOf(detectedKeyword) > -1) ||
-                        (t.content && t.content.indexOf(detectedKeyword) > -1) ||
-                        (t.category && t.category.indexOf(detectedKeyword) > -1)
-                    )
+                    (t.title && t.title.indexOf(detectedKeyword) > -1) ||
+                    (t.content && t.content.indexOf(detectedKeyword) > -1) ||
+                    (t.category && t.category.indexOf(detectedKeyword) > -1)
                 );
                 // 🌟 원장님의 명설계: 선제작된 관련 글들은 스프레드시트 등록 순서(ID 오름차순)를 보존하여
-                // '식이섬유란? ➔ 종류 ➔ 음식' 처럼 원장님이 의도한 연재 흐름대로 아름답게 안착시킵니다!
+                // '1.식이섬유란? ➔ 2.종류 ➔ 3.음식' 처럼 기획 연재 흐름을 1번 섹션 왕좌부터 아름답게 안착시킵니다!
                 relatedTips.sort((a, b) => a.id - b.id);
             }
 
-            // 4. 기본 게시물(isDefault) 목록 필터링 (섹션 1이나 이미 매칭된 글 제외)
+            // 3. 기본 게시물(isDefault) 목록 필터링 (이미 매칭된 글 제외)
             const defaultTipsInDb = tips.filter(t => 
                 t.isDefault === true && 
-                t.id !== sec1Tip.id &&
-                t.category !== '섹션 1' &&
                 !relatedTips.some(rt => rt.id === t.id)
             );
             // 기본 게시물은 최신에 등록된 기본글이 우선 수혈되도록 최신순(ID 내림차순)으로 배열합니다.
             defaultTipsInDb.sort((a, b) => b.id - a.id);
 
-            // 5. 기타 일반 게시물 목록 (빵꾸 대비용 최종 수혈)
+            // 4. 기타 일반 게시물 목록 (빵꾸 대비용 최종 수혈)
             const remainingTips = tips.filter(t => 
-                t.id !== sec1Tip.id &&
-                t.category !== '섹션 1' &&
                 !relatedTips.some(rt => rt.id === t.id) &&
                 !defaultTipsInDb.some(dt => dt.id === t.id)
             );
-            // 일반 게시물(빵꾸 대비)은 최신글이 먼저 수혈되도록 기본 정렬(ID 내림차순, 즉 tips 본래의 역순 그대로 유지)하여 생동감을 줍니다.
+            // 일반 게시물(빵꾸 대비)은 최신글이 먼저 수혈되도록 최신순(ID 내림차순)으로 배열합니다.
             remainingTips.sort((a, b) => b.id - a.id);
 
-            // 6. 2, 3, 4, 5번 섹션을 채울 최종 큐레이션 리스트 작성
+            // 5. 1번 섹션부터 5번 섹션까지 물 흐르듯 채울 최종 통합 큐레이션 리스트 작성
             const curatedTips = [];
             
-            // A. 먼저 관련 팁을 집어넣기
+            // A. 가장 먼저 관련 팁을 선두에 배치 (섹션 1부터 도배 시작!)
             curatedTips.push(...relatedTips);
             
-            // B. 자리가 남으면 기본 게시물로 채우기
-            if (curatedTips.length < 4) {
-                curatedTips.push(...defaultTipsInDb);
-            }
+            // B. 자리가 남으면 최신 기본 게시물로 채우기
+            curatedTips.push(...defaultTipsInDb);
             
-            // C. 그래도 자리가 남으면 일반 게시물로 끝까지 채우기
-            if (curatedTips.length < 4) {
-                curatedTips.push(...remainingTips);
-            }
+            // C. 그래도 자리가 남으면 최신 일반 게시물로 끝까지 채우기
+            curatedTips.push(...remainingTips);
 
-            // 7. 각 섹션에 착지시키기
-            const sec2Tip = curatedTips[0] || defaultTips["섹션 2"];
-            const sec3Tip = curatedTips[1] || defaultTips["섹션 3"];
-            const sec4Tip = curatedTips[2] || null; // 4, 5번 섹션은 없으면 렌더링하지 않음
-            const sec5Tip = curatedTips[3] || null;
+            // 6. 각 섹션에 착지시키기
+            // curatedTips의 순서대로 섹션 1, 2, 3, 4, 5번 카드를 차례대로 매핑합니다.
+            const sec1Tip = curatedTips[0] || defaultTips["섹션 1"];
+            const sec2Tip = curatedTips[1] || defaultTips["섹션 2"];
+            const sec3Tip = curatedTips[2] || defaultTips["섹션 3"];
+            const sec4Tip = curatedTips[3] || null; // 4, 5번 섹션은 없으면 렌더링하지 않음
+            const sec5Tip = curatedTips[4] || null;
 
             let html = "";
             
