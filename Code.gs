@@ -9383,6 +9383,10 @@ function getWisdomTipsWithReactions() {
         }
       }
       
+      var jVal = data[i].length > 9 ? String(data[i][9] || "").trim() : "";
+      var isDefault = (jVal === "Y" || jVal === "true");
+      var targetQuest = (jVal !== "Y" && jVal !== "true" && jVal !== "N" && jVal !== "") ? jVal : "";
+      
       tips.push({
         id: tipId,
         date: data[i][0],
@@ -9394,7 +9398,8 @@ function getWisdomTipsWithReactions() {
         likes: Number(data[i][6] || 0),
         insights: Number(data[i][7] || 0),
         image: data[i].length > 8 ? data[i][8] : "",
-        isDefault: data[i].length > 9 ? (data[i][9] === "Y" || data[i][9] === "true") : false,
+        isDefault: isDefault,
+        targetQuest: targetQuest,
         comments: comments
       });
     }

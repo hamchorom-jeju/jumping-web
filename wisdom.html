@@ -612,19 +612,42 @@
             
             console.log(`🎯 오늘의 돌발 퀘스트 제목: "${todayQuestTitle}" ➔ 매칭 키워드: "${detectedKeyword}"`);
 
-            // 2. 다이내믹 매칭을 위한 팁 필터링
-            let relatedTips = [];
-            if (detectedKeyword) {
-                // 키워드를 포함하는 팁 검색 (1번 섹션 도배를 위해 기존의 고정글 가드를 완전히 걷어냅니다!)
-                relatedTips = tips.filter(t => 
-                    (t.title && t.title.indexOf(detectedKeyword) > -1) ||
-                    (t.content && t.content.indexOf(detectedKeyword) > -1) ||
-                    (t.category && t.category.indexOf(detectedKeyword) > -1)
-                );
-                // 🌟 원장님의 명설계: 선제작된 관련 글들은 스프레드시트 등록 순서(ID 오름차순)를 보존하여
-                // '1.식이섬유란? ➔ 2.종류 ➔ 3.음식' 처럼 기획 연재 흐름을 1번 섹션 왕좌부터 아름답게 안착시킵니다!
-                relatedTips.sort((a, b) => a.id - b.id);
+            // 💡 [v66.2] 지능형 텍스트 정규화 비교 함수 (대소문자 무시, 모든 띄어쓰기 제거, 문장부호 싹 제거)
+            function normalizeTextForMatch(str) {
+                if (!str) return "";
+                return String(str)
+                    .toLowerCase()
+                    .replace(/\s+/g, "")
+                    .replace(/[!?,.『』'"]/g, "")
+                    .trim();
             }
+
+            // 2. 다이내믹 매칭을 위한 팁 필터링 (0순위 J열 1:1 타겟 매칭 + 1순위 키워드 매칭)
+            let relatedTips = [];
+            const normalizedTodayQuest = normalizeTextForMatch(todayQuestTitle);
+            
+            relatedTips = tips.filter(t => {
+                // 0순위: J열 타겟 퀘스트 지정 매칭 (원장님의 1:1 웰니스 정리 Day 매칭 기획)
+                if (t.targetQuest) {
+                    const normalizedTarget = normalizeTextForMatch(t.targetQuest);
+                    if (normalizedTarget && normalizedTodayQuest.indexOf(normalizedTarget) > -1) {
+                        return true;
+                    }
+                }
+                
+                // 1순위: 다이내믹 키워드 매칭
+                if (detectedKeyword) {
+                    return (t.title && t.title.indexOf(detectedKeyword) > -1) ||
+                           (t.content && t.content.indexOf(detectedKeyword) > -1) ||
+                           (t.category && t.category.indexOf(detectedKeyword) > -1);
+                }
+                
+                return false;
+            });
+
+            // 🌟 원장님의 명설계: 관련 글들은 스프레드시트 등록 순서(ID 오름차순)를 보존하여
+            // '1.식이섬유란? ➔ 2.종류 ➔ 3.음식' 처럼 기획 연재 흐름을 1번 섹션 왕좌부터 아름답게 안착시킵니다!
+            relatedTips.sort((a, b) => a.id - b.id);
 
             // 3. 기본 게시물(isDefault) 목록 필터링 (이미 매칭된 글 제외)
             const defaultTipsInDb = tips.filter(t => 
