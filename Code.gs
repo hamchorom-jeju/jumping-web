@@ -8377,7 +8377,9 @@ function callGeminiBackendWithDetails(prompt, systemInstruction) {
     // 🌟 원장님의 명설계: 안정적인 멀티 티어 모델 우회(폴백) 리스트 (Gemini 2.5 Flash 시리즈 100% 최적화)
     var fallbackModels = [
       "gemini-2.5-flash",
-      "gemini-2.5-flash-lite"
+      "gemini-2.5-flash-lite",
+      "gemini-2.0-flash",
+      "gemini-2.0-flash-lite"
     ];
     
     var payload = {
@@ -8439,9 +8441,9 @@ function callGeminiBackendWithDetails(prompt, systemInstruction) {
   
           // 💡 [v66.10] 429, 400뿐만 아니라 503, 502 등 200이 아닌 모든 이상 상태 코드 발생 시 즉시 다음 키로 로테이션 가동!
           if (responseCode !== 200) {
-            Logger.log("🚨 [키 폐기/우회] API Key [" + keySnippet + "]에서 HTTP " + responseCode + " 감지. 다음 API Key로 즉시 교체합니다.");
-            keyFailed = true;
-            break; // 안쪽 모델 루프 탈출 -> 다음 API Key 시도
+            Logger.log("🚨 [서버/모델 장애 감지] API Key [" + keySnippet + "]에서 HTTP " + responseCode + " 감지. 다음 우회 모델로 즉시 바통 터치합니다.");
+            // 🌟 [원장님의 조언 수용] break 제거! 모델 루프를 끝까지 순환하며 예비 모델을 모두 찔러보도록 유도
+            continue;
           }
           
           Utilities.sleep(500);
