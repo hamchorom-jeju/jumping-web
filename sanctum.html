@@ -1808,38 +1808,6 @@
       }
     }
 
-    function summonAiDraft() {
-      // 🔮 중복 소환 방지 보호막 가드 격발
-      if (window.isAiSummoning) {
-        console.warn("⚠️ 이미 지니 AI 비법서 소환 마법이 진행 중입니다. 잠시만 기다려 주십시오.");
-        return;
-      }
-
-      const keywords = document.getElementById('scroll-ai-keywords-input').value.trim();
-      const section = document.getElementById('scroll-category-select').value;
-      const needImage = document.getElementById('scroll-ai-image-check').checked;
-
-      if (!keywords) {
-        alert("🔮 마법을 부릴 핵심 키워드나 요지를 적어 주십시오!");
-        return;
-      }
-
-      window.isAiSummoning = true;
-      const summonBtn = document.getElementById('ai-summon-btn');
-      if (summonBtn) {
-        summonBtn.disabled = true;
-        summonBtn.innerText = "🔮 비법서 소환 중...";
-      }
-
-      showLoading("지니 AI가 우주의 기운을 모아 비법서를 작성 중...");
-
-      if (typeof google === 'undefined') {
-        resetAiSummonState();
-        hideLoading();
-        alert("⚠️ 구글 Apps Script 로컬 실행 환경에서는 소환 마법을 사용할 수 없습니다.");
-        return;
-      }
-
     function cleanAndGetApiKeys(res) {
       let backendKeys = (res && res.success && res.keys) ? res.keys : [];
       let backendSingleKey = (res && res.success && res.key) ? res.key : "";
@@ -1878,6 +1846,38 @@
       
       return [];
     }
+
+    function summonAiDraft() {
+      // 🔮 중복 소환 방지 보호막 가드 격발
+      if (window.isAiSummoning) {
+        console.warn("⚠️ 이미 지니 AI 비법서 소환 마법이 진행 중입니다. 잠시만 기다려 주십시오.");
+        return;
+      }
+
+      const keywords = document.getElementById('scroll-ai-keywords-input').value.trim();
+      const section = document.getElementById('scroll-category-select').value;
+      const needImage = document.getElementById('scroll-ai-image-check').checked;
+
+      if (!keywords) {
+        alert("🔮 마법을 부릴 핵심 키워드나 요지를 적어 주십시오!");
+        return;
+      }
+
+      window.isAiSummoning = true;
+      const summonBtn = document.getElementById('ai-summon-btn');
+      if (summonBtn) {
+        summonBtn.disabled = true;
+        summonBtn.innerText = "🔮 비법서 소환 중...";
+      }
+
+      showLoading("지니 AI가 우주의 기운을 모아 비법서를 작성 중...");
+
+      if (typeof google === 'undefined') {
+        resetAiSummonState();
+        hideLoading();
+        alert("⚠️ 구글 Apps Script 로컬 실행 환경에서는 소환 마법을 사용할 수 없습니다.");
+        return;
+      }
 
       // 구글 백엔드 안전 금고에서 Gemini API Key 꺼내오기
       google.script.run
