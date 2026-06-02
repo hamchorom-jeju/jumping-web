@@ -8290,36 +8290,45 @@ function sendWeeklyBonusSms(phoneStr, memberName, count) {
   sendWeeklyBonusNotification(phoneStr, memberName, count);
 }
 
-// [v46.35] 구글의 소스코드 노출 자동차단을 예방하는 안전한 백엔드 API 키 저장/배포 시스템
+// [v65.00] 구글의 소스코드 노출 자동차단을 예방하는 안전한 백엔드 API 키 저장/배포 시스템 (복수 키 로테이션 풀 지원)
 function getGeminiApiKey() {
   try {
-    // 1단계: "환경설정" 시트의 키값을 실시간으로 확인하여 최우선 연동합니다. (시트에서 수정 시 즉시 동기화)
+    // 1단계: "환경설정" 시트의 B2:B6 영역에서 복수 키들을 실시간으로 수집합니다.
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("환경설정");
-    var sheetKey = "";
+    var sheetKeys = [];
     if (sheet) {
-      sheetKey = String(sheet.getRange("B2").getValue() || "").trim();
+      var values = sheet.getRange("B2:B6").getValues();
+      for (var i = 0; i < values.length; i++) {
+        var k = String(values[i][0] || "").trim();
+        // 옛날 차단 화석 키나 헤더 등 비정상 값 필터링
+        if (k && k !== "API_KEY" && !k.startsWith("AIzaSyAzX")) {
+          sheetKeys.push(k);
+        }
+      }
     }
 
     var cachedKey = String(PropertiesService.getScriptProperties().getProperty("GEMINI_API_KEY") || "").trim();
 
-    // 시트에 새 키가 들어있고 캐시된 키와 다른 경우, 캐시를 즉시 갱신하고 새 키를 반환합니다.
-    if (sheetKey && sheetKey !== cachedKey) {
-      PropertiesService.getScriptProperties().setProperty("GEMINI_API_KEY", sheetKey);
-      return { success: true, key: sheetKey };
+    // 만약 시트에서 키를 하나도 못 가져왔을 때, 기존 캐시를 최후의 보루로 활용
+    if (sheetKeys.length === 0) {
+      if (cachedKey && !cachedKey.startsWith("AIzaSyAzX")) {
+        sheetKeys.push(cachedKey);
+      }
+    } else {
+      // 캐시 갱신 (1순위 키 기준)
+      if (sheetKeys[0] !== cachedKey) {
+        PropertiesService.getScriptProperties().setProperty("GEMINI_API_KEY", sheetKeys[0]);
+      }
     }
 
-    // 만약 시트에 값이 없고 캐시된 키가 있다면 캐시된 키를 반환합니다.
-    if (cachedKey) {
-      return { success: true, key: cachedKey };
-    }
+    var primaryKey = sheetKeys.length > 0 ? sheetKeys[0] : "";
 
-    // 시트에 값이 있다면 시트의 값을 반환합니다.
-    if (sheetKey) {
-      return { success: true, key: sheetKey };
-    }
-
-    return { success: true, key: "" };
+    return { 
+      success: true, 
+      key: primaryKey,          // 하위 호환성 유지용 단일 키
+      keys: sheetKeys           // 실시간 피스톤 로테이션용 복수 키 배열
+    };
   } catch (e) {
     Logger.log("🚨 getGeminiApiKey 오류: " + e.toString());
     return { success: false, error: e.toString() };
@@ -8360,17 +8369,15 @@ function setGeminiApiKey(newKey) {
 function callGeminiBackendWithDetails(prompt, systemInstruction) {
   try {
     var apiKeyRes = getGeminiApiKey();
-    if (!apiKeyRes.success || !apiKeyRes.key) {
+    if (!apiKeyRes.success || !apiKeyRes.keys || apiKeyRes.keys.length === 0) {
       return { success: false, error: "API Key가 로드되지 않았습니다." };
     }
-    var apiKey = apiKeyRes.key;
+    var keys = apiKeyRes.keys;
     
-    // 🌟 원장님의 명설계: 안정적인 멀티 티어 모델 우회(폴백) 리스트
+    // 🌟 원장님의 명설계: 안정적인 멀티 티어 모델 우회(폴백) 리스트 (Gemini 2.5 Flash 시리즈 100% 최적화)
     var fallbackModels = [
-      "gemini-2.0-flash",
       "gemini-2.5-flash",
-      "gemini-2.5-flash-lite",
-      "gemini-2.0-flash-lite"
+      "gemini-2.5-flash-lite"
     ];
     
     var payload = {
@@ -8400,42 +8407,54 @@ function callGeminiBackendWithDetails(prompt, systemInstruction) {
     
     var errorLogs = [];
     
-    for (var i = 0; i < fallbackModels.length; i++) {
-      var modelName = fallbackModels[i];
-      var url = "https://generativelanguage.googleapis.com/v1beta/models/" + modelName + ":generateContent?key=" + apiKey;
+    // 🔑 바깥 루프: API Key 로테이션 (최대 5개 복수 키)
+    for (var k = 0; k < keys.length; k++) {
+      var apiKey = keys[k];
+      var keySnippet = apiKey.substring(0, 6) + "..." + apiKey.substring(apiKey.length - 4);
+      Logger.log("🔑 [백엔드 AI] API Key 시도 [" + (k + 1) + "/" + keys.length + "]: " + keySnippet);
       
-      try {
-        Logger.log("🔮 [백엔드 AI] 시도 [" + (i + 1) + "단계]: " + modelName + "...");
-        var response = UrlFetchApp.fetch(url, options);
-        var responseCode = response.getResponseCode();
-        var responseText = response.getContentText();
+      var keyFailed = false;
+      
+      // 🤖 안쪽 루프: 모델 폴백 (gemini-2.5-flash -> gemini-2.5-flash-lite)
+      for (var i = 0; i < fallbackModels.length; i++) {
+        var modelName = fallbackModels[i];
+        var url = "https://generativelanguage.googleapis.com/v1beta/models/" + modelName + ":generateContent?key=" + apiKey;
         
-        if (responseCode === 200) {
-          var json = JSON.parse(responseText);
-          if (json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts[0]) {
-            Logger.log("✨ [백엔드 AI] 성공: [" + modelName + "] 모델이 완수했습니다.");
-            return { success: true, text: json.candidates[0].content.parts[0].text.trim() };
+        try {
+          Logger.log("🔮 [백엔드 AI] 모델 시도 [" + (i + 1) + "단계]: " + modelName + "...");
+          var response = UrlFetchApp.fetch(url, options);
+          var responseCode = response.getResponseCode();
+          var responseText = response.getContentText();
+          
+          if (responseCode === 200) {
+            var json = JSON.parse(responseText);
+            if (json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts[0]) {
+              Logger.log("✨ [백엔드 AI] 성공: [" + modelName + "] 모델이 완수했습니다. (Key: " + keySnippet + ")");
+              return { success: true, text: json.candidates[0].content.parts[0].text.trim() };
+            }
           }
+          
+          errorLogs.push("Key [" + keySnippet + "] Model [" + modelName + "] 실패: HTTP " + responseCode + " - " + responseText);
+          Logger.log("⚠️ [백엔드 AI] " + modelName + " 실패: HTTP " + responseCode);
+  
+          if (responseCode === 429 || responseCode === 400) {
+            Logger.log("🚨 [키 폐기/우회] API Key [" + keySnippet + "]에서 HTTP " + responseCode + " 감지. 다음 API Key로 즉시 교체합니다.");
+            keyFailed = true;
+            break; // 안쪽 모델 루프 탈출 -> 다음 API Key 시도
+          }
+          
+          Utilities.sleep(500);
+        } catch (e) {
+          errorLogs.push("Key [" + keySnippet + "] Model [" + modelName + "] 에러: " + e.toString());
+          Logger.log("🚨 [백엔드 AI] " + modelName + " 에러: " + e.toString());
+          Utilities.sleep(500);
         }
-        
-        // 실패 시 에러 로그 누적
-        errorLogs.push(modelName + " 실패: HTTP " + responseCode + " - " + responseText);
-        Logger.log("⚠️ [백엔드 AI] " + modelName + " 실패: HTTP " + responseCode);
-
-        if (responseCode === 429) {
-          Logger.log("🚨 [429 제한] " + modelName + " 호출 제한 감지. 다음 폴백 모델로 우회를 진행합니다.");
-        }
-        
-        // 다른 일시적인 에러 시, 다음 폴백 전 미세 지연(500ms)
-        Utilities.sleep(500);
-      } catch (e) {
-        errorLogs.push(modelName + " 통신 에러: " + e.toString());
-        Logger.log("🚨 [백엔드 AI] " + modelName + " 에러: " + e.toString());
-        Utilities.sleep(500);
       }
+      
+      // 만약 429/400이 아니고 다른 특별한 에러가 나더라도, 바깥 루프가 계속 돌며 다음 키를 시도할 수 있도록 지원합니다.
     }
     
-    return { success: false, error: "모든 백엔드 AI 모델 호출에 실패했습니다.\n\n상세 정보:\n" + errorLogs.join("\n\n") };
+    return { success: false, error: "모든 등록된 API Key 및 모델 호출에 실패했습니다.\n\n상세 정보:\n" + errorLogs.join("\n\n") };
     
   } catch (e) {
     return { success: false, error: e.toString() };

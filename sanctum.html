@@ -759,11 +759,11 @@
           🎨 AI 삽화 화풍 스타일 선택
         </label>
         <select id="scroll-image-style-select" class="scroll-text-input" style="margin-bottom: 0;">
-          <option value="wellness_photo">📸 내추럴 웰니스 라이프스타일 사진 (Default)</option>
-          <option value="premium_3d">🧸 프리미엄 3D 클레이 아트</option>
-          <option value="watercolor">🎨 따뜻하고 세련된 감성 수채화</option>
-          <option value="minimal_flat">📐 감각적인 미니멀 flat 벡터 그래픽</option>
-          <option value="science_comic">🧬 아기자기한 과학 교육 도감 일러스트</option>
+          <option value="wellness_photo">📸 내추럴 웰니스 라이프스타일 사진 (기본)</option>
+          <option value="premium_3d">🧸 감성 3D 클레이 일러스트 (주제 밀착형)</option>
+          <option value="editorial_line">✒️ 미니멀 에디토리얼 라인 아트 (뉴욕타임스 스타일)</option>
+          <option value="isometric_concept">📐 아이소메트릭 웰니스 개념화 (감성 테크)</option>
+          <option value="scandinavian_flat">🌿 북유럽식 감성 플랫 그래픽 (킨포크 디자인)</option>
         </select>
       </div>
 
@@ -1840,17 +1840,56 @@
         return;
       }
 
+    function cleanAndGetApiKeys(res) {
+      let backendKeys = (res && res.success && res.keys) ? res.keys : [];
+      let backendSingleKey = (res && res.success && res.key) ? res.key : "";
+      
+      let finalKeys = [];
+      
+      // 1단계: 백엔드(시트 금고) 수집 키들 정제
+      if (backendKeys && backendKeys.length > 0) {
+        finalKeys = backendKeys.filter(k => k && !k.startsWith('AIzaSyAzX'));
+      } else if (backendSingleKey && !backendSingleKey.startsWith('AIzaSyAzX')) {
+        finalKeys = [backendSingleKey];
+      }
+      
+      // 🌟 [유일 사령부 통합 설계] 백엔드 키가 확보되면 로컬스토리지에 캐시해두고 즉시 덮어써서 동기화
+      if (finalKeys.length > 0) {
+        localStorage.setItem('gemini_api_keys', JSON.stringify(finalKeys));
+        localStorage.setItem('gemini_api_key', finalKeys[0]); // 하위 호환용
+        return finalKeys;
+      }
+      
+      // 2단계: 백엔드와 연결되지 않은 극단적인 상황 시 브라우저 로컬 저장소 복구 시도
+      try {
+        let localKeysStr = localStorage.getItem('gemini_api_keys');
+        if (localKeysStr) {
+          let parsed = JSON.parse(localKeysStr);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.filter(k => k && !k.startsWith('AIzaSyAzX'));
+          }
+        }
+      } catch (e) {}
+      
+      let singleLocalKey = (localStorage.getItem('gemini_api_key') || '').trim();
+      if (singleLocalKey && !singleLocalKey.startsWith('AIzaSyAzX')) {
+        return [singleLocalKey];
+      }
+      
+      return [];
+    }
+
       // 구글 백엔드 안전 금고에서 Gemini API Key 꺼내오기
       google.script.run
         .withSuccessHandler(res => {
-          if (!res.success || !res.key) {
+          let apiKeys = cleanAndGetApiKeys(res);
+          if (!apiKeys || apiKeys.length === 0) {
             resetAiSummonState();
             hideLoading();
             alert("⚠️ 구글 시트 또는 스크립트 속성에 GEMINI_API_KEY가 설정되어 있지 않습니다. 설정 완료 후 다시 강림시켜 주십시오.");
             return;
           }
-          const apiKey = res.key;
-          executeGeminiCall(apiKey, keywords, section, needImage);
+          executeGeminiCall(apiKeys, keywords, section, needImage);
         })
         .withFailureHandler(err => {
           resetAiSummonState();
@@ -1860,7 +1899,7 @@
         .getGeminiApiKey();
     }
 
-    async function executeGeminiCall(apiKey, keywords, section, needImage) {
+    async function executeGeminiCall(apiKeys, keywords, section, needImage) {
       // 화풍 스타일 획득
       const imageStyleSelect = document.getElementById('scroll-image-style-select');
       const imageStyle = imageStyleSelect ? imageStyleSelect.value : 'wellness_photo';
@@ -1869,13 +1908,17 @@
       if (imageStyle === 'wellness_photo') {
         styleGuide = "A professional high-end aesthetic wellness lifestyle photography, warm natural sunlight, clean and modern minimalist interior, serene atmospheric vibes, aesthetic composition, elegant and calm mood";
       } else if (imageStyle === 'premium_3d') {
-        styleGuide = "A premium 3D claymation art style, charming cute minimalist 3D clay figures, soft pastel color palette, volumetric warm lighting, smooth clay textures, clean simple background, artistic and cozy";
-      } else if (imageStyle === 'watercolor') {
-        styleGuide = "An elegant and warm watercolor painting, cozy hand-drawn pastel textures, soft flowing pastel washes, gentle organic lines, artistic splashes, dreamy and peaceful wellness mood";
-      } else if (imageStyle === 'minimal_flat') {
-        styleGuide = "A sophisticated modern 2D flat vector illustration, stylish minimalist shapes, harmonious contemporary color palette, elegant clean lines, professional graphic design masterpiece";
-      } else if (imageStyle === 'science_comic') {
-        styleGuide = "A vibrant and friendly educational graphic art style, clean bold outlines, vivid playful elements, charming flat design, modern children's science book illustration style";
+        // [다이어트 튜닝]: 인형(figures)과 빈 배경(clean simple background)을 삭제하여 본문 주제 3D화 공간 확보!
+        styleGuide = "A premium 3D claymation art style, soft pastel color palette, volumetric warm lighting, smooth clay textures, artistic and cozy";
+      } else if (imageStyle === 'editorial_line') {
+        // [미니멀 에디토리얼 라인 아트]
+        styleGuide = "A sophisticated minimalist editorial line art illustration, clean black lines, simple geometric organic shapes, elegant limited color palette of warm beige and sage green, high-end editorial graphic design masterpiece, conceptually clear and meaningful, clean white background";
+      } else if (imageStyle === 'isometric_concept') {
+        // [아이소메트릭 웰니스 개념화]
+        styleGuide = "A premium modern isometric vector illustration, clean minimalist conceptual wellness art, elegant pastel tones, stylish simple geometric forms, high-end editorial tech graphic, clear layout, soft professional lighting";
+      } else if (imageStyle === 'scandinavian_flat') {
+        // [북유럽식 감성 플랫 그래픽]
+        styleGuide = "A beautiful Scandinavian flat design, organic botanicals and minimal human silhouettes, earth tone colors of terracotta, olive and warm sand, aesthetic flat vector composition, clean and elegant editorial aesthetic";
       }
 
       const promptText = `
@@ -1895,10 +1938,11 @@
    - 유아적인 어투나 사투리, 지나치게 가벼운 홍보성 어조는 일절 금지하며, 지성적이고 전문적이면서도 따뜻한 온기가 서려 있는 수석 에디터 격식체(~입니다, ~해야 합니다, ~해보는 것이 좋습니다)를 철저히 구사하십시오.
    - 문장의 맥락에 맞춰 건강 및 과학적 신뢰를 더하는 이모지(🥦, 🌳, 🔬, 🌟)를 2~3개 내외로 우아하게 섞어 주십시오.
 
-4. **이미지 프롬프트 (imagePrompt) 생성 규칙**:
-   - 본문 내용이나 영양소 명칭을 기계적으로 복제하여 설명하는 뻔하고 식상한 피사체 구도(예: 약병, 단순한 알약 더미, 줄자, 음식 재료나 체중계 등)는 철저히 배제해 주십시오.
-   - 마법 방패, 신비로운 오라, SF 광선, 판타지 요정 등 지나친 판타지나 초현실주의(Surrealism) 역시 웰니스 콘텐츠의 신뢰성 있고 편안한 톤앤매너에 어긋나므로 절대 금지합니다.
-   - 대신, 칼럼의 핵심 메시지(제목)와 감성에 어울리는 '일상생활 속 편안하고 감각적인 웰니스 모먼트나 내추럴한 자연 풍경'을 아름다운 은유(Metaphor)로 활용하여, 보는 이에게 평화로운 활력을 주는 단독 16:9 일러스트/사진 영문 프롬프트 1문장을 아래 [스타일 가이드]를 완벽히 녹여내어 영어로 작성해 주십시오.
+4. **이미지 프롬프트 (imagePrompt) 생성 규칙 (🚨절대 준수)**:
+   - **[1차원적 단순 피사체 복제 절대 금지]**: 본문 단어에 비타민, 오렌지, 야채, 약병, 줄자, 아령, 체중계 등이 언급되었다고 해서 이를 기계적으로 오렌지 무더기나 아령 1개처럼 1차원적으로 묘사하여 그리는 식상하고 뻔한 구도는 **100% 엄격히 배제**하십시오.
+   - **[고차원적 개념적 은유(Metaphor)와 상징 강제]**: 질문과 대화(Q&A) 테마라면 "대화의 흐름이나 물음표(?)와 느낌표(!)"를 시각화하고, 운동이나 항상성 테마라면 "조화롭게 기지개를 켜거나 웰니스 창문 밖으로 들어오는 정돈된 빛, 또는 균형을 이루는 모던한 물체들"과 같이, 칼럼의 '맥락과 지적 호기심'을 추상적이고 우아한 상징적 구도로 승화하십시오.
+   - 지나친 초현실주의 판타지(마법 방패, 요정 등)는 신뢰성에 어긋나므로 금지합니다.
+   - 칼럼의 지성미와 감성에 어울리는 영문 프롬프트 1문장을 아래 [스타일 가이드]를 완벽히 녹여내어 영어로 작성해 주십시오.
    - 예: '아침을 깨우는 글리코겐'이 주제라면 판타지 방패 대신 "평화롭고 화창한 아침 햇살이 가득 비치는 현대적이고 따뜻한 아늑한 방에서, 활력 있게 기지개를 켜는 건강한 사람의 뒷모습과 창가에 싱그럽게 자라난 녹색 잎 식물들"처럼 일상적인 활력과 건강한 평온함을 은유하십시오.
    - [삽화 스타일 가이드]: ${styleGuide}
 
@@ -1930,59 +1974,76 @@
         let response;
         let success = false;
         let errMsg = "";
-        let is429 = false;
+        let is429Or400 = false;
+        let keysPool = [...apiKeys]; // 🔑 스마트 로테이션용 복제본 생성
 
-        // 🌟 원장님의 명설계: 안정적인 멀티 티어 모델 우회(폴백) 리스트
+        // 🌟 원장님의 명설계: 안정적인 멀티 티어 모델 우회(폴백) 리스트 (Gemini 2.5 Flash 시리즈 100% 최적화)
         const fallbackModels = [
-          "gemini-2.0-flash",
           "gemini-2.5-flash",
-          "gemini-2.5-flash-lite",
-          "gemini-2.0-flash-lite"
+          "gemini-2.5-flash-lite"
         ];
 
-        for (let i = 0; i < fallbackModels.length; i++) {
-          const modelName = fallbackModels[i];
-          console.log(`🔮 [비법서 소환] 시도 [${i + 1}단계]: ${modelName}...`);
-          try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-            response = await fetch(url, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(payload)
-            });
+        // 🔑 바깥 루프: API Key 로테이션 피스톤 스왑
+        for (let k = 0; k < keysPool.length; k++) {
+          const currentKey = keysPool[k];
+          const keySnippet = currentKey.substring(0, 6) + "..." + currentKey.substring(currentKey.length - 4);
+          console.log(`🔑 [비법서 소환 API Key 시도] [${k + 1}/${keysPool.length}]: ${keySnippet}`);
 
-            if (response.ok) {
-              success = true;
-              console.log(`✨ [비법서 소환] 성공: [${modelName}] 모델이 완수했습니다.`);
-              break;
-            } else {
-              const errData = await response.json();
-              errMsg = errData.error ? errData.error.message : `API 실패 (HTTP ${response.status})`;
-              console.warn(`⚠️ [비법서 소환] ${modelName} 실패:`, errMsg);
+          let keyFailed = false;
 
-              if (response.status === 429) {
-                is429 = true;
-                console.warn(`🚨 [429 제한] ${modelName} 호출 제한 감지. 다음 폴백 모델로 우회를 진행합니다.`);
+          // 🤖 안쪽 루프: 모델 폴백 (gemini-2.5-flash -> gemini-2.5-flash-lite)
+          for (let i = 0; i < fallbackModels.length; i++) {
+            const modelName = fallbackModels[i];
+            console.log(`🔮 [비법서 소환] 모델 시도 [${i + 1}단계]: ${modelName}...`);
+            try {
+              const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${currentKey}`;
+              response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+
+              if (response.ok) {
+                success = true;
+                console.log(`✨ [비법서 소환] 성공: [${modelName}] 모델이 완수했습니다. (Key: ${keySnippet})`);
+                
+                // 🌟 [Smart Shift] 로테이션을 통해 성공한 경우, 성공한 키를 0순위로 맨 앞으로 올리고 저장소 동기화
+                if (k > 0) {
+                  for (let s = 0; s < k; s++) {
+                    keysPool.push(keysPool.shift());
+                  }
+                  localStorage.setItem('gemini_api_keys', JSON.stringify(keysPool));
+                  localStorage.setItem('gemini_api_key', keysPool[0]);
+                  console.log(`🔄 [API Key 순서 순환] 다음번 호출 시 최우선 순위로 성공한 키가 적용되도록 저장소를 재배치했습니다.`);
+                }
+                break;
+              } else {
+                const errData = await response.json();
+                errMsg = errData.error ? errData.error.message : `API 실패 (HTTP ${response.status})`;
+                console.warn(`⚠️ [비법서 소환] ${modelName} 실패:`, errMsg);
+
+                if (response.status === 429 || response.status === 400) {
+                  is429Or400 = true;
+                  console.warn(`🚨 [키 오류 감지] HTTP ${response.status} 발생. 다음 API Key로 피스톤 로테이션을 가동합니다.`);
+                  keyFailed = true;
+                  break; // 모델 폴백 중단 -> 즉시 다음 키로 전환
+                }
+
+                // 기타 일시적 오류 시 지연
+                await new Promise(resolve => setTimeout(resolve, 500));
               }
-              
-              // 다음 모델 호출 전 미세 지연(500ms)
+            } catch (e) {
+              errMsg = e.toString();
+              console.error(`🚨 [비법서 소환] ${modelName} 통신 에러:`, e);
               await new Promise(resolve => setTimeout(resolve, 500));
             }
-          } catch (e) {
-            errMsg = e.toString();
-            console.error(`🚨 [비법서 소환] ${modelName} 통신 에러:`, e);
-            await new Promise(resolve => setTimeout(resolve, 500));
           }
+
+          if (success) break; // 소환 대성공 시 키 로테이션 전체 루프 중단
         }
 
         if (!success) {
-          if (is429) {
-            throw new Error(`429 Too Many Requests\n사유: ${errMsg}\n\n💡 [조치 안내] 구글 AI Studio 무료 티어 API Key의 호출 한도(분당 15회 또는 하루 1500회)가 일시적으로 소진되었을 가능성이 있습니다. 1분 정도 기다렸다가 다시 시도해 주시거나, 구글 AI Studio에서 새 API Key를 발급받아 [환경설정] 시트 B2 셀에 교체 입력해 주시면 즉시 해결됩니다!`);
-          } else {
-            throw new Error(errMsg);
-          }
+          throw new Error(`모든 예비 API Key 호출에 완전히 실패했습니다.\n사유: ${errMsg}\n\n💡 [조치 안내] 구글 스프레드시트 '환경설정' 시트 B열의 API Key 목록을 검토해 주십시오.`);
         }
 
         const data = await response.json();
@@ -2214,7 +2275,8 @@
 
       google.script.run
         .withSuccessHandler(res => {
-          if (!res.success || !res.key) {
+          let apiKeys = cleanAndGetApiKeys(res);
+          if (!apiKeys || apiKeys.length === 0) {
             if (summonBtn) {
               summonBtn.disabled = false;
               summonBtn.innerHTML = '<i class="fa-solid fa-image"></i> AI 삽화 소환';
@@ -2223,8 +2285,7 @@
             alert("⚠️ GEMINI_API_KEY 설정이 누락되었습니다.");
             return;
           }
-          const apiKey = res.key;
-          executeDirectImageOnlyGeminiCall(apiKey, title, content);
+          executeDirectImageOnlyGeminiCall(apiKeys, title, content);
         })
         .withFailureHandler(err => {
           if (summonBtn) {
@@ -2237,7 +2298,7 @@
         .getGeminiApiKey();
     }
 
-    async function executeDirectImageOnlyGeminiCall(apiKey, title, content) {
+    async function executeDirectImageOnlyGeminiCall(apiKeys, title, content) {
       if (window.isDirectImageSummoning) {
         console.warn("⚠️ 이미 지니 AI 삽화 소환 마법이 진행 중입니다. 중복 요청을 방어합니다.");
         return;
@@ -2256,13 +2317,17 @@
       if (imageStyle === 'wellness_photo') {
         styleGuide = "A professional high-end aesthetic wellness lifestyle photography, warm natural sunlight, clean and modern minimalist interior, serene atmospheric vibes, aesthetic composition, elegant and calm mood";
       } else if (imageStyle === 'premium_3d') {
-        styleGuide = "A premium 3D claymation art style, charming cute minimalist 3D clay figures, soft pastel color palette, volumetric warm lighting, smooth clay textures, clean simple background, artistic and cozy";
-      } else if (imageStyle === 'watercolor') {
-        styleGuide = "An elegant and warm watercolor painting, cozy hand-drawn pastel textures, soft flowing pastel washes, gentle organic lines, artistic splashes, dreamy and peaceful wellness mood";
-      } else if (imageStyle === 'minimal_flat') {
-        styleGuide = "A sophisticated modern 2D flat vector illustration, stylish minimalist shapes, harmonious contemporary color palette, elegant clean lines, professional graphic design masterpiece";
-      } else if (imageStyle === 'science_comic') {
-        styleGuide = "A vibrant and friendly educational graphic art style, clean bold outlines, vivid playful elements, charming flat design, modern children's science book illustration style";
+        // [다이어트 튜닝]: 인형(figures)과 빈 배경(clean simple background)을 삭제하여 본문 주제 3D화 공간 확보!
+        styleGuide = "A premium 3D claymation art style, soft pastel color palette, volumetric warm lighting, smooth clay textures, artistic and cozy";
+      } else if (imageStyle === 'editorial_line') {
+        // [미니멀 에디토리얼 라인 아트]
+        styleGuide = "A sophisticated minimalist editorial line art illustration, clean black lines, simple geometric organic shapes, elegant limited color palette of warm beige and sage green, high-end editorial graphic design masterpiece, conceptually clear and meaningful, clean white background";
+      } else if (imageStyle === 'isometric_concept') {
+        // [아이소메트릭 웰니스 개념화]
+        styleGuide = "A premium modern isometric vector illustration, clean minimalist conceptual wellness art, elegant pastel tones, stylish simple geometric forms, high-end editorial tech graphic, clear layout, soft professional lighting";
+      } else if (imageStyle === 'scandinavian_flat') {
+        // [북유럽식 감성 플랫 그래픽]
+        styleGuide = "A beautiful Scandinavian flat design, organic botanicals and minimal human silhouettes, earth tone colors of terracotta, olive and warm sand, aesthetic flat vector composition, clean and elegant editorial aesthetic";
       }
 
       // 피드백이 존재하면 프롬프트 지침에 최우선 가이드라인을 강하게 주입!
@@ -2330,59 +2395,78 @@ ${feedbackGuide}
         let response;
         let success = false;
         let errMsg = "";
-        let is429 = false;
+        let is429Or400 = false;
+        let keysPool = [...apiKeys]; // 🔑 스마트 로테이션용 복제본 생성
 
-        // 🌟 4단계 전사 통합 모델 리스트 (안정화 우회망)
+        // 🌟 원장님의 명설계: 안정적인 멀티 티어 모델 우회(폴백) 리스트 (Gemini 2.5 Flash 시리즈 100% 최적화)
         const fallbackModels = [
-          "gemini-2.0-flash",
           "gemini-2.5-flash",
-          "gemini-2.5-flash-lite",
-          "gemini-2.0-flash-lite"
+          "gemini-2.5-flash-lite"
         ];
 
-        for (let i = 0; i < fallbackModels.length; i++) {
-          const modelName = fallbackModels[i];
-          console.log(`🔮 [단독 삽화 소환 시도] [${i + 1}단계]: ${modelName}...`);
-          try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-            response = await fetch(url, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(payload)
-            });
+        // 🔑 바깥 루프: API Key 로테이션 피스톤 스왑
+        for (let k = 0; k < keysPool.length; k++) {
+          const currentKey = keysPool[k];
+          const keySnippet = currentKey.substring(0, 6) + "..." + currentKey.substring(currentKey.length - 4);
+          console.log(`🔑 [단독 삽화 소환 API Key 시도] [${k + 1}/${keysPool.length}]: ${keySnippet}`);
 
-            if (response.ok) {
-              success = true;
-              console.log(`✨ [단독 삽화 소환 성공]: [${modelName}] 모델이 완수했습니다.`);
-              break;
-            } else {
-              const errData = await response.json();
-              errMsg = errData.error ? errData.error.message : `API 실패 (HTTP ${response.status})`;
-              console.warn(`⚠️ [단독 삽화 소환] ${modelName} 실패:`, errMsg);
+          let keyFailed = false;
 
-              if (response.status === 429) {
-                is429 = true;
-                console.warn(`🚨 [429 제한] ${modelName} 호출 제한 감지. 다음 폴백 모델로 우회를 진행합니다.`);
+          // 🤖 안쪽 루프: 모델 폴백 (gemini-2.5-flash -> gemini-2.5-flash-lite)
+          for (let i = 0; i < fallbackModels.length; i++) {
+            const modelName = fallbackModels[i];
+            console.log(`🔮 [단독 삽화 소환 시도] [${i + 1}단계]: ${modelName}...`);
+            try {
+              const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${currentKey}`;
+              response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+              });
+
+              if (response.ok) {
+                success = true;
+                console.log(`✨ [단독 삽화 소환 성공]: [${modelName}] 모델이 완수했습니다. (Key: ${keySnippet})`);
+                
+                // 🌟 [Smart Shift] 로테이션을 통해 성공한 경우, 성공한 키를 0순위로 맨 앞으로 올리고 저장소 동기화
+                if (k > 0) {
+                  for (let s = 0; s < k; s++) {
+                    keysPool.push(keysPool.shift());
+                  }
+                  localStorage.setItem('gemini_api_keys', JSON.stringify(keysPool));
+                  localStorage.setItem('gemini_api_key', keysPool[0]);
+                  console.log(`🔄 [API Key 순서 순환] 다음번 호출 시 최우선 순위로 성공한 키가 적용되도록 저장소를 재배치했습니다.`);
+                }
+                break;
+              } else {
+                const errData = await response.json();
+                errMsg = errData.error ? errData.error.message : `API 실패 (HTTP ${response.status})`;
+                console.warn(`⚠️ [단독 삽화 소환] ${modelName} 실패:`, errMsg);
+
+                if (response.status === 429 || response.status === 400) {
+                  is429Or400 = true;
+                  console.warn(`🚨 [키 오류 감지] HTTP ${response.status} 발생. 다음 API Key로 피스톤 로테이션을 가동합니다.`);
+                  keyFailed = true;
+                  break; // 모델 폴백 중단 -> 즉시 다음 키로 전환
+                }
+
+                // 다음 모델 호출 전 미세 지연(500ms)
+                await new Promise(resolve => setTimeout(resolve, 500));
               }
-
-              // 다음 모델 호출 전 미세 지연(500ms)
+            } catch (e) {
+              errMsg = e.toString();
+              console.error(`🚨 [단독 삽화 소환] ${modelName} 통신 에러:`, e);
               await new Promise(resolve => setTimeout(resolve, 500));
             }
-          } catch (e) {
-            errMsg = e.toString();
-            console.error(`🚨 [단독 삽화 소환] ${modelName} 통신 에러:`, e);
-            await new Promise(resolve => setTimeout(resolve, 500));
           }
+
+          if (success) break; // 소환 대성공 시 키 로테이션 전체 루프 중단
         }
 
         if (!success) {
-          if (is429) {
-            throw new Error(`429 Too Many Requests\n사유: ${errMsg}\n\n💡 [조치 안내] 호출 한도가 초과되었습니다. 1분 정도 기다렸다가 다시 시도해 주십시오.`);
-          } else {
-            throw new Error(errMsg);
-          }
+          throw new Error(`모든 예비 API Key 호출에 완전히 실패했습니다.\n사유: ${errMsg}\n\n💡 [조치 안내] 구글 스프레드시트 '환경설정' 시트 B열의 API Key 목록을 검토해 주십시오.`);
         }
 
         const data = await response.json();

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🤖 지니 AI API Key 정밀 진단 진단서</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Pretendard:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: 'Outfit', 'Pretendard', sans-serif;
+      padding: 40px 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #fbbf24;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    p.subtitle {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-bottom: 30px;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      margin-bottom: 25px;
+    }
+    label {
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: #fbbf24;
+      display: block;
+      margin-bottom: 8px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 15px;
+      background: #0f172a;
+      border: 1px solid #475569;
+      border-radius: 10px;
+      color: #f8fafc;
+      font-size: 0.9rem;
+      font-weight: 700;
+      box-sizing: border-box;
+      margin-bottom: 20px;
+      outline: none;
+    }
+    input[type="text"]:focus {
+      border-color: #fbbf24;
+    }
+    .btn-diagnose {
+      width: 100%;
+      background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+      color: #0f172a;
+      border: none;
+      padding: 15px;
+      border-radius: 12px;
+      font-weight: 900;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(251, 191, 36, 0.2);
+      transition: all 0.2s;
+    }
+    .btn-diagnose:active {
+      transform: scale(0.98);
+    }
+    .result-box {
+      margin-top: 25px;
+      padding: 15px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      display: none;
+    }
+    .result-box.success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1.5px solid #10b981;
+      color: #34d399;
+      display: block;
+    }
+    .result-box.error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1.5px solid #ef4444;
+      color: #fca5a5;
+      display: block;
+    }
+    .model-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 0.7rem;
+      margin-bottom: 8px;
+      background: #475569;
+      color: #f8fafc;
+    }
+    pre {
+      background: #0f172a;
+      padding: 12px;
+      border-radius: 8px;
+      overflow-x: auto;
+      border: 1px solid #1e293b;
+      margin-top: 10px;
+      color: #f8fafc;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🔍 지니 AI API Key 정밀 진단기</h1>
+  <p class="subtitle">구글 API 서버의 실제 반응과 차단 코드를 100% 투명하게 봅니다.</p>
+
+  <div class="card">
+    <label for="api-key-input">🔑 검사할 구글 API Key (브라우저 메모리 복원됨)</label>
+    <input type="text" id="api-key-input" placeholder="AIzaSy로 시작하는 API 키 입력">
+    
+    <button class="btn-diagnose" onclick="runDiagnosis()">🔍 API 키 정밀 진단 시작</button>
+  </div>
+
+  <div id="loading" style="display: none; text-align: center; color: #fbbf24; font-weight: 800; margin-bottom: 25px;">
+    ⚡ 구글 AI Studio 서버와 통신하며 정밀 검사 중...
+  </div>
+
+  <div id="results-container"></div>
+
+  <script>
+    // 페이지 로드 시 localStorage에서 기존 키 복원
+    window.onload = function() {
+      const savedKey = localStorage.getItem('gemini_api_key') || '';
+      document.getElementById('api-key-input').value = savedKey;
+    };
+
+    async function runDiagnosis() {
+      const apiKey = document.getElementById('api-key-input').value.trim();
+      if (!apiKey) {
+        alert("진단할 API Key를 입력해 주세요!");
+        return;
+      }
+
+      // 로컬 스토리지에 자동 저장 (동기화)
+      localStorage.setItem('gemini_api_key', apiKey);
+
+      const loading = document.getElementById('loading');
+      const container = document.getElementById('results-container');
+      
+      loading.style.display = 'block';
+      container.innerHTML = '';
+
+      // 우리가 진단할 대상 모델 리스트
+      const testModels = [
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-1.5-flash",
+        "gemini-2.0-flash"
+      ];
+
+      for (const model of testModels) {
+        const modelDiv = document.createElement('div');
+        modelDiv.className = 'card';
+        modelDiv.innerHTML = `<span class="model-badge">${model}</span> 진단 진행 중...`;
+        container.appendChild(modelDiv);
+
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: "Hello, this is a diagnostic test. Please reply with 'OK'." }] }]
+            })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const replyText = data.candidates[0].content.parts[0].text;
+            modelDiv.innerHTML = `
+              <span class="model-badge" style="background: #10b981; color: #fff;">${model} - 통신 성공 ✅</span>
+              <div class="result-box success">
+                <strong>[성공] 구글 서버가 정상적으로 답변했습니다!</strong>
+                <pre>응답 내용: "${replyText.trim()}"</pre>
+              </div>
+            `;
+          } else {
+            const responseText = await response.text();
+            let errDetail = responseText;
+            try {
+              const errJson = JSON.parse(responseText);
+              errDetail = JSON.stringify(errJson, null, 2);
+            } catch(e) {}
+
+            modelDiv.innerHTML = `
+              <span class="model-badge" style="background: #ef4444; color: #fff;">${model} - 실패 ❌ (HTTP ${response.status})</span>
+              <div class="result-box error">
+                <strong>[실패] 구글 서버가 에러를 반환했습니다!</strong>
+                <pre>상태 코드: HTTP ${response.status}\n\n상세 에러 내용:\n${errDetail}</pre>
+              </div>
+            `;
+          }
+        } catch (err) {
+          modelDiv.innerHTML = `
+            <span class="model-badge" style="background: #7c3aed; color: #fff;">${model} - 통신 장애 🚨</span>
+            <div class="result-box error">
+              <strong>[오류] 구글 서버에 연결할 수 없습니다. (네트워크 차단/방화벽 등)</strong>
+              <pre>${err.toString()}</pre>
+            </div>
+          `;
+        }
+      }
+
+      loading.style.display = 'none';
+    }
+  </script>
+</body>
+</html>
