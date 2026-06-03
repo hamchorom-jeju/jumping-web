@@ -1899,7 +1899,9 @@
             alert("⚠️ 구글 시트 또는 스크립트 속성에 GEMINI_API_KEY가 설정되어 있지 않습니다. 설정 완료 후 다시 강림시켜 주십시오.");
             return;
           }
-          executeGeminiCall(apiKeys, keywords, section, needImage);
+          // [v67.7] Pollinations API Key 전달
+          let pKey = (res && res.success) ? (res.pollinationsKey || "") : "";
+          executeGeminiCall(apiKeys, keywords, section, needImage, pKey);
         })
         .withFailureHandler(err => {
           resetAiSummonState();
@@ -1933,7 +1935,7 @@
 ${feedbackGuide ? `\n${feedbackGuide}` : ''}`;
     }
 
-    async function executeGeminiCall(apiKeys, keywords, section, needImage) {
+    async function executeGeminiCall(apiKeys, keywords, section, needImage, pKey = "") {
       // 화풍 스타일 획득
       const imageStyleSelect = document.getElementById('scroll-image-style-select');
       const imageStyle = imageStyleSelect ? imageStyleSelect.value : 'wellness_photo';
@@ -2090,7 +2092,8 @@ ${getCommonImagePromptGuide(styleGuide)}
         if (needImage && result.imagePrompt) {
           const randomSeed = Math.floor(Math.random() * 1000000);
           const encodedPrompt = encodeURIComponent(result.imagePrompt);
-          const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=500&nologo=true&private=true&feed=false&seed=${randomSeed}`;
+          const keyParam = pKey ? `&key=${pKey}` : '';
+          const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=500&nologo=true&private=true&feed=false&seed=${randomSeed}${keyParam}`;
           
           previewImg.src = imageUrl;
           previewImageBox.style.display = 'block';
@@ -2308,7 +2311,8 @@ ${getCommonImagePromptGuide(styleGuide)}
             alert("⚠️ GEMINI_API_KEY 설정이 누락되었습니다.");
             return;
           }
-          executeDirectImageOnlyGeminiCall(apiKeys, title, content);
+          let pKey = (res && res.success) ? (res.pollinationsKey || "") : "";
+          executeDirectImageOnlyGeminiCall(apiKeys, title, content, pKey);
         })
         .withFailureHandler(err => {
           if (summonBtn) {
@@ -2321,7 +2325,7 @@ ${getCommonImagePromptGuide(styleGuide)}
         .getGeminiApiKey();
     }
 
-    async function executeDirectImageOnlyGeminiCall(apiKeys, title, content) {
+    async function executeDirectImageOnlyGeminiCall(apiKeys, title, content, pKey = "") {
       if (window.isDirectImageSummoning) {
         console.warn("⚠️ 이미 지니 AI 삽화 소환 마법이 진행 중입니다. 중복 요청을 방어합니다.");
         return;
@@ -2496,7 +2500,8 @@ ${getCommonImagePromptGuide(styleGuide, feedbackGuide)}
           window.lastImagePrompt = result.imagePrompt; // 기존 프롬프트 업데이트! (연쇄 피드백 보존)
           const randomSeed = Math.floor(Math.random() * 1000000);
           const encodedPrompt = encodeURIComponent(result.imagePrompt);
-          const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=500&nologo=true&private=true&feed=false&seed=${randomSeed}`;
+          const keyParam = pKey ? `&key=${pKey}` : '';
+          const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=500&nologo=true&private=true&feed=false&seed=${randomSeed}${keyParam}`;
           
           // 직접 작성 영역 이미지 URL 및 미리보기 주입
           const imageInput = document.getElementById('scroll-image-input');
