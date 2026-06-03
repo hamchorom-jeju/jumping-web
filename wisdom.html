@@ -712,9 +712,10 @@
             }
             if (excerpt.length > limit) excerpt = excerpt.substring(0, limit) + "...";
             
-            const hasImage = t.image && t.image.trim().length > 10;
+            const hasImage = t.image && String(t.image).trim().length > 10;
             // 작은따옴표(') 기호 충돌로 인한 CSS 파괴 버그를 URL 안전 문자(%27) 치환을 통해 철저히 방지!
-            const safeImageUrl = hasImage ? String(t.image).replace(/'/g, "%27") : "";
+            // 개행문자 및 앞뒤 공백을 확실하게 청소하여 CSS background-image가 파괴되는 현상을 완벽히 차단합니다.
+            const safeImageUrl = hasImage ? String(t.image).trim().replace(/\r?\n|\r/g, "").replace(/'/g, "%27") : "";
             const cardStyle = hasImage 
                 ? `background-image: url('${safeImageUrl}');`
                 : ``;
