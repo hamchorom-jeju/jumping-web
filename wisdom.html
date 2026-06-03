@@ -713,11 +713,11 @@
             if (excerpt.length > limit) excerpt = excerpt.substring(0, limit) + "...";
             
             const hasImage = t.image && String(t.image).trim().length > 10;
-            // 작은따옴표(') 기호 충돌로 인한 CSS 파괴 버그를 URL 안전 문자(%27) 치환을 통해 철저히 방지!
-            // 개행문자 및 앞뒤 공백을 확실하게 청소하여 CSS background-image가 파괴되는 현상을 완벽히 차단합니다.
-            const safeImageUrl = hasImage ? String(t.image).trim().replace(/\r?\n|\r/g, "").replace(/'/g, "%27") : "";
+            // 개행문자 및 앞뒤 공백을 청소하여 CSS background-image 파괴를 완벽히 차단하고,
+            // 큰따옴표 치환을 통해 작은따옴표(')가 포함된 원본 이미지 주소 캐시를 깨뜨리지 않고 스타일시트 오작동을 방지합니다.
+            const safeImageUrl = hasImage ? String(t.image).trim().replace(/\r?\n|\r/g, "") : "";
             const cardStyle = hasImage 
-                ? `background-image: url('${safeImageUrl}');`
+                ? `background-image: url("${safeImageUrl.replace(/"/g, '%22')}");`
                 : ``;
                 
             // 더보기 입체형 버튼 마크업
