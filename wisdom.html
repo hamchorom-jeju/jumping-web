@@ -751,21 +751,7 @@
             
             if (!t) return;
             
-            // 딱딱한 '섹션 X'를 격조 높은 웰니스 한글 라벨로 자동 치환
             let friendlyCategory = String(t.category || "건강지식");
-            if (friendlyCategory.indexOf("섹션 1") > -1) {
-                friendlyCategory = "에디터 추천 건강 비법 📰";
-            } else if (friendlyCategory.indexOf("섹션 2") > -1) {
-                friendlyCategory = "영양 가득 건강 식단 칼럼 🍱";
-            } else if (friendlyCategory.indexOf("섹션 3") > -1) {
-                friendlyCategory = "항상성 홈트 운동 가이드 🏃";
-            } else if (friendlyCategory.indexOf("섹션 4") > -1) {
-                friendlyCategory = "마음 평온 힐링 케어 단신 🧘";
-            } else if (friendlyCategory.indexOf("섹션 5") > -1) {
-                friendlyCategory = "신체 밸런스 건강 수호 가이드 🛡️";
-            } else if (friendlyCategory.indexOf("섹션") > -1) {
-                friendlyCategory = "수석 에디터의 웰니스 건강 비법 🌿";
-            }
 
             const modal = document.getElementById('tip-detail-modal');
             const container = document.getElementById('tip-detail-container');
