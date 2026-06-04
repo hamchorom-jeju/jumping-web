@@ -6966,8 +6966,9 @@ function saveWisdomTip(data) {
     }
     
     var rawImage = data.image || "";
-    var cleanImage = (rawImage.indexOf("pollinations.ai") > -1)
-      ? saveWisdomImageToDrive(rawImage)
+    var isBase64 = (rawImage.indexOf("data:") === 0 || rawImage.length > 1000);
+    var cleanImage = isBase64
+      ? saveBase64ImageToDrive(rawImage, "wisdom_img_" + Date.now() + ".png")
       : cleanPollinationsApiKey(rawImage);
       
     sheet.appendRow([
@@ -7001,8 +7002,9 @@ function updateWisdomTip(rowIdx, data) {
     // A: 날짜(1), B: 제목(2), C: 내용(3), D: 카테고리(4), E: 작성자(5)
     // I: 사진주소(9), J: 기본게시물(10)
     var rawImage = data.image || "";
-    var cleanImage = (rawImage.indexOf("pollinations.ai") > -1)
-      ? saveWisdomImageToDrive(rawImage)
+    var isBase64 = (rawImage.indexOf("data:") === 0 || rawImage.length > 1000);
+    var cleanImage = isBase64
+      ? saveBase64ImageToDrive(rawImage, "wisdom_img_" + Date.now() + ".png")
       : cleanPollinationsApiKey(rawImage);
       
     sheet.getRange(row, 2).setValue(data.title);
@@ -8448,88 +8450,59 @@ function getOrCreateWisdomFolder() {
 }
 
 /**
- * [v68.0] Pollinations 이미지를 구글 드라이브에 파일로 다운로드하여 저장하고,
- * 구글 미디어 CDN 다이렉트 뷰어 URL로 변환하여 반환
+ * [v68.0] Base64 이미지 데이터를 구글 드라이브에 저장하고 direct URL 반환
  */
-function saveWisdomImageToDrive(pollinationsUrl) {
-  if (!pollinationsUrl || pollinationsUrl.indexOf("pollinations.ai") === -1) {
-    return pollinationsUrl;
-  }
+function saveBase64ImageToDrive(base64Data, fileName) {
   try {
     var folder = getOrCreateWisdomFolder();
+    var cleanBase64 = base64Data;
+    var contentType = "image/png";
     
-    // 1. 이미지 다운로드
-    var response = UrlFetchApp.fetch(pollinationsUrl, { muteHttpExceptions: true });
-    if (response.getResponseCode() !== 200) {
-      Logger.log("🚨 Pollinations 이미지 다운로드 실패: HTTP " + response.getResponseCode());
-      return pollinationsUrl;
+    if (cleanBase64.indexOf(",") > -1) {
+      var parts = cleanBase64.split(",");
+      var meta = parts[0];
+      cleanBase64 = parts[1];
+      if (meta.indexOf("image/jpeg") > -1) contentType = "image/jpeg";
+      else if (meta.indexOf("image/jpg") > -1) contentType = "image/jpeg";
+      else if (meta.indexOf("image/gif") > -1) contentType = "image/gif";
     }
     
-    var blob = response.getBlob();
-    var timestamp = Date.now();
-    blob.setName("wisdom_img_" + timestamp + ".png");
+    cleanBase64 = cleanBase64.replace(/\s/g, '');
+    var decoded = Utilities.base64Decode(cleanBase64);
+    var blob = Utilities.newBlob(decoded, contentType, fileName);
     
-    // 2. 구글 드라이브에 저장 (폴더 권한을 상속하므로 별도 권한 설정 배제하여 지연 방지)
     var file = folder.createFile(blob);
-    var fileId = file.getId();
-    
-    // 3. 구글 드라이브 미디어 서빙 다이렉트 주소 반환
-    var driveDirectUrl = "https://lh3.googleusercontent.com/d/" + fileId;
-    return driveDirectUrl;
+    return "https://lh3.googleusercontent.com/d/" + file.getId();
   } catch (e) {
-    Logger.log("🚨 saveWisdomImageToDrive 에러: " + e.toString());
-    return pollinationsUrl;
+    Logger.log("🚨 saveBase64ImageToDrive 에러: " + e.toString());
+    return "";
   }
 }
 
 /**
- * [v68.0] 기존 지식창고 시트의 모든 Pollinations 주소 이미지를 구글 드라이브로 마이그레이션
+ * [v68.0] 프론트엔드에서 전송받은 특정 팁 ID의 Base64 데이터를 드라이브에 저장하고 시트 업데이트
  */
-function migrateWisdomImagesToDrive() {
+function migrateSingleImage(tipId, base64Data) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("지혜의_보물고");
     if (!sheet) return { success: false, error: "지혜의_보물고 시트가 존재하지 않습니다." };
     
-    var lastRow = sheet.getLastRow();
-    if (lastRow < 2) return { success: true, message: "마이그레이션할 데이터가 없습니다." };
-    
-    var data = sheet.getRange(2, 9, lastRow - 1, 1).getValues(); // I열 (사진주소) 로드
-    var count = 0;
-    var skipped = 0;
-    var errorCount = 0;
-    
-    for (var i = 0; i < data.length; i++) {
-      var rowNum = i + 2;
-      var currentUrl = String(data[i][0] || "").trim();
-      
-      if (currentUrl && currentUrl.indexOf("pollinations.ai") > -1) {
-        Logger.log("🔄 [" + rowNum + "행] 이관 시작: " + currentUrl);
-        var driveUrl = saveWisdomImageToDrive(currentUrl);
-        
-        if (driveUrl && driveUrl.indexOf("googleusercontent.com") > -1) {
-          sheet.getRange(rowNum, 9).setValue(driveUrl);
-          count++;
-          Logger.log("✅ [" + rowNum + "행] 이관 성공: " + driveUrl);
-        } else {
-          errorCount++;
-          Logger.log("🚨 [" + rowNum + "행] 이관 실패 (원래 주소 보존)");
-        }
-        Utilities.sleep(100); // 속도 제한 완화 및 안정성 버퍼
-      } else {
-        skipped++;
-      }
+    var row = parseInt(tipId);
+    if (isNaN(row) || row < 2 || row > sheet.getLastRow()) {
+      return { success: false, error: "유효하지 않은 행 번호입니다: " + tipId };
     }
     
-    return {
-      success: true,
-      total: data.length,
-      migrated: count,
-      skipped: skipped,
-      errors: errorCount
-    };
+    var timestamp = Date.now();
+    var driveUrl = saveBase64ImageToDrive(base64Data, "wisdom_migrated_" + tipId + "_" + timestamp + ".png");
+    
+    if (driveUrl && driveUrl.indexOf("googleusercontent.com") > -1) {
+      sheet.getRange(row, 9).setValue(driveUrl); // I열 (9열)
+      return { success: true, url: driveUrl };
+    } else {
+      return { success: false, error: "드라이브 저장 후 링크 생성 실패" };
+    }
   } catch (e) {
-    Logger.log("🚨 마이그레이션 오류: " + e.toString());
     return { success: false, error: e.toString() };
   }
 }

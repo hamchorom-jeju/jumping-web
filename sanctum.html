@@ -1809,6 +1809,25 @@
       }
     }
 
+    // 🎨 Pollinations URL 이미지를 Blob으로 받아 Base64로 인코딩하는 헬퍼 함수
+    async function urlToBase64(url) {
+      if (!url || !url.includes("pollinations.ai")) return url;
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch (e) {
+        console.error("🚨 urlToBase64 에러:", e);
+        return url; // 에러 시 원래 URL 반환
+      }
+    }
+
     function resetAiSummonState() {
       window.isAiSummoning = false;
       const summonBtn = document.getElementById('ai-summon-btn');
@@ -2113,12 +2132,12 @@ ${getCommonImagePromptGuide(styleGuide)}
       }
     }
 
-    function approveAndPublishAiDraft() {
+    async function approveAndPublishAiDraft() {
       // ✍️ 원장님이 수정한 최종 제목과 본문 값(value)을 읽어옵니다!
       const title = document.getElementById('ai-preview-title').value.trim();
       const content = document.getElementById('ai-preview-content').value.trim();
       const category = document.getElementById('scroll-category-select').value;
-      const image = window.lastAiGeneratedImageUrl || "";
+      const rawImage = window.lastAiGeneratedImageUrl || "";
       const defaultCheck = document.getElementById('scroll-default-check');
       const matchQuestInput = document.getElementById('scroll-match-quest-input');
       
@@ -2132,6 +2151,17 @@ ${getCommonImagePromptGuide(styleGuide)}
       if (!title || !content) {
         alert("제목과 본문을 작성 또는 소환해 주십시오.");
         return;
+      }
+
+      showLoading("삽화 이미지를 소장용 파일로 가공하는 중...");
+      
+      let finalImage = rawImage;
+      try {
+        if (rawImage && rawImage.includes("pollinations.ai")) {
+          finalImage = await urlToBase64(rawImage);
+        }
+      } catch (e) {
+        console.error("Image conversion failed, fallback to original", e);
       }
 
       showLoading("이장의 계시를 안전하게 봉인하여 보물고에 박제하는 중...");
@@ -2149,7 +2179,7 @@ ${getCommonImagePromptGuide(styleGuide)}
         title: title,
         content: content,
         category: category,
-        image: image,
+        image: finalImage,
         isDefault: isDefault
       });
     }
@@ -2191,11 +2221,11 @@ ${getCommonImagePromptGuide(styleGuide)}
       }
     }
 
-    function submitScroll() {
+    async function submitScroll() {
       const title = document.getElementById('scroll-title-input').value.trim();
       const content = document.getElementById('scroll-content-input').value.trim();
       const category = document.getElementById('scroll-category-select').value;
-      const image = document.getElementById('scroll-image-input') ? document.getElementById('scroll-image-input').value.trim() : "";
+      const rawImage = document.getElementById('scroll-image-input') ? document.getElementById('scroll-image-input').value.trim() : "";
       const defaultCheck = document.getElementById('scroll-default-check');
       const matchQuestInput = document.getElementById('scroll-match-quest-input');
       
@@ -2211,6 +2241,17 @@ ${getCommonImagePromptGuide(styleGuide)}
         return;
       }
 
+      showLoading("삽화 이미지를 소장용 파일로 가공하는 중...");
+      
+      let finalImage = rawImage;
+      try {
+        if (rawImage && rawImage.includes("pollinations.ai")) {
+          finalImage = await urlToBase64(rawImage);
+        }
+      } catch (e) {
+        console.error("Image conversion failed, fallback to original", e);
+      }
+
       showLoading("이장님의 계시를 안전하게 봉인하는 중...");
 
       if (currentEditorType === 'tip') {
@@ -2218,7 +2259,7 @@ ${getCommonImagePromptGuide(styleGuide)}
           title: title,
           content: content,
           category: category,
-          image: image,
+          image: finalImage,
           isDefault: isDefault
         };
 
