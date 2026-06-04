@@ -2112,7 +2112,8 @@ ${getCommonImagePromptGuide(styleGuide)}
           const randomSeed = Math.floor(Math.random() * 1000000);
           const encodedPrompt = encodeURIComponent(result.imagePrompt);
           const keyParam = pKey ? `&key=${pKey}` : '';
-          const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=500&nologo=true&private=true&feed=false&seed=${randomSeed}${keyParam}`;
+          const paidParams = pKey ? '&nologo=true&private=true&feed=false' : '';
+          const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=500${paidParams}&seed=${randomSeed}${keyParam}`;
           
           previewImg.src = imageUrl;
           previewImageBox.style.display = 'block';
@@ -2542,7 +2543,8 @@ ${getCommonImagePromptGuide(styleGuide, feedbackGuide)}
           const randomSeed = Math.floor(Math.random() * 1000000);
           const encodedPrompt = encodeURIComponent(result.imagePrompt);
           const keyParam = pKey ? `&key=${pKey}` : '';
-          const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=500&nologo=true&private=true&feed=false&seed=${randomSeed}${keyParam}`;
+          const paidParams = pKey ? '&nologo=true&private=true&feed=false' : '';
+          const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=500${paidParams}&seed=${randomSeed}${keyParam}`;
           
           // 직접 작성 영역 이미지 URL 및 미리보기 주입
           const imageInput = document.getElementById('scroll-image-input');
