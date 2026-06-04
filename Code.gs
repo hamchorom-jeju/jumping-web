@@ -10910,40 +10910,36 @@ function getAlgorithmicSuddenQuest(dateStr) {
     // 한국 시간(KST) 기준으로 정확하게 날짜 객체 생성
     var targetDate = new Date(year, month - 1, day, 12, 0, 0); 
     
-    // 1. 21대 명품 웰니스 테라피 정의 (평일용)
+    // 1. 21대 명품 웰니스 테라피 정의 (평일용 - 비타민/미네랄 겹침 방지 최적 순서)
     var baseQuests = [
-      { key: "단백질", title: "단백질 day!", description: "근육과 대사를 지켜주는 양질의 단백질(닭가슴살, 흰살생선, 계란, 두부, 살코기 등) 식단을 맛있게 챙겨 드시고 인증해주세요! 🍗🍳", method: "사진", score: 15 },
-      { key: "지방", title: "건강한 지방 day!", description: "불포화지방산이 풍부하여 혈관을 깨끗하게 해주는 아보카도, 견과류, 등푸른 생선, 올리브유 등을 섭취하고 인증해주세요! 🥑🐟", method: "사진", score: 15 },
-      { key: "탄수화물", title: "착한 탄수화물 day!", description: "정제되지 않아 식이섬유가 살아있는 현미밥, 고구마, 단호박, 통밀 등 착한 탄수화물 섭취를 인증해 주세요! 🍠🌾", method: "사진", score: 15 },
-      { key: "인슐린", title: "인슐린 day!", description: "식사 시 혈당 폭발을 막기 위해 식이섬유(채소) ➔ 단백질 ➔ 탄수화물 순서로 식사법을 직접 실천하고 인증해 주세요! 🥗📈", method: "사진", score: 15 },
       { key: "식이섬유", title: "식이섬유 day!", description: "장 건강과 포만감을 책임지는 신선한 쌈채소, 브로콜리, 버섯 등 식이섬유가 풍부한 식단을 드시고 인증해주세요! 🥦🥬", method: "사진", score: 15 },
-      { key: "간식", title: "건강한 간식 day!", description: "가공간식, 액상과당 음료 대신 견과류, 무가당 요거트, 방울토마토 등 건강한 간식을 선택해 드시고 인증해주세요! 🍅🥜", method: "사진", score: 15 },
       { key: "비타민", title: "비타민과 미네랄 day!", description: "활력을 주고 몸의 대사를 돕는 신선한 제철 과일, 채소 섭취나 종합 비타민/영양제 섭취 모습을 인증해주세요! 🍊💊", method: "사진", score: 15 },
-      { key: "유산균", title: "건강한 장내환경 day!", description: "유익균이 좋아하는 발효식품(요거트, 청국장, 낫또, 김치)이나 프로바이오틱스 유산균 섭취를 인증해주세요! 🥛🦠", method: "사진", score: 15 },
-      { key: "칼슘", title: "칼슘 day!", description: "뼈 건강을 튼튼하게 지켜주는 멸치, 유제품, 두부, 브로콜리 등 칼슘이 풍부한 음식이나 칼슘 영양제 섭취를 인증해 주세요! 🧀🦴", method: "사진", score: 15 },
-      { key: "생애주기별", title: "생애주기별 필수 영양소 day!", description: "나의 연령/성별 등 생애주기에 꼭 필요하여 특별히 챙겨 드시는 영양 식품이나 영양제를 인증해주세요! 🍊🍼", method: "사진", score: 15 },
+      { key: "단백질", title: "단백질 day!", description: "근육과 대사를 지켜주는 양질의 단백질(닭가슴살, 흰살생선, 계란, 두부, 살코기 등) 식단을 맛있게 챙겨 드시고 인증해주세요! 🍗🍳", method: "사진", score: 15 },
       { key: "온수", title: "체온면역 day!", description: "체온 1도가 면역력을 좌우합니다! 몸을 따뜻하게 데워줄 순수한 온수/허브티 한 잔이나 족욕, 따뜻한 목욕을 실천하고 인증해 주세요! 🍵♨️", method: "사진", score: 15 },
-      { key: "영양제", title: "나의 웰니스 보물창고 정리 day!", description: "내가 매일 챙겨 먹는 영양제 보관 상자나 서랍을 깨끗이 정돈하고, 올바른 복용법에 맞춰 가지런히 정돈된 영양제들을 인증해 주세요! 💊📦", method: "사진", score: 15 },
-      { key: "디톡스", title: "디지털 디톡스 day!", description: "오늘 저녁 식사 후 단 1시간 동안 스마트폰을 멀리하고 뇌에 휴식을 주세요! 멀리 치워둔 폰의 모습이나, 폰 대신 읽은 책/가벼운 스트레칭 모습을 인증해 주세요! 📵🧘", method: "사진", score: 15 },
+      { key: "지방", title: "건강한 지방 day!", description: "불포화지방산이 풍부하여 혈관을 깨끗하게 해주는 아보카도, 견과류, 등푸른 생선, 올리브유 등을 섭취하고 인증해주세요! 🥑🐟", method: "사진", score: 15 },
+      { key: "칼슘", title: "칼슘 day!", description: "뼈 건강을 튼튼하게 지켜주는 멸치, 유제품, 두부, 브로콜리 등 칼슘이 풍부한 음식이나 칼슘 영양제 섭취를 인증해 주세요! 🧀🦴", method: "사진", score: 15 },
+      { key: "간식", title: "건강한 간식 day!", description: "가공간식, 액상과당 음료 대신 견과류, 무가당 요거트, 방울토마토 등 건강한 간식을 선택해 드시고 인증해주세요! 🍅🥜", method: "사진", score: 15 },
+      { key: "탄수화물", title: "착한 탄수화물 day!", description: "정제되지 않아 식이섬유가 살아있는 현미밥, 고구마, 단호박, 통밀 등 착한 탄수화물 섭취를 인증해 주세요! 🍠🌾", method: "사진", score: 15 },
       { key: "비타민B군", title: "비타민 B군 day!", description: "피로 해소와 에너지 생성을 돕는 비타민 B가 풍부한 식품(돼지고기, 달걀, 시금치 등) 또는 비타민 B 영양제 복용을 인증해주세요! 🥚🔋", method: "사진", score: 15 },
-      { key: "프리바이오틱스", title: "프리바이오틱스 day!", description: "장내 유익균의 좋은 먹이가 되는 마늘, 양파, 바나나, 아스파라거스 등 프리바이오틱스 식품이나 영양제 섭취를 인증해 주세요! 🍌🦠", method: "사진", score: 15 },
-      { key: "칼륨", title: "칼륨 day!", description: "나트륨 배출과 부종 완화를 돕는 칼륨이 풍부한 식품(바나나, 토마토, 아보카도, 오이, 시금치 등) 섭취를 인증해주세요! 🥑🥒", method: "사진", score: 15 },
-      { key: "미네랄", title: "미네랄 day!", description: "세포 기능을 활성화하는 미네랄이 풍부한 해조류(미역, 다시마), 버섯, 견과류 섭취 모습을 인증해 주세요! 🍄🥜", method: "사진", score: 15 },
-      { key: "항산화", title: "항산화 day!", description: "활성산소를 제거하는 항산화 영양소가 가득한 블루베리, 토마토, 파프리카 등 컬러풀한 베리/야채 섭취를 인증해 주세요! 🫐🍅", method: "사진", score: 15 },
+      { key: "인슐린", title: "인슐린 day!", description: "식사 시 혈당 폭발을 막기 위해 식이섬유(채소) ➔ 단백질 ➔ 탄수화물 순서로 식사법을 직접 실천하고 인증해 주세요! 🥗📈", method: "사진", score: 15 },
       { key: "수면", title: "건강한 수면 day!", description: "최고의 면역 충전! 침실 어둡게 하기, 온도 조절, 잠들기 전 스마트폰 멀리하기 등 질 좋은 수면을 위한 잠자리 환경을 인증해 주세요! 🛌🌙", method: "사진", score: 15 },
       { key: "나트륨", title: "나트륨 줄이기 day!", description: "건강한 혈압과 부종 예방을 위해 소금기 적은 삼삼하고 담백한 식단(저염식)을 직접 섭취하고 인증해주세요! 🥗🧂", method: "사진", score: 15 },
-      { key: "지중해", title: "지중해 식단 day!", description: "세계가 인정한 장수 식단! 신선한 야채, 올리브유, 견과류, 통곡물이 어우러진 건강한 지중해 스타일의 식사를 즐기고 인증해 주세요! 🥗🍋", method: "사진", score: 15 }
+      { key: "미네랄", title: "미네랄 day!", description: "세포 기능을 활성화하는 미네랄이 풍부한 해조류(미역, 다시마), 버섯, 견과류 섭취 모습을 인증해 주세요! 🍄🥜", method: "사진", score: 15 },
+      { key: "지중해", title: "지중해 식단 day!", description: "세계가 인정한 장수 식단! 신선한 야채, 올리브유, 견과류, 통곡물이 어우러진 건강한 지중해 스타일의 식사를 즐기고 인증해 주세요! 🥗🍋", method: "사진", score: 15 },
+      { key: "디톡스", title: "디지털 디톡스 day!", description: "오늘 저녁 식사 후 단 1시간 동안 스마트폰을 멀리하고 뇌에 휴식을 주세요! 멀리 치워둔 폰의 모습이나, 폰 대신 읽은 책/가벼운 스트레칭 모습을 인증해 주세요! 📵🧘", method: "사진", score: 15 },
+      { key: "유산균", title: "건강한 장내환경 day!", description: "유익균이 좋아하는 발효식품(요거트, 청국장, 낫또, 김치)이나 프로바이오틱스 유산균 섭취를 인증해주세요! 🥛🦠", method: "사진", score: 15 },
+      { key: "칼륨", title: "칼륨 day!", description: "나트륨 배출과 부종 완화를 돕는 칼륨이 풍부한 식품(바나나, 토마토, 아보카도, 오이, 시금치 등) 섭취를 인증해주세요! 🥑🥒", method: "사진", score: 15 },
+      { key: "항산화", title: "항산화 day!", description: "활성산소를 제거하는 항산화 영양소가 가득한 블루베리, 토마토, 파프리카 등 컬러풀한 베리/야채 섭취를 인증해 주세요! 🫐🍅", method: "사진", score: 15 },
+      { key: "프리바이오틱스", title: "프리바이오틱스 day!", description: "장내 유익균의 좋은 먹이가 되는 마늘, 양파, 바나나, 아스파라거스 등 프리바이오틱스 식품이나 영양제 섭취를 인증해 주세요! 🍌🦠", method: "사진", score: 15 },
+      { key: "영양제", title: "나의 웰니스 보물창고 정리 day!", description: "내가 매일 챙겨 먹는 영양제 보관 상자나 서랍을 깨끗이 정돈하고, 올바른 복용법에 맞춰 가지런히 정돈된 영양제들을 인증해 주세요! 💊📦", method: "사진", score: 15 },
+      { key: "생애주기별", title: "생애주기별 필수 영양소 day!", description: "나의 연령/성별 등 생애주기에 꼭 필요하여 특별히 챙겨 드시는 영양 식품이나 영양제를 인증해주세요! 🍊🍼", method: "사진", score: 15 }
     ];
     
-    // 2. 월별 시드값 셔플 (Year + Month ➡️ PRNG 시드화)
-    var seedVal = year * 100 + month; // 예: 2026-06 ➡️ 202606
-    var rng = new SeededRandom(seedVal);
-    var shuffledQuests = baseQuests.slice();
-    for (var i = shuffledQuests.length - 1; i > 0; i--) {
-      var j = Math.floor(rng.next() * (i + 1));
-      var temp = shuffledQuests[i];
-      shuffledQuests[i] = shuffledQuests[j];
-      shuffledQuests[j] = temp;
+    // 2. 월별 시드값을 기반으로 순서는 유지한 채 시작 위치(Offset)만 변경 (상대적 간격 고정)
+    var offset = (year * 12 + month) % 21;
+    var shuffledQuests = [];
+    for (var i = 0; i < 21; i++) {
+      shuffledQuests.push(baseQuests[(i + offset) % 21]);
     }
     
     // 3. 당월 1일부터 주어진 targetDate까지 하루씩 전진하며 배정 알고리즘 구동
