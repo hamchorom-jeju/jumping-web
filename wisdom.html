@@ -638,7 +638,6 @@
                 // 1순위: 다이내믹 키워드 매칭
                 if (detectedKeyword) {
                     return (t.title && t.title.indexOf(detectedKeyword) > -1) ||
-                           (t.content && t.content.indexOf(detectedKeyword) > -1) ||
                            (t.category && t.category.indexOf(detectedKeyword) > -1);
                 }
                 

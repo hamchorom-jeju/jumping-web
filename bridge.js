@@ -1282,10 +1282,15 @@ const Mailbox = {
         ? `<button onclick="navigateTo('halloffame')" class="mailbox-action-btn">🏆 명예의 전당 바로가기 ➔</button>` 
         : '';
       
+      // 제목이 대표 이모지 또는 공용 이모지(⚡, 🏆, 📅, 🎉, ⚠️, 🛡️, 💌, ✉️, 😢, 📢)로 시작하면 중복 표시 방지
+      const commonEmojis = ["⚡", "🏆", "📅", "🎉", "⚠️", "🛡️", "💌", "✉️", "😢", "📢"];
+      const startsWithEmoji = noti.title && commonEmojis.some(em => noti.title.trim().startsWith(em));
+      const emojiSpan = startsWithEmoji ? "" : `<span>${emoji}</span>`;
+      
       card.innerHTML = `
         <div class="card-header">
           <div class="card-title">
-            <span>${emoji}</span>
+            ${emojiSpan}
             <span>${noti.title}</span>
             ${!noti.isRead ? '<span class="new-badge">NEW</span>' : ''}
           </div>

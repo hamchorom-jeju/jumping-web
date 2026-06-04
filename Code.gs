@@ -7584,7 +7584,7 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
                   }
                   // 1순위 키워드 매칭
                   if (detectedKeyword) {
-                    if (wTitle.indexOf(detectedKeyword) > -1 || wContent.indexOf(detectedKeyword) > -1 || wCategory.indexOf(detectedKeyword) > -1) {
+                    if (wTitle.indexOf(detectedKeyword) > -1 || wCategory.indexOf(detectedKeyword) > -1) {
                       hasRelatedTip = true;
                       break;
                     }
@@ -12353,7 +12353,13 @@ function getDailyQuestNoticePreview() {
         }
       }
       
-      if (detectedKeyword) {
+      var normalizeTextForMatch = function(str) {
+        if (!str) return "";
+        return String(str).toLowerCase().replace(/\s+/g, "").replace(/[!?,.『』'"]/g, "").trim();
+      };
+      var normalizedTodayQuest = normalizeTextForMatch(todayQuest.title);
+      
+      if (detectedKeyword || normalizedTodayQuest) {
         // B. 지혜의_보물고 시트에서 관련 글 매칭 조회
         var wisdomSheet = ss.getSheetByName("지혜의_보물고");
         if (wisdomSheet && wisdomSheet.getLastRow() > 1) {
@@ -12363,13 +12369,29 @@ function getDailyQuestNoticePreview() {
           for (var w = 1; w < wData.length; w++) {
             var wCategory = String(wData[w][3] || "").trim();
             var wTitle = String(wData[w][1] || "").trim();
-            var wContent = String(wData[w][2] || "").trim();
+            var jVal = wData[w].length > 9 ? String(wData[w][9] || "").trim() : "";
+            var targetQuest = (jVal !== "Y" && jVal !== "true" && jVal !== "N" && jVal !== "") ? jVal : "";
             
-            // 섹션 1 고정글 제외 및 키워드 매칭
-            if (wCategory !== "섹션 1") {
-              if (wTitle.indexOf(detectedKeyword) > -1 || wContent.indexOf(detectedKeyword) > -1 || wCategory.indexOf(detectedKeyword) > -1) {
-                relatedTitles.push(wTitle);
+            var isMatch = false;
+            
+            // 0순위 J열 타겟팅 매칭
+            if (targetQuest) {
+              var normalizedTarget = normalizeTextForMatch(targetQuest);
+              if (normalizedTarget && normalizedTodayQuest.indexOf(normalizedTarget) > -1) {
+                isMatch = true;
               }
+            }
+            
+            // 1순위 키워드 매칭 (제목/카테고리만 매칭, 본문 내용 검색은 제외)
+            if (!isMatch && detectedKeyword) {
+              if (wTitle.indexOf(detectedKeyword) > -1 || wCategory.indexOf(detectedKeyword) > -1) {
+                isMatch = true;
+              }
+            }
+            
+            // 섹션 1 고정글 제외 및 매칭 칼럼 수집
+            if (isMatch && wCategory !== "섹션 1") {
+              relatedTitles.push(wTitle);
             }
           }
           
