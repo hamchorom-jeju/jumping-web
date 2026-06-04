@@ -789,7 +789,7 @@
 
         <!-- 🎨 직접작성용 실시간 이미지 미리보기 박스 -->
         <div id="direct-image-preview-box" style="display: none; margin-bottom: 12px; border-radius: 18px; overflow: hidden; border: 1.5px solid rgba(170, 124, 17, 0.25); background: #000; aspect-ratio: 16/9; position: relative;">
-          <img id="direct-image-preview-img" src="" style="width: 100%; height: 100%; object-fit: cover;" />
+          <img id="direct-image-preview-img" src="" style="width: 100%; height: 100%; object-fit: cover;" onerror="handleImageError(this)" />
         </div>
 
         <!-- 🎨 [지니 AI 삽화 화가 조율실 - 대대적인 UX 대개편] -->
@@ -854,7 +854,7 @@
           
           <!-- 이미지 미리보기 박스 -->
           <div id="ai-preview-image-box" style="display: none; margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1.5px solid rgba(170,124,17,0.25); background: #000; aspect-ratio: 16/9; position: relative;">
-            <img id="ai-preview-img" src="" alt="AI generated illustration" style="width: 100%; height: 100%; object-fit: cover;">
+            <img id="ai-preview-img" src="" alt="AI generated illustration" style="width: 100%; height: 100%; object-fit: cover;" onerror="handleImageError(this)">
             <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.65); color: #fff; font-size: 0.6rem; text-align: center; padding: 5px; font-weight: 800; letter-spacing: 0.5px;">Pollinations AI 화가의 즉석 맞춤 삽화</div>
           </div>
           
@@ -873,6 +873,39 @@
   <script>
     let activeWeather = 'sun';
     let currentEditorType = 'tip';
+
+    window.pollinationsKeyFailed = false;
+
+    window.handleImageError = function(imgEl) {
+      const currentSrc = imgEl.src;
+      if (!currentSrc) return;
+      
+      if (currentSrc.indexOf("pollinations.ai") > -1 && currentSrc.indexOf("key=") > -1) {
+        console.warn("⚠️ API Key를 사용한 이미지 로드에 실패하여(402 등) 무료 버전으로 자동 전환합니다:", currentSrc);
+        window.pollinationsKeyFailed = true; // 이후 세션 동안은 무료 주소로 바로 생성하도록 설정
+        
+        let cleanUrl = currentSrc
+          .replace(/[?&]key=[^&]*/g, "")
+          .replace(/[?&]nologo=[^&]*/g, "")
+          .replace(/[?&]private=[^&]*/g, "")
+          .replace(/[?&]feed=[^&]*/g, "");
+        cleanUrl = cleanUrl.replace("gen.pollinations.ai/image/", "image.pollinations.ai/prompt/");
+        if (cleanUrl.endsWith("?") || cleanUrl.endsWith("&")) {
+          cleanUrl = cleanUrl.slice(0, -1);
+        }
+        cleanUrl = cleanUrl.replace(/\?&/g, "?").replace(/&&/g, "&");
+        
+        imgEl.src = cleanUrl;
+        
+        const imageInput = document.getElementById('scroll-image-input');
+        if (imageInput && imageInput.value === currentSrc) {
+          imageInput.value = cleanUrl;
+        }
+        if (window.lastAiGeneratedImageUrl === currentSrc) {
+          window.lastAiGeneratedImageUrl = cleanUrl;
+        }
+      }
+    };
 
     window.onload = function() {
       updateThemeIcon(); // 테마 스위치 아이콘 초기화
@@ -1813,8 +1846,25 @@
     async function urlToBase64(url) {
       if (!url || !url.includes("pollinations.ai")) return url;
       try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        let response = await fetch(url);
+        if (!response.ok) {
+          console.warn(`🚨 urlToBase64 1차 호출 실패 (${response.status}). 무료 버전으로 재시도합니다...`);
+          window.pollinationsKeyFailed = true; // 세션 동안 키 실패 기록
+          
+          let cleanUrl = url
+            .replace(/[?&]key=[^&]*/g, "")
+            .replace(/[?&]nologo=[^&]*/g, "")
+            .replace(/[?&]private=[^&]*/g, "")
+            .replace(/[?&]feed=[^&]*/g, "");
+          cleanUrl = cleanUrl.replace("gen.pollinations.ai/image/", "image.pollinations.ai/prompt/");
+          if (cleanUrl.endsWith("?") || cleanUrl.endsWith("&")) {
+            cleanUrl = cleanUrl.slice(0, -1);
+          }
+          cleanUrl = cleanUrl.replace(/\?&/g, "?").replace(/&&/g, "&");
+          
+          response = await fetch(cleanUrl);
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const blob = await response.blob();
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -2111,9 +2161,10 @@ ${getCommonImagePromptGuide(styleGuide)}
         if (needImage && result.imagePrompt) {
           const randomSeed = Math.floor(Math.random() * 1000000);
           const encodedPrompt = encodeURIComponent(result.imagePrompt);
-          const baseUrl = pKey ? 'https://gen.pollinations.ai/image/' : 'https://image.pollinations.ai/prompt/';
-          const keyParam = pKey ? `&key=${pKey}` : '';
-          const paidParams = pKey ? '&nologo=true&private=true&feed=false' : '';
+          const effectiveKey = (pKey && !window.pollinationsKeyFailed) ? pKey : '';
+          const baseUrl = effectiveKey ? 'https://gen.pollinations.ai/image/' : 'https://image.pollinations.ai/prompt/';
+          const keyParam = effectiveKey ? `&key=${effectiveKey}` : '';
+          const paidParams = effectiveKey ? '&nologo=true&private=true&feed=false' : '';
           const imageUrl = `${baseUrl}${encodedPrompt}?width=800&height=500${paidParams}&seed=${randomSeed}${keyParam}`;
           
           previewImg.src = imageUrl;
@@ -2543,9 +2594,10 @@ ${getCommonImagePromptGuide(styleGuide, feedbackGuide)}
           window.lastImagePrompt = result.imagePrompt; // 기존 프롬프트 업데이트! (연쇄 피드백 보존)
           const randomSeed = Math.floor(Math.random() * 1000000);
           const encodedPrompt = encodeURIComponent(result.imagePrompt);
-          const baseUrl = pKey ? 'https://gen.pollinations.ai/image/' : 'https://image.pollinations.ai/prompt/';
-          const keyParam = pKey ? `&key=${pKey}` : '';
-          const paidParams = pKey ? '&nologo=true&private=true&feed=false' : '';
+          const effectiveKey = (pKey && !window.pollinationsKeyFailed) ? pKey : '';
+          const baseUrl = effectiveKey ? 'https://gen.pollinations.ai/image/' : 'https://image.pollinations.ai/prompt/';
+          const keyParam = effectiveKey ? `&key=${effectiveKey}` : '';
+          const paidParams = effectiveKey ? '&nologo=true&private=true&feed=false' : '';
           const imageUrl = `${baseUrl}${encodedPrompt}?width=800&height=500${paidParams}&seed=${randomSeed}${keyParam}`;
           
           // 직접 작성 영역 이미지 URL 및 미리보기 주입
