@@ -8397,13 +8397,28 @@ function getPollinationsApiKey() {
  */
 function appendPollinationsApiKey(imgUrl, pKey) {
   if (!imgUrl || !pKey) return imgUrl;
-  // sk_ 비밀키는 브라우저 이미지 요청에 사용되면 402 에러를 유발하므로 제외
-  if (!pKey.startsWith("pk_")) return imgUrl;
-  var isPollinations = imgUrl.indexOf("pollinations.ai") > -1;
   var hasKey = imgUrl.indexOf("key=") > -1;
-  if (isPollinations && !hasKey) {
+  if (hasKey) return imgUrl;
+  
+  var isLegacy = imgUrl.indexOf("image.pollinations.ai/prompt/") > -1;
+  var isNew = imgUrl.indexOf("gen.pollinations.ai/image/") > -1;
+  
+  if (isNew) {
     return imgUrl + (imgUrl.indexOf("?") > -1 ? "&" : "?") + "key=" + pKey;
   }
+  
+  if (isLegacy) {
+    // sk_ 비밀키는 브라우저 이미지 요청에 사용되면 402 에러를 유발하므로 제외
+    if (pKey.startsWith("pk_")) {
+      return imgUrl + (imgUrl.indexOf("?") > -1 ? "&" : "?") + "key=" + pKey;
+    }
+  }
+  
+  // 기타 일반적인 경우
+  if ((imgUrl.indexOf("pollinations.ai") > -1) && pKey.startsWith("pk_")) {
+    return imgUrl + (imgUrl.indexOf("?") > -1 ? "&" : "?") + "key=" + pKey;
+  }
+  
   return imgUrl;
 }
 
