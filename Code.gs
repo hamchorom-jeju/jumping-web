@@ -10910,22 +10910,29 @@ function getAlgorithmicSuddenQuest(dateStr) {
     // 한국 시간(KST) 기준으로 정확하게 날짜 객체 생성
     var targetDate = new Date(year, month - 1, day, 12, 0, 0); 
     
-    // 1. 14대 명품 웰니스 테라피 정의 (영양 9대 + 습관 5대)
+    // 1. 21대 명품 웰니스 테라피 정의 (평일용)
     var baseQuests = [
-      { key: "단백질", title: "단백질 day!", description: "오늘 하루, 양질의 단백질(닭가슴살, 계란, 두부, 살코기 등)이 풍부한 식단을 맛있게 챙겨 드시고 인증해주세요! 🍗🍳", method: "사진", score: 15 },
-      { key: "지방", title: "건강한 지방 섭취하기!", description: "불포화지방산이 풍부한 아보카도, 견과류, 등푸른 생선, 올리브유 등 건강한 지방을 섭취하고 인증해주세요! 🥑🐟", method: "사진", score: 15 },
-      { key: "탄수화물", title: "착한 탄수화물 day!", description: "정제되지 않은 현미밥, 고구마, 단호박, 통밀빵 등 몸에 좋은 착한 탄수화물을 찾아 맛있게 드시고 인증해주세요! 🍠🌾", method: "사진", score: 15 },
-      { key: "인슐린", title: "인슐린 day!", description: "혈당 스파이크를 방지하는 GI(당지수) 낮은 음식 선택이나 식사 순서(채소->단백질->탄수화물)를 실천하고 인증해주세요! 🥗📉", method: "사진", score: 15 },
+      { key: "단백질", title: "단백질 day!", description: "근육과 대사를 지켜주는 양질의 단백질(닭가슴살, 흰살생선, 계란, 두부, 살코기 등) 식단을 맛있게 챙겨 드시고 인증해주세요! 🍗🍳", method: "사진", score: 15 },
+      { key: "지방", title: "건강한 지방 day!", description: "불포화지방산이 풍부하여 혈관을 깨끗하게 해주는 아보카도, 견과류, 등푸른 생선, 올리브유 등을 섭취하고 인증해주세요! 🥑🐟", method: "사진", score: 15 },
+      { key: "탄수화물", title: "착한 탄수화물 day!", description: "정제되지 않아 식이섬유가 살아있는 현미밥, 고구마, 단호박, 통밀 등 착한 탄수화물 섭취를 인증해 주세요! 🍠🌾", method: "사진", score: 15 },
+      { key: "인슐린", title: "인슐린 day!", description: "식사 시 혈당 폭발을 막기 위해 식이섬유(채소) ➔ 단백질 ➔ 탄수화물 순서로 식사법을 직접 실천하고 인증해 주세요! 🥗📈", method: "사진", score: 15 },
       { key: "식이섬유", title: "식이섬유 day!", description: "장 건강과 포만감을 책임지는 신선한 쌈채소, 브로콜리, 버섯 등 식이섬유가 풍부한 식단을 드시고 인증해주세요! 🥦🥬", method: "사진", score: 15 },
-      { key: "간식", title: "건강한 간식 day!", description: "가공식품이나 당류가 높은 간식 대신, 견과류, 요거트, 방울토마토 등 건강한 간식을 선택해 드시고 인증해주세요! 🍅🥜", method: "사진", score: 15 },
-      { key: "비타민", title: "비타민 day!", description: "피로 해소와 면역력을 높여주는 신선한 과일, 채소 혹은 매일 챙겨 먹는 종합 비타민/영양제 섭취를 인증해주세요! 🍊💊", method: "사진", score: 15 },
-      { key: "유산균", title: "유산균 day!", description: "장내 유익균을 늘려주는 요거트, 김치, 낫또 등 유산균이 풍부한 음식이나 유산균 영양제 섭취를 인증해주세요! 🥛🦠", method: "사진", score: 15 },
-      { key: "칼슘", title: "칼슘 day!", description: "뼈 건강을 지켜주는 멸치, 우유, 치즈, 두부 등 칼슘이 풍부한 음식이나 칼슘 영양제 섭취를 인증해주세요! 🧀🦴", method: "사진", score: 15 },
-      { key: "햇빛", title: "하루 15분 햇빛 샤워 day!", description: "식욕을 억제하고 항상성을 지켜주는 자연의 선물 비타민D! 오늘 낮 동안 따뜻한 햇살 아래서 15분간 광합성을 하며, 나의 발과 그림자 또는 쏟아지는 햇살 스팟을 사진으로 담아 인증해 주세요! ☀️👣", method: "사진", score: 15 },
-      { key: "온수", title: "디톡스 온수 & 허브티 day!", description: "오늘만큼은 카페인이 가득한 커피나 인공 감미료 탄산음료 대신, 차분하게 몸을 따뜻하게 데워줄 순수한 온수나 향긋한 허브차 한 잔을 즐겨보세요! 예쁜 잔에 담긴 따뜻한 차 사진을 인증해 주세요. 🍵✨", method: "사진", score: 15 },
-      { key: "영양제", title: "나의 웰니스 보물창고 정리 day!", description: "내가 매일 먹는 영양제들이 보관된 서랍이나 식탁 위 약 상자를 깨끗하게 정비해 보세요! 나를 건강하게 지켜주는 든든한 영양제 군단(영양제 병들이 예쁘게 정돈된 샷)을 인증샷으로 자랑해 주세요! 💊📦", method: "사진", score: 15 },
-      { key: "책", title: "뇌 휴식! 종이책 10분 읽기 day!", description: "오늘 단 10분간만 스마트폰을 멀리하고 종이책(소설, 잡지, 시집 등 무엇이든)을 읽으며 뇌에 진정한 휴식을 선물해 보세요. 지금 읽고 있는 책의 표지나 마음에 깊이 닿은 한 페이지를 찍어 평온한 생각과 함께 인증해 주세요! 📖☕", method: "사진", score: 15 },
-      { key: "감사", title: "마음 따뜻 감사 칭찬 day!", description: "긍정적인 감정은 웰니스 항상성을 극대화합니다! 오늘 하루 고마웠던 가족, 친구, 혹은 클럽 동료나 헌신적인 코치님에게 감사한 마음을 담아 오아시스 게시판에 따스한 응원과 칭찬 한마디를 남겨보세요 💖📝", method: "게시판", score: 15 }
+      { key: "간식", title: "건강한 간식 day!", description: "가공간식, 액상과당 음료 대신 견과류, 무가당 요거트, 방울토마토 등 건강한 간식을 선택해 드시고 인증해주세요! 🍅🥜", method: "사진", score: 15 },
+      { key: "비타민", title: "비타민과 미네랄 day!", description: "활력을 주고 몸의 대사를 돕는 신선한 제철 과일, 채소 섭취나 종합 비타민/영양제 섭취 모습을 인증해주세요! 🍊💊", method: "사진", score: 15 },
+      { key: "유산균", title: "건강한 장내환경 day!", description: "유익균이 좋아하는 발효식품(요거트, 청국장, 낫또, 김치)이나 프로바이오틱스 유산균 섭취를 인증해주세요! 🥛🦠", method: "사진", score: 15 },
+      { key: "칼슘", title: "칼슘 day!", description: "뼈 건강을 튼튼하게 지켜주는 멸치, 유제품, 두부, 브로콜리 등 칼슘이 풍부한 음식이나 칼슘 영양제 섭취를 인증해 주세요! 🧀🦴", method: "사진", score: 15 },
+      { key: "생애주기별", title: "생애주기별 필수 영양소 day!", description: "나의 연령/성별 등 생애주기에 꼭 필요하여 특별히 챙겨 드시는 영양 식품이나 영양제를 인증해주세요! 🍊🍼", method: "사진", score: 15 },
+      { key: "온수", title: "체온면역 day!", description: "체온 1도가 면역력을 좌우합니다! 몸을 따뜻하게 데워줄 순수한 온수/허브티 한 잔이나 족욕, 따뜻한 목욕을 실천하고 인증해 주세요! 🍵♨️", method: "사진", score: 15 },
+      { key: "영양제", title: "나의 웰니스 보물창고 정리 day!", description: "내가 매일 챙겨 먹는 영양제 보관 상자나 서랍을 깨끗이 정돈하고, 올바른 복용법에 맞춰 가지런히 정돈된 영양제들을 인증해 주세요! 💊📦", method: "사진", score: 15 },
+      { key: "디톡스", title: "디지털 디톡스 day!", description: "오늘 저녁 식사 후 단 1시간 동안 스마트폰을 멀리하고 뇌에 휴식을 주세요! 멀리 치워둔 폰의 모습이나, 폰 대신 읽은 책/가벼운 스트레칭 모습을 인증해 주세요! 📵🧘", method: "사진", score: 15 },
+      { key: "비타민B군", title: "비타민 B군 day!", description: "피로 해소와 에너지 생성을 돕는 비타민 B가 풍부한 식품(돼지고기, 달걀, 시금치 등) 또는 비타민 B 영양제 복용을 인증해주세요! 🥚🔋", method: "사진", score: 15 },
+      { key: "프리바이오틱스", title: "프리바이오틱스 day!", description: "장내 유익균의 좋은 먹이가 되는 마늘, 양파, 바나나, 아스파라거스 등 프리바이오틱스 식품이나 영양제 섭취를 인증해 주세요! 🍌🦠", method: "사진", score: 15 },
+      { key: "칼륨", title: "칼륨 day!", description: "나트륨 배출과 부종 완화를 돕는 칼륨이 풍부한 식품(바나나, 토마토, 아보카도, 오이, 시금치 등) 섭취를 인증해주세요! 🥑🥒", method: "사진", score: 15 },
+      { key: "미네랄", title: "미네랄 day!", description: "세포 기능을 활성화하는 미네랄이 풍부한 해조류(미역, 다시마), 버섯, 견과류 섭취 모습을 인증해 주세요! 🍄🥜", method: "사진", score: 15 },
+      { key: "항산화", title: "항산화 day!", description: "활성산소를 제거하는 항산화 영양소가 가득한 블루베리, 토마토, 파프리카 등 컬러풀한 베리/야채 섭취를 인증해 주세요! 🫐🍅", method: "사진", score: 15 },
+      { key: "수면", title: "건강한 수면 day!", description: "최고의 면역 충전! 침실 어둡게 하기, 온도 조절, 잠들기 전 스마트폰 멀리하기 등 질 좋은 수면을 위한 잠자리 환경을 인증해 주세요! 🛌🌙", method: "사진", score: 15 },
+      { key: "나트륨", title: "나트륨 줄이기 day!", description: "건강한 혈압과 부종 예방을 위해 소금기 적은 삼삼하고 담백한 식단(저염식)을 직접 섭취하고 인증해주세요! 🥗🧂", method: "사진", score: 15 },
+      { key: "지중해", title: "지중해 식단 day!", description: "세계가 인정한 장수 식단! 신선한 야채, 올리브유, 견과류, 통곡물이 어우러진 건강한 지중해 스타일의 식사를 즐기고 인증해 주세요! 🥗🍋", method: "사진", score: 15 }
     ];
     
     // 2. 월별 시드값 셔플 (Year + Month ➡️ PRNG 시드화)
@@ -10950,26 +10957,53 @@ function getAlgorithmicSuddenQuest(dateStr) {
       var curDayOfWeek = curDate.getDay(); // 0:일, 1:월, ..., 6:토
       var curDateStr = year + "-" + (month < 10 ? "0" + month : month) + "-" + (d < 10 ? "0" + d : d);
       
-      // A. 주말 미션 (토: 홈트&운동, 일: 야외산책)
+      // A. 주말 미션 (토요일 2대 로테이션, 일요일 3대 로테이션)
       if (curDayOfWeek === 6) {
         if (d === day) {
-          return {
-            title: "주말 미션! 홈트 & 운동 day!",
-            description: "활기찬 주말의 시작! 집에서 가벼운 홈트레이닝을 하거나 헬스, 필라테스, 등산, 라이딩 등 주말 스포츠를 즐기는 활기찬 내 모습을 인증해 주세요! 🏃‍♂️💪",
-            method: "사진",
-            score: 15
-          };
+          var satIdx = Math.floor((d - 1) / 7) % 2;
+          if (satIdx === 0) {
+            return {
+              title: "주말 미션! 홈트 & 운동 day!",
+              description: "집에서 가벼운 홈트레이닝을 하거나 스포츠(필라테스, 헬스, 등산, 배드민턴 등)를 즐기는 내 운동 인증을 올려 주세요! 🏋️‍♂️💪",
+              method: "사진",
+              score: 15
+            };
+          } else {
+            return {
+              title: "운동 전후 영양관리 day!",
+              description: "운동 전 활력을 주는 영양이나 운동 후 회복을 위한 단백질/수분 보완 식사 인증을 올려 주세요! 🏃‍♀️🍼",
+              method: "사진",
+              score: 15
+            };
+          }
         }
         continue;
       }
       if (curDayOfWeek === 0) {
         if (d === day) {
-          return {
-            title: "주말 미션! 초록 힐링 야외 산책 day!",
-            description: "일요일은 숲과 바람과 함께 마음을 정화하는 날! 근처 공원이나 산책길을 걸으며 마주한 싱그러운 초록 자연 풍경이나 산책 중인 내 모습을 사진에 담아 인증해 주세요! 🌳🚶‍♀️",
-            method: "사진",
-            score: 15
-          };
+          var sunIdx = Math.floor((d - 1) / 7) % 3;
+          if (sunIdx === 0) {
+            return {
+              title: "주말 미션! 초록 힐링 야외 산책 day!",
+              description: "일요일은 자연 속에서 뇌를 비우는 날! 공원이나 산책길에서 마주한 초록 풍경 또는 산책하는 내 모습을 인증해 주세요! 🌳🚶‍♀️",
+              method: "사진",
+              score: 15
+            };
+          } else if (sunIdx === 1) {
+            return {
+              title: "올바른 물마시기 day!",
+              description: "주말 동안 흐트러진 수분 밸런스를 맞추는 날! 맑은 물 한 잔을 마시는 건강한 모습과 산책길을 인증해 주세요! 🥛👣",
+              method: "사진",
+              score: 15
+            };
+          } else {
+            return {
+              title: "수분균형 day!",
+              description: "몸 속 완벽한 수분 밸런스 유지! 수시로 충분히 물을 마시고 텀블러나 물병과 함께 편히 휴식하는 인증을 올려 주세요! 💧🛋️",
+              method: "사진",
+              score: 15
+            };
+          }
         }
         continue;
       }
@@ -11008,77 +11042,9 @@ function getAlgorithmicSuddenQuest(dateStr) {
         isGoalSettingDay = (usedDays.length === 1); // 6월 1일에 즉시 목표 세우기 매핑!
       }
       
-      // D. 주간 결산일 판정
-      var tempDate = new Date(year, month - 1, 1, 12, 0, 0);
-      while (tempDate.getDay() !== 4) {
-        tempDate.setDate(tempDate.getDate() + 1);
-      }
-      var firstThursdayDay = tempDate.getDate();
-      
-      var isWeeklyReview = false;
-      var reviewWeekIndex = -1;
-      
-      if (curDayOfWeek === 4) {
-        var weekIndex = Math.floor((d - firstThursdayDay) / 7) + 1;
-        if (firstThursdayDay <= 3) {
-          isWeeklyReview = true;
-          reviewWeekIndex = weekIndex;
-        } else {
-          if (weekIndex >= 2) {
-            isWeeklyReview = true;
-            reviewWeekIndex = weekIndex;
-          }
-        }
-      }
-      
       var prevMonth = month === 1 ? 12 : month - 1;
       
-      // E. 결산 & 목표 & 주간 중첩 판정 플로우
-      if (isMonthlyReviewDay && isWeeklyReview) {
-        // 월결산일과 주간결산일이 겹친 경우 (예: 1일 또는 2/3일이 목요일인 경우)
-        if (d === day) {
-          if (firstThursdayDay <= 3 && reviewWeekIndex === 1) {
-            return {
-              title: prevMonth + "월 월간 최종 결산일!",
-              description: "지난 " + prevMonth + "월 한 달간의 챌린지 전체 여정을 돌아보는 최종 결산 및 성찰 피드백을 오아시스 게시판에 뜨겁게 남겨주세요! 📝🏆",
-              method: "게시판",
-              score: 15
-            };
-          } else {
-            return {
-              title: "주간 & " + prevMonth + "월 월간 통합 결산일!",
-              description: "지난 한 주간의 성찰과 더불어, " + prevMonth + "월 챌린지의 풍성했던 최종 결과를 종합적으로 성찰하여 오아시스에 자랑해 보세요! 📝🏆",
-              method: "게시판",
-              score: 15
-            };
-          }
-        }
-        continue;
-      }
-      
-      if (isGoalSettingDay && isWeeklyReview) {
-        // 목표세우기와 주간결산일이 겹친 경우 (예: 2일 또는 3일이 목요일인 경우)
-        if (d === day) {
-          if (firstThursdayDay <= 3 && reviewWeekIndex === 1) {
-            return {
-              title: prevMonth + "월 최종 결산 & " + month + "월 목표 세우기!",
-              description: "지난 " + prevMonth + "월의 여정을 돌아보는 최종 결산 피드백과 함께, 새로운 " + month + "월 한 달 동안 달성하고 싶은 건강 목표와 다짐을 오아시스에 선포해 주세요! 📝🎯",
-              method: "게시판",
-              score: 15
-            };
-          } else {
-            return {
-              title: "주간 결산 & " + month + "월 목표 세우기!",
-              description: "지난 한 주간의 웰니스 성적 성찰과 더불어, 이번 " + month + "월 한 달 동안 꼭 이루어낼 다이어트/건강 목표와 다짐을 오아시스에 당차게 남겨주세요! 📝🎯",
-              method: "게시판",
-              score: 15
-            };
-          }
-        }
-        continue;
-      }
-      
-      // 단일 매핑 처리
+      // E. 단일 매핑 처리 (목요일 주간 결산일은 폐지하고 일반 평일 로테이션 미션으로 대체)
       if (isMonthlyReviewDay) {
         if (d === day) {
           return {
@@ -11103,35 +11069,14 @@ function getAlgorithmicSuddenQuest(dateStr) {
         continue;
       }
       
-      if (isWeeklyReview) {
-        if (d === day) {
-          var weekText = "";
-          var descText = "";
-          if (firstThursdayDay <= 3 && reviewWeekIndex === 1) {
-            weekText = prevMonth + "월 최종 결산일!";
-            descText = "지난 " + prevMonth + "월 챌린지의 최종 결과를 되돌아보고 고생한 나에게 칭찬 한마디와 수고의 메시지를 오아시스에 뜨겁게 남겨주세요! 📝🏆";
-          } else {
-            weekText = "주간 결산일!";
-            descText = "한 주간의 나의 웰니스 성적을 되돌아보고, 남은 챌린지 기간 동안의 각오와 다짐을 작성하여 오아시스에 선포해 주세요! 📝🔥";
-          }
-          return {
-            title: weekText,
-            description: descText,
-            method: "게시판",
-            score: 15
-          };
-        }
-        continue;
-      }
-      
-      // E. 일반 평일 14대 테라피 로테이션
-      var quest = shuffledQuests[rotationIdx % 14];
+      // E. 일반 평일 21대 테라피 로테이션
+      var quest = shuffledQuests[rotationIdx % 21];
       var count = countMap[quest.key] || 0;
       
       // ⚠️ 영양제 정리 미션은 한 달에 최대 1회만 출현하도록 제한하는 최적화 건너뛰기 룰
       if (quest.key === "영양제" && count >= 1) {
         rotationIdx++;
-        quest = shuffledQuests[rotationIdx % 14];
+        quest = shuffledQuests[rotationIdx % 21];
         count = countMap[quest.key] || 0;
       }
       
