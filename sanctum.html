@@ -884,25 +884,28 @@
         console.warn("⚠️ API Key를 사용한 이미지 로드에 실패하여(402 등) 무료 버전으로 자동 전환합니다:", currentSrc);
         window.pollinationsKeyFailed = true; // 이후 세션 동안은 무료 주소로 바로 생성하도록 설정
         
-        let cleanUrl = currentSrc
-          .replace(/[?&]key=[^&]*/g, "")
-          .replace(/[?&]nologo=[^&]*/g, "")
-          .replace(/[?&]private=[^&]*/g, "")
-          .replace(/[?&]feed=[^&]*/g, "");
-        cleanUrl = cleanUrl.replace("gen.pollinations.ai/image/", "image.pollinations.ai/prompt/");
-        if (cleanUrl.endsWith("?") || cleanUrl.endsWith("&")) {
-          cleanUrl = cleanUrl.slice(0, -1);
-        }
-        cleanUrl = cleanUrl.replace(/\?&/g, "?").replace(/&&/g, "&");
-        
-        imgEl.src = cleanUrl;
-        
-        const imageInput = document.getElementById('scroll-image-input');
-        if (imageInput && imageInput.value === currentSrc) {
-          imageInput.value = cleanUrl;
-        }
-        if (window.lastAiGeneratedImageUrl === currentSrc) {
-          window.lastAiGeneratedImageUrl = cleanUrl;
+        try {
+          const urlObj = new URL(currentSrc);
+          urlObj.searchParams.delete('key');
+          urlObj.searchParams.delete('nologo');
+          urlObj.searchParams.delete('private');
+          urlObj.searchParams.delete('feed');
+          if (urlObj.hostname === 'gen.pollinations.ai') {
+            urlObj.hostname = 'image.pollinations.ai';
+            urlObj.pathname = urlObj.pathname.replace('/image/', '/prompt/');
+          }
+          const cleanUrl = urlObj.toString();
+          imgEl.src = cleanUrl;
+          
+          const imageInput = document.getElementById('scroll-image-input');
+          if (imageInput && imageInput.value === currentSrc) {
+            imageInput.value = cleanUrl;
+          }
+          if (window.lastAiGeneratedImageUrl === currentSrc) {
+            window.lastAiGeneratedImageUrl = cleanUrl;
+          }
+        } catch (err) {
+          console.error("URL parsing error in handleImageError:", err);
         }
       }
     };
@@ -1851,19 +1854,22 @@
           console.warn(`🚨 urlToBase64 1차 호출 실패 (${response.status}). 무료 버전으로 재시도합니다...`);
           window.pollinationsKeyFailed = true; // 세션 동안 키 실패 기록
           
-          let cleanUrl = url
-            .replace(/[?&]key=[^&]*/g, "")
-            .replace(/[?&]nologo=[^&]*/g, "")
-            .replace(/[?&]private=[^&]*/g, "")
-            .replace(/[?&]feed=[^&]*/g, "");
-          cleanUrl = cleanUrl.replace("gen.pollinations.ai/image/", "image.pollinations.ai/prompt/");
-          if (cleanUrl.endsWith("?") || cleanUrl.endsWith("&")) {
-            cleanUrl = cleanUrl.slice(0, -1);
+          try {
+            const urlObj = new URL(url);
+            urlObj.searchParams.delete('key');
+            urlObj.searchParams.delete('nologo');
+            urlObj.searchParams.delete('private');
+            urlObj.searchParams.delete('feed');
+            if (urlObj.hostname === 'gen.pollinations.ai') {
+              urlObj.hostname = 'image.pollinations.ai';
+              urlObj.pathname = urlObj.pathname.replace('/image/', '/prompt/');
+            }
+            const cleanUrl = urlObj.toString();
+            response = await fetch(cleanUrl);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          } catch (urlErr) {
+            throw new Error("URL parsing/cleanup failed in fallback: " + urlErr.toString());
           }
-          cleanUrl = cleanUrl.replace(/\?&/g, "?").replace(/&&/g, "&");
-          
-          response = await fetch(cleanUrl);
-          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         }
         const blob = await response.blob();
         return new Promise((resolve, reject) => {
