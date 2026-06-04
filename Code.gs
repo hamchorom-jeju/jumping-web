@@ -8397,6 +8397,8 @@ function getPollinationsApiKey() {
  */
 function appendPollinationsApiKey(imgUrl, pKey) {
   if (!imgUrl || !pKey) return imgUrl;
+  // sk_ 비밀키는 브라우저 이미지 요청에 사용되면 402 에러를 유발하므로 제외
+  if (!pKey.startsWith("pk_")) return imgUrl;
   var isPollinations = imgUrl.indexOf("pollinations.ai") > -1;
   var hasKey = imgUrl.indexOf("key=") > -1;
   if (isPollinations && !hasKey) {
