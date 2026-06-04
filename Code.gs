@@ -8365,7 +8365,11 @@ function getPollinationsApiKey() {
     
     var cachedKey = String(PropertiesService.getScriptProperties().getProperty("POLLINATIONS_API_KEY") || "").trim();
     if (!key) {
-      key = cachedKey;
+      // B7 셀이 비어있으면 캐시된 키를 명시적으로 삭제하고 빈 값을 사용합니다.
+      if (cachedKey) {
+        PropertiesService.getScriptProperties().deleteProperty("POLLINATIONS_API_KEY");
+      }
+      key = "";
     } else if (key !== cachedKey) {
       PropertiesService.getScriptProperties().setProperty("POLLINATIONS_API_KEY", key);
     }
