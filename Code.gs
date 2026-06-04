@@ -6964,7 +6964,12 @@ function saveWisdomTip(data) {
       sheet.appendRow(["날짜", "제목", "내용", "카테고리", "작성자", "조회수", "공감수", "깨달음수", "사진주소", "기본게시물"]);
       sheet.setFrozenRows(1);
     }
-    var cleanImage = cleanPollinationsApiKey(data.image);
+    
+    var rawImage = data.image || "";
+    var cleanImage = (rawImage.indexOf("pollinations.ai") > -1)
+      ? saveWisdomImageToDrive(rawImage)
+      : cleanPollinationsApiKey(rawImage);
+      
     sheet.appendRow([
       new Date(), 
       data.title, 
@@ -6995,7 +7000,11 @@ function updateWisdomTip(rowIdx, data) {
     // 시트 컬럼 구조:
     // A: 날짜(1), B: 제목(2), C: 내용(3), D: 카테고리(4), E: 작성자(5)
     // I: 사진주소(9), J: 기본게시물(10)
-    var cleanImage = cleanPollinationsApiKey(data.image);
+    var rawImage = data.image || "";
+    var cleanImage = (rawImage.indexOf("pollinations.ai") > -1)
+      ? saveWisdomImageToDrive(rawImage)
+      : cleanPollinationsApiKey(rawImage);
+      
     sheet.getRange(row, 2).setValue(data.title);
     sheet.getRange(row, 3).setValue(data.content);
     sheet.getRange(row, 4).setValue(data.category);
@@ -8407,6 +8416,122 @@ function cleanPollinationsApiKey(imgUrl) {
     return cleaned;
   }
   return imgUrl;
+}
+
+/**
+ * [v68.0] 지식창고 이미지 구글 드라이브 전용 보관 폴더 생성 및 설정
+ */
+function getOrCreateWisdomFolder() {
+  var folderName = "GenieWorld_Wisdom_Images";
+  var scriptProps = PropertiesService.getScriptProperties();
+  var cachedFolderId = scriptProps.getProperty("wisdom_folder_id");
+  var folder;
+  if (cachedFolderId) {
+    try {
+      folder = DriveApp.getFolderById(cachedFolderId);
+    } catch (e) {
+      Logger.log("캐싱된 폴더 조회 실패, 새로 조회합니다: " + e.toString());
+    }
+  }
+  if (!folder) {
+    var folders = DriveApp.getFoldersByName(folderName);
+    if (folders.hasNext()) {
+      folder = folders.next();
+    } else {
+      folder = DriveApp.createFolder(folderName);
+    }
+    // 부모 폴더에 권한 설정 (한 번만 호출하므로 매우 빠름, 하위 파일 상속)
+    folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    scriptProps.setProperty("wisdom_folder_id", folder.getId());
+  }
+  return folder;
+}
+
+/**
+ * [v68.0] Pollinations 이미지를 구글 드라이브에 파일로 다운로드하여 저장하고,
+ * 구글 미디어 CDN 다이렉트 뷰어 URL로 변환하여 반환
+ */
+function saveWisdomImageToDrive(pollinationsUrl) {
+  if (!pollinationsUrl || pollinationsUrl.indexOf("pollinations.ai") === -1) {
+    return pollinationsUrl;
+  }
+  try {
+    var folder = getOrCreateWisdomFolder();
+    
+    // 1. 이미지 다운로드
+    var response = UrlFetchApp.fetch(pollinationsUrl, { muteHttpExceptions: true });
+    if (response.getResponseCode() !== 200) {
+      Logger.log("🚨 Pollinations 이미지 다운로드 실패: HTTP " + response.getResponseCode());
+      return pollinationsUrl;
+    }
+    
+    var blob = response.getBlob();
+    var timestamp = Date.now();
+    blob.setName("wisdom_img_" + timestamp + ".png");
+    
+    // 2. 구글 드라이브에 저장 (폴더 권한을 상속하므로 별도 권한 설정 배제하여 지연 방지)
+    var file = folder.createFile(blob);
+    var fileId = file.getId();
+    
+    // 3. 구글 드라이브 미디어 서빙 다이렉트 주소 반환
+    var driveDirectUrl = "https://lh3.googleusercontent.com/d/" + fileId;
+    return driveDirectUrl;
+  } catch (e) {
+    Logger.log("🚨 saveWisdomImageToDrive 에러: " + e.toString());
+    return pollinationsUrl;
+  }
+}
+
+/**
+ * [v68.0] 기존 지식창고 시트의 모든 Pollinations 주소 이미지를 구글 드라이브로 마이그레이션
+ */
+function migrateWisdomImagesToDrive() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("지혜의_보물고");
+    if (!sheet) return { success: false, error: "지혜의_보물고 시트가 존재하지 않습니다." };
+    
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return { success: true, message: "마이그레이션할 데이터가 없습니다." };
+    
+    var data = sheet.getRange(2, 9, lastRow - 1, 1).getValues(); // I열 (사진주소) 로드
+    var count = 0;
+    var skipped = 0;
+    var errorCount = 0;
+    
+    for (var i = 0; i < data.length; i++) {
+      var rowNum = i + 2;
+      var currentUrl = String(data[i][0] || "").trim();
+      
+      if (currentUrl && currentUrl.indexOf("pollinations.ai") > -1) {
+        Logger.log("🔄 [" + rowNum + "행] 이관 시작: " + currentUrl);
+        var driveUrl = saveWisdomImageToDrive(currentUrl);
+        
+        if (driveUrl && driveUrl.indexOf("googleusercontent.com") > -1) {
+          sheet.getRange(rowNum, 9).setValue(driveUrl);
+          count++;
+          Logger.log("✅ [" + rowNum + "행] 이관 성공: " + driveUrl);
+        } else {
+          errorCount++;
+          Logger.log("🚨 [" + rowNum + "행] 이관 실패 (원래 주소 보존)");
+        }
+        Utilities.sleep(100); // 속도 제한 완화 및 안정성 버퍼
+      } else {
+        skipped++;
+      }
+    }
+    
+    return {
+      success: true,
+      total: data.length,
+      migrated: count,
+      skipped: skipped,
+      errors: errorCount
+    };
+  } catch (e) {
+    Logger.log("🚨 마이그레이션 오류: " + e.toString());
+    return { success: false, error: e.toString() };
+  }
 }
 
 function setGeminiApiKey(newKey) {
