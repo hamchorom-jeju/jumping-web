@@ -13858,9 +13858,52 @@ function runBackendMigration() {
   }
 }
 
-
-
-
-
-
-
+/**
+ * 🛠️ [v67.1] 오늘 발송된 돌발 퀘스트 공지의 추천 칼럼 목록을 실시간으로 보정하는 자가치유 함수
+ * 실행 후 스프레드시트 로그 및 우편함을 통해 직접 작동 결과를 검증할 수 있습니다.
+ */
+function repairTodayNotification() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var preview = getDailyQuestNoticePreview();
+    if (!preview || !preview.success) {
+      Logger.log("❌ 프리뷰 생성 실패: " + (preview ? preview.error : ""));
+      return "프리뷰 생성 실패: " + (preview ? preview.error : "");
+    }
+    
+    var sheet = ss.getSheetByName("전체_알림_목록") || ss.getSheetByName("전체알림목록") || ss.getSheetByName("전체알림");
+    if (!sheet) {
+      Logger.log("❌ 전체_알림_목록 시트가 없습니다.");
+      return "전체_알림_목록 시트가 없습니다.";
+    }
+    
+    var now = new Date();
+    var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    var data = sheet.getDataRange().getDisplayValues();
+    
+    var updatedCount = 0;
+    for (var i = 1; i < data.length; i++) {
+      var dateStr = data[i][1]; // B열: 기록시간
+      var type = data[i][2];    // C열: 분류
+      
+      // 오늘 생성된 돌발 퀘스트 쪽지 매칭
+      if (type === "quest" && dateStr.indexOf(todayStr) === 0) {
+        // D열(제목)과 E열(내용)을 최신 보정된 프리뷰 데이터로 교체!
+        sheet.getRange(i + 1, 4).setValue(preview.title);
+        sheet.getRange(i + 1, 5).setValue(preview.content);
+        Logger.log("✅ 오늘 자 돌발 퀘스트 쪽지 보정 완료! 행 번호: " + (i + 1));
+        updatedCount++;
+      }
+    }
+    
+    if (updatedCount === 0) {
+      Logger.log("⚠️ 오늘자 돌발 퀘스트 쪽지를 찾지 못했습니다.");
+      return "오늘자 돌발 퀘스트 쪽지를 찾지 못했습니다.";
+    }
+    
+    return "성공: " + updatedCount + "개의 쪽지를 보정했습니다.";
+  } catch (e) {
+    Logger.log("❌ repairTodayNotification 에러: " + e.toString());
+    return "에러: " + e.toString();
+  }
+}
