@@ -13742,6 +13742,83 @@ function rollbackPrematureJune1stWeekRanking() {
   Logger.log("6월 5일(금) 새벽 0시 5분에 주간 랭킹을 정상 재정산 및 재발표하도록 일회성 트리거를 정상 예약 완료했습니다!");
 }
 
+/**
+ * [v68.1] 백엔드(구글 서버-to-서버)에서 직접 Pollinations 이미지를 다운로드하여 구글 드라이브로 이관하는 함수
+ */
+function runBackendMigration() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("지혜의_보물고");
+    if (!sheet) return { success: false, error: "지혜의_보물고 시트가 존재하지 않습니다." };
+    
+    var pKeyRes = getPollinationsApiKey();
+    var pKey = pKeyRes.success ? pKeyRes.key : "";
+    if (!pKey) {
+      return { success: false, error: "환경설정 시트 B7 셀에 Pollinations API Key(sk_...)를 입력해 주세요." };
+    }
+    
+    var data = sheet.getDataRange().getValues();
+    var successCount = 0;
+    var failCount = 0;
+    
+    var folder = getOrCreateWisdomFolder();
+    
+    for (var i = 1; i < data.length; i++) {
+      var rawImage = String(data[i][8] || "").trim(); // I열
+      if (rawImage && rawImage.indexOf("pollinations.ai") > -1) {
+        try {
+          var cleanUrl = rawImage.replace(/[?&]key=[^&]*/g, "");
+          if (cleanUrl.indexOf("?") === -1) {
+            cleanUrl += "?";
+          } else if (!cleanUrl.endsWith("&") && !cleanUrl.endsWith("?")) {
+            cleanUrl += "&";
+          }
+          
+          if (cleanUrl.indexOf("nologo=") === -1) {
+            cleanUrl += "nologo=true&private=true&feed=false&";
+          }
+          cleanUrl += "key=" + pKey;
+          
+          Logger.log("🔄 Fetching image: " + cleanUrl);
+          
+          var response = UrlFetchApp.fetch(cleanUrl, {
+            muteHttpExceptions: true
+          });
+          
+          if (response.getResponseCode() !== 200) {
+            throw new Error("HTTP " + response.getResponseCode() + ": " + response.getContentText());
+          }
+          
+          var blob = response.getBlob();
+          var contentType = blob.getContentType();
+          if (contentType.indexOf("image") === -1) {
+            blob.setContentType("image/png");
+          }
+          
+          var timestamp = Date.now();
+          blob.setName("wisdom_migrated_" + (i + 1) + "_" + timestamp + ".png");
+          
+          var file = folder.createFile(blob);
+          var driveUrl = "https://lh3.googleusercontent.com/d/" + file.getId();
+          
+          sheet.getRange(i + 1, 9).setValue(driveUrl);
+          successCount++;
+          Logger.log("✅ Row " + (i + 1) + " migrated to: " + driveUrl);
+        } catch (e) {
+          failCount++;
+          Logger.log("❌ Row " + (i + 1) + " migration failed: " + e.toString());
+        }
+        
+        Utilities.sleep(500); // 0.5초 대기
+      }
+    }
+    
+    return { success: true, successCount: successCount, failCount: failCount };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
 
 
 
