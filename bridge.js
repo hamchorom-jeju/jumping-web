@@ -1297,7 +1297,7 @@ const Mailbox = {
           <span class="card-time">${timeStr}</span>
         </div>
         <div class="card-body">
-          ${noti.content.replace(/\n/g, '<br>')}
+          ${(noti.content || '').replace(/\n/g, '<br>')}
         </div>
         ${actionButtonHtml}
       `;
@@ -1398,8 +1398,12 @@ const Mailbox = {
 // 대시보드 로드 데이터 자동 동기화용 리스너 등록
 window.syncMailboxWithDashboardData = function(res) {
   if (res && res.success && res.notifications) {
-    Mailbox.notifications = res.notifications;
-    Mailbox.render();
+    try {
+      Mailbox.notifications = res.notifications;
+      Mailbox.render();
+    } catch (e) {
+      console.error("Error syncing mailbox with dashboard data:", e);
+    }
   }
 };
 
