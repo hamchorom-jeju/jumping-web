@@ -108,66 +108,6 @@ function updateWisdomTip(rowIdx, data) {
 
 
 
-/**
- * ✨ 이장의 축복 (추가 보상) 관련 로직
- */
-function getRecentCertifications() {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("33챌린지_기록");
-    if (!sheet) return [];
-    
-    var data = sheet.getDataRange().getDisplayValues();
-    var recent = [];
-    for (var i = 1; i < data.length; i++) {
-      // 오직 '대기' 상태인 식단/퀘스트만 추출
-      if ((data[i][3] === "식단" || data[i][3] === "퀘스트") && data[i][8] === "대기") {
-        recent.push({
-          rowIdx: i + 1,
-          date: data[i][0],
-          name: data[i][1],
-          phone: data[i][2],
-          type: data[i][3],
-          item: data[i][4],
-          content: data[i][5],
-          imageUrl: data[i][7]
-        });
-      }
-    }
-    return recent;
-  } catch(e) { return []; }
-}
-
-
-
-function blessAction(data) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("33챌린지_기록");
-    var rowIdx = data.rowIdx;
-    
-    // 1. 해당 행의 상태를 '승인'으로 변경 (9번째 열: I열)
-    sheet.getRange(rowIdx, 9).setValue("승인");
-    
-    // 2. 승인 시 보너스 점수(+5) 하사
-    var result = submit33Action({
-      phone: data.phone,
-      name: data.name,
-      type: "축복",
-      item: "이장의축복",
-      value: "특별 보너스",
-      score: 5
-    });
-    
-    // 3. (옵션) 인증샷 자체의 기본 점수도 이때 합산하고 싶다면 여기서 추가 로직 구현 가능
-    // 현재 구조는 인증샷 등록 시 0점(대기)이었다가 승인 시 점수가 들어가는 방식이 더 권위적임
-    
-    return result;
-  } catch(e) { return { success: false, error: e.toString() }; }
-}
-
-
-
 function createSurpriseQuest(data) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
