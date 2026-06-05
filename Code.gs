@@ -13864,9 +13864,91 @@ function runBackendMigration() {
   }
 }
 
-
-
-
-
-
-
+/**
+ * [원장님 전용] 특정 회원의 출석 및 차감 기록을 기간별로 필터링하여 조회합니다. (v67.0)
+ */
+function getMemberDeductionHistory(payload) {
+  try {
+    var name = String(payload.name || "").trim();
+    var phone = String(payload.phone || "").trim().replace(/[^0-9]/g, "");
+    var startDate = String(payload.startDate || "").trim();
+    var endDate = String(payload.endDate || "").trim();
+    
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var logSheet = ss.getSheetByName("출석기록");
+    if (!logSheet) {
+      return { success: false, error: "출석기록 시트를 찾을 수 없습니다." };
+    }
+    
+    var data = logSheet.getDataRange().getDisplayValues();
+    var cols = getAttendanceColumnIndices(logSheet);
+    
+    var history = [];
+    
+    // YYYY-MM-DD를 Date 객체 형태로 단순 비교하기 위한 헬퍼
+    var startLimit = startDate ? new Date(startDate + "T00:00:00") : null;
+    var endLimit = endDate ? new Date(endDate + "T23:59:59") : null;
+    
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      var rowName = String(row[cols.name] || "").trim();
+      var rowPhone = String(row[cols.phone] || "").trim().replace(/[^0-9]/g, "");
+      
+      var match = false;
+      if (phone && rowPhone) {
+        if (rowPhone === phone) match = true;
+      } else if (name && rowName) {
+        if (rowName === name) match = true;
+      }
+      
+      if (!match) continue;
+      
+      var rowDateRaw = String(row[cols.date] || "").trim().split(" ")[0]; // YYYY-MM-DD
+      if (rowDateRaw) {
+        var rowDate = new Date(rowDateRaw + "T00:00:00");
+        if (startLimit && rowDate < startLimit) continue;
+        if (endLimit && rowDate > endLimit) continue;
+      }
+      
+      var reason = String(row[cols.reason] || "").trim();
+      var changeRaw = String(row[cols.change] || "0").trim();
+      var remainVal = String(row[cols.remain] || "0").trim();
+      var passType = String(row[cols.type] || "").trim(); // E열 회원권 정보
+      
+      // I열 사유 분석하여 차감 유형 분류
+      var mappedType = "기타";
+      if (reason.indexOf("테라피권 우선") !== -1 || reason.indexOf("테라피권 없음") !== -1 || reason.indexOf("테라피") !== -1) {
+        mappedType = "테라피";
+      } else if (reason.indexOf("복합") !== -1) {
+        mappedType = "복합출석";
+      } else if (reason.indexOf("점핑") !== -1 || reason.indexOf("정상") !== -1) {
+        mappedType = "점핑";
+      } else {
+        mappedType = reason || "출석";
+      }
+      
+      history.push({
+        date: rowDateRaw,
+        inTime: String(row[cols.inTime] || "").trim(),
+        outTime: String(row[cols.outTime] || "").trim(),
+        membershipType: passType,
+        change: changeRaw,
+        remain: remainVal,
+        reason: reason,
+        mappedType: mappedType,
+        memo: String(row[cols.memo] || "").trim()
+      });
+    }
+    
+    // 최신 날짜 역순 정렬
+    history.sort(function(a, b) {
+      var dateA = a.date + " " + a.inTime;
+      var dateB = b.date + " " + b.inTime;
+      return dateB.localeCompare(dateA);
+    });
+    
+    return { success: true, history: history };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
