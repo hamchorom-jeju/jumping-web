@@ -1837,14 +1837,24 @@ function getCompiledMemberRegistry(ss) {
   var keys = Object.keys(memberMap);
   for (var j = 0; j < keys.length; j++) {
     var m = memberMap[keys[j]];
-    var allExpired = m.passes.every(function(p) { return p.status === "마감"; });
+    var allExpired = m.passes.every(function(p) { return p.status.indexOf("마감") !== -1; });
+    
+    var activePass = null;
+    for (var pIdx = 0; pIdx < m.passes.length; pIdx++) {
+      var p = m.passes[pIdx];
+      if (p.status === "진행중" || p.status === "진행 중") {
+        activePass = p;
+        break;
+      }
+    }
+    if (!activePass) activePass = m.passes[0]; 
     
     registryList.push({
       name: m.name,
       phone: m.phone,
       membershipType: m.passes.map(function(p) { return p.membershipType; }).join(" / "),
-      expireDate: m.passes[0].expireDate,
-      remainCount: m.passes[0].remainCount,
+      expireDate: activePass ? activePass.expireDate : "-",
+      remainCount: activePass ? activePass.remainCount : "0",
       bonusCount: m.bonusCount,
       mRowIdx: m.mRowIdx,
       allPasses: m.passes,
