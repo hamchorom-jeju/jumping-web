@@ -1178,8 +1178,8 @@ function searchMembersByDigits(payload) {
       var phoneOnlyDigits = phoneRaw.replace(/[^0-9]/g, "");
       var status = String(data[i][cols.status] || "").trim(); // 상태
       
-      // [출석 앱 공식] 진행중인 회원 + 뒷 4자리 엄격 매칭
-      if ((status === "진행중" || status === "진행 중") && phoneOnlyDigits.slice(-4) === digits) {
+      // [출석 앱 공식] 진행중인 회원 + 뒷 4자리 엄격 매칭 (마감된 회원도 포함하여 우선 불러오기)
+      if ((status === "진행중" || status === "진행 중" || status === "마감") && phoneOnlyDigits.slice(-4) === digits) {
         // 이미 맵에 등록된 번호라면 건너뜁니다 (중복 제거)
         if (!memberMap[phoneOnlyDigits]) {
           var phoneHint = phoneRaw.length > 4 ? "****" + phoneRaw.slice(-4) : phoneRaw;
@@ -1873,7 +1873,7 @@ function searchMemberByPin(pinStr) {
     
     var matched = [];
     for (var i = 0; i < registry.length; i++) {
-      if (registry[i].phoneClean.slice(-4) === pin && !registry[i].isExpired) {
+      if (registry[i].phoneClean.slice(-4) === pin) {
         matched.push(registry[i]);
       }
     }
@@ -1885,7 +1885,7 @@ function searchMemberByPin(pinStr) {
       registry = getCompiledMemberRegistry(ss);
       
       for (var i = 0; i < registry.length; i++) {
-        if (registry[i].phoneClean.slice(-4) === pin && !registry[i].isExpired) {
+        if (registry[i].phoneClean.slice(-4) === pin) {
           matched.push(registry[i]);
         }
       }
