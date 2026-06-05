@@ -32,7 +32,7 @@ function getCompiledMemberRegistry(ss) {
     var phoneRaw = data[i][cols.phone];
     var phoneClean = formatPhoneNumber(phoneRaw).replace(/[^0-9]/g, ""); 
     var status = String(data[i][cols.status] || "").trim(); 
-    if (status === "진행중" || status === "진행 중" || status === "마감") {
+    if (status === "진행중" || status === "진행 중" || status.indexOf("마감") !== -1) {
       if (!memberMap[phoneClean]) {
         var bonus = "0";
         var mRowIdx = -1;
@@ -71,7 +71,7 @@ function getCompiledMemberRegistry(ss) {
   var keys = Object.keys(memberMap);
   for (var j = 0; j < keys.length; j++) {
     var m = memberMap[keys[j]];
-    var allExpired = m.passes.every(function(p) { return p.status === "마감"; });
+    var allExpired = m.passes.every(function(p) { return p.status.indexOf("마감") !== -1; });
     
     // 진행중인 패스 중 첫 번째를 대표로 선택 (과거 마감된 패스가 remainCount에 0으로 대표 노출되는 현상 방지)
     var activePass = null;

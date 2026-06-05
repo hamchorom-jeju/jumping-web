@@ -26,7 +26,7 @@ function searchMembersByDigits(payload) {
       var phoneOnlyDigits = phoneRaw.replace(/[^0-9]/g, "");
       var status = String(data[i][cols.status] || "").trim(); 
       
-      if ((status === "진행중" || status === "진행 중" || status === "마감") && phoneOnlyDigits.slice(-4) === digits) {
+      if ((status === "진행중" || status === "진행 중" || status.indexOf("마감") !== -1) && phoneOnlyDigits.slice(-4) === digits) {
         if (!memberMap[phoneOnlyDigits]) {
           var phoneHint = phoneRaw.length > 4 ? "****" + phoneRaw.slice(-4) : phoneRaw;
           memberMap[phoneOnlyDigits] = { 
