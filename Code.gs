@@ -1782,7 +1782,7 @@ function getCompiledMemberRegistry(ss) {
     } catch(e) {}
   }
   
-  if (!ss) ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss || typeof ss.getSheetByName !== 'function') ss = SpreadsheetApp.getActiveSpreadsheet();
   var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
   if (!regSheet) return [];
   
