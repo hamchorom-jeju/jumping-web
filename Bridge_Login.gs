@@ -12,20 +12,26 @@ function searchMembersByDigits(payload) {
     var digits = String(payload.digits || "").trim();
     if (digits.length < 2) return { success: true, members: [] };
     
-    // 공용 검색 엔진 활용
-    var matched = searchMemberRegistryByDigits(digits);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var regSheet = ss.getSheetByName("등록현황") || ss.getSheetByName("등록 현황");
+    if (!regSheet) return { success: false, error: "'등록현황' 시트를 찾을 수 없습니다." };
+    
+    var data = regSheet.getDataRange().getDisplayValues();
+    var cols = getRegColumnIndices(regSheet);
     var memberMap = {}; 
     
-    for (var i = 0; i < matched.length; i++) {
-      var m = matched[i];
-      // 기존 조건 유지: 진행중이거나 마감 상태인 경우만 로그인 허용
-      var status = m.status || "";
-      if (status === "진행중" || status === "진행 중" || status.indexOf("마감") !== -1) {
-        if (!memberMap[m.phoneClean]) {
-          var phoneHint = m.phoneRaw.length > 4 ? "****" + m.phoneRaw.slice(-4) : m.phoneRaw;
-          memberMap[m.phoneClean] = { 
-            name: m.name, 
-            phone: m.phoneClean,
+    for (var i = 1; i < data.length; i++) {
+      var name = String(data[i][cols.name] || "모험가").trim(); 
+      var phoneRaw = String(data[i][cols.phone] || "").trim(); 
+      var phoneOnlyDigits = phoneRaw.replace(/[^0-9]/g, "");
+      var status = String(data[i][cols.status] || "").trim(); 
+      
+      if ((status === "진행중" || status === "진행 중" || status.indexOf("마감") !== -1) && phoneOnlyDigits.slice(-4) === digits) {
+        if (!memberMap[phoneOnlyDigits]) {
+          var phoneHint = phoneRaw.length > 4 ? "****" + phoneRaw.slice(-4) : phoneRaw;
+          memberMap[phoneOnlyDigits] = { 
+            name: name, 
+            phone: phoneOnlyDigits,
             hint: phoneHint
           };
         }
