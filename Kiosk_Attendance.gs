@@ -14,26 +14,15 @@ function searchMemberByPin(pinStr) {
     if (pin.length < 4) return { error: "뒷자리 4자리를 정확히 입력해주세요." };
     
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var registry = getCompiledMemberRegistry(ss);
-    
-    var matched = [];
-    for (var i = 0; i < registry.length; i++) {
-      if (registry[i].phoneClean.slice(-4) === pin) {
-        matched.push(registry[i]);
-      }
-    }
+    // 공용 검색 엔진 활용
+    var matched = searchMemberRegistryByDigits(pin);
     
     if (matched.length === 0) {
-      // [BUGFIX] 혹시 원장님이 수동으로 시트를 고친 경우, 10분 캐시 때문에 안 나왔을 가능성 대비 캐시 강제 무효화 후 스프레드시트 재로드!
+      // [BUGFIX] 혹시 원장님이 수동으로 시트를 고친 경우, 10분 캐시 때문에 안 나왔을 가능성 대비 캐시 강제 무효화 후 재조회!
       var cache = CacheService.getScriptCache();
       cache.remove("v45_member_registry");
-      registry = getCompiledMemberRegistry(ss);
       
-      for (var i = 0; i < registry.length; i++) {
-        if (registry[i].phoneClean.slice(-4) === pin) {
-          matched.push(registry[i]);
-        }
-      }
+      matched = searchMemberRegistryByDigits(pin);
       
       if (matched.length === 0) {
         return { error: "이용 가능한 회원권이 없습니다. 다시 확인해주세요..." };

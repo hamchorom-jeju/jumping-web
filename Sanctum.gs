@@ -1749,3 +1749,1424 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
   
   return result;
 }
+
+
+// ──────────────────────────────────────────────
+// [이관] getScheduledQuests
+// ──────────────────────────────────────────────
+function getScheduledQuests() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = checkAndCreateQuestRegistrySheet();
+    var data = sheet.getDataRange().getDisplayValues();
+    
+    // 1. 스프레드시트에 기 적재되어 있는 모든 수동 예약 퀘스트들을 맵(Map)에 적재 (날짜 표준화 적용)
+    var manualMap = {};
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][2] === "이장") {
+        var rawDate = data[i][1];
+        var dStr = normalizeDateStr(rawDate);
+        if (dStr) {
+          manualMap[dStr] = {
+            rowIdx: i + 1,
+            date: dStr, // 표준 포맷 전달
+            title: data[i][3],
+            description: data[i][4],
+            status: data[i][7] || "대기",
+            score: data[i].length > 8 ? Number(data[i][8] || 15) : 15,
+            method: data[i].length > 9 ? (data[i][9] || "사진") : "사진",
+            isManual: true
+          };
+        }
+      }
+    }
+    
+    // 2. 오늘부터 앞으로 45일간의 날짜에 대해 수동 또는 자동화 퀘스트 매칭
+    var list = [];
+    var now = new Date();
+    // 타임존 오프셋 반영하여 KST 기준 오늘 날짜 구하기 (더블 오프셋 버그 방지를 위해 포맷 후 재파싱)
+    var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    var parts = todayStr.split("-");
+    var todayKst = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), 12, 0, 0);
+    
+    for (var d = 0; d < 45; d++) {
+      var targetDate = new Date(todayKst.getTime() + d * 24 * 60 * 60 * 1000);
+      var targetDateStr = Utilities.formatDate(targetDate, "GMT+9", "yyyy-MM-dd");
+      
+      if (manualMap[targetDateStr]) {
+        // 수동 예약이 이미 존재하는 경우
+        list.push(manualMap[targetDateStr]);
+      } else {
+        // 수동 예약이 없는 미래 날짜 ➡️ 실시간 계산기를 돌려 자동화 가상 예약 주입!
+        var algoQuest = getAlgorithmicSuddenQuest(targetDateStr);
+        if (algoQuest) {
+          list.push({
+            rowIdx: null,
+            date: targetDateStr,
+            title: algoQuest.title,
+            description: algoQuest.description,
+            status: "진행",
+            score: algoQuest.score || 15,
+            method: algoQuest.method || "사진",
+            isManual: false
+          });
+        }
+      }
+    }
+    
+    // 시간 오름차순 (가까운 날짜 순) 정렬하여 반환
+    return list;
+  } catch (e) {
+    Logger.log("getScheduledQuests 에러: " + e.toString());
+    return [];
+  }
+}
+
+// ──────────────────────────────────────────────
+// [이관] saveScheduledQuest
+// ──────────────────────────────────────────────
+function saveScheduledQuest(payload) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = checkAndCreateQuestRegistrySheet();
+    
+    var dateStr = normalizeDateStr(payload.date); // 확실하게 yyyy-MM-dd 표준형으로 정리
+    var title = payload.title;
+    var desc = payload.description;
+    var score = Number(payload.score || 15);
+    var method = payload.method || "사진";
+    
+    // 동일한 날짜에 이미 등록된 이장 돌발 퀘스트가 있는지 검사하여 덮어쓰기/수정 지원 (날짜 정합성 매핑)
+    var data = sheet.getDataRange().getDisplayValues();
+    var foundRowIdx = -1;
+    for (var i = 1; i < data.length; i++) {
+      var sheetDateStr = normalizeDateStr(data[i][1]);
+      if (data[i][2] === "이장" && sheetDateStr === dateStr) {
+        foundRowIdx = i + 1;
+        break;
+      }
+    }
+    
+    if (foundRowIdx > -1) {
+      // 덮어쓰기 수정 (날짜도 표준 포맷인 dateStr로 예쁘게 치환)
+      sheet.getRange(foundRowIdx, 2).setValue(dateStr);
+      sheet.getRange(foundRowIdx, 4).setValue(title);
+      sheet.getRange(foundRowIdx, 5).setValue(desc);
+      sheet.getRange(foundRowIdx, 8).setValue("대기");
+      sheet.getRange(foundRowIdx, 9).setValue(score);
+      sheet.getRange(foundRowIdx, 10).setValue(method);
+    } else {
+      // 신규 등록
+      var newId = "Q_" + Date.now();
+      sheet.appendRow([
+        newId,
+        dateStr,
+        "이장",
+        title,
+        desc,
+        dateStr + " 23:59:59", // 만료 시간
+        "ALL_MEMBERS",
+        "대기",
+        score,
+        method
+      ]);
+    }
+    
+    return { success: true, message: dateStr + "일 당일에 자동 선포되는 돌발 퀘스트 예약 등록이 안전하게 완료되었습니다! 📅⚡" };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+// ──────────────────────────────────────────────
+// [이관] deleteScheduledQuest
+// ──────────────────────────────────────────────
+function deleteScheduledQuest(rowIdx) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = checkAndCreateQuestRegistrySheet();
+    sheet.deleteRow(Number(rowIdx));
+    return { success: true, message: "예약된 돌발 퀘스트가 캘린더에서 제거되었습니다." };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+// ──────────────────────────────────────────────
+// [이관] processScheduledQuestsDaily
+// ──────────────────────────────────────────────
+function processScheduledQuestsDaily() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = checkAndCreateQuestRegistrySheet();
+    var data = sheet.getDataRange().getDisplayValues();
+    
+    var now = new Date();
+    var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    var activatedCount = 0;
+    
+    for (var i = 1; i < data.length; i++) {
+      var rawDate = data[i][1];
+      var dateStr = normalizeDateStr(rawDate); // 날짜 포맷 강제 보정
+      var type = data[i][2];    // C열: 유형 ("이장")
+      var title = data[i][3];   // D열: 퀘스트명
+      var desc = data[i][4];    // E열: 설명
+      var status = data[i][7];  // H열: 상태 ("대기")
+      var score = Number(data[i][8] || 15);
+      var method = data[i][9] || "사진";
+      
+      if (type === "이장" && dateStr === todayStr && status === "대기") {
+        var rowIdx = i + 1;
+        // 1. 날짜 데이터가 비표준형인 경우 표준형으로 일괄 등기 보정
+        sheet.getRange(rowIdx, 2).setValue(todayStr);
+        // 2. 상태를 '진행'으로 변경하여 당일 퀘스트로 공식 표출
+        sheet.getRange(rowIdx, 8).setValue("진행");
+        
+        // 3. 당일 아침 활성화 알림(쪽지)을 회원 전체에게 1회 공식 선포!
+        var globalTitle = "📅 [오늘의 돌발 퀘스트] " + title + " ⚡";
+        var globalContent = "📢 [웰니스 코치의 돌발 퀘스트 오늘 진행 시작!] 📢\n\n" +
+                            "오늘의 돌발 퀘스트가 공식적으로 활성화되었습니다! 오늘의 웰니스 수호에 도전해 보세요!\n\n" +
+                            "📅 [시행 일자]: " + todayStr + " (오늘 밤 자정 마감)\n" +
+                            "🔥 [돌발 퀘스트]: " + title + "\n" +
+                            "📝 [임무 설명]: " + desc + "\n" +
+                            "💎 [보상 EXP]: +" + score + " EXP\n" +
+                            "🎯 [인증 방법]: " + method + " 인증\n\n" +
+                            "오늘 밤 자정 전까지 아카이브 게시판에 인증을 완료해 주세요. 수호 점수 획득을 향해 돌격! ⚔️";
+                            
+        sendGlobalNotification("quest", globalTitle, globalContent);
+        activatedCount++;
+        Logger.log("✅ [돌발퀘스트 활성화] 오늘 자(" + todayStr + ") 퀘스트 '" + title + "' 공식 진행 개시 및 알림 발송 완료!");
+      }
+    }
+    
+    return { success: true, activatedCount: activatedCount };
+  } catch (e) {
+    Logger.log("❌ processScheduledQuestsDaily 에러: " + e.toString());
+    return { success: false, error: e.toString() };
+  }
+}
+
+// ──────────────────────────────────────────────
+// [이관] getDailyQuestNoticePreview
+// ──────────────────────────────────────────────
+function getDailyQuestNoticePreview() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("돌발퀘스트_목록");
+    if (!sheet) {
+      return { success: false, error: "돌발퀘스트_목록 시트가 없습니다." };
+    }
+    var data = sheet.getDataRange().getDisplayValues();
+    var now = new Date();
+    var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    
+    var todayQuest = null;
+    var isManual = false;
+    
+    for (var i = 1; i < data.length; i++) {
+      var type = String(data[i][2] || "").trim();
+      var rawDate = data[i][1];
+      var dateStr = normalizeDateStr(rawDate); // 날짜 정합성 표준화
+      if (type === "이장" && dateStr === todayStr) {
+        var title = String(data[i][3] || "").trim();
+        var desc = String(data[i][4] || "").trim();
+        var qScore = (data[i] && data[i].length > 8) ? Number(data[i][8] || 15) : 15;
+        var qMethod = (data[i] && data[i].length > 9) ? String(data[i][9] || '사진').trim() : '사진';
+        
+        // ⚠️ 이중 방어막: 제목에 명시적인 이모지가 있다면 백엔드 단에서 강제로 매핑해 주는 인텔리전트 보정
+        var titleStr = String(title || "");
+        if (titleStr.indexOf('✍️') > -1 || titleStr.indexOf('📝') > -1 || titleStr.indexOf('✏️') > -1 || titleStr.indexOf('⚡') > -1) {
+          qMethod = '게시판';
+        } else if (titleStr.indexOf('📸') > -1 || titleStr.indexOf('📷') > -1) {
+          qMethod = '사진';
+        }
+        
+        todayQuest = { title: title, description: desc, score: qScore, method: qMethod };
+        isManual = true;
+        break;
+      }
+    }
+    
+    // 만약 오늘자 수동 예약이 없다면 ➡️ 알고리즘 계산기 작동하여 가상 프리뷰 생성!
+    if (!todayQuest) {
+      var algoQuest = getAlgorithmicSuddenQuest(todayStr);
+      if (algoQuest) {
+        todayQuest = {
+          title: algoQuest.title,
+          description: algoQuest.description,
+          score: algoQuest.score || 15,
+          method: algoQuest.method || "사진"
+        };
+      }
+    }
+    
+    if (!todayQuest) {
+      return { success: false, error: "오늘(" + todayStr + ") 자 돌발 퀘스트를 판정할 수 없습니다." };
+    }
+    
+    // 💡 [v66.2] 원장님의 실천 철학: 돌발 퀘스트와 관련된 선제작 지식창고 글이 있을 때만 동적으로 특별 비책 가이드를 우편 꼬리에 넛지로 동봉!
+    // (매칭 칼럼이 전혀 없는 날에는 완전히 숨김 처리하여 메시지 초슬림화 사수)
+    var tipNotice = "";
+    try {
+      // A. 돌발퀘스트 제목에서 다이어트 주요 키워드 추출
+      var keywordList = ["식이섬유", "수분", "물", "오운완", "단식", "체지방", "근육", "단백질", "유산소", "스트레칭", "습관", "식단", "채소"];
+      var detectedKeyword = "";
+      for (var k = 0; k < keywordList.length; k++) {
+        var kw = keywordList[k];
+        if (todayQuest.title.indexOf(kw) > -1) {
+          detectedKeyword = kw;
+          break;
+        }
+      }
+      
+      var normalizeTextForMatch = function(str) {
+        if (!str) return "";
+        return String(str).toLowerCase().replace(/\s+/g, "").replace(/[!?,.『』'"]/g, "").trim();
+      };
+      var normalizedTodayQuest = normalizeTextForMatch(todayQuest.title);
+      
+      if (detectedKeyword || normalizedTodayQuest) {
+        // B. 지혜의_보물고 시트에서 관련 글 매칭 조회
+        var wisdomSheet = ss.getSheetByName("지혜의_보물고");
+        if (wisdomSheet && wisdomSheet.getLastRow() > 1) {
+          var wData = wisdomSheet.getDataRange().getDisplayValues();
+          var relatedTitles = [];
+          
+          for (var w = 1; w < wData.length; w++) {
+            var wCategory = String(wData[w][3] || "").trim();
+            var wTitle = String(wData[w][1] || "").trim();
+            var jVal = wData[w].length > 9 ? String(wData[w][9] || "").trim() : "";
+            var targetQuest = (jVal !== "Y" && jVal !== "true" && jVal !== "N" && jVal !== "") ? jVal : "";
+            
+            var isMatch = false;
+            
+            // 0순위 J열 타겟팅 매칭
+            if (targetQuest) {
+              var normalizedTarget = normalizeTextForMatch(targetQuest);
+              if (normalizedTarget && normalizedTodayQuest.indexOf(normalizedTarget) > -1) {
+                isMatch = true;
+              }
+            }
+            
+            // 1순위 키워드 매칭 (제목/카테고리만 매칭, 본문 내용 검색은 제외)
+            if (!isMatch && detectedKeyword) {
+              if (wTitle.indexOf(detectedKeyword) > -1 || wCategory.indexOf(detectedKeyword) > -1) {
+                isMatch = true;
+              }
+            }
+            
+            // 섹션 1 고정글 제외 및 매칭 칼럼 수집
+            if (isMatch && wCategory !== "섹션 1") {
+              relatedTitles.push(wTitle);
+            }
+          }
+          
+          // C. 매칭 칼럼이 존재할 때만 원장님 조율 피드백을 수용한 단정한 넛지 단락 합성!
+          if (relatedTitles.length > 0) {
+            tipNotice = "\n\n오늘 돌발퀘스트와 관련한 지식 칼럼들을 지식창고에서 확인할수 있습니다.\n" +
+                        "추천칼럼: " + relatedTitles.join(", ") + " 등 지식창고 탭을 통해 관련 건강정보를 확인하세요";
+          }
+        }
+      }
+    } catch (e) {
+      Logger.log("⚠️ 쪽지 발송 지식창고 연동 꿀팁 추출 에러: " + e.toString());
+    }
+
+    var title = "⚡ [오늘의 돌발 퀘스트] " + todayQuest.title + " ✉️";
+    var content = "📢 [이장님의 긴급 돌발 퀘스트 선포!] 📢\n\n" +
+                  "오늘의 돌발 퀘스트가 공식적으로 선포되었습니다! 오늘 자정 전까지 완수하고 추가 경험치를 획득해 보세요!\n\n" +
+                  "📅 [시행 일자]: " + todayStr + " (오늘 밤 자정 마감)\n" +
+                  "🔥 [돌발 퀘스트]: " + todayQuest.title + "\n" +
+                  "📝 [임무 설명]: " + todayQuest.description + "\n" +
+                  "💎 [보상 EXP]: +" + todayQuest.score + " EXP\n" +
+                  "🎯 [인증 방법]: " + todayQuest.method + " 인증" +
+                  tipNotice + "\n\n" +
+                  "지금 즉시 대시보드에서 아코디언 서랍을 열어 퀘스트 상세 가이드를 확인하고 도전해 보세요! ⚔️";
+                  
+    return { success: true, title: title, content: content, quest: todayQuest, isManual: isManual };
+  } catch (err) {
+    return { success: false, error: err.toString() };
+  }
+}
+
+// ──────────────────────────────────────────────
+// [이관] autoSendDailyQuestNotice
+// ──────────────────────────────────────────────
+function autoSendDailyQuestNotice() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = checkAndCreateQuestRegistrySheet();
+    var now = new Date();
+    var todayStr = Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    
+    // 1. 프리뷰 엔진 작동 (수동이 없으면 가상 알고리즘 퀘스트 탑재)
+    var preview = getDailyQuestNoticePreview();
+    if (!preview || !preview.success) {
+      Logger.log("돌발 퀘스트 프리뷰 생성 실패로 트리거 종료: " + (preview ? preview.error : ""));
+      return;
+    }
+    
+    var questInfo = preview.quest;
+    var isManual = preview.isManual;
+    
+    // 2. 수동과 자동 분기 처리하여 시트 등기/진행 상태 기록
+    if (isManual) {
+      // 오늘자 수동 예약을 찾아 '진행' 상태로 변경 및 표준화 저장
+      var data = sheet.getDataRange().getDisplayValues();
+      for (var i = 1; i < data.length; i++) {
+        var sheetDateStr = normalizeDateStr(data[i][1]);
+        if (data[i][2] === "이장" && sheetDateStr === todayStr) {
+          sheet.getRange(i + 1, 2).setValue(todayStr); // 표준 yyyy-MM-dd 포맷 보정 저장
+          sheet.getRange(i + 1, 8).setValue("진행"); // H열: 상태를 진행으로 세팅
+          Logger.log("✅ 오늘 자 수동 예약 돌발 퀘스트를 '진행'으로 공식 활성화 완료!");
+          break;
+        }
+      }
+    } else {
+      // 오늘자 자동 퀘스트를 시트(돌발퀘스트_목록)에 등기 적재 (appendRow)
+      var newId = "Q_AUTO_" + Date.now();
+      sheet.appendRow([
+        newId,
+        todayStr,
+        "이장",
+        questInfo.title,
+        questInfo.description,
+        todayStr + " 23:59:59", // 만료 시간
+        "ALL_MEMBERS",
+        "진행", // 등록과 동시에 '진행' 상태로 기록!
+        questInfo.score,
+        questInfo.method
+      ]);
+      Logger.log("✅ 오늘 자 자동화 돌발 퀘스트 '" + questInfo.title + "'를 시트에 영구 등기 적재 완료!");
+    }
+    
+    // 3. 전체 회원 쪽지 발송
+    var title = preview.title;
+    var content = preview.content;
+    var res = sendGlobalNotification("quest", title, content);
+    
+    if (res && res.success) {
+      Logger.log("🚀 돌발 퀘스트 자동 전체 알림 등록 및 발송 완료! GLOBAL_ID: " + res.globalId);
+    } else {
+      Logger.log("⚠️ 돌발 퀘스트 자동 전체 알림 등록 실패: " + (res ? res.error : "알 수 없음"));
+    }
+  } catch (err) {
+    Logger.log("❌ autoSendDailyQuestNotice 오류: " + err.toString());
+  }
+}
+
+// ──────────────────────────────────────────────
+// [이관] autoSendWeeklyRankingNotice
+// ──────────────────────────────────────────────
+function autoSendWeeklyRankingNotice() {
+  try {
+    var now = new Date();
+    
+    // 1. 일회성 트리거 자가 청소 (Clean up one-off trigger)
+    var oneOffTriggerId = PropertiesService.getScriptProperties().getProperty("ONE_OFF_WEEKLY_NOTICE_TRIGGER_ID");
+    if (oneOffTriggerId) {
+      var triggers = ScriptApp.getProjectTriggers();
+      for (var i = 0; i < triggers.length; i++) {
+        if (triggers[i].getUniqueId() === oneOffTriggerId) {
+          ScriptApp.deleteTrigger(triggers[i]);
+          Logger.log("🏆 주간 일회성 트리거 삭제 완료: " + oneOffTriggerId);
+          break;
+        }
+      }
+      PropertiesService.getScriptProperties().deleteProperty("ONE_OFF_WEEKLY_NOTICE_TRIGGER_ID");
+    }
+
+    // 2. 만약 오늘이 목요일인데 어제(수요일)가 휴일이었다면, 금요일로 연장 예약하고 종료!
+    var curDay = now.getDay();
+    if (curDay === 4) { // 목요일
+      var yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      if (typeof isCenterHoliday === "function" && isCenterHoliday(yesterday)) {
+        Logger.log("어제(수요일)가 휴무일이므로 주간 랭킹 발표를 하루 연장합니다. 금요일 새벽 0시 5분에 실행되도록 일회성 트리거를 생성합니다.");
+        
+        var targetDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        targetDate.setHours(0, 5, 0, 0);
+        
+        var newTrigger = ScriptApp.newTrigger("autoSendWeeklyRankingNotice")
+          .timeBased()
+          .at(targetDate)
+          .create();
+        PropertiesService.getScriptProperties().setProperty("ONE_OFF_WEEKLY_NOTICE_TRIGGER_ID", newTrigger.getUniqueId());
+        
+        // [v67.5] 수요일 휴무로 인한 인바디 마감 연장 안내 쪽지 발송
+        var noticeTitle = "📢 [노형빌리지] 주간 인바디 제출 기한 연장 안내 🏋️‍♂️";
+        var noticeContent = "안녕하세요, 모험가님!\n\n" +
+                            "수요일(어제) 센터 공식 휴무로 인해 이번 주 주간 인바디 측정 및 제출 기한이 오늘(목요일) 밤 23:59까지로 하루 연장되었습니다!\n\n" +
+                            "일반 활동 점수(일일 미션 등)는 수요일 자정으로 정상 마감되었으나, 최종 주간 랭킹은 오늘 밤까지 인바디를 제출해 주신 내역까지 포함하여 내일(금요일) 새벽에 정산 및 발표됩니다.\n\n" +
+                            "아직 인바디 측정을 완료하지 않으신 모험가님들은 오늘 센터 방문 시 꼭 측정해 주시기 바랍니다!\n\n" +
+                            "감사합니다.";
+        sendGlobalNotification("quest", noticeTitle, noticeContent);
+        
+        return; // 목요일 발표 중단
+      }
+    }
+
+    var preview = getWeeklyRankingNoticePreview();
+    if (!preview || !preview.success) {
+      Logger.log("주간 명예의 전당 프리뷰 생성 실패로 트리거 종료: " + (preview ? preview.error : ""));
+      return;
+    }
+    
+    // 주간 명예의 전당 성적 아카이브 자동 저장
+    try {
+      var periodMatch = preview.title.match(/\[노형빌리지\] (.+) 주간 명예의 전당/);
+      var periodStr = periodMatch ? periodMatch[1] : "";
+      if (periodStr) {
+        archiveWeeklyRankingToSheet(periodStr);
+      }
+    } catch (archErr) {
+      Logger.log("주간 성적 아카이빙 자동 저장 실패: " + archErr.toString());
+    }
+    
+    var title = preview.title;
+    var content = preview.content;
+    
+    // 단 1회의 전체 알림 적재로 획기적 속도 향상!
+    var res = sendGlobalNotification("ranking", title, content);
+    if (res && res.success) {
+      Logger.log("🏆 주간 명예의 전당 전체 공용 쪽지 단 1개 발송 완료! (행 증가 제로)");
+    } else {
+      Logger.log("❌ 주간 명예의 전당 전체 쪽지 발송 실패: " + (res ? res.error : "unknown"));
+    }
+  } catch (err) {
+    Logger.log("주간 명예의 전당 자동 쪽지 발송 오류: " + err.toString());
+  }
+}
+
+// ──────────────────────────────────────────────
+// [이관] autoSendMonthlyRankingNotice
+// ──────────────────────────────────────────────
+function autoSendMonthlyRankingNotice() {
+  try {
+    var now = new Date();
+    
+    // 1. 일회성 트리거 자가 청소 (Clean up one-off trigger)
+    var oneOffTriggerId = PropertiesService.getScriptProperties().getProperty("ONE_OFF_MONTHLY_NOTICE_TRIGGER_ID");
+    if (oneOffTriggerId) {
+      var triggers = ScriptApp.getProjectTriggers();
+      for (var i = 0; i < triggers.length; i++) {
+        if (triggers[i].getUniqueId() === oneOffTriggerId) {
+          ScriptApp.deleteTrigger(triggers[i]);
+          Logger.log("🏆 월간 일회성 트리거 삭제 완료: " + oneOffTriggerId);
+          break;
+        }
+      }
+      PropertiesService.getScriptProperties().deleteProperty("ONE_OFF_MONTHLY_NOTICE_TRIGGER_ID");
+    }
+
+    // 2. 만약 오늘이 1일이고 목요일인데 어제(수요일, 이전 달 마지막 날)가 휴일이었다면, 2일로 연장 예약하고 종료!
+    var curDate = now.getDate();
+    var curDay = now.getDay();
+    if (curDate === 1 && curDay === 4) { // 1일이고 목요일인 경우
+      var yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      if (typeof isCenterHoliday === "function" && isCenterHoliday(yesterday)) {
+        Logger.log("이전 달 마지막 수요일이 휴무일이었고 오늘이 1일(목요일)이므로 월간 랭킹 발표를 하루 연장합니다. 내일(2일) 새벽 0시 10분에 실행되도록 일회성 트리거를 생성합니다.");
+        
+        var targetDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        targetDate.setHours(0, 10, 0, 0);
+        
+        var newTrigger = ScriptApp.newTrigger("autoSendMonthlyRankingNotice")
+          .timeBased()
+          .at(targetDate)
+          .create();
+        PropertiesService.getScriptProperties().setProperty("ONE_OFF_MONTHLY_NOTICE_TRIGGER_ID", newTrigger.getUniqueId());
+        
+        // [v67.5] 수요일 휴무로 인한 인바디 마감 연장 안내 쪽지 발송
+        var noticeTitle = "📢 [노형빌리지] 월간 인바디 제출 기한 연장 안내 🏋️‍♂️";
+        var noticeContent = "안녕하세요, 모험가님!\n\n" +
+                            "월말 수요일(어제) 센터 공식 휴무로 인해 이번 달 월간 최종 인바디 측정 및 제출 기한이 오늘(목요일) 밤 23:59까지로 하루 연장되었습니다!\n\n" +
+                            "일반 활동 점수(일일 미션 등)는 월말일 자정으로 정상 마감되었으나, 최종 월간 MVP 선정은 오늘 밤까지 인바디를 제출해 주신 내역까지 포함하여 내일(금요일) 새벽에 정산 및 발표됩니다.\n\n" +
+                            "아직 인바디 측정을 완료하지 않으신 모험가님들은 오늘 센터 방문 시 꼭 측정해 주시기 바랍니다!\n\n" +
+                            "감사합니다.";
+        sendGlobalNotification("quest", noticeTitle, noticeContent);
+        
+        return; // 1일 발표 중단
+      }
+    }
+
+    var preview = getMonthlyRankingNoticePreview();
+    if (!preview || !preview.success) {
+      Logger.log("월간 명예의 전당 프리뷰 생성 실패로 트리거 종료: " + (preview ? preview.error : ""));
+      return;
+    }
+    
+    // 월간 명예의 전당 성적 아카이브 자동 저장
+    try {
+      var periodMatch = preview.title.match(/\[노형빌리지\] (.+) 월간 명예의 전당/);
+      var periodStr = periodMatch ? periodMatch[1] : "";
+      if (periodStr) {
+        archiveMonthlyRankingToSheet(periodStr);
+      }
+    } catch (archErr) {
+      Logger.log("월간 성적 아카이빙 자동 저장 실패: " + archErr.toString());
+    }
+    
+    var title = preview.title;
+    var content = preview.content;
+    
+    // 단 1회의 전체 알림 적재로 획기적 속도 향상!
+    var res = sendGlobalNotification("ranking", title, content);
+    if (res && res.success) {
+      Logger.log("🏆 월간 명예의 전당 전체 공용 쪽지 단 1개 발송 완료! (행 증가 제로)");
+    } else {
+      Logger.log("❌ 월간 명예의 전당 전체 쪽지 발송 실패: " + (res ? res.error : "unknown"));
+    }
+  } catch (err) {
+    Logger.log("월간 명예의 전당 자동 쪽지 발송 오류: " + err.toString());
+  }
+}
+
+// ──────────────────────────────────────────────
+// [이관] getWeeklyRankingNoticePreview
+// ──────────────────────────────────────────────
+function getWeeklyRankingNoticePreview() {
+  try {
+    var hofRes = getHallOfFameData();
+    if (!hofRes || !hofRes.success || !hofRes.data || !hofRes.data.archive || !hofRes.data.archive.weekly) {
+      return { success: false, error: "주간 명예의 전당 데이터 취합 실패" };
+    }
+    
+    var weeklyArchive = hofRes.data.archive.weekly;
+    if (weeklyArchive.length === 0) {
+      return { success: false, error: "과거 주간 랭킹 아카이브 데이터가 없습니다." };
+    }
+    
+    // 가장 최근 완성된 주차 (직전 주)
+    var latestWeek = weeklyArchive[0];
+    var period = latestWeek.period; // 예: "5월 4주"
+    
+    // winners parsing ("🥇 1.김순희(344p) | 2.박노형(320p)...")
+    var winnersStr = latestWeek.winners.replace("🥇 ", "");
+    var tokens = winnersStr.split("|");
+    var w1 = tokens[0] ? tokens[0].trim() : "-";
+    var w2 = tokens[1] ? tokens[1].trim() : "-";
+    var w3 = tokens[2] ? tokens[2].trim() : "-";
+    
+    var title = "🏆 [노형빌리지] " + period + " 주간 명예의 전당 발표! ✉️";
+    var content = "🏰 [노형빌리지 " + period + " 주간 시상식] 🏰\n\n" +
+                  "지난 한 주 동안 노형빌리지를 뜨겁게 빛내주신 위대한 영웅들의 주간 명예의 전당 순위가 발표되었습니다!\n\n" +
+                  "👑 [최종 주간 TOP 3]\n" +
+                  "🥇 1위 : " + w1 + "\n" +
+                  "🥈 2위 : " + w2 + "\n" +
+                  "🥉 3위 : " + w3 + "\n\n" +
+                  "수상하신 모든 모험가님 진심으로 축하드립니다! 👏\n\n" +
+                  "우편함의 바로가기 버튼을 터치하여 전체 10위까지의 영광스러운 전체 순위표를 확인하고 축하의 박수를 보내주세요! 🎉";
+                  
+    return { success: true, title: title, content: content };
+  } catch (err) {
+    return { success: false, error: err.toString() };
+  }
+}
+
+// ──────────────────────────────────────────────
+// [이관] getMonthlyRankingNoticePreview
+// ──────────────────────────────────────────────
+function getMonthlyRankingNoticePreview() {
+  try {
+    var hofRes = getHallOfFameData();
+    if (!hofRes || !hofRes.success || !hofRes.data || !hofRes.data.archive) {
+      return { success: false, error: "월간 명예의 전당 데이터 취합 실패" };
+    }
+    
+    var monthlyArchive = hofRes.data.archive.monthly || [];
+    var attArchive = hofRes.data.archive.attendance || [];
+    
+    if (monthlyArchive.length === 0 && attArchive.length === 0) {
+      return { success: false, error: "과거 월간/출석왕 아카이브 데이터가 없습니다." };
+    }
+    
+    // 가장 최근 완성된 월 (직전 월)
+    var latestMonth = monthlyArchive[0];
+    var latestAtt = attArchive[0];
+    
+    var displayPeriod = "";
+    if (latestMonth) displayPeriod = latestMonth.period;
+    else if (latestAtt) displayPeriod = latestAtt.period;
+    
+    var w1 = "-", w2 = "-", w3 = "-";
+    if (latestMonth) {
+      var mWinnersStr = latestMonth.winners.replace("🥇 ", "");
+      var mTokens = mWinnersStr.split("|");
+      w1 = mTokens[0] ? mTokens[0].trim() : "-";
+      w2 = mTokens[1] ? mTokens[1].trim() : "-";
+      w3 = mTokens[2] ? mTokens[2].trim() : "-";
+    }
+    
+    var att1 = "-", att2 = "-", att3 = "-";
+    if (latestAtt) {
+      var attTokens = latestAtt.winners.split("|");
+      att1 = attTokens[0] ? attTokens[0].trim() : "-";
+      att2 = attTokens[1] ? attTokens[1].trim() : "-";
+      att3 = attTokens[2] ? attTokens[2].trim() : "-";
+    }
+    
+    var title = "📅 [노형빌리지] " + displayPeriod + " 월간 명예의 전당 발표! ✉️";
+    var content = "🏰 [노형빌리지 " + displayPeriod + " 월간 & 출석왕 시상식] 🏰\n\n" +
+                  "지난 한 달 동안 노형빌리지를 가장 뜨겁게 불태워주신 명예로운 월간 MVP와 출석왕이 탄생했습니다!\n\n" +
+                  "🔥 [최종 월간 TOP 3]\n" +
+                  "🥇 1위 : " + w1 + "\n" +
+                  "🥈 2위 : " + w2 + "\n" +
+                  "🥉 3위 : " + w3 + "\n\n" +
+                  "🏃 [최종 월별 출석왕 TOP 3]\n" +
+                  att1 + "\n" +
+                  att2 + "\n" +
+                  att3 + "\n\n" +
+                  "위대한 성과를 거두신 모든 영웅분들께 뜨거운 박수를 보냅니다! 👏\n\n" +
+                  "우편함의 바로가기 버튼을 터치하여 전체 명예의 전당에서 영광스러운 순위표를 즉시 확인해 보세요! 💫";
+                  
+    return { success: true, title: title, content: content };
+  } catch (err) {
+    return { success: false, error: err.toString() };
+  }
+}
+
+// ──────────────────────────────────────────────
+// [이관] archiveWeeklyRankingToSheet
+// ──────────────────────────────────────────────
+function archiveWeeklyRankingToSheet(period) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("33챌린지_주간성적아카이브") || ss.insertSheet("33챌린지_주간성적아카이브");
+    
+    if (sheet.getLastRow() === 0) {
+      var headers = ["주차", "순위", "이름", "연락처", "체력", "실천력", "회복력", "주간토탈점수", "누적토탈점수"];
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground("#f1f3f5");
+    }
+    
+    // 중복 제거 검사
+    var data = sheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === period.trim()) {
+        Logger.log(period + " 주간 기록은 이미 아카이브에 존재하므로 건너뜁니다.");
+        return { success: true, message: "이미 기록이 존재합니다." };
+      }
+    }
+    
+    // calculateWeeklyRankingForPeriod 호출하여 정확한 감량/체력 점수 및 총점이 합산된 정렬 순위를 가져옴!
+    var result = calculateWeeklyRankingForPeriod(period);
+    if (!result || !result.rankings || result.rankings.length === 0) {
+      return { success: false, message: "해당 주차의 데이터를 계산하지 못했습니다." };
+    }
+    
+    var rankedUsers = result.rankings;
+    var rowsToAppend = [];
+    for (var idx = 0; idx < rankedUsers.length; idx++) {
+      var u = rankedUsers[idx];
+      rowsToAppend.push([
+        period,
+        idx + 1,
+        u.name,
+        "'" + u.phone,
+        u.health,
+        u.perf,
+        u.def,
+        u.score, // weeklyTotal (주간토탈점수)
+        u.lifetimeTotal
+      ]);
+    }
+    
+    if (rowsToAppend.length > 0) {
+      sheet.insertRowsAfter(1, rowsToAppend.length);
+      sheet.getRange(2, 1, rowsToAppend.length, rowsToAppend[0].length).setValues(rowsToAppend);
+      Logger.log(period + " 주간 성적 아카이브 최신 탑 적재 완료: 총 " + rowsToAppend.length + "행");
+    }
+    return { success: true, message: "아카이브 저장 성공" };
+  } catch (e) {
+    Logger.log("archiveWeeklyRankingToSheet 오류: " + e.toString());
+    return { success: false, error: e.toString() };
+  }
+}
+
+// ──────────────────────────────────────────────
+// [이관] archiveMonthlyRankingToSheet
+// ──────────────────────────────────────────────
+function archiveMonthlyRankingToSheet(period) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("33챌린지_월간성적아카이브") || ss.insertSheet("33챌린지_월간성적아카이브");
+    
+    if (sheet.getLastRow() === 0 || sheet.getLastColumn() < 10) {
+      var headers = ["월", "순위", "이름", "연락처", "체력", "실천력", "회복력", "월간토탈점수", "누적토탈점수", "출석기록"];
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground("#f1f3f5");
+    }
+    
+    var data = sheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === period.trim()) {
+        Logger.log(period + " 월간 기록은 이미 아카이브에 존재하므로 스킵합니다.");
+        return { success: true, message: "이미 기록이 존재합니다." };
+      }
+    }
+    
+    // calculateMonthlyRankingForPeriod 호출하여 정확한 감량/체력 점수 및 총점이 합산된 정렬 순위를 가져옴!
+    var result = calculateMonthlyRankingForPeriod(period);
+    if (!result || !result.rankings || result.rankings.length === 0) {
+      return { success: false, message: "해당 월의 데이터를 계산하지 못했습니다." };
+    }
+    
+    var rankedUsers = result.rankings;
+    var rowsToAppend = [];
+    for (var idx = 0; idx < rankedUsers.length; idx++) {
+      var u = rankedUsers[idx];
+      rowsToAppend.push([
+        period,
+        idx + 1,
+        u.name,
+        "'" + u.phone,
+        u.health,
+        u.perf,
+        u.def,
+        u.score, // monthlyTotal (월간토탈점수)
+        u.lifetimeTotal,
+        u.attCount
+      ]);
+    }
+    
+    if (rowsToAppend.length > 0) {
+      sheet.insertRowsAfter(1, rowsToAppend.length);
+      sheet.getRange(2, 1, rowsToAppend.length, rowsToAppend[0].length).setValues(rowsToAppend);
+      Logger.log(period + " 월간 성적 아카이브 최신 탑 적재 완료: 총 " + rowsToAppend.length + "행");
+    }
+    return { success: true, message: "아카이브 저장 성공" };
+  } catch (e) {
+    Logger.log("archiveMonthlyRankingToSheet 오류: " + e.toString());
+    return { success: false, error: e.toString() };
+  }
+}
+
+// ──────────────────────────────────────────────
+// [이관] calculateWeeklyRankingForPeriod
+// ──────────────────────────────────────────────
+function calculateWeeklyRankingForPeriod(period) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var summarySheet = ss.getSheetByName("일일_활동_기록");
+    var summaryData = summarySheet ? summarySheet.getDataRange().getValues() : [];
+    
+    var targetThuDate = null;
+    for (var j = 1; j < summaryData.length; j++) {
+      var recDateRaw = summaryData[j][0];
+      var recDate = (recDateRaw instanceof Date) ? recDateRaw : new Date(recDateRaw);
+      if (isNaN(recDate.getTime())) continue;
+      
+      if (getWeekStringLocal(recDate) === period) {
+        targetThuDate = getThuStartOfWeekLocal(recDate);
+        break;
+      }
+    }
+    
+    if (!targetThuDate) {
+      targetThuDate = getThuStartOfWeekLocal(new Date());
+    }
+    
+    var endOfActivityDate = new Date(targetThuDate.getTime() + 6 * 24 * 60 * 60 * 1000 + 23 * 60 * 60 * 1000 + 59 * 60 * 1000 + 59 * 1000); // 수요일 23:59:59
+    var endOfInbodyDate = new Date(endOfActivityDate.getTime()); // 기본은 수요일 23:59:59
+    
+    // [v67.5] 수요일이 공휴일/휴무일이면 목요일 밤 23:59:59로 인바디 마감만 연장!
+    var lastWed = new Date(targetThuDate.getTime() + 6 * 24 * 60 * 60 * 1000);
+    if (typeof isCenterHoliday === "function" && isCenterHoliday(lastWed)) {
+      endOfInbodyDate.setDate(endOfInbodyDate.getDate() + 1);
+    }
+    
+    // 인바디 로드
+    var inbodySheet = ss.getSheetByName("33챌린지_인바디");
+    var inData = inbodySheet ? inbodySheet.getDataRange().getValues() : [];
+    var userInbodyMap = {};
+    for (var k = 1; k < inData.length; k++) {
+      var rawPhone = String(inData[k][2] || "").trim();
+      var phone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, "");
+      if (!phone) continue;
+      userInbodyMap[phone] = userInbodyMap[phone] || [];
+      userInbodyMap[phone].push({
+        date: new Date(inData[k][0]),
+        weight: Number(inData[k][3] || 0),
+        muscle: Number(inData[k][4] || 0),
+        fat: Number(inData[k][5] || 0)
+      });
+    }
+    
+    // 회원명단에서 목표체중 로드
+    var userTargetWeightMap = {};
+    var memberSheet = ss.getSheetByName("회원명단");
+    if (memberSheet) {
+      var mData = memberSheet.getDataRange().getDisplayValues();
+      var mCols = getMemberSheetColumnIndices(memberSheet);
+      for (var i = 1; i < mData.length; i++) {
+        var mPhone = normalizePhoneDigits(mData[i][mCols.phone]);
+        if (mPhone) {
+          userTargetWeightMap[mPhone] = parseWeightSafely(mData[i][mCols.targetWeight]);
+        }
+      }
+    }
+    
+    // 일일 점수 누적 집계
+    var userStats = {};
+    for (var j = 1; j < summaryData.length; j++) {
+      var rawPhone = String(summaryData[j][1] || "").trim();
+      var phone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, "");
+      if (!phone) continue;
+      
+      var recDateRaw = summaryData[j][0];
+      var recDate = (recDateRaw instanceof Date) ? recDateRaw : new Date(recDateRaw);
+      if (isNaN(recDate.getTime())) continue;
+      
+      if (recDate <= endOfActivityDate) {
+        var name = String(summaryData[j][2] || "모험가").trim();
+        var visitScore = Number(summaryData[j][3] || 0);
+        var intensityScore = Number(summaryData[j][4] || 0);
+        var actScore = Number(summaryData[j][5] || 0);
+        var recScore = Number(summaryData[j][6] || 0);
+        var hpScore = Number(summaryData[j][7] || 0);
+        var rowTotal = Number(summaryData[j][9] || 0);
+        
+        if (!userStats[phone]) {
+          userStats[phone] = { name: name, health: 0, perf: 0, def: 0, weeklyTotalAct: 0, lifetimeTotalAct: 0 };
+        }
+        
+        var stat = userStats[phone];
+        stat.lifetimeTotalAct += rowTotal;
+        
+        if (recDate >= targetThuDate && recDate <= endOfActivityDate) {
+          stat.health += hpScore;
+          stat.perf += (visitScore + intensityScore + actScore);
+          stat.def += recScore;
+          stat.weeklyTotalAct += rowTotal;
+        }
+      }
+    }
+    
+    var list = [];
+    for (var phone in userStats) {
+      var stat = userStats[phone];
+      var records = userInbodyMap[phone] || [];
+      
+      var firstEver = null;
+      var latestEver = null;
+      var latestInWeek = null;
+      for (var rIdx = 0; rIdx < records.length; rIdx++) {
+        var r = records[rIdx];
+        if (r.date <= endOfInbodyDate) {
+          if (!firstEver || r.date < firstEver.date) firstEver = r;
+          if (!latestEver || r.date > latestEver.date) latestEver = r;
+          if (r.date >= targetThuDate && r.date <= endOfInbodyDate) {
+            if (!latestInWeek || r.date > latestInWeek.date) latestInWeek = r;
+          }
+        }
+      }
+      
+      var targetWeight = userTargetWeightMap[phone] || 0;
+      var inbodyWeeklyScore = 0;
+      if (latestInWeek) {
+        var prevBeforeThisWeek = null;
+        for (var rIdx = 0; rIdx < records.length; rIdx++) {
+          var r = records[rIdx];
+          if (r.date < targetThuDate) {
+            if (!prevBeforeThisWeek || r.date > prevBeforeThisWeek.date) prevBeforeThisWeek = r;
+          }
+        }
+        var baseRecord = prevBeforeThisWeek || firstEver;
+        inbodyWeeklyScore = calculateInbodyScoreHelper(baseRecord, latestInWeek, targetWeight, 'weekly');
+      }
+      
+      var inbodyLifetimeScore = calculateInbodyScoreHelper(firstEver, latestEver, targetWeight, 'lifetime');
+      
+      var totalWeeklyExp = stat.weeklyTotalAct + inbodyWeeklyScore;
+      var totalLifetimeExp = stat.lifetimeTotalAct + inbodyLifetimeScore;
+      
+      // 인바디 감량 점수 및 보너스 점수 등은 모두 체력으로 들어갑니다!
+      var healthScore = stat.health + inbodyWeeklyScore;
+      
+      list.push({
+        name: stat.name,
+        phone: phone,
+        health: healthScore,
+        perf: stat.perf,
+        def: stat.def,
+        score: totalWeeklyExp,
+        lifetimeTotal: totalLifetimeExp
+      });
+    }
+    
+    list.sort(function(a, b) { return b.score - a.score; });
+    for (var idx = 0; idx < list.length; idx++) {
+      list[idx].rank = idx + 1;
+    }
+    return { period: period, rankings: list };
+  } catch (e) {
+    Logger.log("calculateWeeklyRankingForPeriod 에러: " + e.toString());
+    return null;
+  }
+}
+
+// ──────────────────────────────────────────────
+// [이관] calculateMonthlyRankingForPeriod
+// ──────────────────────────────────────────────
+function calculateMonthlyRankingForPeriod(period) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var summarySheet = ss.getSheetByName("일일_활동_기록");
+    var summaryData = summarySheet ? summarySheet.getDataRange().getValues() : [];
+    
+    var targetYear = new Date().getFullYear();
+    var monthNum = parseInt(period.replace("월", "").trim());
+    if (isNaN(monthNum)) monthNum = new Date().getMonth() + 1;
+    
+    var startOfMonth = new Date(targetYear, monthNum - 1, 1, 0, 0, 0, 0);
+    var endOfMonth = new Date(targetYear, monthNum, 0, 23, 59, 59, 999);
+    
+    // 월초 인바디 마감 기한
+    var firstDay = new Date(targetYear, monthNum - 1, 1);
+    var firstDayOfWeek = firstDay.getDay();
+    var diffToWed = (3 - firstDayOfWeek + 7) % 7;
+    var baselineDeadline = new Date(targetYear, monthNum - 1, 1 + diffToWed);
+    var hasWedHoliday = isCenterHoliday(baselineDeadline);
+    if (hasWedHoliday) {
+      baselineDeadline.setDate(baselineDeadline.getDate() + 1);
+    }
+    baselineDeadline.setHours(23, 59, 59, 999);
+    
+    // 인바디 로드
+    var inbodySheet = ss.getSheetByName("33챌린지_인바디");
+    var inData = inbodySheet ? inbodySheet.getDataRange().getValues() : [];
+    var userInbodyMap = {};
+    for (var k = 1; k < inData.length; k++) {
+      var rawPhone = String(inData[k][2] || "").trim();
+      var phone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, "");
+      if (!phone) continue;
+      userInbodyMap[phone] = userInbodyMap[phone] || [];
+      userInbodyMap[phone].push({
+        date: new Date(inData[k][0]),
+        weight: Number(inData[k][3] || 0),
+        muscle: Number(inData[k][4] || 0),
+        fat: Number(inData[k][5] || 0)
+      });
+    }
+    
+    // 회원명단에서 목표체중 로드
+    var userTargetWeightMap = {};
+    var memberSheet = ss.getSheetByName("회원명단");
+    if (memberSheet) {
+      var mData = memberSheet.getDataRange().getDisplayValues();
+      var mCols = getMemberSheetColumnIndices(memberSheet);
+      for (var i = 1; i < mData.length; i++) {
+        var mPhone = normalizePhoneDigits(mData[i][mCols.phone]);
+        if (mPhone) {
+          userTargetWeightMap[mPhone] = parseWeightSafely(mData[i][mCols.targetWeight]);
+        }
+      }
+    }
+    
+    // 일일 점수 누적 집계
+    var userStats = {};
+    for (var j = 1; j < summaryData.length; j++) {
+      var rawPhone = String(summaryData[j][1] || "").trim();
+      var phone = formatPhoneNumber(rawPhone).replace(/[^0-9]/g, "");
+      if (!phone) continue;
+      
+      var recDateRaw = summaryData[j][0];
+      var recDate = (recDateRaw instanceof Date) ? recDateRaw : new Date(recDateRaw);
+      if (isNaN(recDate.getTime())) continue;
+      
+      if (recDate <= endOfMonth) {
+        var name = String(summaryData[j][2] || "모험가").trim();
+        var visitScore = Number(summaryData[j][3] || 0);
+        var intensityScore = Number(summaryData[j][4] || 0);
+        var actScore = Number(summaryData[j][5] || 0);
+        var recScore = Number(summaryData[j][6] || 0);
+        var hpScore = Number(summaryData[j][7] || 0);
+        var rowTotal = Number(summaryData[j][9] || 0);
+        
+        if (!userStats[phone]) {
+          userStats[phone] = { name: name, health: 0, perf: 0, def: 0, monthlyTotalAct: 0, lifetimeTotalAct: 0 };
+        }
+        
+        var stat = userStats[phone];
+        stat.lifetimeTotalAct += rowTotal;
+        
+        if (recDate >= startOfMonth && recDate <= endOfMonth) {
+          stat.health += hpScore;
+          stat.perf += (visitScore + intensityScore + actScore);
+          stat.def += recScore;
+          stat.monthlyTotalAct += rowTotal;
+        }
+      }
+    }
+    
+    var list = [];
+    for (var phone in userStats) {
+      var stat = userStats[phone];
+      var records = userInbodyMap[phone] || [];
+      
+      var firstEver = null;
+      var latestEver = null;
+      var baselineRecord = null;
+      var latestInMonth = null;
+      for (var rIdx = 0; rIdx < records.length; rIdx++) {
+        var r = records[rIdx];
+        if (r.date <= endOfMonth) {
+          if (!firstEver || r.date < firstEver.date) firstEver = r;
+          if (!latestEver || r.date > latestEver.date) latestEver = r;
+          
+          if (r.date >= startOfMonth && r.date <= baselineDeadline) {
+            var rDay = r.date.getDay();
+            var isValidDay = (rDay >= 1 && rDay <= 3) || (hasWedHoliday && rDay === 4);
+            if (isValidDay) {
+              if (!baselineRecord || r.date < baselineRecord.date) baselineRecord = r;
+            }
+          }
+          if (r.date >= startOfMonth && isDateInLastWeekMonToWed(r.date)) {
+            if (!latestInMonth || r.date > latestInMonth.date) latestInMonth = r;
+          }
+        }
+      }
+      
+      var targetWeight = userTargetWeightMap[phone] || 0;
+      var inbodyMonthlyScore = 0;
+      if (baselineRecord && latestInMonth) {
+        inbodyMonthlyScore = calculateInbodyScoreHelper(baselineRecord, latestInMonth, targetWeight, 'monthly');
+      }
+      
+      var inbodyLifetimeScore = calculateInbodyScoreHelper(firstEver, latestEver, targetWeight, 'lifetime');
+      
+      var totalMonthlyExp = stat.monthlyTotalAct + inbodyMonthlyScore;
+      var totalLifetimeExp = stat.lifetimeTotalAct + inbodyLifetimeScore;
+      
+      // 인바디 감량 점수 및 명품 유지 보너스 등은 모두 체력으로 합산됩니다!
+      var healthScore = stat.health + inbodyMonthlyScore;
+      
+      list.push({
+        name: stat.name,
+        phone: phone,
+        health: healthScore,
+        perf: stat.perf,
+        def: stat.def,
+        score: totalMonthlyExp,
+        lifetimeTotal: totalLifetimeExp
+      });
+    }
+    
+    list.sort(function(a, b) { return b.score - a.score; });
+    for (var idx = 0; idx < list.length; idx++) {
+      list[idx].rank = idx + 1;
+    }
+    
+    // 출석 횟수 집계
+    var monthlyAttendanceMap = {};
+    try {
+      var attSheet = ss.getSheetByName("출석기록");
+      var attData = attSheet ? attSheet.getDataRange().getValues() : [];
+      if (attSheet && attData.length > 1) {
+        var attCols = getAttendanceColumnIndices(attSheet);
+        for (var aIdx = 1; aIdx < attData.length; aIdx++) {
+          var aRow = attData[aIdx];
+          var aPhoneRaw = String(aRow[attCols.phone] || "").trim();
+          var aPhone = formatPhoneNumber(aPhoneRaw).replace(/[^0-9]/g, "");
+          if (!aPhone) continue;
+          
+          var aDateRaw = aRow[attCols.date];
+          var aDate = (aDateRaw instanceof Date) ? aDateRaw : new Date(aDateRaw);
+          if (isNaN(aDate.getTime())) continue;
+          
+          if (aDate >= startOfMonth && aDate <= endOfMonth) {
+            monthlyAttendanceMap[aPhone] = (monthlyAttendanceMap[aPhone] || 0) + 1;
+          }
+        }
+      }
+    } catch (attErr) {
+      Logger.log("출석 횟수 실시간 집계 중 오류: " + attErr.toString());
+    }
+    
+    list.forEach(function(u) {
+      u.attCount = monthlyAttendanceMap[u.phone] || 0;
+    });
+    
+    return { period: period, rankings: list };
+  } catch (e) {
+    Logger.log("calculateMonthlyRankingForPeriod 에러: " + e.toString());
+    return null;
+  }
+}
+
+// ──────────────────────────────────────────────
+// [이관] migrateSheetPeriods
+// ──────────────────────────────────────────────
+function migrateSheetPeriods() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("33챌린지_주간성적아카이브");
+    if (!sheet) {
+      Logger.log("33챌린지_주간성적아카이브 시트를 찾을 수 없습니다.");
+      return;
+    }
+    
+    // 1. 기존 과거 주차 이름 보정 및 지난주 버그 행 일괄 삭제 (역순 처리로 밀림 방지)
+    var range = sheet.getDataRange();
+    var values = range.getValues();
+    var count = 0;
+    
+    for (var i = values.length - 1; i >= 1; i--) {
+      var period = String(values[i][0]).trim();
+      var rowNum = i + 1;
+      
+      if (period === "5월 2주") {
+        sheet.getRange(rowNum, 1).setValue("5월 3주");
+        count++;
+      } else if (period === "5월 1주") {
+        sheet.getRange(rowNum, 1).setValue("5월 2주");
+        count++;
+      } else if (period === "4월 5주") {
+        sheet.getRange(rowNum, 1).setValue("5월 1주");
+        count++;
+      } else if (period === "5월 3주" || period === "5월 4주") {
+        // [체력 0점 버그 해결] 지난주(5월 21일~27일) 기록은 옛날 버그 코드로 잘못 적힌 행들이므로 삭제하고 새로 씁니다!
+        sheet.deleteRow(rowNum);
+      }
+    }
+    
+    // 2. 지난주(5월 21일~27일, 즉 "5월 4주") 성적을 정확한 점수 계산법(인바디 및 보너스가 합산된 체력점수 포함!)으로 실시간 재계산해서 깔끔히 재적재!
+    var targetPeriod = "5월 4주";
+    var result = calculateWeeklyRankingForPeriod(targetPeriod);
+    if (result && result.rankings && result.rankings.length > 0) {
+      var rankedUsers = result.rankings;
+      var rowsToAppend = [];
+      for (var idx = 0; idx < rankedUsers.length; idx++) {
+        var u = rankedUsers[idx];
+        rowsToAppend.push([
+          targetPeriod,
+          idx + 1,
+          u.name,
+          "'" + u.phone,
+          u.health,
+          u.perf,
+          u.def,
+          u.score, // weeklyTotal (주간토탈)
+          u.lifetimeTotal
+        ]);
+      }
+      
+      if (rowsToAppend.length > 0) {
+        sheet.insertRowsAfter(1, rowsToAppend.length);
+        sheet.getRange(2, 1, rowsToAppend.length, rowsToAppend[0].length).setValues(rowsToAppend);
+        count += rowsToAppend.length;
+        Logger.log("지난주 5월 4주차 성적(체력점수 정상 합산본)을 신규 마이그레이션 적재하였습니다.");
+      }
+    }
+    
+    Logger.log("마이그레이션 최종 완료: 총 " + count + "행의 데이터 및 주차명을 성공적으로 올바르게 보정했습니다.");
+  } catch (e) {
+    Logger.log("마이그레이션 에러: " + e.toString());
+  }
+}
+
+// ──────────────────────────────────────────────
+// [이관] rollbackPrematureJune1stWeekRanking
+// ──────────────────────────────────────────────
+function rollbackPrematureJune1stWeekRanking() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  
+  // 1. 33챌린지_주간성적아카이브 시트에서 "6월 1주" 행 삭제
+  var archiveSheet = ss.getSheetByName("33챌린지_주간성적아카이브");
+  if (archiveSheet) {
+    var data = archiveSheet.getDataRange().getValues();
+    var deletedCount = 0;
+    // 아래서부터 위로 삭제해야 인덱스가 꼬이지 않음
+    for (var i = data.length - 1; i >= 1; i--) {
+      if (String(data[i][0]).trim() === "6월 1주") {
+        archiveSheet.deleteRow(i + 1);
+        deletedCount++;
+      }
+    }
+    Logger.log("주간성적아카이브에서 '6월 1주' 행 " + deletedCount + "개 삭제 완료.");
+  }
+  
+  // 2. 전체_알림_목록 시트에서 "6월 1주 주간 명예의 전당 발표" 행 삭제
+  var alarmSheet = ss.getSheetByName("전체_알림_목록") || ss.getSheetByName("전체알림");
+  if (alarmSheet) {
+    var data = alarmSheet.getDataRange().getValues();
+    var deletedAlarms = 0;
+    for (var i = data.length - 1; i >= 1; i--) {
+      var title = String(data[i][3] || "");
+      if (title.indexOf("6월 1주 주간 명예의 전당 발표") !== -1) {
+        alarmSheet.deleteRow(i + 1);
+        deletedAlarms++;
+      }
+    }
+    Logger.log("전체_알림_목록에서 '6월 1주' 발표 쪽지 " + deletedAlarms + "개 삭제 완료.");
+  }
+  
+  // 3. 내일(금요일, 6월 5일) 새벽 0시 5분에 발표가 자동 실행되도록 일회성 트리거 수동 생성
+  var oneOffTriggerId = PropertiesService.getScriptProperties().getProperty("ONE_OFF_WEEKLY_NOTICE_TRIGGER_ID");
+  if (oneOffTriggerId) {
+    var triggers = ScriptApp.getProjectTriggers();
+    for (var i = 0; i < triggers.length; i++) {
+      if (triggers[i].getUniqueId() === oneOffTriggerId) {
+        ScriptApp.deleteTrigger(triggers[i]);
+        break;
+      }
+    }
+  }
+  
+  var targetDate = new Date(2026, 5, 5, 0, 5, 0); // 2026년 6월 5일 00:05 (KST)
+  var newTrigger = ScriptApp.newTrigger("autoSendWeeklyRankingNotice")
+    .timeBased()
+    .at(targetDate)
+    .create();
+  PropertiesService.getScriptProperties().setProperty("ONE_OFF_WEEKLY_NOTICE_TRIGGER_ID", newTrigger.getUniqueId());
+  
+  // 캐시 초기화
+  var cache = CacheService.getScriptCache();
+  cache.remove("v45_member_registry");
+  
+  Logger.log("6월 5일(금) 새벽 0시 5분에 주간 랭킹을 정상 재정산 및 재발표하도록 일회성 트리거를 정상 예약 완료했습니다!");
+}
+
+// ──────────────────────────────────────────────
+// [이관] runBackendMigration
+// ──────────────────────────────────────────────
+function runBackendMigration() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("지혜의_보물고");
+    if (!sheet) return { success: false, error: "지혜의_보물고 시트가 존재하지 않습니다." };
+    
+    var pKeyRes = getPollinationsApiKey();
+    var pKey = pKeyRes.success ? pKeyRes.key : "";
+    if (!pKey) {
+      return { success: false, error: "환경설정 시트 B7 셀에 Pollinations API Key(sk_...)를 입력해 주세요." };
+    }
+    
+    var data = sheet.getDataRange().getValues();
+    var successCount = 0;
+    var failCount = 0;
+    
+    var folder = getOrCreateWisdomFolder();
+    
+    for (var i = 1; i < data.length; i++) {
+      var rawImage = String(data[i][8] || "").trim(); // I열
+      if (rawImage && rawImage.indexOf("pollinations.ai") > -1) {
+        try {
+          var cleanUrl = rawImage.replace(/[?&]key=[^&]*/g, "");
+          if (cleanUrl.indexOf("?") === -1) {
+            cleanUrl += "?";
+          } else if (!cleanUrl.endsWith("&") && !cleanUrl.endsWith("?")) {
+            cleanUrl += "&";
+          }
+          
+          if (cleanUrl.indexOf("nologo=") === -1) {
+            cleanUrl += "nologo=true&private=true&feed=false&";
+          }
+          cleanUrl += "key=" + pKey;
+          
+          Logger.log("🔄 Fetching image: " + cleanUrl);
+          
+          var response = UrlFetchApp.fetch(cleanUrl, {
+            muteHttpExceptions: true
+          });
+          
+          if (response.getResponseCode() !== 200) {
+            throw new Error("HTTP " + response.getResponseCode() + ": " + response.getContentText());
+          }
+          
+          var blob = response.getBlob();
+          var contentType = blob.getContentType();
+          if (contentType.indexOf("image") === -1) {
+            blob.setContentType("image/png");
+          }
+          
+          var timestamp = Date.now();
+          blob.setName("wisdom_migrated_" + (i + 1) + "_" + timestamp + ".png");
+          
+          var file = folder.createFile(blob);
+          var driveUrl = "https://lh3.googleusercontent.com/d/" + file.getId();
+          
+          sheet.getRange(i + 1, 9).setValue(driveUrl);
+          successCount++;
+          Logger.log("✅ Row " + (i + 1) + " migrated to: " + driveUrl);
+        } catch (e) {
+          failCount++;
+          Logger.log("❌ Row " + (i + 1) + " migration failed: " + e.toString());
+        }
+        
+        Utilities.sleep(500); // 0.5초 대기
+      }
+    }
+    
+    return { success: true, successCount: successCount, failCount: failCount };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+// ──────────────────────────────────────────────
+// [이관] backfillAllRankingArchives
+// ──────────────────────────────────────────────
+function backfillAllRankingArchives() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var summarySheet = ss.getSheetByName("일일_활동_기록");
+    if (!summarySheet) return { success: false, error: "일일_활동_기록 시트가 없습니다." };
+    
+    var summaryData = summarySheet.getDataRange().getValues();
+    var now = new Date();
+    
+    
+
+    var startOfWeek = getThuStartOfWeekLocal(now);
+    var startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    
+    // (A) 과거 고유 주차 리스트 추출
+    var uniqueWeeks = {};
+    for (var j = 1; j < summaryData.length; j++) {
+      var recDateRaw = summaryData[j][0];
+      var recDate = (recDateRaw instanceof Date) ? recDateRaw : new Date(recDateRaw);
+      if (isNaN(recDate.getTime())) continue;
+      
+      if (recDate < startOfWeek) {
+        var weekKey = getWeekStringLocal(recDate);
+        uniqueWeeks[weekKey] = getThuStartOfWeekLocal(recDate);
+      }
+    }
+    var weekKeys = Object.keys(uniqueWeeks);
+    weekKeys.sort(function(a, b) { return uniqueWeeks[a] - uniqueWeeks[b]; });
+    
+    var weeklyCount = 0;
+    for (var i = 0; i < weekKeys.length; i++) {
+      var res = archiveWeeklyRankingToSheet(weekKeys[i]);
+      if (res && res.success) weeklyCount++;
+    }
+    
+    // (B) 과거 고유 월 리스트 추출
+    var uniqueMonths = {};
+    for (var j = 1; j < summaryData.length; j++) {
+      var recDateRaw = summaryData[j][0];
+      var recDate = (recDateRaw instanceof Date) ? recDateRaw : new Date(recDateRaw);
+      if (isNaN(recDate.getTime())) continue;
+      
+      if (recDate < startOfMonth) {
+        var monthKey = (recDate.getMonth() + 1) + "월";
+        var sortDate = new Date(recDate.getFullYear(), recDate.getMonth(), 1);
+        uniqueMonths[monthKey] = sortDate;
+      }
+    }
+    var monthKeys = Object.keys(uniqueMonths);
+    monthKeys.sort(function(a, b) { return uniqueMonths[a] - uniqueMonths[b]; });
+    
+    var monthlyCount = 0;
+    for (var i = 0; i < monthKeys.length; i++) {
+      var res = archiveMonthlyRankingToSheet(monthKeys[i]);
+      if (res && res.success) monthlyCount++;
+    }
+    
+    return { 
+      success: true, 
+      message: "백필 완료! 주간: " + weekKeys.length + "개 중 " + weeklyCount + "개 완료 | 월간: " + monthKeys.length + "개 중 " + monthlyCount + "개 완료." 
+    };
+  } catch (e) {
+    Logger.log("backfillAllRankingArchives 오류: " + e.toString());
+    return { success: false, error: e.toString() };
+  }
+}
