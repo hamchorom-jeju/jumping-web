@@ -2,8 +2,7 @@
 **/*
 
 # Except Google Apps Script files
-!Code.gs
-!Common_Utils.gs
+!*.gs
 !appsscript.json
 !*.html
 !bridge.js
