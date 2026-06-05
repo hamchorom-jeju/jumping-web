@@ -517,7 +517,6 @@ function isAppActiveDuringAbsence(phone, lastAttendanceDate, now) {
           var detail = String(data[i][8] || "");
           var isOnlyOffline = (detail.indexOf("센터방문") !== -1 || detail.indexOf("퇴실") !== -1 || detail.indexOf("테라피") !== -1) && 
                               (detail.indexOf("로그인") === -1 && detail.indexOf("체크") === -1 && detail.indexOf("식단") === -1 && detail.indexOf("인증") === -1 && detail.indexOf("오아시스") === -1 && detail.indexOf("방어") === -1);
-          
           if (!isOnlyOffline) {
             return true; 
           }
@@ -529,3 +528,4 @@ function isAppActiveDuringAbsence(phone, lastAttendanceDate, now) {
   }
   return false;
 }
+

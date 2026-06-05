@@ -544,3 +544,4 @@ function processKioskCheckout(phoneStr) {
     return { error: "퇴실 처리 중 오류: " + e.toString() };
   }
 }
+

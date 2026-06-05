@@ -1317,8 +1317,7 @@ function autoExpireMemberships() {
           var expireInfo = "[기한마감] 잔여 " + remainVal + "회 소멸됨 (" + Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd") + ")";
           
           regSheet.getRange(i + 1, cols.status + 1).setValue("마감(기간만료)"); 
-          regSheet.getRange(i + 1, 11).// [이동 완료] 키오스크 출석 관련 함수(getCompiledMemberRegistry, searchMemberByPin, processAttendance, processKioskCheckout)는 Kiosk_Attendance.gs로 이동되었습니다.
-// [이동 완료] 회원용 테라피 예약 관련 함수(getAnnouncements, getTodaySummary, getTodayTimetable, getRoomStatus, getMyReservations, getMemberIDList, submitReservation)는 Reservation.gs 및 Bridge_Login.gs로 이동되었습니다.; 
+          regSheet.getRange(i + 1, 11).setValue(expireInfo); // [이동 완료] 관련 함수들은 각각의 파일로 이동됨 
           count++;
         }
       }
