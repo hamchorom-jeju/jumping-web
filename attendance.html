@@ -403,7 +403,7 @@
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run.withSuccessHandler(function(res) {
           if (res && Array.isArray(res)) {
-            localStorage.setItem('v45_attendance_registry', JSON.stringify(res));
+            localStorage.setItem('v46_attendance_registry', JSON.stringify(res));
             console.log("⚡ [PWA Cache] 회원 명단 동기화 완료! (" + res.length + "명)");
           }
         }).getCompiledMemberRegistry();
@@ -461,7 +461,7 @@
       display.innerHTML = '<span class="searching-text">조회중...</span>';
       
       // [perf] 로컬 캐시에서 즉시 검색 시도 (0.001초)
-      const cached = localStorage.getItem('v45_attendance_registry');
+      const cached = localStorage.getItem('v46_attendance_registry');
       if (cached) {
         try {
           const registry = JSON.parse(cached);
@@ -493,7 +493,7 @@
                   if (res && res.success && res.members && res.members.length > 0) {
                     // 1. 로컬 캐시(LocalStorage) 최신화
                     try {
-                      const cachedReg = localStorage.getItem('v45_attendance_registry');
+                      const cachedReg = localStorage.getItem('v46_attendance_registry');
                       if (cachedReg) {
                         const registry = JSON.parse(cachedReg);
                         res.members.forEach(function(m) {
@@ -504,7 +504,7 @@
                             registry.push(m);
                           }
                         });
-                        localStorage.setItem('v45_attendance_registry', JSON.stringify(registry));
+                        localStorage.setItem('v46_attendance_registry', JSON.stringify(registry));
                         console.log("⚡ [Live Sync] 백그라운드 데이터 동기화 완료!");
                       }
                     } catch(e) {}
@@ -612,7 +612,7 @@
         // [백그라운드 캐시 최신화] 서버에서 직접 받아온 신선한 정보를 로컬 캐시에 즉시 업데이트합니다.
         if (res.members && res.members.length > 0) {
           try {
-            const cachedReg = localStorage.getItem('v45_attendance_registry');
+            const cachedReg = localStorage.getItem('v46_attendance_registry');
             if (cachedReg) {
               const registry = JSON.parse(cachedReg);
               res.members.forEach(function(m) {
@@ -623,7 +623,7 @@
                   registry.push(m);
                 }
               });
-              localStorage.setItem('v45_attendance_registry', JSON.stringify(registry));
+              localStorage.setItem('v46_attendance_registry', JSON.stringify(registry));
               console.log("⚡ [PWA Cache] 실시간 검색된 정보를 로컬 캐시에 갱신 완료!");
             }
           } catch(cacheErr) {
@@ -875,7 +875,7 @@
       
       // 낙관적으로 미리 로컬 캐시를 업데이트 해둡니다 (0초 만에 잔여 횟수가 연산됨)
       if (selectedMemberObject) {
-        const cached = localStorage.getItem('v45_attendance_registry');
+        const cached = localStorage.getItem('v46_attendance_registry');
         if (cached) {
           try {
             const registry = JSON.parse(cached);
@@ -912,7 +912,7 @@
                 break;
               }
             }
-            localStorage.setItem('v45_attendance_registry', JSON.stringify(registry));
+            localStorage.setItem('v46_attendance_registry', JSON.stringify(registry));
           } catch(e) {}
         }
       }

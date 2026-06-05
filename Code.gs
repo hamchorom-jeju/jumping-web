@@ -1771,7 +1771,7 @@ function setupDatabase() {
  */
 function getCompiledMemberRegistry(ss) {
   var cache = CacheService.getScriptCache();
-  var cacheKey = "v45_member_registry";
+  var cacheKey = "v46_member_registry";
   var cached = cache.get(cacheKey);
   if (cached) {
     try {
@@ -1891,7 +1891,7 @@ function searchMemberByPin(pinStr) {
     if (matched.length === 0) {
       // [BUGFIX] 혹시 원장님이 수동으로 시트를 고친 경우, 10분 캐시 때문에 안 나왔을 가능성 대비 캐시 강제 무효화 후 스프레드시트 재로드!
       var cache = CacheService.getScriptCache();
-      cache.remove("v45_member_registry");
+      cache.remove("v46_member_registry");
       registry = getCompiledMemberRegistry(ss);
       
       for (var i = 0; i < registry.length; i++) {
@@ -2266,7 +2266,7 @@ function processAttendance(phoneStr, type, isBonus) {
     clearUserDashboardCache(phoneStr);
     try {
       var cache = CacheService.getScriptCache();
-      cache.remove("v45_member_registry");
+      cache.remove("v46_member_registry");
     } catch(e) {}
 
     return { 
@@ -4069,7 +4069,7 @@ function submitRegistration(data) {
     // [캐시 갱신] 태블릿 PWA 출석기에서 실시간으로 연장된 정보가 노출되도록 구글 서버 캐시 강제 무효화
     try {
       var cache = CacheService.getScriptCache();
-      cache.remove("v45_member_registry");
+      cache.remove("v46_member_registry");
     } catch(cacheErr) {
       console.error("회원 레지스트리 캐시 삭제 실패: " + cacheErr.toString());
     }
@@ -10420,7 +10420,7 @@ function onEdit(e) {
     var sheetName = sheet.getName();
     if (sheetName === "등록 현황" || sheetName === "등록현황" || sheetName === "회원명단") {
       var cache = CacheService.getScriptCache();
-      cache.remove("v45_member_registry");
+      cache.remove("v46_member_registry");
       console.log("⚡ [onEdit] 시트 수정으로 인한 회원 명단 캐시 초기화 성공!");
     } else if (sheetName === "마을_공지" || sheetName === "마을공지") {
       var cache = CacheService.getScriptCache();
@@ -10491,7 +10491,7 @@ function sendGlobalNotification(type, title, content) {
     
     // 실시간 UI 갱신을 위해 스크립트 캐시 초기화 트리거
     var cache = CacheService.getScriptCache();
-    cache.remove("v45_member_registry");
+    cache.remove("v46_member_registry");
     return { success: true, globalId: globalId };
   } catch (e) {
     Logger.log("전체 알림 생성 실패: " + e.toString());
@@ -13786,7 +13786,7 @@ function rollbackPrematureJune1stWeekRanking() {
   
   // 캐시 초기화
   var cache = CacheService.getScriptCache();
-  cache.remove("v45_member_registry");
+  cache.remove("v46_member_registry");
   
   Logger.log("6월 5일(금) 새벽 0시 5분에 주간 랭킹을 정상 재정산 및 재발표하도록 일회성 트리거를 정상 예약 완료했습니다!");
 }

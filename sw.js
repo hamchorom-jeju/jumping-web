@@ -1,7 +1,7 @@
-// Service Worker for Nohyung Jumping PWA (v75.0)
+// Service Worker for Nohyung Jumping PWA (v76.0)
 // Strategy: Network First for HTML, Cache First for assets
 
-const CACHE_NAME = 'nohyung-jumping-v75.0';
+const CACHE_NAME = 'nohyung-jumping-v76.0';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
