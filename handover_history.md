@@ -22,9 +22,9 @@
 | :--- | :--- | :--- |
 | **`Common_Utils.gs`** | `doGet`, `doPost`, `handleRequest` (공용 진입점), 컬럼 매퍼, 날짜/시간/전화번호 안심 포맷터, 휴일/결석 계산 헬퍼, 공통 비즈니스 헬퍼 | **완료 (중복 없음)** |
 | **`Bridge_Login.gs`** | `searchMembersByDigits` (로그인 게이트), `recordAppAccess` (접속 로그), 쪽지/우편함 알림 API | **완료 (중복 없음)** |
-| **`Kiosk_Attendance.gs`**| `searchMemberByPin` (회원조회), `processAttendance` (출석차감), `processKioskCheckout` (퇴실처리) | **완료 (중복 없음)** |
+| **`Kiosk_Attendance.gs`**| `searchMemberByPin` (회원조회), `processAttendance` (출석차감) | **완료 (중복 없음)** |
 | **`Reservation.gs`** | `getTodaySummary`, `getTodayTimetable`, `getMyReservations`, `submitReservation` (회원용 예약 API) | **완료 (중복 없음)** |
-| **`Admin.gs`** | 어드민 전용 대시보드 조회, 회원 체크인/체크아웃 제어, 인바디 기록 및 예약 관리 등 총 39개 API | **완료 (중복 없음)** |
+| **`Admin.gs`** | 어드민 전용 대시보드 조회, 회원 체크인/체크아웃 제어, 인바디 기록, 예약 관리 및 키오스크 퇴실 처리(`processKioskCheckout`) 등 총 40개 API | **완료 (중복 없음)** |
 | **`Registration.gs`** | 회원 가입 및 이름 검색 처리 관련 로직 (`submitRegistration`, `searchAllMembers`) | **완료 (중복 없음)** |
 | **`Code.gs`** | 생텀(이장의 집) 관련 API 5개 보존 완료 (`getRecentCertifications`, `blessAction` 등) | **해당 없음 (온전히 보존)** |
 
