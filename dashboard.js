@@ -584,8 +584,8 @@ const Village = {
             return `<div class="v-ranking-content-multiline">${line1}${line2}</div>`;
         };
 
-        // (1) 주간 랭킹 TOP 3 (목요일: 지난주 확정 시상 배너로 자동 스위칭)
-        const isWeeklyConfirmedDay = (dayOfWeek === 4); // 목요일
+        // (1) 주간 랭킹 TOP 3 (목요일: 지난주 확정 시상 배너로 자동 스위칭 - 수요일 휴무 연장 감지)
+        const isWeeklyConfirmedDay = !!data.isWeeklyAward;
         const hasWeeklyArchive = (data.archive && data.archive.weekly && data.archive.weekly.length > 0);
         
         if (isWeeklyConfirmedDay && hasWeeklyArchive) {
@@ -603,8 +603,8 @@ const Village = {
             });
         }
 
-        // (2) 월간 랭킹 TOP 3 (1일: 지난달 확정 시상 배너로 자동 스위칭)
-        const isMonthlyConfirmedDay = (dateOfMonth === 1); // 매월 1일 단 하루만 시상 배너 노출
+        // (2) 월간 랭킹 TOP 3 (1일: 지난달 확정 시상 배너로 자동 스위칭 - 수요일 휴무 연장 감지)
+        const isMonthlyConfirmedDay = !!data.isMonthlyAward;
         const hasMonthlyArchive = (data.archive && data.archive.monthly && data.archive.monthly.length > 0);
         
         if (isMonthlyConfirmedDay && hasMonthlyArchive) {
