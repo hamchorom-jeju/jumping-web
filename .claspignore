@@ -1,0 +1,11 @@
+# Ignore all files by default
+**/*
+
+# Except Google Apps Script files
+!Code.gs
+!Common_Utils.gs
+!appsscript.json
+!*.html
+!bridge.js
+!dashboard.js
+!sw.js
