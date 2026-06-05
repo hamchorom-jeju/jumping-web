@@ -16,17 +16,20 @@ function searchMembersByDigits(payload) {
     var regSheet = ss.getSheetByName("등록현황") || ss.getSheetByName("등록 현황");
     if (!regSheet) return { success: false, error: "'등록현황' 시트를 찾을 수 없습니다." };
     
+    // getDisplayValues()를 사용하여 날짜/숫자 변환 오류 방지 (v44.164 중복 제거 적용)
     var data = regSheet.getDataRange().getDisplayValues();
     var cols = getRegColumnIndices(regSheet);
-    var memberMap = {}; 
+    var memberMap = {}; // [v44.164] 중복 방지를 위한 맵
     
     for (var i = 1; i < data.length; i++) {
-      var name = String(data[i][cols.name] || "모험가").trim(); 
-      var phoneRaw = String(data[i][cols.phone] || "").trim(); 
+      var name = String(data[i][cols.name] || "모험가").trim(); // 이름
+      var phoneRaw = String(data[i][cols.phone] || "").trim(); // 휴대폰
       var phoneOnlyDigits = phoneRaw.replace(/[^0-9]/g, "");
-      var status = String(data[i][cols.status] || "").trim(); 
+      var status = String(data[i][cols.status] || "").trim(); // 상태
       
-      if ((status === "진행중" || status === "진행 중" || status.indexOf("마감") !== -1) && phoneOnlyDigits.slice(-4) === digits) {
+      // [출석 앱 공식] 진행중인 회원 + 뒷 4자리 엄격 매칭
+      if ((status === "진행중" || status === "진행 중") && phoneOnlyDigits.slice(-4) === digits) {
+        // 이미 맵에 등록된 번호라면 건너뜁니다 (중복 제거)
         if (!memberMap[phoneOnlyDigits]) {
           var phoneHint = phoneRaw.length > 4 ? "****" + phoneRaw.slice(-4) : phoneRaw;
           memberMap[phoneOnlyDigits] = { 
@@ -38,6 +41,7 @@ function searchMembersByDigits(payload) {
       }
     }
     
+    // 맵의 값들만 배열로 변환하여 반환
     var matches = Object.values(memberMap);
     return { success: true, members: matches.slice(0, 20) };
   } catch (e) {
