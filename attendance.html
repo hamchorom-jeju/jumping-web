@@ -487,11 +487,97 @@
                 selectUser(matched[0]);
               }
               
-              // 예약 연동 상태(테라피 진행중)는 UI 표시 완료 후 백그라운드로 조용히 갱신 처리
+              // [Live Sync] 로컬 캐시를 띄운 직후, 백그라운드로 서버의 최신 데이터를 실시간 비동기 동기화!
               if (typeof google !== 'undefined' && google.script && google.script.run) {
                 google.script.run.withSuccessHandler(function(res) {
-                  if (res && res.success && res.isTherapyActive) {
-                    // 혹시 예약이 활성화되어 있다면 백그라운드 갱신
+                  if (res && res.success && res.members && res.members.length > 0) {
+                    // 1. 로컬 캐시(LocalStorage) 최신화
+                    try {
+                      const cachedReg = localStorage.getItem('v45_attendance_registry');
+                      if (cachedReg) {
+                        const registry = JSON.parse(cachedReg);
+                        res.members.forEach(function(m) {
+                          const idx = registry.findIndex(function(r) { return r.phoneClean === m.phoneClean; });
+                          if (idx !== -1) {
+                            registry[idx] = m;
+                          } else {
+                            registry.push(m);
+                          }
+                        });
+                        localStorage.setItem('v45_attendance_registry', JSON.stringify(registry));
+                        console.log("⚡ [Live Sync] 백그라운드 데이터 동기화 완료!");
+                      }
+                    } catch(e) {}
+                    
+                    // 2. 만약 현재 떠있는 본인인증 모달의 회원과 일치한다면, 화면의 잔여 횟수 UI를 부드럽게 최신 값으로 업데이트!
+                    const currentModal = document.getElementById('userModal');
+                    if (currentModal && currentModal.classList.contains('show') && selectedMemberPhone) {
+                      const matched = res.members.find(function(m) { return m.phone === selectedMemberPhone; });
+                      if (matched) {
+                        // 선택된 회원 정보 객체 갱신
+                        selectedMemberObject = matched;
+                        
+                        // 보너스 버튼 등 UI 갱신
+                        const btnBonus = document.getElementById('btnBonus');
+                        if (btnBonus) {
+                          const bCount = Number(matched.bonusCount || 0);
+                          if (bCount > 0) {
+                            btnBonus.style.display = "block";
+                            btnBonus.innerText = `🎁 보너스 출석 (잔여: ${bCount}회)`;
+                          } else {
+                            btnBonus.style.display = "none";
+                          }
+                        }
+                        
+                        // 회원권 목록 카드들 실시간 갱신
+                        const statusArea = document.getElementById('userStatus');
+                        if (statusArea) {
+                          statusArea.innerHTML = ""; // 기존 오염된 정보 비우기
+                          if (matched.allPasses && matched.allPasses.length > 0) {
+                            matched.allPasses.forEach(function(pass) {
+                              if (pass.status === "마감" || pass.status === "마감됨") return;
+                              const passDiv = document.createElement('div');
+                              passDiv.style.marginBottom = "10px";
+                              passDiv.style.padding = "12px";
+                              passDiv.style.background = "rgba(255,255,255,0.07)";
+                              passDiv.style.border = "1px solid rgba(255,255,255,0.1)";
+                              passDiv.style.borderRadius = "10px";
+                              passDiv.style.textAlign = "left";
+                              
+                              let color = "#fff";
+                              let warning = "";
+                              const remain = Number(pass.remainCount);
+                              const isLowSessions = (!isNaN(remain) && remain <= 3);
+                              let isNearExpiry = false;
+                              let diffDays = 999;
+                              if (pass.expireDate && pass.expireDate !== "-") {
+                                const exp = new Date(pass.expireDate);
+                                exp.setHours(23, 59, 59, 999);
+                                const now = new Date();
+                                const diffTime = exp.getTime() - now.getTime();
+                                diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                if (diffDays <= 5) isNearExpiry = true;
+                              }
+                              
+                              if (isLowSessions || isNearExpiry) {
+                                color = "#ff5252";
+                                let warnings = [];
+                                if (isLowSessions) warnings.push(remain + "회 남음");
+                                if (diffDays < 0) warnings.push("기한만료");
+                                else if (diffDays === 0) warnings.push("오늘만료");
+                                else if (isNearExpiry) warnings.push(diffDays + "일 남음");
+                                if (warnings.length > 0) {
+                                  warning = " <span class='pass-warning'>⚠️ " + warnings.join(" / ") + "</span>";
+                                }
+                              }
+                              passDiv.innerHTML = `<div class="pass-type">${pass.membershipType}</div>` + 
+                                                  `<div class="pass-detail" style="color:${color};">잔여: ${pass.remainCount}회 | 기한: ~${pass.expireDate}${warning}</div>`;
+                              statusArea.appendChild(passDiv);
+                            });
+                          }
+                        }
+                      }
+                    }
                   }
                 }).searchMemberByPin(pin);
               }
