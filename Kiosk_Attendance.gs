@@ -118,7 +118,7 @@ function searchMemberByPin(pinStr) {
     
     var matched = [];
     for (var i = 0; i < registry.length; i++) {
-      if (registry[i].phoneClean.slice(-4) === pin && !registry[i].isExpired) {
+      if (registry[i].phoneClean.slice(-4) === pin) {
         matched.push(registry[i]);
       }
     }
@@ -130,7 +130,7 @@ function searchMemberByPin(pinStr) {
       registry = getCompiledMemberRegistry(ss);
       
       for (var i = 0; i < registry.length; i++) {
-        if (registry[i].phoneClean.slice(-4) === pin && !registry[i].isExpired) {
+        if (registry[i].phoneClean.slice(-4) === pin) {
           matched.push(registry[i]);
         }
       }
