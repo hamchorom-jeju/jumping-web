@@ -798,11 +798,30 @@
               if (registry[i].phoneClean === cleanPhone) {
                 if (isBonus && optRemain !== undefined) {
                   registry[i].bonusCount = String(optRemain);
-                } else if (optRemain !== undefined) {
-                  registry[i].remainCount = String(optRemain);
+                } else if (optRemain !== undefined && matchedPass) {
+                  // 실제 차감한 회원권(matchedPass)의 잔여횟수를 갱신
                   if (registry[i].allPasses && registry[i].allPasses.length > 0) {
-                    registry[i].allPasses[0].remainCount = String(optRemain);
+                    for (let p = 0; p < registry[i].allPasses.length; p++) {
+                      if (registry[i].allPasses[p].rowIdx === matchedPass.rowIdx) {
+                        registry[i].allPasses[p].remainCount = String(optRemain);
+                        break;
+                      }
+                    }
                   }
+                  
+                  // 대표 잔여 횟수(remainCount)도 진행중인 첫 번째 패스의 값으로 재연산
+                  let activePass = null;
+                  if (registry[i].allPasses && registry[i].allPasses.length > 0) {
+                    for (let p = 0; p < registry[i].allPasses.length; p++) {
+                      let pass = registry[i].allPasses[p];
+                      if (pass.status === "진행중" || pass.status === "진행 중") {
+                        activePass = pass;
+                        break;
+                      }
+                    }
+                    if (!activePass) activePass = registry[i].allPasses[0];
+                  }
+                  registry[i].remainCount = activePass ? activePass.remainCount : String(optRemain);
                 }
                 break;
               }

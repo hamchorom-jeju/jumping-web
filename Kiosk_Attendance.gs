@@ -73,12 +73,23 @@ function getCompiledMemberRegistry(ss) {
     var m = memberMap[keys[j]];
     var allExpired = m.passes.every(function(p) { return p.status === "마감"; });
     
+    // 진행중인 패스 중 첫 번째를 대표로 선택 (과거 마감된 패스가 remainCount에 0으로 대표 노출되는 현상 방지)
+    var activePass = null;
+    for (var pIdx = 0; pIdx < m.passes.length; pIdx++) {
+      var p = m.passes[pIdx];
+      if (p.status === "진행중" || p.status === "진행 중") {
+        activePass = p;
+        break;
+      }
+    }
+    if (!activePass) activePass = m.passes[0]; // 없으면 첫 번째 패스 폴백
+
     registryList.push({
       name: m.name,
       phone: m.phone,
       membershipType: m.passes.map(function(p) { return p.membershipType; }).join(" / "),
-      expireDate: m.passes[0].expireDate,
-      remainCount: m.passes[0].remainCount,
+      expireDate: activePass ? activePass.expireDate : "-",
+      remainCount: activePass ? activePass.remainCount : "0",
       bonusCount: m.bonusCount,
       mRowIdx: m.mRowIdx,
       allPasses: m.passes,
