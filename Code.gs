@@ -2889,7 +2889,10 @@ function getAdminDashboardData_Fast() {
           classes: String(logData[i][cols.classes] || ""), 
           timeLog: String(logData[i][cols.workoutTime] || ""), 
           extraText: String(logData[i][cols.memo] || ""), 
-          reason: reason 
+          reason: reason,
+          prevCount: String(logData[i][cols.prev] || ""),
+          changeCount: String(logData[i][cols.change] || ""),
+          remainCount: String(logData[i][cols.remain] || "")
         };
 
         // 퇴실/귀가 상태 판별
@@ -3109,7 +3112,10 @@ function getAdminDashboardData_Legacy() {
           classes: String(logData[i][cols.classes] || ""), 
           timeLog: String(logData[i][cols.workoutTime] || ""), 
           extraText: String(logData[i][cols.memo] || ""), 
-          reason: reason 
+          reason: reason,
+          prevCount: String(logData[i][cols.prev] || ""),
+          changeCount: String(logData[i][cols.change] || ""),
+          remainCount: String(logData[i][cols.remain] || "")
         };
 
         // 퇴실/귀가 상태 판별
@@ -3815,95 +3821,6 @@ function getClassMembersByDate(targetDateStr) {
     return { success: true, classMembers: classMembers, allLogs: allLogs };
   } catch (e) { return { error: "명단 조회 오류: " + e.toString() }; }
 }
-
-function queryAttendanceLogs(payload) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var logSheet = ss.getSheetByName("출석기록");
-    if (!logSheet) return { error: "시트 오류: '출석기록' 시트를 찾을 수 없습니다." };
-    
-    var data = logSheet.getDataRange().getValues();
-    var displayData = logSheet.getDataRange().getDisplayValues();
-    var cols = getAttendanceColumnIndices(logSheet);
-    
-    var startDate = payload.startDate || "";
-    var endDate = payload.endDate || "";
-    var nameQuery = String(payload.nameQuery || "").trim().toLowerCase();
-    var statusQuery = String(payload.statusQuery || "전체").trim();
-    var typeQuery = String(payload.typeQuery || "전체").trim();
-    var limit = parseInt(payload.limit) || 150;
-    
-    var startNum = startDate ? parseInt(startDate.replace(/[^0-9]/g, "")) : 0;
-    var endNum = endDate ? parseInt(endDate.replace(/[^0-9]/g, "")) : 99999999;
-    
-    var filteredLogs = [];
-    
-    for (var i = 1; i < data.length; i++) {
-      var dateRaw = data[i][cols.date];
-      if (!dateRaw) continue;
-      
-      var dateStr = (dateRaw instanceof Date) ? Utilities.formatDate(dateRaw, "GMT+9", "yyyy-MM-dd") : String(dateRaw).split(" ")[0];
-      var dateNum = parseInt(dateStr.replace(/[^0-9]/g, "")) || 0;
-      
-      if (dateNum < startNum || dateNum > endNum) continue;
-      
-      var name = String(data[i][cols.name] || "");
-      var phone = String(data[i][cols.phone] || "");
-      
-      if (nameQuery) {
-        var cleanPhone = phone.replace(/[^0-9]/g, "");
-        if (name.toLowerCase().indexOf(nameQuery) === -1 && cleanPhone.indexOf(nameQuery) === -1) continue;
-      }
-      
-      var status = String(data[i][cols.status] || "").trim();
-      var isGoHome = (status.indexOf("귀가") !== -1 || status === "퇴실" || status === "퇴실완료");
-      
-      if (statusQuery === "미퇴실" && isGoHome) continue;
-      if (statusQuery === "귀가완료" && !isGoHome) continue;
-      
-      var reason = String(data[i][cols.reason] || "");
-      var isCombo = reason.indexOf("복합") !== -1;
-      var isTherapy = (reason.indexOf("테라피") !== -1 || reason.indexOf("보너스") !== -1) && !isCombo;
-      var isJumping = (reason.indexOf("점핑") !== -1 || reason.indexOf("월권") !== -1 || reason.indexOf("운동만") !== -1) && !isTherapy && !isCombo;
-      var logType = isCombo ? "복합" : (isTherapy ? "테라피" : (isJumping ? "점핑" : "보너스"));
-      
-      if (typeQuery !== "전체" && logType !== typeQuery) continue;
-      
-      var inTimeRaw = displayData[i][cols.inTime];
-      var outTimeRaw = displayData[i][cols.outTime];
-      
-      filteredLogs.push({
-        rowIdx: i + 1,
-        date: dateStr,
-        inTime: inTimeRaw,
-        name: name,
-        phone: phone,
-        membership: String(data[i][cols.type] || ""),
-        change: String(data[i][cols.change] || ""),
-        remainCount: String(data[i][cols.remain] || ""),
-        reason: reason,
-        classes: String(data[i][cols.classes] || ""),
-        workoutTime: String(data[i][cols.workoutTime] || ""),
-        status: status,
-        outTime: outTimeRaw,
-        memo: String(data[i][cols.memo] || ""),
-        type: logType,
-        isGoHome: isGoHome
-      });
-    }
-    
-    filteredLogs.sort(function(a, b) {
-      var dateA = a.date + " " + (a.inTime || "00:00");
-      var dateB = b.date + " " + (b.inTime || "00:00");
-      return dateB.localeCompare(dateA);
-    });
-    
-    return { success: true, logs: filteredLogs.slice(0, limit) };
-  } catch (e) {
-    return { error: "출석기록 조회 중 오류: " + e.toString() };
-  }
-}
-
 
 // ──────────────────────────────────────────────
 // 10. 신규 회원 가입 / 재등록 및 서명 API
