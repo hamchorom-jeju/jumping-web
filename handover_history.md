@@ -2,17 +2,15 @@
 
 > [!CAUTION]
 > **🚨 절대 건드리지 말아야 할 금기 사항 (AI 필수 필독)**
-> 1. **이장의 집 생텀(`sanctum.html`) 제어 API 5개(`getRecentCertifications`, `blessAction`, `createSurpriseQuest`, `saveWisdomTip`, `updateWisdomTip`)는 이번 3단계 이관에서 제외되어 `Code.gs`에 안전하게 보존되었습니다.** 향후 생텀 관련 개별 분리 시점 전까지 건드리지 마십시오.
-> 2. **★ [중요] '지니월드 추가개선사항 마스터플랜' 및 구버전 기획서들은 이미 100% 구현 완료되어 `AI_Inspiration_Diary/Completed_Archive/` 폴더 안으로 영구 격리(치워진 상태)되었습니다.** 새 AI가 투입될 때 이 폴더 내부의 파일을 찾아내서 "해야 할 미구현 과제"로 오독하는 일이 절대 없도록 하십시오. 이 보관함은 참고용 완료 문서일 뿐입니다.
-> 3. **★ [중요] 앞으로 AI가 대화 혹은 검증 보고서 작성 과정에서 스크린샷이나 임시 이미지 파일(예: `media__*.png`, `media__*.jpg`)을 생성할 때는 절대로 프로젝트 루트에 직접 저장하지 말고, 반드시 신설된 `media/` 폴더 내부에 생성하고 링크하십시오.** (루트 경로에 보존된 필수 웹앱 UI 리소스들인 로고, 아이콘, 배지 등은 건드리지 마십시오.)
+> 1. **★ [중요] '지니월드 추가개선사항 마스터플랜' 및 구버전 기획서들은 이미 100% 구현 완료되어 `AI_Inspiration_Diary/Completed_Archive/` 폴더 안으로 영구 격리(치워진 상태)되었습니다.** 새 AI가 투입될 때 이 폴더 내부의 파일을 찾아내서 "해야 할 미구현 과제"로 오독하는 일이 절대 없도록 하십시오. 이 보관함은 참고용 완료 문서일 뿐입니다.
+> 2. **★ [중요] 앞으로 AI가 대화 혹은 검증 보고서 작성 과정에서 스크린샷이나 임시 이미지 파일(예: `media__*.png`, `media__*.jpg`)을 생성할 때는 절대로 프로젝트 루트에 직접 저장하지 말고, 반드시 신설된 `media/` 폴더 내부에 생성하고 링크하십시오.** (루트 경로에 보존된 필수 웹앱 UI 리소스들인 로고, 아이콘, 배지 등은 건드리지 마십시오.)
 
 ---
 
 ## 📌 현재 이관 단계
-- **3단계 (어드민 백엔드 API 분리 및 레거시 함수 삭제) 완료 상태**
-  - `Common_Utils.gs` (Step 1), `Bridge_Login.gs` (Step 2), `Kiosk_Attendance.gs` (Step 2), `Reservation.gs` (Step 2)에 이어 `Admin.gs` (Step 3) 및 `Registration.gs` (Step 3)로 이관 완료 및 `Code.gs` 내 중복 함수 제거 완료.
-  - 레거시 33챌린지 4개 함수(`getChallengeRanking`, `setCheck`, `setAllChecks`, `setup33ChallengeSheets`)는 양쪽 파일 모두에서 안전하게 완전 삭제 완료.
-  - 완료된 지난 모든 마스터플랜 및 기획서 파일 23개를 `AI_Inspiration_Diary/Completed_Archive/`로 격리 보관 처리 완료.
+- **4단계 (생텀 통합 백엔드 API 분리) 완료 상태**
+  - `Common_Utils.gs` (Step 1), `Bridge_Login.gs` (Step 2), `Kiosk_Attendance.gs` (Step 2), `Reservation.gs` (Step 2)에 이어 `Admin.gs` (Step 3), `Registration.gs` (Step 3), 그리고 `Sanctum.gs` (Step 4)로 이관 완료 및 `Code.gs` 내 중복 함수 제거 완료.
+  - 생텀 영역인 **기후 마법(날씨/테마), 지혜의 보물고(지식창고), 전령의 기둥(공지사항), 그리고 돌발 퀘스트**가 `Sanctum.gs` 단일 통합 모듈로 완벽히 결속 및 격리되었습니다.
 
 ---
 
@@ -26,7 +24,8 @@
 | **`Reservation.gs`** | `getTodaySummary`, `getTodayTimetable`, `getMyReservations`, `submitReservation` (회원용 예약 API) | **완료 (중복 없음)** |
 | **`Admin.gs`** | 어드민 전용 대시보드 조회, 회원 체크인/체크아웃 제어, 인바디 기록, 예약 관리 및 키오스크 퇴실 처리(`processKioskCheckout`) 등 총 40개 API | **완료 (중복 없음)** |
 | **`Registration.gs`** | 회원 가입 및 이름 검색 처리 관련 로직 (`submitRegistration`, `searchAllMembers`) | **완료 (중복 없음)** |
-| **`Code.gs`** | 생텀(이장의 집) 관련 API 5개 보존 완료 (`getRecentCertifications`, `blessAction` 등) | **해당 없음 (온전히 보존)** |
+| **`Sanctum.gs`** | 생텀(이장의 집) 관련 공지, 날씨/테마(기후), 지식 꿀팁 및 돌발 퀘스트/인증 승인 전체 통제 API (총 33개) | **완료 (중복 없음)** |
+| **`Code.gs`** | 사용자 대시보드 데이터 조회(`getUserDashboardData`), 커뮤니티(`getOasisPosts`) 및 자동 정산 배치 스케줄러 본체 | **해당 없음 (온전히 보존)** |
 
 ---
 
