@@ -1179,7 +1179,7 @@ function searchMembersByDigits(payload) {
       var status = String(data[i][cols.status] || "").trim(); // 상태
       
       // [출석 앱 공식] 진행중인 회원 + 뒷 4자리 엄격 매칭 (마감된 회원도 포함하여 우선 불러오기)
-      if ((status === "진행중" || status === "진행 중" || status === "마감") && phoneOnlyDigits.slice(-4) === digits) {
+      if ((status.indexOf("진행") !== -1 || status.indexOf("마감") !== -1) && phoneOnlyDigits.slice(-4) === digits) {
         // 이미 맵에 등록된 번호라면 건너뜁니다 (중복 제거)
         if (!memberMap[phoneOnlyDigits]) {
           var phoneHint = phoneRaw.length > 4 ? "****" + phoneRaw.slice(-4) : phoneRaw;
@@ -1771,7 +1771,7 @@ function setupDatabase() {
  */
 function getCompiledMemberRegistry(ss) {
   var cache = CacheService.getScriptCache();
-  var cacheKey = "v45_member_registry";
+  var cacheKey = "v46_member_registry";
   var cached = cache.get(cacheKey);
   if (cached) {
     try {
@@ -1798,7 +1798,7 @@ function getCompiledMemberRegistry(ss) {
     var phoneRaw = data[i][cols.phone];
     var phoneClean = formatPhoneNumber(phoneRaw).replace(/[^0-9]/g, ""); 
     var status = String(data[i][cols.status] || "").trim(); 
-    if (status === "진행중" || status === "진행 중" || status === "마감") {
+    if (status.indexOf("진행") !== -1 || status.indexOf("마감") !== -1) {
       if (!memberMap[phoneClean]) {
         var bonus = "0";
         var mRowIdx = -1;
@@ -1837,7 +1837,7 @@ function getCompiledMemberRegistry(ss) {
   var keys = Object.keys(memberMap);
   for (var j = 0; j < keys.length; j++) {
     var m = memberMap[keys[j]];
-    var allExpired = m.passes.every(function(p) { return p.status === "마감"; });
+    var allExpired = m.passes.every(function(p) { return p.status.indexOf("마감") !== -1; });
     
     registryList.push({
       name: m.name,
@@ -1881,7 +1881,7 @@ function searchMemberByPin(pinStr) {
     if (matched.length === 0) {
       // [BUGFIX] 혹시 원장님이 수동으로 시트를 고친 경우, 10분 캐시 때문에 안 나왔을 가능성 대비 캐시 강제 무효화 후 스프레드시트 재로드!
       var cache = CacheService.getScriptCache();
-      cache.remove("v45_member_registry");
+      cache.remove("v46_member_registry");
       registry = getCompiledMemberRegistry(ss);
       
       for (var i = 0; i < registry.length; i++) {
@@ -2256,7 +2256,7 @@ function processAttendance(phoneStr, type, isBonus) {
     clearUserDashboardCache(phoneStr);
     try {
       var cache = CacheService.getScriptCache();
-      cache.remove("v45_member_registry");
+      cache.remove("v46_member_registry");
     } catch(e) {}
 
     return { 

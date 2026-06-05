@@ -691,7 +691,7 @@
       // 보유한 모든 회원권 정보를 리스트로 표시
       if (member.allPasses && member.allPasses.length > 0) {
         member.allPasses.forEach(function(pass) {
-          if (pass.status === "마감" || pass.status === "마감됨") return; // 마감된 회원권은 화면 표시 패스!
+          if (pass.status && pass.status.indexOf("마감") !== -1) return; // 마감된 회원권은 화면 표시 패스!
           const passDiv = document.createElement('div');
           passDiv.style.marginBottom = "10px";
           passDiv.style.padding = "12px";
