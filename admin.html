@@ -1552,6 +1552,9 @@
 
     function refreshDashboard() {
       google.script.run.withSuccessHandler(renderDashboard).getAdminDashboardData();
+      if (document.getElementById('attendanceLogModal') && document.getElementById('attendanceLogModal').classList.contains('show')) {
+        loadAttendanceLogs();
+      }
     }
 
     // 5분마다 자동 새로고침
@@ -2482,6 +2485,57 @@
       </div>
       
       <button class="btn-close" onclick="closeSalesHistoryModal()" style="margin-top: 15px; background: #edf2f7; color: #4a5568; font-weight: bold; border-radius: 12px; height: 48px; border: none; cursor: pointer; width: 100%;">닫기</button>
+    </div>
+  </div>
+
+  <!-- 출석기록 상세 조회 모달 -->
+  <div class="modal-overlay" id="attendanceLogModal" style="z-index: 3500;">
+    <div class="modal-content"
+      style="height: 85vh; max-height: 85vh; width: 95%; max-width: 500px; display: flex; flex-direction: column; background: #ffffff; padding: 25px 20px;">
+      <div class="modal-header" style="margin-bottom: 15px;">📋 출석기록 상세 조회</div>
+      
+      <!-- 검색 필터 영역 -->
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 15px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; text-align: left; flex-shrink: 0;">
+        <!-- 1행: 이름 검색 -->
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="text" id="attSearchName" placeholder="이름 또는 연락처 검색" style="flex: 1; padding: 10px 12px; font-size: 0.9rem; margin: 0; border: 1.5px solid #edf2f7; border-radius: 10px; background: #fff;" onkeydown="if(event.key === 'Enter') loadAttendanceLogs();">
+          <button onclick="loadAttendanceLogs()" class="m-btn m-btn-combo" style="width: auto; padding: 0 16px; margin: 0; font-weight: 800; border-radius: 10px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; background: var(--primary);">🔍 검색</button>
+        </div>
+        
+        <!-- 2행: 날짜 범위 필터 -->
+        <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 8px; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 4px; width: 100%;">
+            <input type="date" id="attStartDate" style="width: 100%; padding: 8px; font-size: 0.85rem; margin: 0; border: 1.5px solid #edf2f7; border-radius: 10px; background: #fff; box-sizing: border-box;" onchange="loadAttendanceLogs()">
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px; width: 100%;">
+            <span style="font-size:0.75rem; color:#718096; flex-shrink: 0;">~</span>
+            <input type="date" id="attEndDate" style="width: 100%; padding: 8px; font-size: 0.85rem; margin: 0; border: 1.5px solid #edf2f7; border-radius: 10px; background: #fff; box-sizing: border-box;" onchange="loadAttendanceLogs()">
+          </div>
+        </div>
+
+        <!-- 3행: 상태 및 유형 필터 -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <select id="attSearchStatus" style="width: 100%; padding: 8px; font-size: 0.85rem; margin: 0; border: 1.5px solid #edf2f7; border-radius: 10px; background: #fff; box-sizing: border-box;" onchange="loadAttendanceLogs()">
+            <option value="전체">상태: 전체</option>
+            <option value="미퇴실">상태: 미퇴실 ⚠️</option>
+            <option value="귀가완료">상태: 귀가완료</option>
+          </select>
+          <select id="attSearchType" style="width: 100%; padding: 8px; font-size: 0.85rem; margin: 0; border: 1.5px solid #edf2f7; border-radius: 10px; background: #fff; box-sizing: border-box;" onchange="loadAttendanceLogs()">
+            <option value="전체">유형: 전체</option>
+            <option value="점핑">유형: 점핑 🏃‍♀️</option>
+            <option value="테라피">유형: 테라피 🌿</option>
+            <option value="복합">유형: 복합 ✨</option>
+            <option value="보너스">유형: 보너스 🎁</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 리스트 영역 -->
+      <div id="attendanceLogList" style="flex: 1; overflow-y: auto; padding-right: 2px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="text-align:center; padding:20px; color:#718096;">날짜를 선택하고 조회해 주세요.</div>
+      </div>
+      
+      <button class="btn-close" onclick="closeAttendanceLogModal()" style="margin-top: 15px; flex-shrink: 0;">닫기</button>
     </div>
   </div>
 
@@ -4724,6 +4778,8 @@
           onclick="openPersonalNotiModal(); closeWorkLogMenuModal();">✉️<br>개인쪽지 관리</button>
         <button class="m-btn" style="background: linear-gradient(135deg, #6b46c1, #553c9a); color: white; padding: 20px; font-size: 1.05rem; flex-direction: column; height: 110px; border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: bold; border: none; cursor: pointer; transition: transform 0.2s;"
           onclick="openSmsLogModal(); closeWorkLogMenuModal();">📧<br>문자관리</button>
+        <button class="m-btn" style="grid-column: span 2; background: linear-gradient(135deg, #0284c7, #0369a1); color: white; padding: 20px; font-size: 1.05rem; flex-direction: column; height: 110px; border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: bold; border: none; cursor: pointer; transition: transform 0.2s;"
+          onclick="openAttendanceLogModal(); closeWorkLogMenuModal();">📋<br>출석기록 조회</button>
         <button class="m-btn m-btn-cancel" onclick="closeWorkLogMenuModal()" style="grid-column: span 2; margin-top: 15px; border-radius: 12px; height: 48px; font-size: 1rem; font-weight: bold; border: 1px solid #cbd5e0; background: #edf2f7; color: #4a5568; cursor: pointer;">닫기</button>
       </div>
     </div>
@@ -5463,6 +5519,136 @@
           showAdminErrorModal("저장 오류: " + res.error);
         }
       }).saveFlashSetting({ date: dateVal, type: typeVal, note: noteVal });
+    }
+
+    // --- 출석기록 상세 조회 모달 관련 함수 ---
+    function openAttendanceLogModal() {
+      // 시작일 기본값: 7일 전, 종료일 기본값: 오늘
+      const today = new Date();
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(today.getDate() - 7);
+      
+      const formatLocal = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      
+      document.getElementById('attStartDate').value = formatLocal(sevenDaysAgo);
+      document.getElementById('attEndDate').value = formatLocal(today);
+      document.getElementById('attSearchName').value = "";
+      document.getElementById('attSearchStatus').value = "전체";
+      document.getElementById('attSearchType').value = "전체";
+      
+      document.getElementById('attendanceLogModal').classList.add('show');
+      loadAttendanceLogs();
+      if (window.registerModalOpen) {
+        window.registerModalOpen(closeAttendanceLogModal);
+      }
+    }
+
+    function closeAttendanceLogModal(isPopstate) {
+      document.getElementById('attendanceLogModal').classList.remove('show');
+      if (!isPopstate && window.registerModalClose) {
+        window.registerModalClose(closeAttendanceLogModal);
+      }
+    }
+
+    function loadAttendanceLogs() {
+      const start = document.getElementById('attStartDate').value;
+      const end = document.getElementById('attEndDate').value;
+      const name = document.getElementById('attSearchName').value;
+      const status = document.getElementById('attSearchStatus').value;
+      const type = document.getElementById('attSearchType').value;
+      
+      const listContainer = document.getElementById('attendanceLogList');
+      listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#718096;"><div style="font-size:1.5rem; margin-bottom:10px; animation: spin 1s linear infinite;">🔄</div>데이터 불러오는 중...</div>';
+      
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (res.error) {
+              listContainer.innerHTML = '<div style="color:var(--danger); text-align:center; padding:20px;">' + res.error + '</div>';
+              return;
+            }
+            if (!res.logs || res.logs.length === 0) {
+              listContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#718096;">검색 조건에 맞는 출석 데이터가 없습니다.</div>';
+              return;
+            }
+            
+            let html = res.logs.map(log => {
+              let typeColor = '#3182ce';
+              if (log.type === '테라피') typeColor = '#38a169';
+              else if (log.type === '복합') typeColor = '#d69e2e';
+              else if (log.type === '보너스') typeColor = '#e53e3e';
+              
+              let statusBadgeHtml = '';
+              let checkoutBtnHtml = '';
+              
+              if (log.isGoHome) {
+                statusBadgeHtml = `<span style="background:rgba(76, 175, 80, 0.15); color:#2f855a; padding:4px 8px; border-radius:6px; font-size:0.75rem; font-weight:700;">🏠 귀가완료 (${log.outTime || '-'})</span>`;
+              } else {
+                statusBadgeHtml = `<span style="background:rgba(229, 62, 62, 0.15); color:#e53e3e; padding:4px 8px; border-radius:6px; font-size:0.75rem; font-weight:700;">⚠️ 미퇴실</span>`;
+                
+                const escapedName = log.name.replace(/'/g, "\\'");
+                const escapedType = log.type.replace(/'/g, "\\'");
+                const escapedClasses = log.classes.replace(/'/g, "\\'");
+                
+                checkoutBtnHtml = `<button onclick="openCheckout('${escapedName}', ${log.rowIdx}, '${escapedType}', '${escapedClasses}')" style="margin-top:10px; background:#e53e3e; color:#fff; border:none; padding:8px 12px; border-radius:8px; font-weight:700; font-size:0.8rem; cursor:pointer; width:100%;">🚪 즉시 퇴실 처리</button>`;
+              }
+              
+              let changeText = log.change || '0';
+              if (changeText && !changeText.startsWith('-') && changeText !== '0' && changeText !== '불가') {
+                changeText = '-' + changeText;
+              }
+              
+              return `
+                <div style="padding:15px; background:#f8fafc; border:1px solid ${log.isGoHome ? '#e2e8f0' : '#feb2b2'}; border-radius:16px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); text-align:left; position:relative; transition: border-color 0.2s;">
+                  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                    <div>
+                      <strong style="color:#1a202c; font-size:1.05rem;">${log.name}</strong>
+                      <div style="font-size:0.75rem; color:#718096; margin-top:2px;">📅 ${log.date} | 입실 ${log.inTime || '-'}</div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                      <span style="background:${typeColor}; color:#fff; padding:3px 10px; border-radius:8px; font-size:0.75rem; font-weight:700; display:inline-block;">${log.type}</span>
+                      ${statusBadgeHtml}
+                    </div>
+                  </div>
+                  
+                  <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; font-size:0.78rem; color:#4a5568; margin-top:10px;">
+                    <div style="background:#fff; padding:8px; border-radius:10px; border:1px solid #edf2f7; text-align:center;">
+                      <div style="color:#718096; font-size:0.65rem; margin-bottom:3px;">🎫 잔여횟수</div>
+                      <div style="font-weight:800; color:#2d3748;">${log.remainCount || '0'}회</div>
+                    </div>
+                    <div style="background:#fff; padding:8px; border-radius:10px; border:1px solid #edf2f7; text-align:center;">
+                      <div style="color:#718096; font-size:0.65rem; margin-bottom:3px;">🔢 변동치</div>
+                      <div style="font-weight:800; color:#e53e3e;">${changeText}회</div>
+                    </div>
+                    <div style="background:#fff; padding:8px; border-radius:10px; border:1px solid #edf2f7; text-align:center;">
+                      <div style="color:#718096; font-size:0.65rem; margin-bottom:3px;">🕒 운동/타임</div>
+                      <div style="font-weight:800; color:#2d3748;">${log.workoutTime ? log.workoutTime + 'T' : '-'}/${log.classes || '-'}</div>
+                    </div>
+                  </div>
+                  
+                  ${log.memo ? `<div style="margin-top:10px; padding:10px; background:#fff; border-radius:10px; border:1px solid #edf2f7; font-size:0.78rem; color:#4a5568; line-height:1.4;"><span style="color:#718096; font-weight:700; margin-right:4px;">비고:</span>${log.memo}</div>` : ''}
+                  ${checkoutBtnHtml}
+                </div>
+              `;
+            }).join('');
+            
+            listContainer.innerHTML = `<div style="display:flex; flex-direction:column; gap:12px; padding-bottom:15px;">${html}</div>`;
+          })
+          .withFailureHandler(function (err) {
+            listContainer.innerHTML = '<div style="color:var(--danger); text-align:center; padding:20px;">서버 통신 실패: ' + err.toString() + '</div>';
+          })
+          .queryAttendanceLogs({
+            startDate: start,
+            endDate: end,
+            nameQuery: name,
+            statusQuery: status,
+            typeQuery: type
+          });
+      } else {
+        setTimeout(() => {
+          listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#718096;">[테스트 모드] 구글 서버와 통신할 수 없습니다.</div>';
+        }, 800);
+      }
     }
 
     // --- 문자 발송 및 출석 정산 관리 함수 ---
