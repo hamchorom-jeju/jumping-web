@@ -563,3 +563,453 @@ function calculateInactiveDays(startDate, endDate) {
   }
   return inactiveDays;
 }
+
+// ──────────────────────────────────────────────
+// 7. 공통 비즈니스 액션 (매출 기재, 알림문자 생성, 벙개/휴무일 설정)
+// ──────────────────────────────────────────────
+
+/**
+ * 매출내역 등록 API
+ */
+function submitSalesRecord(data) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var salesSheet = ss.getSheetByName("판매내역");
+    if (!salesSheet) return { error: "판매내역 시트가 없습니다." };
+    
+    var now = new Date();
+    var dateStr = data.date || Utilities.formatDate(now, "GMT+9", "yyyy-MM-dd");
+    var timeStr = Utilities.formatDate(now, "GMT+9", "HH:mm:ss");
+    var fullDateStr = dateStr + " " + timeStr;
+    var idStr = "S" + dateStr.replace(/-/g, "") + Utilities.formatDate(now, "GMT+9", "HHmmss");
+    
+    salesSheet.appendRow([
+      idStr,
+      fullDateStr,
+      data.category,
+      data.buyer,
+      data.itemName,
+      Number(data.amount) || 0,
+      data.payMethod,
+      data.memo || ""
+    ]);
+    
+    return { success: true, message: dateStr + " 매출이 등록되었습니다. (" + data.category + " / " + Number(data.amount).toLocaleString() + "원)" };
+  } catch (e) {
+    return { error: "매출 등록 오류: " + e.toString() };
+  }
+}
+
+/**
+ * [공용] 매출/연장 결제 시 안내 문자 템플릿 생성 헬퍼
+ */
+function generateSmsContent(name, category, membership, expireDate, remainCount, gapDays) {
+  var content = name + " 회원님, 노형점핑클럽입니다! ❤️\n\n";
+  
+  if (category === "신규등록") {
+    content += "노형점핑과의 첫 만남을 진심으로 환영합니다! 😊\n" +
+               "선택하신 [" + membership + "] 등록이 완료되었습니다.\n\n" +
+               "📅 이용 기한: ~ " + expireDate + "까지\n" +
+               "📊 이용 횟수: " + remainCount + "회\n\n" +
+               "⚠️ 꼭 확인해 주세요!\n" +
+               "소중한 회원권은 이용 기한인 **" + expireDate + "** 전까지 남은 " + remainCount + "회를 모두 소진하셔야 합니다. 늦지 않게 자주 방문하셔서 활기찬 하루를 충전해 보세요! 회원님의 건강과 아름다움을 위해 최선을 다해 돕겠습니다! 🥰";
+  } else if (category === "연장결제") {
+    content += "잊지 않고 연장 등록 해주셔서 감사합니다! ✨\n" +
+               "기존 잔여분과 꼼꼼히 합산하여 [" + membership + "] 등록을 마쳤습니다.\n\n" +
+               "📅 최종 이용 기한: ~ " + expireDate + "까지\n" +
+               "📊 총 잔여 횟수: " + remainCount + "회\n\n" +
+               "⚠️ 꼭 확인해 주세요!\n" +
+               "이용 기한이 지나면 소중한 잔여 횟수가 소멸되오니, 최종 만료일인 **" + expireDate + "** 전까지 남은 " + remainCount + "회를 꼭 전부 사용해 주세요! 늦기 전에 서둘러 클럽에 나오셔서 신나게 점핑해 보아요! 꾸준한 관리가 최고의 결과를 만듭니다. 화이팅! 🔥";
+  } else if (category === "재결제") {
+    var greeting = (gapDays > 30) ? "다시 노형점핑을 찾아주셔서 정말 기뻐요! 🥰\n" : "노형점핑을 다시 믿고 선택해 주셔서 감사합니다! 😊\n";
+    content += greeting +
+               "결제하신 [" + membership + "] 등록이 완료되었습니다.\n\n" +
+               "📅 이용 기한: ~ " + expireDate + "까지\n" +
+               "📊 이용 횟수: " + remainCount + "회\n\n" +
+               "⚠️ 꼭 확인해 주세요!\n" +
+               "회원권 이용 기한인 **" + expireDate + "** 전까지 남은 " + remainCount + "회를 건강하게 소진해 주셔야 합니다. 소중한 운동 투자가 낭비되지 않도록 서둘러 내방해 주세요! 이번에도 회원님의 놀라운 변화를 위해 최선을 다하겠습니다! 💪";
+  } else if (category === "추가결제") {
+    content += "기존 프로그램과 더불어 [" + membership + "]을 추가해 주셔서 감사합니다! 🥰\n" +
+               "회원님의 뜨거운 열정을 보며 저희도 큰 힘을 얻습니다.\n\n" +
+               "📅 신규 이용 기한: ~ " + expireDate + "까지\n" +
+               "📊 신규 이용 횟수: " + remainCount + "회\n\n" +
+               "⚠️ 꼭 확인해 주세요!\n" +
+               "새로 추가된 권종의 기한은 **" + expireDate + "**까지입니다! 꼭 기한 내에 남은 " + remainCount + "회를 시너지 나게 모두 즐기실 수 있도록 자주 방문해 주세요! 두 가지 모두 빛을 발하게 세심하게 케어해 드릴게요! ✨";
+  } else {
+    content += "결제하신 [" + membership + "] 등록이 완료되었습니다.\n\n" +
+               "📅 이용 기한: ~ " + expireDate + "까지\n" +
+               "📊 이용 횟수: " + remainCount + "회\n\n" +
+               "⚠️ 꼭 확인해 주세요!\n" +
+               "이용 기한인 **" + expireDate + "** 전까지 남은 " + remainCount + "회를 모두 소진해 주셔야 하니 늦지 않게 자주 방문해 주세요! 언제나 정성을 다해 관리해 드리겠습니다! 💪";
+  }
+  return content;
+}
+
+/**
+ * 특정 날짜의 벙개/휴무 설정 가져오기
+ */
+function getFlashSettingByDate(dateStr) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("벙개테라피 및 휴일 설정");
+    if (!sheet) return { found: false };
+    
+    var data = sheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      if (!data[i][0]) continue;
+      var rDate = (data[i][0] instanceof Date) ? Utilities.formatDate(data[i][0], "GMT+9", "yyyy-MM-dd") : String(data[i][0]).split(" ")[0];
+      if (rDate === dateStr) {
+        return {
+          found: true,
+          type: data[i][1], 
+          note: data[i][2]  
+        };
+      }
+    }
+    return { found: false };
+  } catch (e) { return { error: e.toString() }; }
+}
+
+/**
+ * 벙개/휴무 설정 저장 (덮어쓰기 포함)
+ */
+function saveFlashSetting(data) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("벙개테라피 및 휴일 설정");
+    if (!sheet) {
+      sheet = ss.insertSheet("벙개테라피 및 휴일 설정");
+      sheet.appendRow(["날짜", "구분", "메모(벙개시간)"]);
+      sheet.getRange("A1:C1").setBackground("#f3f3f3").setFontWeight("bold");
+    }
+    
+    sheet.getRange("A1:C1").setValues([["날짜", "구분", "메모(벙개시간)"]]);
+    
+    var sheetData = sheet.getDataRange().getValues();
+    var targetRow = -1;
+    for (var i = 1; i < sheetData.length; i++) {
+      if (!sheetData[i][0]) continue;
+      var rDate = (sheetData[i][0] instanceof Date) ? Utilities.formatDate(sheetData[i][0], "GMT+9", "yyyy-MM-dd") : String(sheetData[i][0]).split(" ")[0];
+      if (rDate === data.date) {
+        targetRow = i + 1;
+        break;
+      }
+    }
+    
+    if (targetRow !== -1) {
+      sheet.getRange(targetRow, 2, 1, 2).setValues([[data.type, data.note]]);
+    } else {
+      sheet.appendRow([data.date, data.type, data.note]);
+    }
+    
+    SpreadsheetApp.flush(); 
+    return { success: true };
+  } catch (e) { return { error: e.toString() }; }
+}
+
+/**
+ * 모든 벙개/휴무 설정 가져오기 (목록용)
+ */
+function getAllFlashSettings() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("벙개테라피 및 휴일 설정");
+    if (!sheet) return [];
+    
+    var data = sheet.getDataRange().getDisplayValues();
+    var results = [];
+    for (var i = 1; i < data.length; i++) {
+      var dStr = String(data[i][0]).trim();
+      if (!dStr) continue;
+      
+      var type = String(data[i][1]).trim();
+      var normalizedType = (type === "벙개설정" || type === "벙개") ? "벙개" : "휴무";
+      
+      results.push({
+        rowIdx: i + 1,
+        date: dStr,
+        type: normalizedType,
+        note: data[i][2]
+      });
+    }
+    results.sort((a, b) => b.date.localeCompare(a.date));
+    return results;
+  } catch (e) { return []; }
+}
+
+/**
+ * 벙개/휴무 설정 삭제
+ */
+function deleteFlashSettingByRow(rowIdx) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("벙개테라피 및 휴일 설정");
+    if (!sheet) return { error: "시트를 찾을 수 없습니다." };
+    sheet.deleteRow(rowIdx);
+    return { success: true };
+  } catch (e) { return { error: e.toString() }; }
+}
+
+/**
+ * 시트 내의 모든 잘못된 전화번호 일괄 수정 정규화 도구
+ */
+function fixAllPhoneNumbersInSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheets = ["회원명단", "출석기록", "등록 현황", "예약DB", "문자발송"];
+  var fixedCount = 0;
+  
+  sheets.forEach(function(name) {
+    var sheet = ss.getSheetByName(name);
+    if (!sheet) return;
+    
+    var data = sheet.getDataRange().getValues();
+    if (data.length < 2) return;
+    
+    var headers = data[0];
+    var phoneCols = [];
+    
+    for (var i = 0; i < headers.length; i++) {
+      var h = String(headers[i]);
+      if (h.indexOf("폰") !== -1 || h.indexOf("번호") !== -1 || h.indexOf("연락처") !== -1 || h.indexOf("휴대폰") !== -1 || h.indexOf("ID") !== -1) {
+        phoneCols.push(i);
+      }
+    }
+    
+    if (phoneCols.length > 0) {
+      phoneCols.forEach(function(colIdx) {
+        for (var r = 1; r < data.length; r++) {
+          var original = String(data[r][colIdx] || "");
+          if (!original || original.trim() === "" || original === "-") continue;
+          
+          var formatted = formatPhoneNumber(original);
+          
+          var digitsOnly = original.replace(/[^0-9]/g, "");
+          if (original !== formatted && (digitsOnly.length === 9 || digitsOnly.length === 10) && digitsOnly.startsWith("1")) {
+            sheet.getRange(r + 1, colIdx + 1).setValue("'" + formatted); 
+            fixedCount++;
+          }
+        }
+      });
+    }
+  });
+  
+  return { success: true, message: "총 " + fixedCount + "개의 전화번호를 정규화(010-xxxx-xxxx)했습니다." };
+}
+
+/**
+ * 테라피 예약 시 사용 가능한 회원권이나 보너스권이 있는지 검사하는 헬퍼 함수
+ */
+function checkMemberTicket(name, phone) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+    var memberSheet = ss.getSheetByName("회원명단");
+    
+    if (!regSheet) return { success: false, error: "등록 현황 시트를 찾을 수 없습니다." };
+    
+    var phoneClean = String(phone || "").replace(/[^0-9]/g, "");
+    var regData = regSheet.getDataRange().getValues();
+    var cols = getRegColumnIndices(regSheet);
+    
+    var hasValidTicket = false;
+    var foundTickets = [];
+    
+    for (var i = 1; i < regData.length; i++) {
+      var rPhone = String(regData[i][cols.phone]).replace(/[^0-9]/g, "");
+      var rStatus = String(regData[i][cols.status]).trim();
+      
+      if (rPhone === phoneClean && (rStatus === "진행중" || rStatus === "진행 중")) {
+        var membership = String(regData[i][cols.membership]);
+        var remainRaw = regData[i][cols.remain];
+        var remain = parseInt(remainRaw) || 0;
+        
+        if (membership.indexOf("테라피") !== -1 || membership.indexOf("점핑") !== -1 || membership.indexOf("회") !== -1 || membership.indexOf("월권") !== -1) {
+          if (remain > 0 || String(remainRaw).indexOf("무제한") !== -1) {
+            hasValidTicket = true;
+            foundTickets.push(membership + "(" + remainRaw + "회)");
+          }
+        }
+      }
+    }
+    
+    if (memberSheet) {
+      var mData = memberSheet.getDataRange().getValues();
+      for (var j = 1; j < mData.length; j++) {
+        var mPhone = String(mData[j][2]).replace(/[^0-9]/g, "");
+        if (mPhone === phoneClean) {
+          var bonus = parseInt(mData[j][9]) || 0;
+          if (bonus > 0) {
+            hasValidTicket = true;
+            foundTickets.push("보너스권(" + bonus + "회)");
+          }
+          break;
+        }
+      }
+    }
+    
+    return {
+      success: true,
+      hasValidTicket: hasValidTicket,
+      tickets: foundTickets.join(", ") || "없음"
+    };
+  } catch (e) {
+    return { success: false, error: "서버 오류: " + e.toString() };
+  }
+}
+
+/**
+ * [공용] 태블릿 출석체크 및 캐싱을 위한 전체 회원 레지스트리 수집
+ */
+function getCompiledMemberRegistry(ss) {
+  var cache = CacheService.getScriptCache();
+  var cacheKey = "v45_member_registry";
+  var cached = cache.get(cacheKey);
+  if (cached) {
+    try {
+      var parsed = JSON.parse(cached);
+      if (parsed && parsed.length > 0) {
+        return parsed;
+      }
+    } catch(e) {}
+  }
+  
+  if (!ss) ss = SpreadsheetApp.getActiveSpreadsheet();
+  var regSheet = ss.getSheetByName("등록 현황") || ss.getSheetByName("등록현황");
+  if (!regSheet) return [];
+  
+  var data = regSheet.getDataRange().getDisplayValues();
+  var cols = getRegColumnIndices(regSheet);
+  
+  var memberSheet = ss.getSheetByName("회원명단");
+  var mData = memberSheet ? memberSheet.getDataRange().getDisplayValues() : [];
+  
+  var memberMap = {};
+  
+  for (var i = 1; i < data.length; i++) {
+    var phoneRaw = data[i][cols.phone];
+    var phoneClean = formatPhoneNumber(phoneRaw).replace(/[^0-9]/g, ""); 
+    var status = String(data[i][cols.status] || "").trim(); 
+    if (status === "진행중" || status === "진행 중" || status.indexOf("마감") !== -1) {
+      if (!memberMap[phoneClean]) {
+        var bonus = "0";
+        var mRowIdx = -1;
+        if (mData.length > 0) {
+          for (var mIdx = 1; mIdx < mData.length; mIdx++) {
+            var mPhone = formatPhoneNumber(mData[mIdx][2]).replace(/[^0-9]/g, "");
+            if (mPhone === phoneClean) {
+              bonus = String(mData[mIdx][9] || "0"); 
+              mRowIdx = mIdx + 1;
+              break;
+            }
+          }
+        }
+        
+        memberMap[phoneClean] = {
+          name: String(data[i][cols.name] || "이름없음"),
+          phone: phoneRaw,
+          bonusCount: bonus,
+          mRowIdx: mRowIdx,
+          passes: []
+        };
+      }
+      
+      memberMap[phoneClean].passes.push({
+        membershipType: String(data[i][cols.membership] || "일반"),
+        expireDate: data[i][cols.expire],
+        remainCount: String(data[i][cols.remain] || "0"),
+        rowIdx: i + 1,
+        memo: data[i][10], 
+        status: status
+      });
+    }
+  }
+  
+  var registryList = [];
+  var keys = Object.keys(memberMap);
+  for (var j = 0; j < keys.length; j++) {
+    var m = memberMap[keys[j]];
+    var allExpired = m.passes.every(function(p) { return p.status.indexOf("마감") !== -1; });
+    
+    var activePass = null;
+    for (var pIdx = 0; pIdx < m.passes.length; pIdx++) {
+      var p = m.passes[pIdx];
+      if (p.status === "진행중" || p.status === "진행 중") {
+        activePass = p;
+        break;
+      }
+    }
+    if (!activePass) activePass = m.passes[0]; 
+    
+    registryList.push({
+      name: m.name,
+      phone: m.phone,
+      membershipType: m.passes.map(function(p) { return p.membershipType; }).join(" / "),
+      expireDate: activePass ? activePass.expireDate : "-",
+      remainCount: activePass ? activePass.remainCount : "0",
+      bonusCount: m.bonusCount,
+      mRowIdx: m.mRowIdx,
+      allPasses: m.passes,
+      phoneClean: keys[j],
+      isExpired: allExpired
+    });
+  }
+  
+  try {
+    cache.put(cacheKey, JSON.stringify(registryList), 600); 
+  } catch(e) {}
+  
+  return registryList;
+}
+
+/**
+ * [공용] 회원의 연장 결제에 필요한 메타데이터 및 등록 현황을 가져옵니다.
+ */
+function getMemberRenewalData(phoneStr) {
+  if (!phoneStr) return { error: "번호 없음" };
+  var clean = String(phoneStr).replace(/[^0-9]/g, "");
+  
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var mData = ss.getSheetByName("회원명단").getDataRange().getValues();
+    var rData = ss.getSheetByName("등록 현황").getDataRange().getValues();
+    
+    var res = { name: "-", phone: phoneStr, activeList: [] };
+    
+    for (var i=1; i<mData.length; i++) {
+      if (String(mData[i][2]).replace(/[^0-9]/g, "") === clean) {
+        res.name = String(mData[i][1]);
+        break;
+      }
+    }
+    
+    for (var j=1; j<rData.length; j++) {
+      if (String(rData[j][2]).replace(/[^0-9]/g, "") === clean) {
+        var exp = rData[j][6];
+        var expStr = (exp instanceof Date) ? (exp.getFullYear() + "-" + (exp.getMonth()+1) + "-" + exp.getDate()) : String(exp || "-");
+        res.activeList.push({
+          membership: String(rData[j][4] || ""),
+          expireDate: expStr,
+          remainCount: rData[j][7] || 0,
+          status: String(rData[j][8] || "")
+        });
+      }
+    }
+
+    var configs = [];
+    var cData = ss.getSheetByName("설정").getDataRange().getValues();
+    for (var k=1; k<cData.length; k++) {
+      if (cData[k][0]) {
+        configs.push({ 
+          name: String(cData[k][0]), 
+          count: Number(cData[k][1]) || 0,
+          duration: Number(cData[k][2]) || 0, 
+          price: Number(cData[k][6]) || 0 
+        });
+      }
+    }
+    
+    return { success: true, member: res, config: configs };
+  } catch (e) {
+    return { error: e.toString() };
+  }
+}
