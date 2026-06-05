@@ -2,7 +2,7 @@ const axios = require('axios');
 
 export default async function handler(req, res) {
   const { action } = req.query;
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbxnscUMs_G7bNUaw9fNgLx6IXTlhbmBoItxprKz5kXrUckz15ComM6nIzKumD3uqulbsw/exec";
+  const GAS_URL = "https://script.google.com/macros/s/AKfycby4CR2j6xovZ_mphNygHptER3sMYCc95tsxAulFUko2pgbg1y_yzPCNHTUwL2oEHKi51Q/exec";
 
   // OPTIONS 요청 대응 (CORS)
   if (req.method === 'OPTIONS') {
