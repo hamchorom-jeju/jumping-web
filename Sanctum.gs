@@ -1199,20 +1199,9 @@ function getVillageNotices() {
 
 
 
-/**
- * 🎰 [v66.0] 연-월(Year-Month) 시드 기반의 의사 난수 생성기 (PRNG)
- * 동일 월 내에서는 항상 일관된 셔플 결과를 반환하여 데이터 정합성을 보장합니다.
- */
-function SeededRandom(seed) {
-  var m = 0x80000000; // 2**31
-  var a = 1103515245;
-  var c = 12345;
-  var state = seed ? seed : Math.floor(Math.random() * (m - 1));
-  this.next = function() {
-    state = (a * state + c) % m;
-    return state / (m - 1);
-  };
-}
+
+// [이동 완료] SeededRandom 함수는 Common_Utils.gs로 공통 유틸리티 이관되었습니다.
+
 
 
 
