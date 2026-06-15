@@ -2832,7 +2832,7 @@
               salesHtml += '<div style="font-size:0.85rem; margin-top:4px;">• ' + s.category + ': ' + Number(s.amount).toLocaleString() + '원</div>';
             });
             salesRes.sales.forEach(function (s) {
-              salesHtml += '<div style="font-size:0.8rem; color:#4a5568; margin-top:3px; padding-left:10px;">└ ' + s.buyer + ' - ' + s.itemName + ' (' + Number(salesRes.totalAmount).toLocaleString() + '원)</div>';
+              salesHtml += '<div style="font-size:0.8rem; color:#4a5568; margin-top:3px; padding-left:10px;">└ ' + s.buyer + ' - ' + s.itemName + ' (' + Number(s.amount).toLocaleString() + '원)</div>';
             });
             el.innerHTML = salesHtml;
           })

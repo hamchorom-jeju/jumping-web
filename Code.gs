@@ -1656,6 +1656,7 @@ function setupDatabase() {
     configSheet.appendRow(["테라피 10회", 10, 2, "불가", 1, "불가", 250000]);
     configSheet.appendRow(["월권", 20, 1, 1, "불가", "불가", 150000]);
     configSheet.appendRow(["운동만", 20, 1, 1, "불가", "불가", 130000]);
+    configSheet.appendRow(["운동만2", 12, 1, 1, "불가", "불가", 80000]);
     configSheet.getRange("A1:G1").setFontWeight("bold").setBackground("#e3fafd");
     configSheet.setFrozenRows(1);
   }
