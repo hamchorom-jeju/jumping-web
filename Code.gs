@@ -6360,6 +6360,13 @@ function generateAttendanceReportAiComment(name, stats, prevSms, remain, expire,
     var lastDayOfEndMonth = new Date(endD.getFullYear(), endD.getMonth() + 1, 0).getDate();
     var isFullMonth = (startD.getDate() === 1 && endD.getDate() === lastDayOfEndMonth);
     
+    // [v66.2] 정산 기간 일수에 따른 출석 빈도 반응 구간 동적 계산
+    var diffTime = Math.abs(endD - startD);
+    var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    var ratio = diffDays / 30;
+    var lowThreshold = Math.max(1, Math.round(4 * ratio));
+    var midThreshold = Math.max(lowThreshold + 1, Math.round(12 * ratio));
+    
     var targetMonthNum = startD.getMonth() + 1;
     var nextMonthNum = targetMonthNum === 12 ? 1 : targetMonthNum + 1;
     var targetMonthStr = targetMonthNum + "월";
@@ -6393,9 +6400,9 @@ function generateAttendanceReportAiComment(name, stats, prevSms, remain, expire,
                  "   - [본문 (출석 분석)]: " + analysisLabel + " 남은 횟수, 그리고 이전 히스토리 대비 증감을 분석하여 칭찬/공감/우려를 전문적이면서 다정하게 언급\n" +
                  "   - [끝인사]: " + nextMonthLabel + " 힘차게 건강 관리를 이어나갈 수 있도록 따뜻하게 격려하고 클럽에서 반갑게 만나자는 다정한 끝인사. (예: '바쁘신 일상 속에서도 자신을 위한 소중한 시간을 매일 개척해 나가시는 모습이 진정으로 멋집니다. " + nextMonthLabel + " 늘 정성을 다하는 코치로 대기하고 있을게요! 클럽에서 뵙겠습니다. ❤️')\n" +
                  "2. 출석 빈도별 반응 룰:\n" +
-                 "   - 출석 0~4회: 바쁜 일상에 깊이 공감해주되, 소중한 남은 횟수(" + remain + "회)와 마감일(" + expire + ")을 강조하며 이용 기간 내에 다 쓰지 못해 소멸할까 걱정되는 코치의 진심 어린 염려 톤 부각\n" +
-                 "   - 출석 5~12회: 점핑과 테라피를 적절히 조화롭게 활용하는 습관을 칭찬하고 꾸준한 건강 루틴화 독려\n" +
-                 "   - 출석 13회 이상: 엄청난 성실함과 뜨거운 건강 열정에 감동받은 코치의 극찬과 경탄의 찬사\n" +
+                 "   - 출석 0~" + lowThreshold + "회: 바쁜 일상에 깊이 공감해주되, 소중한 남은 횟수(" + remain + "회)와 마감일(" + expire + ")을 강조하며 이용 기간 내에 다 쓰지 못해 소멸할까 걱정되는 코치의 진심 어린 염려 톤 부각\n" +
+                 "   - 출석 " + (lowThreshold + 1) + "~" + midThreshold + "회: 점핑과 테라피를 적절히 조화롭게 활용하는 습관을 칭찬하고 꾸준한 건강 루틴화 독려\n" +
+                 "   - 출석 " + (midThreshold + 1) + "회 이상: 엄청난 성실함과 뜨거운 건강 열정에 감동받은 코치의 극찬과 경탄의 찬사\n" +
                  "3. 지난 정산 이력과의 1:1 대조 분석:\n" +
                  "   - 지난 문자 기록이 있다면 꼭 이전 출석 횟수와 비교하여 증가/감소의 변화 양상을 극찬하거나 공감하며 안부 묻기\n" +
                  "4. 출력 형식:\n" +
@@ -6428,9 +6435,9 @@ function generateAttendanceReportAiComment(name, stats, prevSms, remain, expire,
   
   if (total === 0) {
     comment = name + " 회원님, 지난 정산 기간 동안 클럽에서 한 번도 뵙지 못해 코치가 무척 안타깝고 염려스러운 마음이 가득했습니다. 😢 바쁘신 일상이 정리되는 대로, 소중한 남은 회원권이 만료일 전에 아깝게 소멸되지 않도록 꼭 다시 클럽에 들러 건강 충전을 시작해 보세요!";
-  } else if (total <= 5) {
+  } else if (total <= lowThreshold) {
     comment = name + " 회원님, 이번 정산 기간 동안 총 " + total + "회의 출석을 기록해 주셨네요! 바쁜 일정 속에서도 걸음해 주셔서 감사하지만, 남은 회원권 잔여 횟수가 " + remain + "회나 유효하게 남아있어 이용 만료일(" + expire + ")까지 모두 소진하시지 못해 아깝게 소멸될까 코치가 진심으로 걱정하고 있습니다. " + nextMonthLabel + " 조금만 더 자주 뵈어요! ❤️";
-  } else if (total <= 12) {
+  } else if (total <= midThreshold) {
     comment = name + " 회원님, 지난 정산 기간 동안 총 " + total + "회의 소중한 출석을 달성하셨네요! " + habitDesc + " 회원님만의 건강한 리듬이 삶 속에 점차 단단하게 자리를 잡아가고 있는 것 같아 코치도 든든하고 뿌듯한 보람을 느낍니다. 늘 응원하고 자랑스럽습니다. 😊";
   } else {
     comment = name + " 회원님, 이번 정산 기간 동안 무려 " + total + "회라는 경이롭고 뜨거운 출석 대기록을 돌파하셨습니다! 대단하십니다. 🏆💪 " + habitDesc + " 회원님의 흔들림 없는 꾸준함과 뜨거운 건강 집념에 코치도 엄청난 감동과 웰니스 에너지를 선물 받았습니다. 삶의 진정한 성취를 보여주시는 회원님을 온 맘 다해 존경하고 축복합니다!";
