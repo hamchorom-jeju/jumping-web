@@ -6353,23 +6353,34 @@ function generateIndividualAttendanceSms(member, startDateStr, endDateStr, baseD
  */
 function generateAttendanceReportAiComment(name, stats, prevSms, remain, expire, startDateStr, endDateStr) {
   try {
-    // 정산 시작일에서 실제 정산 대상 월 추출 (예: "2026-05-01" -> 5월)
     var startD = new Date(startDateStr);
+    var endD = new Date(endDateStr);
+    
+    // 정산 기간이 해당 월의 전체인지 체크 (시작일이 1일이고, 종료일이 해당 월의 마지막 날짜인지)
+    var lastDayOfEndMonth = new Date(endD.getFullYear(), endD.getMonth() + 1, 0).getDate();
+    var isFullMonth = (startD.getDate() === 1 && endD.getDate() === lastDayOfEndMonth);
+    
     var targetMonthNum = startD.getMonth() + 1;
     var nextMonthNum = targetMonthNum === 12 ? 1 : targetMonthNum + 1;
     var targetMonthStr = targetMonthNum + "월";
     var nextMonthStr = nextMonthNum + "월";
+    
+    // 기간적 맥락 라벨 구성
+    var periodLabel = isFullMonth ? (targetMonthStr + " 한 달 동안") : (targetMonthNum + "월 " + startD.getDate() + "일부터 " + endD.getDate() + "일까지의 기간");
+    var greetingLabel = isFullMonth ? (targetMonthStr + "도 건강하게 잘 마감하셨나요?") : (targetMonthNum + "월 " + startD.getDate() + "일부터 " + endD.getDate() + "일까지의 시간도 건강하고 보람차게 보내셨나요?");
+    var analysisLabel = isFullMonth ? (targetMonthStr + " 출석 빈도와") : (targetMonthNum + "월 " + startD.getDate() + "일~" + endD.getDate() + "일 사이의 출석 빈도와");
+    var nextMonthLabel = isFullMonth ? ("다가오는 " + nextMonthStr + "에도") : ("남은 " + targetMonthNum + "월 기간과 다가오는 " + nextMonthStr + "에도");
 
     var systemInstruction = "당신은 제주 노형점핑클럽의 따뜻하고 쾌활하며 전문적인 웰니스 코치입니다. " +
-                            "회원의 " + targetMonthStr + " 한 달 동안의 출석 기록과 상태를 보고, 첫 인사부터 " + nextMonthStr + " 마무리 응원까지 매끄럽게 이어지는 한 편의 따뜻한 맞춤형 코칭 편지(줄글 형태)를 직접 작성하십시오. " +
+                            "회원의 " + periodLabel + "의 출석 기록과 상태를 보고, 첫 인사부터 마무리 응원까지 매끄럽게 이어지는 한 편의 따뜻한 맞춤형 코칭 편지(줄글 형태)를 직접 작성하십시오. " +
                             "답변은 반드시 한국어 경어체로 180자~300자 내외로 자연스럽고 풍부하게 작성해 주시고, " +
-                            "정산하는 시점(오늘)이 몇 월 며칠이든 상관없이, 회원이 돌아보는 대상은 반드시 '" + targetMonthStr + "'이고 다짐을 하는 다가오는 달은 '" + nextMonthStr + "'이어야 하므로, 날짜 혼선 없이 반드시 편지 내에서 이번 달은 '" + targetMonthStr + "', 다음 달은 '" + nextMonthStr + "'로 명시하여 대화하십시오. " +
+                            "정산하는 시점(오늘)이 몇 월 며칠이든 상관없이, 회원이 돌아보는 대상은 반드시 '" + periodLabel + "'이고 다짐을 하는 시기는 '" + nextMonthLabel + "'이어야 하므로 날짜 혼선 없이 명시하여 대화하십시오. " +
                             "문장 곳곳에 하트(❤️), 응원(💪), 미소(🥰)와 같은 따뜻한 이모지를 2~3개 적절히 섞어 코치의 진심어린 온기를 더해 주십시오.";
     
     var prompt = "■ 회원 및 출석 정보\n" +
                  "- 회원 이름: " + name + "\n" +
-                 "- 정산 대상 월 (이번 달): " + targetMonthStr + "\n" +
-                 "- 다음 활동 월 (다음 달): " + nextMonthStr + "\n" +
+                 "- 정산 대상 기간 (이번 정산): " + periodLabel + "\n" +
+                 "- 다음 활동 기간 (향후 다짐): " + nextMonthLabel + "\n" +
                  "- 정산 기간: " + startDateStr + " ~ " + endDateStr + "\n" +
                  "- 이번 출석 횟수: 총 " + stats.total + "회 (점핑 운동: " + stats.jumping + "회, 원적외선 테라피: " + stats.therapy + "회)\n" +
                  "- 회원권 남은 횟수: " + remain + "회\n" +
@@ -6378,9 +6389,9 @@ function generateAttendanceReportAiComment(name, stats, prevSms, remain, expire,
                  (prevSms ? prevSms : "(과거 출석정산 이력 없음 - 첫 정산 대상)") + "\n\n" +
                  "■ 핵심 지시사항 및 편지 구성 요소 (필수 준수)\n" +
                  "1. 편지 구조 정의:\n" +
-                 "   - [첫인사]: 회원님의 이름을 다정하고 따뜻하게 부르며 시작하는 친근한 첫인사. 오늘이 몇 월 며칠이든 관계없이 편지 내용 상에서는 반드시 " + targetMonthStr + "의 건강 여정 정산 소식임을 명시하십시오. (예: '♥지은 회원님, 따뜻하고 눈부셨던 " + targetMonthStr + "도 건강하게 잘 마감하셨나요? 🌟 한 달간의 소중한 웰니스 성적표를 들고 코치가 찾아왔습니다!')\n" +
-                 "   - [본문 (출석 분석)]: " + targetMonthStr + " 출석 빈도와 남은 횟수, 그리고 이전 히스토리 대비 증감을 분석하여 칭찬/공감/우려를 전문적이면서 다정하게 언급 (예: 지난달에 비해 자주 오셔서 정말 기쁘다든지, 혹은 바쁘신지 출석이 뜸해 소중한 회원권 소멸 걱정이 된다든지)\n" +
-                 "   - [끝인사]: 다가오는 " + nextMonthStr + "에도 힘차게 건강 관리를 이어나갈 수 있도록 따뜻하게 격려하고 클럽에서 반갑게 만나자는 다정한 끝인사. (예: '바쁘신 일상 속에서도 자신을 위한 소중한 시간을 매일 개척해 나가시는 모습이 진정으로 멋집니다. 다가오는 " + nextMonthStr + "에도 늘 정성을 다하는 코치로 대기하고 있을게요! 클럽에서 뵙겠습니다. ❤️')\n" +
+                 "   - [첫인사]: 회원님의 이름을 다정하고 따뜻하게 부르며 시작하는 친근한 첫인사. 오늘이 몇 월 며칠이든 관계없이 편지 내용 상에서는 반드시 " + periodLabel + "의 건강 여정 정산 소식임을 명시하십시오. (예: '♥지은 회원님, 따뜻하고 눈부셨던 " + greetingLabel + " 🌟 소중한 웰니스 성적표를 들고 코치가 찾아왔습니다!')\n" +
+                 "   - [본문 (출석 분석)]: " + analysisLabel + " 남은 횟수, 그리고 이전 히스토리 대비 증감을 분석하여 칭찬/공감/우려를 전문적이면서 다정하게 언급\n" +
+                 "   - [끝인사]: " + nextMonthLabel + " 힘차게 건강 관리를 이어나갈 수 있도록 따뜻하게 격려하고 클럽에서 반갑게 만나자는 다정한 끝인사. (예: '바쁘신 일상 속에서도 자신을 위한 소중한 시간을 매일 개척해 나가시는 모습이 진정으로 멋집니다. " + nextMonthLabel + " 늘 정성을 다하는 코치로 대기하고 있을게요! 클럽에서 뵙겠습니다. ❤️')\n" +
                  "2. 출석 빈도별 반응 룰:\n" +
                  "   - 출석 0~4회: 바쁜 일상에 깊이 공감해주되, 소중한 남은 횟수(" + remain + "회)와 마감일(" + expire + ")을 강조하며 이용 기간 내에 다 쓰지 못해 소멸할까 걱정되는 코치의 진심 어린 염려 톤 부각\n" +
                  "   - 출석 5~12회: 점핑과 테라피를 적절히 조화롭게 활용하는 습관을 칭찬하고 꾸준한 건강 루틴화 독려\n" +
@@ -6388,7 +6399,7 @@ function generateAttendanceReportAiComment(name, stats, prevSms, remain, expire,
                  "3. 지난 정산 이력과의 1:1 대조 분석:\n" +
                  "   - 지난 문자 기록이 있다면 꼭 이전 출석 횟수와 비교하여 증가/감소의 변화 양상을 극찬하거나 공감하며 안부 묻기\n" +
                  "4. 출력 형식:\n" +
-                 "   - 정산 기간이나 출석 기록 테이블, 회원권 남은 횟수 테이블 등 표 형태의 정보는 시스템이 앞뒤에 깔끔하게 부착하므로, 이곳에서는 **오직 회원의 감성을 깊이 어루만지는 완성도 높은 줄글 형태의 '편지 본문 전체(첫인사 + 분석 + 끝인사)'만 180~300자 내외로 깔끔하게 작성**하여 반환하십시오. 절대 정산하는 날짜(6월 등) 기준의 헷갈리는 문장을 적지 말고, 명확히 " + targetMonthStr + "과 " + nextMonthStr + "으로 고정하여 작성해 주십시오.";
+                 "   - 오직 회원의 감성을 깊이 어루만지는 완성도 높은 줄글 형태의 '편지 본문 전체(첫인사 + 분석 + 끝인사)'만 180~300자 내외로 깔끔하게 작성하여 반환하십시오. 절대 정산하는 날짜 기준의 헷갈리는 문장을 적지 말고, 명확히 정산 대상 기간(" + periodLabel + ")과 다음 활동 기간(" + nextMonthLabel + ")을 확실히 구분하여 작성해 주십시오.";
     
     var aiComment = callGeminiBackend(prompt, systemInstruction);
     
@@ -6416,9 +6427,9 @@ function generateAttendanceReportAiComment(name, stats, prevSms, remain, expire,
   }
   
   if (total === 0) {
-    comment = name + " 회원님, 지난 정산 기간 동안 클럽에서 한 번도 뵙지 못해 코치가 무척 안타깝고 염려스러운 마음이 가득한 한 달이었습니다. 😢 바쁘신 일상이 정리되는 대로, 소중한 남은 회원권이 만료일 전에 아깝게 소멸되지 않도록 꼭 다시 클럽에 들러 건강 충전을 시작해 보세요!";
+    comment = name + " 회원님, 지난 정산 기간 동안 클럽에서 한 번도 뵙지 못해 코치가 무척 안타깝고 염려스러운 마음이 가득했습니다. 😢 바쁘신 일상이 정리되는 대로, 소중한 남은 회원권이 만료일 전에 아깝게 소멸되지 않도록 꼭 다시 클럽에 들러 건강 충전을 시작해 보세요!";
   } else if (total <= 5) {
-    comment = name + " 회원님, 이번 정산 기간 동안 총 " + total + "회의 출석을 기록해 주셨네요! 바쁜 일정 속에서도 걸음해 주셔서 감사하지만, 남은 회원권 잔여 횟수가 " + remain + "회나 유효하게 남아있어 이용 만료일(" + expire + ")까지 모두 소진하시지 못해 아깝게 소멸될까 코치가 진심으로 걱정하고 있습니다. 다음 달은 조금만 더 자주 뵈어요! ❤️";
+    comment = name + " 회원님, 이번 정산 기간 동안 총 " + total + "회의 출석을 기록해 주셨네요! 바쁜 일정 속에서도 걸음해 주셔서 감사하지만, 남은 회원권 잔여 횟수가 " + remain + "회나 유효하게 남아있어 이용 만료일(" + expire + ")까지 모두 소진하시지 못해 아깝게 소멸될까 코치가 진심으로 걱정하고 있습니다. " + nextMonthLabel + " 조금만 더 자주 뵈어요! ❤️";
   } else if (total <= 12) {
     comment = name + " 회원님, 지난 정산 기간 동안 총 " + total + "회의 소중한 출석을 달성하셨네요! " + habitDesc + " 회원님만의 건강한 리듬이 삶 속에 점차 단단하게 자리를 잡아가고 있는 것 같아 코치도 든든하고 뿌듯한 보람을 느낍니다. 늘 응원하고 자랑스럽습니다. 😊";
   } else {
