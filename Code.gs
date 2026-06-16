@@ -4098,7 +4098,7 @@ function generateSmsContent(name, category, membership, expireDate, remainCount,
                "📅 최종 이용 기한: ~ " + expireDate + "까지\n" +
                "📊 총 잔여 횟수: " + remainCount + "회\n\n" +
                "⚠️ 꼭 확인해 주세요!\n" +
-               "이용 기한이 지나면 소중한 잔여 횟수가 소멸되오니, 최종 만료일인 **" + expireDate + "** 전까지 남은 " + remainCount + "회를 꼭 전부 사용해 주세요! 늦기 전에 서둘러 클럽에 나오셔서 신나게 점핑해 보아요! 꾸준한 관리가 최고의 결과를 만듭니다. 화이팅! 🔥";
+               "이용 기한이 지나면 소중한 잔여 횟수가 소멸되오니, 최종 만료일인 **" + expireDate + "** 전까지 남은 " + remainCount + "회를 꼭 전부 사용해 주세요! 꾸준한 관리가 최고의 결과를 만듭니다. 화이팅! 🔥";
   } else if (category === "재결제") {
     var greeting = (gapDays > 30) ? "다시 노형점핑을 찾아주셔서 정말 기뻐요! 🥰\n" : "노형점핑을 다시 믿고 선택해 주셔서 감사합니다! 😊\n";
     content += greeting +
