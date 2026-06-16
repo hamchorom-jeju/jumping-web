@@ -7580,7 +7580,7 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
           // 💡 [v66.2] 지식창고 연동 넛지 배너 동적 결합 (초슬림 한 줄 넛지)
           var hasRelatedTip = false;
           try {
-            var keywordList = ["식이섬유", "수분", "물", "오운완", "단식", "체지방", "근육", "단백질", "유산소", "스트레칭", "습관", "식단", "채소"];
+            var keywordList = ["식이섬유", "수분", "물 마시기", "물마시기", "오운완", "단식", "체지방", "근육", "단백질", "유산소", "스트레칭", "습관", "식단", "채소"];
             var detectedKeyword = "";
             for (var k = 0; k < keywordList.length; k++) {
               var kw = keywordList[k];
@@ -12376,7 +12376,7 @@ function getDailyQuestNoticePreview() {
     var tipNotice = "";
     try {
       // A. 돌발퀘스트 제목에서 다이어트 주요 키워드 추출
-      var keywordList = ["식이섬유", "수분", "물", "오운완", "단식", "체지방", "근육", "단백질", "유산소", "스트레칭", "습관", "식단", "채소"];
+      var keywordList = ["식이섬유", "수분", "물 마시기", "물마시기", "오운완", "단식", "체지방", "근육", "단백질", "유산소", "스트레칭", "습관", "식단", "채소"];
       var detectedKeyword = "";
       for (var k = 0; k < keywordList.length; k++) {
         var kw = keywordList[k];

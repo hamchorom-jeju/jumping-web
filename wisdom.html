@@ -600,7 +600,7 @@
             }
             
             // 다이어트 주요 키워드 사전 선언 (오늘의 퀘스트 제목에서 이 키워드를 검출)
-            const keywordList = ["식이섬유", "수분", "물", "오운완", "단식", "체지방", "근육", "단백질", "유산소", "스트레칭", "습관", "식단", "채소"];
+            const keywordList = ["식이섬유", "수분", "물 마시기", "물마시기", "오운완", "단식", "체지방", "근육", "단백질", "유산소", "스트레칭", "습관", "식단", "채소"];
             let detectedKeyword = "";
             for (let i = 0; i < keywordList.length; i++) {
                 const kw = keywordList[i];
@@ -623,42 +623,50 @@
             }
 
             // 2. 다이내믹 매칭을 위한 팁 필터링 (0순위 J열 1:1 타겟 매칭 + 1순위 키워드 매칭)
-            let relatedTips = [];
+            let targetMatchedTips = [];
+            let keywordMatchedTips = [];
             const normalizedTodayQuest = normalizeTextForMatch(todayQuestTitle);
             
-            relatedTips = tips.filter(t => {
+            tips.forEach(t => {
+                let isTargetMatch = false;
                 // 0순위: J열 타겟 퀘스트 지정 매칭 (원장님의 1:1 웰니스 정리 Day 매칭 기획)
                 if (t.targetQuest) {
                     const normalizedTarget = normalizeTextForMatch(t.targetQuest);
                     if (normalizedTarget && normalizedTodayQuest.indexOf(normalizedTarget) > -1) {
-                        return true;
+                        targetMatchedTips.push(t);
+                        isTargetMatch = true;
                     }
                 }
                 
                 // 1순위: 다이내믹 키워드 매칭
-                if (detectedKeyword) {
-                    return (t.title && t.title.indexOf(detectedKeyword) > -1) ||
-                           (t.category && t.category.indexOf(detectedKeyword) > -1);
+                if (!isTargetMatch && detectedKeyword) {
+                    if ((t.title && t.title.indexOf(detectedKeyword) > -1) ||
+                        (t.category && t.category.indexOf(detectedKeyword) > -1)) {
+                        keywordMatchedTips.push(t);
+                    }
                 }
-                
-                return false;
             });
 
-            // 🌟 원장님의 명설계: 관련 글들은 스프레드시트 등록 순서(ID 오름차순)를 보존하여
-            // '1.식이섬유란? ➔ 2.종류 ➔ 3.음식' 처럼 기획 연재 흐름을 1번 섹션 왕좌부터 아름답게 안착시킵니다!
-            relatedTips.sort((a, b) => a.id - b.id);
+            // 🌟 기획 연재 흐름 정렬 (0순위 타겟 매칭글 우선 정렬 후, 1순위 키워드 매칭글 정렬)
+            targetMatchedTips.sort((a, b) => a.id - b.id);
+            keywordMatchedTips.sort((a, b) => a.id - b.id);
+
+            const allMatchedIds = new Set([
+                ...targetMatchedTips.map(t => t.id),
+                ...keywordMatchedTips.map(t => t.id)
+            ]);
 
             // 3. 기본 게시물(isDefault) 목록 필터링 (이미 매칭된 글 제외)
             const defaultTipsInDb = tips.filter(t => 
                 t.isDefault === true && 
-                !relatedTips.some(rt => rt.id === t.id)
+                !allMatchedIds.has(t.id)
             );
             // 기본 게시물은 최신에 등록된 기본글이 우선 수혈되도록 최신순(ID 내림차순)으로 배열합니다.
             defaultTipsInDb.sort((a, b) => b.id - a.id);
 
             // 4. 기타 일반 게시물 목록 (빵꾸 대비용 최종 수혈)
             const remainingTips = tips.filter(t => 
-                !relatedTips.some(rt => rt.id === t.id) &&
+                !allMatchedIds.has(t.id) &&
                 !defaultTipsInDb.some(dt => dt.id === t.id)
             );
             // 일반 게시물(빵꾸 대비)은 최신글이 먼저 수혈되도록 최신순(ID 내림차순)으로 배열합니다.
@@ -667,13 +675,16 @@
             // 5. 1번 섹션부터 5번 섹션까지 물 흐르듯 채울 최종 통합 큐레이션 리스트 작성
             const curatedTips = [];
             
-            // A. 가장 먼저 관련 팁을 선두에 배치 (섹션 1부터 도배 시작!)
-            curatedTips.push(...relatedTips);
+            // A. 가장 먼저 0순위 J열 타겟 매칭 팁을 최우선 배치
+            curatedTips.push(...targetMatchedTips);
             
-            // B. 자리가 남으면 최신 기본 게시물로 채우기
+            // B. 다음으로 1순위 키워드 매칭 팁 배치
+            curatedTips.push(...keywordMatchedTips);
+            
+            // C. 자리가 남으면 최신 기본 게시물로 채우기
             curatedTips.push(...defaultTipsInDb);
             
-            // C. 그래도 자리가 남으면 최신 일반 게시물로 끝까지 채우기
+            // D. 그래도 자리가 남으면 최신 일반 게시물로 끝까지 채우기
             curatedTips.push(...remainingTips);
 
             // 6. 각 섹션에 착지시키기
