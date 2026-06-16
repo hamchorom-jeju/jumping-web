@@ -7557,7 +7557,7 @@ function getActiveQuestStatus(phone, ss, logData, memberName) {
 
     for (var i = 1; i < data.length; i++) {
       var type = data[i][2];   // C열: 유형
-      var dateStr = data[i][1]; // B열: 시행일
+      var dateStr = normalizeDateStr(data[i][1]); // B열: 시행일 (정합성 표준화 적용)
       var title = data[i][3];  // D열: 퀘스트명
       var desc = data[i][4];   // E열: 설명
       var qPhone = formatPhoneNumber(data[i][6]).replace(/[^0-9]/g, ""); // G열: 전화번호
@@ -13979,3 +13979,5 @@ function getMemberDeductionHistory(payload) {
     return { success: false, error: e.toString() };
   }
 }
+
+
