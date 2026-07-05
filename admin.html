@@ -1740,7 +1740,7 @@
           let extraChecked = p.extraText && (p.extraText.indexOf("차감됨") !== -1 || p.extraText.indexOf("추가차감") !== -1);
 
           html += `
-            <div class="list-item" data-row-idx="${p.rowIdx}" style="opacity: 0.65; cursor: pointer; background: rgba(255,255,255,0.03);" onclick="openEditCheckout('${p.name}', ${p.rowIdx}, '${p.timeLog}', '${p.classes}', ${extraChecked})">
+            <div class="list-item" data-row-idx="${p.rowIdx}" style="opacity: 0.65; cursor: pointer; background: rgba(255,255,255,0.03);" onclick="openEditCheckout('${p.name}', ${p.rowIdx}, '${p.timeLog}', '${p.classes}', ${extraChecked}, '${p.type}')">
               <div class="item-info">
                 <h3 style="color: var(--text-sub);">${p.name.replace(/\d{4}$/, "")} <span class="status-badge" style="background: rgba(255,255,255,0.1); color: #ccc;">완료</span></h3>
                 <p style="font-size:0.85rem;">입실: ${p.inTime} | 기록: ${displayRecord} ${extraChecked ? '<br><span style="color:#ff5252;">(1회 추가 차감됨)</span>' : ''}${formatDeductionText(p)}</p>
@@ -2098,10 +2098,26 @@
       }
     }
 
-    function openEditCheckout(name, rowIdx, timeLog, classes, extraChecked) {
+    function openEditCheckout(name, rowIdx, timeLog, classes, extraChecked, type) {
       currentCheckoutRowIdx = rowIdx;
       isEditingMode = true;
+      currentActivityType = type || "점핑";
       document.getElementById('checkoutName').innerText = name + " 님 퇴실 내역 수정";
+
+      // 섹션 가시성 조절
+      const jumpSection = document.getElementById('jumpingSection');
+      const therapySection = document.getElementById('therapySection');
+
+      if (currentActivityType === '점핑') {
+        jumpSection.style.display = "block";
+        therapySection.style.display = "none";
+      } else if (currentActivityType === '테라피') {
+        jumpSection.style.display = "none";
+        therapySection.style.display = "block";
+      } else if (currentActivityType === '복합') {
+        jumpSection.style.display = "block";
+        therapySection.style.display = "block";
+      }
 
       // 1. 타임수 세팅
       document.querySelectorAll('#timeGrid .select-btn').forEach(btn => {
@@ -2113,12 +2129,61 @@
         document.querySelectorAll('#timeGrid .select-btn')[1].classList.add('active');
       }
 
-      // 2. 클래스 세팅
-      const classArr = classes ? classes.split(",").map(s => s.trim()) : [];
+      // 2. 클래스 및 테라피 세팅 파싱
+      let jumpingClassesStr = classes;
+      let therapyClassesStr = "";
+      if (currentActivityType === '복합' && classes.includes(" / ")) {
+        const parts = classes.split(" / ");
+        jumpingClassesStr = parts[0];
+        therapyClassesStr = parts[1];
+      } else if (currentActivityType === '테라피') {
+        therapyClassesStr = classes;
+        jumpingClassesStr = "";
+      }
+
+      // 점핑 클래스 세팅
+      const classArr = jumpingClassesStr ? jumpingClassesStr.split(",").map(s => s.trim()) : [];
       document.querySelectorAll('#classGrid .select-btn').forEach(btn => {
         btn.classList.remove('active');
         if (classArr.includes(btn.innerText)) btn.classList.add('active');
       });
+
+      // 테라피 시간 세팅
+      document.querySelectorAll('#therapyGrid .select-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('therapyDirectWrap').style.display = "none";
+      document.getElementById('therapyDirectInput').value = "";
+      document.getElementById('btnTherapyDirect').classList.remove('active');
+
+      if (therapyClassesStr) {
+        const match = therapyClassesStr.match(/테라피\(([^)]+)\)/);
+        if (match) {
+          const therapyTimesArr = match[1].split(",").map(s => s.trim());
+          const gridBtns = document.querySelectorAll('#therapyGrid .select-btn:not(#btnTherapyDirect)');
+          
+          let hasDirect = false;
+          let directVal = "";
+          
+          therapyTimesArr.forEach(time => {
+            let found = false;
+            gridBtns.forEach(btn => {
+              if (btn.innerText === time) {
+                btn.classList.add('active');
+                found = true;
+              }
+            });
+            if (!found && time !== "자율") {
+              hasDirect = true;
+              directVal = directVal ? directVal + ", " + time : time;
+            }
+          });
+          
+          if (hasDirect) {
+            document.getElementById('btnTherapyDirect').classList.add('active');
+            document.getElementById('therapyDirectWrap').style.display = "block";
+            document.getElementById('therapyDirectInput').value = directVal;
+          }
+        }
+      }
 
       // 3. 체크박스 세팅
       document.getElementById('extraDeduct').checked = extraChecked;
@@ -2284,7 +2349,7 @@
         let extraChecked = !!checkoutData.extraDeduct;
 
         const newCardHtml = `
-          <div class="list-item" data-row-idx="${rowIdx}" style="opacity: 0.65; cursor: pointer; background: rgba(255,255,255,0.03);" onclick="openEditCheckout('${name}', ${rowIdx}, '${checkoutData.timeLog}', '${checkoutData.classes}', ${extraChecked})">
+          <div class="list-item" data-row-idx="${rowIdx}" style="opacity: 0.65; cursor: pointer; background: rgba(255,255,255,0.03);" onclick="openEditCheckout('${name}', ${rowIdx}, '${checkoutData.timeLog}', '${checkoutData.classes}', ${extraChecked}, '${currentActivityType}')">
             <div class="item-info">
               <h3 style="color: var(--text-sub);">${name} <span class="status-badge" style="background: rgba(255,255,255,0.1); color: #ccc;">완료</span></h3>
               <p style="font-size:0.85rem;">입실: ${inTime} | 기록: ${displayRecord} ${extraTextStr}</p>
@@ -2364,7 +2429,7 @@
           let extraChecked = !!checkoutData.extraDeduct;
 
           const newCardHtml = `
-            <div class="list-item" data-row-idx="${rowIdx}" style="opacity: 0.65; cursor: pointer; background: rgba(255,255,255,0.03);" onclick="openEditCheckout('${name}', ${rowIdx}, '${checkoutData.timeLog}', '${checkoutData.classes}', ${extraChecked})">
+            <div class="list-item" data-row-idx="${rowIdx}" style="opacity: 0.65; cursor: pointer; background: rgba(255,255,255,0.03);" onclick="openEditCheckout('${name}', ${rowIdx}, '${checkoutData.timeLog}', '${checkoutData.classes}', ${extraChecked}, '${currentActivityType}')">
               <div class="item-info">
                 <h3 style="color: var(--text-sub);">${name} <span class="status-badge" style="background: rgba(255,255,255,0.1); color: #ccc;">완료</span></h3>
                 <p style="font-size:0.85rem;">입실: ${inTime} | 기록: ${displayRecord} ${extraTextStr}</p>
