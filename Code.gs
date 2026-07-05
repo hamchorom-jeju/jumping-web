@@ -6564,8 +6564,8 @@ function checkInactivityDebuffAbsentees() {
           if (lastDate && lastDate <= lastSentSmsDate) {
             var diffMs = now.getTime() - lastSentSmsDate.getTime();
             var daysSinceLastSms = diffMs / (1000 * 60 * 60 * 24);
-            if (daysSinceLastSms < 7) {
-              continue; // 아직 7일이 지나지 않았으므로 건너뜀
+            if (daysSinceLastSms < 3) { // 7일에서 3일로 단축 (실제 발송 완료건 스팸 방지 주기 단축)
+              continue; // 아직 3일이 지나지 않았으므로 건너뜀
             }
           }
         }
@@ -6587,10 +6587,8 @@ function checkInactivityDebuffAbsentees() {
           Logger.log("디버프 인앱 쪽지 생성 실패 (" + cleanName + "): " + notiErr.toString());
         }
         
-        // B. 앱 활성 상태인 경우 SMS 발송 스킵
-        if (isActive) {
-          continue; 
-        }
+        // B. 앱 활성 상태인 경우 SMS 발송 스킵 제거 (원장님 요청: 앱 접속 여부 상관없이 실제 결석 시 SMS 대기열에 무조건 적재)
+        // (if (isActive) continue; 부분 제거됨)
         
         var msg = "🚨 [노형점핑] " + cleanName + " 회원님! 운동을 쉬신 지 벌써 " + inactiveDays + "일이 지나, 아쉽게도 웰니스 누적 점수가 매일 100 EXP씩 방전(감점)되기 시작했어요! 😭 누적 -" + penaltyVal + " EXP 상태입니다. 하지만 걱정 마세요! 오늘 클럽에 오셔서 신나게 점핑 뛰고 출석체크만 쾅! 하시면 깎였던 모든 점수와 순위가 즉시 100% 마법처럼 전부 복구(부활)됩니다! ✨ 오늘 꼭 오셔서 건강 충전해 가세요! ❤️";
         
