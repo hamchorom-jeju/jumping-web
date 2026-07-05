@@ -3919,7 +3919,7 @@ function submitRegistration(data) {
     var existingRemain = 0;
     
     for (var i = 1; i < mData.length; i++) {
-      if (String(mData[i][2]) === data.phone) {
+      if (String(mData[i][2]).replace(/[^0-9]/g, "") === data.phone.replace(/[^0-9]/g, "")) {
         existingRowIdx = i + 1;
         existingExpDate = String(mData[i][7]); // H열 만료일
         existingRemain = mData[i][8]; // I열 잔여횟수
@@ -4162,7 +4162,7 @@ function submitRenewal(data) {
     var memberName = "";
 
     for (var k = regData.length - 1; k >= 1; k--) {
-      if (String(regData[k][2]) === data.phone) {
+      if (String(regData[k][2]).replace(/[^0-9]/g, "") === data.phone.replace(/[^0-9]/g, "")) {
         if (!memberName) memberName = regData[k][1];
         
         // 이전 방식: 이름이 정확히 똑같아야 했음
@@ -4187,6 +4187,17 @@ function submitRenewal(data) {
           targetRowIdx = k + 1;
           currentExp = String(regData[k][6]);
           currentRemain = Number(regData[k][7]) || 0;
+          break;
+        }
+      }
+    }
+
+    // 만약 등록현황에서 이름을 찾지 못했다면 회원명단(memberSheet)에서 이름 조회 (이름 누락으로 인한 문자/매출 누락 방지)
+    if (!memberName) {
+      var mData = memberSheet.getDataRange().getValues();
+      for (var i = 1; i < mData.length; i++) {
+        if (String(mData[i][2]).replace(/[^0-9]/g, "") === data.phone.replace(/[^0-9]/g, "")) {
+          memberName = String(mData[i][1]);
           break;
         }
       }
@@ -4233,7 +4244,7 @@ function submitRenewal(data) {
           // 회원DB의 메모(T열)에 이월 딱지 삽입
           var mDataForTag = memberSheet.getDataRange().getValues();
           for (var i = 1; i < mDataForTag.length; i++) {
-            if (String(mDataForTag[i][2]) === data.phone) {
+            if (String(mDataForTag[i][2]).replace(/[^0-9]/g, "") === data.phone.replace(/[^0-9]/g, "")) {
               var mRowTag = i + 1;
               var oldTMemo = String(memberSheet.getRange(mRowTag, 20).getValue() || "");
               var newTMemo = oldTMemo.replace(/\[월권이월:.*?\]/g, "").trim() + " " + carryTag;
@@ -4281,7 +4292,7 @@ function submitRenewal(data) {
     // 6. 회원DB 업데이트 (요약 정보 업데이트)
     var mData = memberSheet.getDataRange().getValues();
     for (var i = 1; i < mData.length; i++) {
-      if (String(mData[i][2]) === data.phone) {
+      if (String(mData[i][2]).replace(/[^0-9]/g, "") === data.phone.replace(/[^0-9]/g, "")) {
         var mRow = i + 1;
         memberSheet.getRange(mRow, 6).setValue(data.membership);
         memberSheet.getRange(mRow, 8).setValue(finalExp);
