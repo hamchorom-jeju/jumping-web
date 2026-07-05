@@ -3409,16 +3409,21 @@ function processAdminCheckout(data) {
       }
     }
     
-    // 4. 퇴실 시 대기 문자 자동 취소 처리 (상태: 대기 -> 완료(출석))
+    // 4. 퇴실 시 대기 문자 자동 취소 처리 (상태: 대기 -> 완료(출석)) - 장기미방문/출석디버프/복귀권유만 대상
     try {
       var smsSheet = ss.getSheetByName("문자발송");
       if (smsSheet) {
         var smsData = smsSheet.getDataRange().getDisplayValues();
         for (var j = 1; j < smsData.length; j++) {
           var sPhone = String(smsData[j][2] || "").replace(/[^0-9]/g, "");
-          var sStatus = smsData[j][5];
+          var sStatus = String(smsData[j][5] || "").trim();
+          var sCategory = String(smsData[j][3] || "").trim(); // Index 3: 안내분류
+          
           if (sPhone === phoneStr && sStatus === "대기") {
-            smsSheet.getRange(j + 1, 6).setValue("완료(출석)");
+            // 등록/연장/재결제/추가결제/출석정산 등은 퇴실 시 자동 취소(완료) 처리되지 않음
+            if (sCategory === "장기미방문" || sCategory === "출석디버프" || sCategory === "복귀권유") {
+              smsSheet.getRange(j + 1, 6).setValue("완료(출석)");
+            }
           }
         }
       }
