@@ -3931,6 +3931,8 @@ function submitRegistration(data) {
     var finalRemain = passInfo.baseCount;
     var finalMemo = ""; // 등록현황(장부)용 비고
     var payCategory = "신규등록"; // 기본값
+    var curRemainVal = Number(existingRemain) || 0;
+    var gapDays = 0;
     
     if (existingRowIdx !== -1) {
       // --- 재등록/연장 로직 ---
@@ -3943,7 +3945,6 @@ function submitRegistration(data) {
       
       payCategory = isNotExpired ? "연장결제" : "재결제"; 
       
-      var gapDays = 0;
       if (existingExpDate && existingExpDate !== "undefined" && existingExpDate !== "-") {
         var prevExp = new Date(existingExpDate);
         gapDays = Math.floor((now.getTime() - prevExp.getTime()) / (1000 * 60 * 60 * 24));
