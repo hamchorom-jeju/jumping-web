@@ -5858,12 +5858,12 @@ function checkLongTermAbsentees() {
         var lastSentSmsDate = lastSentSmsDateMap[phone];
         if (lastSentSmsDate) {
           // 출석 기록이 마지막 발송일보다 최신인 경우 -> 정상 재생성 대상
-          // 출석 기록이 마지막 발송일보다 이전인 경우 -> 7일간 미방문이 지속되었는지 검사
+          // 출석 기록이 마지막 발송일보다 이전인 경우 -> 3일간 미방문이 지속되었는지 검사
           if (lastDate && lastDate <= lastSentSmsDate) {
             var diffMs = now.getTime() - lastSentSmsDate.getTime();
             var daysSinceLastSms = diffMs / (1000 * 60 * 60 * 24);
-            if (daysSinceLastSms < 7) {
-              continue; // 아직 7일이 지나지 않았으므로 건너뜀 (스팸 방지)
+            if (daysSinceLastSms < 3) { // 7일에서 3일로 단축 (장기미방문 문자 재발송 제한 완화)
+              continue; // 아직 3일이 지나지 않았으므로 건너뜀 (스팸 방지)
             }
           }
         }
