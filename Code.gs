@@ -3678,7 +3678,7 @@ function editAdminCheckout(data) {
     var cols = getAttendanceColumnIndices(logSheet);
     var phoneStr = String(logSheet.getRange(rowIdx, cols.phone + 1).getValue());
     var currentExtraText = String(logSheet.getRange(rowIdx, cols.memo + 1).getValue());
-    var wasExtraDeducted = currentExtraText.indexOf("(추가차감됨)") !== -1;
+    var wasExtraDeducted = currentExtraText.indexOf("추가 차감됨") !== -1 || currentExtraText.indexOf("추가차감") !== -1;
     
     // 로그 업데이트 (J:클래스, K:타임)
     logSheet.getRange(rowIdx, cols.classes + 1).setValue(data.classes);

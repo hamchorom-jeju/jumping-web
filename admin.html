@@ -1737,7 +1737,7 @@
           if (p.timeLog && p.timeLog !== "0.0" && p.timeLog !== "0") {
             displayRecord += ` (${p.timeLog}타임)`;
           }
-          let extraChecked = p.extraText && (p.extraText.indexOf("차감됨") !== -1 || p.extraText.indexOf("추가차감") !== -1);
+          let extraChecked = !!(p.extraText && (p.extraText.indexOf("차감됨") !== -1 || p.extraText.indexOf("추가차감") !== -1));
 
           html += `
             <div class="list-item" data-row-idx="${p.rowIdx}" style="opacity: 0.65; cursor: pointer; background: rgba(255,255,255,0.03);" onclick="openEditCheckout('${p.name}', ${p.rowIdx}, '${p.timeLog}', '${p.classes}', ${extraChecked}, '${p.type}')">
