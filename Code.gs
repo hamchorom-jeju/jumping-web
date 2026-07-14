@@ -2891,9 +2891,9 @@ function getAdminDashboardData_Fast() {
           timeLog: String(logData[i][cols.workoutTime] || ""), 
           extraText: String(logData[i][cols.memo] || ""), 
           reason: reason,
-          prevCount: String(logData[i][cols.prev] || ""),
-          changeCount: String(logData[i][cols.change] || ""),
-          remainCount: String(logData[i][cols.remain] || "")
+          prevCount: (logData[i][cols.prev] !== "" && logData[i][cols.prev] !== null && logData[i][cols.prev] !== undefined) ? String(logData[i][cols.prev]) : "",
+          changeCount: (logData[i][cols.change] !== "" && logData[i][cols.change] !== null && logData[i][cols.change] !== undefined) ? String(logData[i][cols.change]) : "",
+          remainCount: (logData[i][cols.remain] !== "" && logData[i][cols.remain] !== null && logData[i][cols.remain] !== undefined) ? String(logData[i][cols.remain]) : ""
         };
 
         // 퇴실/귀가 상태 판별
@@ -3114,9 +3114,9 @@ function getAdminDashboardData_Legacy() {
           timeLog: String(logData[i][cols.workoutTime] || ""), 
           extraText: String(logData[i][cols.memo] || ""), 
           reason: reason,
-          prevCount: String(logData[i][cols.prev] || ""),
-          changeCount: String(logData[i][cols.change] || ""),
-          remainCount: String(logData[i][cols.remain] || "")
+          prevCount: (logData[i][cols.prev] !== "" && logData[i][cols.prev] !== null && logData[i][cols.prev] !== undefined) ? String(logData[i][cols.prev]) : "",
+          changeCount: (logData[i][cols.change] !== "" && logData[i][cols.change] !== null && logData[i][cols.change] !== undefined) ? String(logData[i][cols.change]) : "",
+          remainCount: (logData[i][cols.remain] !== "" && logData[i][cols.remain] !== null && logData[i][cols.remain] !== undefined) ? String(logData[i][cols.remain]) : ""
         };
 
         // 퇴실/귀가 상태 판별

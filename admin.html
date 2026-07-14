@@ -5767,7 +5767,8 @@
     // --- 회원권 및 차감 기록 정보 포맷터 ---
     function formatDeductionText(p) {
       if (!p.membership) return "";
-      if (!p.remainCount || p.remainCount === "무제한" || p.remainCount === "불가" || p.remainCount.trim() === "") {
+      const remainStr = p.remainCount !== undefined && p.remainCount !== null ? String(p.remainCount).trim() : "";
+      if (remainStr === "" || remainStr === "무제한" || remainStr === "불가") {
         return ` (${p.membership})`;
       }
       let change = p.changeCount || "0";
